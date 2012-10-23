@@ -19,9 +19,9 @@
  *
 */
 
-var VERSION='2.2.0rc1';
 var scripts = document.getElementsByTagName('script');
-var cordovaPath = scripts[scripts.length - 1].src.replace('cordova.js', 'cordova-'+VERSION+'.js');
+var platform = navigator.userAgent.indexOf('Android') >= 0 ? 'android' : 'ios';
+var cordovaPath = scripts[scripts.length - 1].src.replace('cordova.js', 'cordova.' + platform + '.js');
 
 document.write('<script type="text/javascript" charset="utf-8" src="' + cordovaPath + '"></script>');
 

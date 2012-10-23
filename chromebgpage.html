@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <body>
+<script>
+(function() {
+  var onLaunchedListeners = [];
+  chrome = {};
+  chrome.app = {};
+  chrome.app.runtime = {};
+  chrome.app.runtime.onLaunched = {};
+  chrome.app.runtime.onLaunched.addListener = function(func) {
+    onLaunchedListeners.push(func);
+  };
+  chrome.app.runtime.onLaunched.fire = function() {
+    for (var i = 0, f; f = onLaunchedListeners[i]; ++i) {
+      f()
+    }
+  };
+  chrome.app.window = {};
+  chrome.app.window.create = function(filePath, opt_options, opt_callback) {
+    with (parent) {
+      chromeapi.createWindow(filePath);
+    }
+  };
+})();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        <style>
+          body { -webkit-user-select: none; }
+        </style>
+    </head>
+    <body>
+        <iframe src="chromebgpage.html"></iframe>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript">
+(function() {
+  var eventIframe = document.getElementsByTagName('iframe')[0];
+  var extraStylesElem = document.getElementsByTagName('style')[0];
+  function failFunc(msg) {
+    return function() {
+      alert('fail: ' + msg);
+    };
+  }
+  function onDeviceReady() {
+    function fetchManifestJson(successCallback) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'manifest.json', false);
+      xhr.send(null);
+      successCallback(JSON.parse(xhr.responseText));
+    }
+    function fireOnLaunched() {
+      with (eventIframe.contentWindow) {
+        chrome.app.runtime.onLaunched.fire();
+      }
+    }
+    // Fetch list of background .js.
+    fetchManifestJson(function(json) {
+      var numScriptsLoaded = 0;
+      var scripts = json.app.background.scripts;
+      function injectScript(path) {
+        var e = document.createElement('script');
+        e.src = path;
+        e.onload = function() {
+          if (++numScriptsLoaded == scripts.length) {
+            fireOnLaunched();
+          }
+        };
+        eventIframe.contentDocument.body.appendChild(e);
+      }
+      for (var i = 0, scriptPath; scriptPath = scripts[i]; ++i) {
+        injectScript(scriptPath);
+      }
+    });
+  }
+  chromeapi = {};
+  chromeapi.createWindow = function(filePath) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', filePath, true);
+    xhr.onload = function() {
+      document.open();
+      document.write(xhr.responseText);
+      document.close();
+      document.body.appendChild(extraStylesElem);
+    };
+    xhr.onerror = failFunc('xhr');
+    xhr.send();
+  };
+  document.addEventListener('deviceready', onDeviceReady, false);
+})();
+        </script>
+    </body>
+</html>
