@@ -3,6 +3,7 @@
   <body>
 <script>
 (function() {
+  console.log('bgpage');
   var onLaunchedListeners = [];
   chrome = {};
   chrome.app = {};
@@ -13,7 +14,7 @@
   };
   chrome.app.runtime.onLaunched.fire = function() {
     for (var i = 0, f; f = onLaunchedListeners[i]; ++i) {
-      f()
+      f();
     }
   };
   chrome.app.window = {};

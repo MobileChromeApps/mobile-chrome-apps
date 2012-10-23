@@ -30,7 +30,9 @@
         <iframe src="chromebgpage.html"></iframe>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript">
+console.log('1');
 (function() {
+  console.log('2');
   var eventIframe = document.getElementsByTagName('iframe')[0];
   var extraStylesElem = document.getElementsByTagName('style')[0];
   function failFunc(msg) {
@@ -39,7 +41,9 @@
     };
   }
   function onDeviceReady() {
+    console.log('3');
     function fetchManifestJson(successCallback) {
+      console.log('fetchManifestJson');
       var xhr = new XMLHttpRequest();
       xhr.open('GET', 'manifest.json', false);
       xhr.send(null);
@@ -52,13 +56,17 @@
     }
     // Fetch list of background .js.
     fetchManifestJson(function(json) {
+      console.log('manifest fetch succeeded');
       var numScriptsLoaded = 0;
       var scripts = json.app.background.scripts;
       function injectScript(path) {
+        console.log('injecting ' + path);
         var e = document.createElement('script');
         e.src = path;
         e.onload = function() {
+          console.log('injected and loaded ' + path);
           if (++numScriptsLoaded == scripts.length) {
+            console.log('firing onLaunched');
             fireOnLaunched();
           }
         };
@@ -67,6 +75,7 @@
       for (var i = 0, scriptPath; scriptPath = scripts[i]; ++i) {
         injectScript(scriptPath);
       }
+      console.log('done manifest fetch');
     });
   }
   chromeapi = {};
@@ -77,13 +86,14 @@
       document.open();
       document.write(xhr.responseText);
       document.close();
-      document.body.appendChild(extraStylesElem);
     };
     xhr.onerror = failFunc('xhr');
     xhr.send();
   };
+  console.log('4');
   document.addEventListener('deviceready', onDeviceReady, false);
 })();
+console.log('5');
         </script>
     </body>
 </html>
