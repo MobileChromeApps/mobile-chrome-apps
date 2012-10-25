@@ -5,19 +5,46 @@
     parentWindow = parentWindow.parent;
   }
 
-  var onLaunchedListeners = [];
+  var listeners = {};
+  function addListener(name) {
+    return function(f) {
+      if(!listeners[name]) {
+        listeners[name] = [f];
+      } else {
+        listeners[name].push(f);
+      }
+    };
+  }
+
+  function fire(name) {
+    return function() {
+      for (var i = 0, f; f = listeners[name][i]; ++i) {
+        f();
+      }
+    };
+  }
+
   chrome = {};
   chrome.app = {};
   chrome.app.runtime = {};
   chrome.app.runtime.onLaunched = {};
-  chrome.app.runtime.onLaunched.addListener = function(func) {
-    onLaunchedListeners.push(func);
+  chrome.app.runtime.onLaunched.addListener = addListener('onLaunched');
+  chrome.app.runtime.onLaunched.fire = fire('onLaunched');
+
+  chrome.runtime = {};
+  chrome.runtime.onSuspend = {};
+  chrome.runtime.onSuspend.fire = fire('onSuspend');
+
+  chrome.runtime.onSuspend.addListener = function(f) {
+    // Trampoline to add the Cordova pause event to the DOM.
+    console.log('first-time trampoline behavior');
+    document.addEventListener('pause', chrome.runtime.onSuspend.fire, false);
+
+    chrome.runtime.onSuspend.addListener = addListener('onSuspend');
+    chrome.runtime.onSuspend.addListener(f);
   };
-  chrome.app.runtime.onLaunched.fire = function() {
-    for (var i = 0, f; f = onLaunchedListeners[i]; ++i) {
-      f();
-    }
-  };
+
+
   chrome.app.window = {};
   chrome.app.window.create = function(filePath, opt_options, opt_callback) {
     var xhr = new XMLHttpRequest();

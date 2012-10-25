@@ -23,6 +23,13 @@
     };
 
     /**
+     * Check that chrome.app.runtime.onSuspend exists.
+     */
+    function checkOnSuspend() {
+      document.getElementById('status').innerHTML = chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found";
+    };
+
+    /**
      * Function called when page has finished loading.
      */
     function init() {
@@ -47,6 +54,7 @@
     </div>
     <h2>Action</h2>
     <div class="btn large" onclick="checkOnLaunched();">Check onLaunched exists</div>
+    <div class="btn large" onclick="checkOnSuspend();">Check onSuspend exists</div>
     <h2> </h2><div class="backBtn" onclick="backHome();">Back</div>
   </body>
 </html>
