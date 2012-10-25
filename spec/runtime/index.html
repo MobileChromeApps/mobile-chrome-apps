@@ -9,39 +9,39 @@
 
 <script type="text/javascript" charset="utf-8">
 
-    var deviceReady = false;
+var deviceReady = false;
 
-    //-------------------------------------------------------------------------
-    // Chrome
-    //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// Chrome
+//-------------------------------------------------------------------------
 
-    /**
-     * Check that chrome.app.runtime.onLaunched exists.
-     */
-    function checkOnLaunched() {
-      document.getElementById('status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
-    };
+/**
+ * Check that chrome.app.runtime.onLaunched exists.
+ */
+function checkOnLaunched() {
+  document.getElementById('status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
+};
 
-    /**
-     * Check that chrome.app.runtime.onSuspend exists.
-     */
-    function checkOnSuspend() {
-      document.getElementById('status').innerHTML = chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found";
-    };
+/**
+ * Check that chrome.app.runtime.onSuspend exists.
+ */
+function checkOnSuspend() {
+  document.getElementById('status').innerHTML = chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found";
+};
 
-    /**
-     * Function called when page has finished loading.
-     */
-    function init() {
-        document.addEventListener("deviceready", function() {
-                deviceReady = true;
-            }, false);
-        window.setTimeout(function() {
-        	if (!deviceReady) {
-        		alert("Error: Apache Cordova did not initialize.  Demo will not run correctly.");
-        	}
-        },1000);
+/**
+ * Function called when page has finished loading.
+ */
+function init() {
+  document.addEventListener("deviceready", function() {
+    deviceReady = true;
+  }, false);
+  window.setTimeout(function() {
+    if (!deviceReady) {
+      alert("Error: Apache Cordova did not initialize.  Demo will not run correctly.");
     }
+  },1000);
+}
 
 </script>
 
