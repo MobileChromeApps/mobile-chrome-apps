@@ -19,10 +19,6 @@
      * Check that chrome.app.runtime.onLaunched exists.
      */
     function checkOnLaunched() {
-      console.log('chrome: ' + chrome);
-      console.log('chrome.app: ' + chrome.app);
-      console.log('chrome.app.runtime: ' + chrome.app.runtime);
-      console.log('chrome.app.runtime.onLaunched: ' + chrome.app.runtime.onLaunched);
       document.getElementById('chrome_status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
     };
 
@@ -32,7 +28,6 @@
     function init() {
         document.addEventListener("deviceready", function() {
                 deviceReady = true;
-                console.log("Device="+device.platform+" "+device.version);
             }, false);
         window.setTimeout(function() {
         	if (!deviceReady) {

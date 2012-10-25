@@ -20,11 +20,9 @@
   };
   chrome.app.window = {};
   chrome.app.window.create = function(filePath, opt_options, opt_callback) {
-    console.log('fetching ' + filePath);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', filePath, true);
     xhr.onload = function() {
-      console.log('found ' + filePath);
       document.open();
       document.write(xhr.responseText);
       document.close();
