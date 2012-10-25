@@ -19,7 +19,7 @@
      * Check that chrome.app.runtime.onLaunched exists.
      */
     function checkOnLaunched() {
-      document.getElementById('chrome_status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
+      document.getElementById('status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
     };
 
     /**
@@ -41,9 +41,9 @@
   </head>
   <body onload="init();" id="stage" class="theme">
 
-    <h1>Chrome</h1>
+    <h1>chrome.runtime</h1>
     <div id="info">
-        <b>Status:</b> <span id="chrome_status"></span><br>
+        <b>Status:</b> <span id="status"></span><br>
     </div>
     <h2>Action</h2>
     <div class="btn large" onclick="checkOnLaunched();">Check onLaunched exists</div>
