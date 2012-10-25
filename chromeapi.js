@@ -5,10 +5,6 @@
     parentWindow = parentWindow.parent;
   }
 
-  function failFunc(msg) {
-    parentWindow.alert('fail: ' + msg);
-  }
-
   var onLaunchedListeners = [];
   chrome = {};
   chrome.app = {};
@@ -33,7 +29,9 @@
       document.write(xhr.responseText);
       document.close();
     };
-    xhr.onerror = failFunc('xhr');
+    xhr.onerror = function() {
+      alert('XHR failed');
+    };
     xhr.send();
   };
 })();
