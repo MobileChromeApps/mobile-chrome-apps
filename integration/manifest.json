@@ -1,0 +1,13 @@
+{
+  "name": "YOUR APP HERE",
+  "description": "DESCRIPTION HERE",
+  "manifest_version": 2,
+  "minimum_chrome_version": "23",
+  "version": "0.1.0",
+  "offline_enabled": "true",
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  }
+}
