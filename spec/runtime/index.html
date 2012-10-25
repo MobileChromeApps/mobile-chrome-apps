@@ -15,23 +15,26 @@ var deviceReady = false;
 // Chrome
 //-------------------------------------------------------------------------
 
-/**
- * Check that chrome.app.runtime.onLaunched exists.
- */
+// Check that chrome.app.runtime.onLaunched exists.
 function checkOnLaunched() {
   document.getElementById('status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
 };
 
-/**
- * Check that chrome.app.runtime.onSuspend exists.
- */
+// Check that chrome.app.runtime.onSuspend exists.
 function checkOnSuspend() {
   document.getElementById('status').innerHTML = chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found";
 };
 
-/**
- * Function called when page has finished loading.
- */
+// Attach a handler to onSuspend that will populate the status field when it gets called.
+function attachOnSuspend() {
+  var buttonTime = new Date();
+  chrome.runtime.onSuspend.addListener(function() {
+    var callbackTime = new Date();
+    document.getElementById('status').innerHTML = 'onSuspend fired: ' + (callbackTime.getTime() - buttonTime.getTime()) + 'ms after button';
+  });
+}
+
+// Function called when page has finished loading.
 function init() {
   document.addEventListener("deviceready", function() {
     deviceReady = true;
@@ -55,6 +58,7 @@ function init() {
     <h2>Action</h2>
     <div class="btn large" onclick="checkOnLaunched();">Check onLaunched exists</div>
     <div class="btn large" onclick="checkOnSuspend();">Check onSuspend exists</div>
+    <div class="btn large" onclick="attachOnSuspend();">Attach onSuspend</div>
     <h2> </h2><div class="backBtn" onclick="backHome();">Back</div>
   </body>
 </html>
