@@ -3,28 +3,25 @@
 These specs are designed to run inside the mobile device that implements it - _it will fail in the DESKTOP browser_.
 The Chrome API tests should work inside a Chrome packaged app.
 
-These set of tests is designed to be used with Cordova. You should initialize a fresh Cordova repository for a target platform and then toss these files into the www folder, replacing the contents.
+### How to create an iOS spec project ###
+Run these commands:
 
-Make sure you include cordova-\*.js in the www folder.  You also need to edit cordova.js to reference the version of cordova-\*.js file you are testing.
-For example, to test with cordova-2.2.0, edit the VERSION variable in the cordova.js file as follows:
+    incubator-cordova-ios/bin/create --shared ChromeSpecIos com.google.chromespecios ChromeSpec
+    cd ChromeSpecIos
+    rm -r www
+    open ChromeSpecIos.xcodeproj
 
-    var VERSION='2.2.0';
+Change ChromeSpec/Classes/AppDelegate.m:
 
-This is done so that you don't have to modify every HTML file when you want to test a new version of Cordova.
+    self.viewController.useSplashScreen = NO;
+    self.viewController.wwwFolderName = @"spec";
+    self.viewController.startPage = @"chromeapp.html";
 
-The goal is to test mobile device functionality inside a mobile browser.
-Where possible, the Cordova API lines up with HTML 5 spec.
-Chrome APIs are custom and should be identical on mobile and desktop.
+Change the Build Phases:
 
-### Requirements ###
-
-Various parts of this test suite communicate with external servers.
-Therefore, when you wrap up the test suite inside a Cordova application,
-make sure you add the following entries to the whitelist!
-
-- audio.ibeat.org
-- cordova-filetransfer.jitsu.com
-- whatheaders.com
-- apache.org (with all subdomains)
-- httpssss://example.com (bad protocol necessary)
-
+1. Click on the ChromeSpec project entry on the left-nav
+1. Click the ChromeSpec target
+1. Click the "Build Phases" tab
+1. Change the "touch www" phase to:
+    rm -rf "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/spec"
+    cp -RL ../../chrome-cordova/spec "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/spec"
