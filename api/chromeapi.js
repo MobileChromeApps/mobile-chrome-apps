@@ -1,9 +1,18 @@
 (function() {
-  // Find the parent window, which has its parent set to itself.
-  var parentWindow = window;
-  while (parentWindow.parent !== parentWindow) {
-    parentWindow = parentWindow.parent;
+  // The added mobile check lets this work in desktop Chrome.
+  if (this.chrome && chrome.mobile) {
+    console.log('WARNING - chrome apis doubly included.');
+    return;
   }
+
+  // The AppWindow created by chrome.app.window.create.
+  var createdAppWindow = null;
+  // Used during chrome.app.window.create to store the funciton's callback.
+  var createWindowCallback = null;
+  // The top window.
+  var fgWindow = null;
+  // The events page window.
+  var bgWindow = null;
 
   var listeners = {};
   function addListener(name) {
@@ -24,6 +33,7 @@
     };
   }
 
+  // chrome.app.runtime
   chrome = {};
   chrome.app = {};
   chrome.app.runtime = {};
@@ -44,20 +54,82 @@
     chrome.runtime.onSuspend.addListener(f);
   };
 
+  // chrome.mobile.impl
+  chrome.mobile = {};
+  chrome.mobile.impl = {};
+  chrome.mobile.impl.init = function(_fgWindow, _bgWindow) {
+    fgWindow = _fgWindow;
+    bgWindow = _bgWindow;
+    bgWindow.chrome = chrome;
+  };
+  chrome.mobile.impl.createWindowHook = function() {
+    createWindowCallback();
+    createWindowCallback = null;
+  };
+
+
+  // chrome.app.window
+  function unsupportedApi(name) {
+    return function() {
+      console.warn('API is not supported on mobile: ' + name);
+    }
+  }
+
+  function AppWindow() {
+    this.contentWindow = fgWindow;
+    this.id = '';
+  }
+  AppWindow.prototype = {
+    restore: unsupportedApi('AppWindow.restore'),
+    moveTo: unsupportedApi('AppWindow.moveTo'),
+    clearAttention: unsupportedApi('AppWindow.clearAttention'),
+    minimize: unsupportedApi('AppWindow.minimize'),
+    drawAttention: unsupportedApi('AppWindow.drawAttention'),
+    focus: unsupportedApi('AppWindow.focus'),
+    resizeTo: unsupportedApi('AppWindow.resizeTo'),
+    maximize: unsupportedApi('AppWindow.maximize'),
+    close: unsupportedApi('AppWindow.close')
+  };
 
   chrome.app.window = {};
-  chrome.app.window.create = function(filePath, opt_options, opt_callback) {
+  chrome.app.window.create = function(filePath, options, callback) {
+    if (createdAppWindow) {
+      console.log('ERROR - chrome.createWindow called multiple times. This is unsupported.');
+      return;
+    }
+    createdAppWindow = new AppWindow();
     var xhr = new XMLHttpRequest();
     xhr.open('GET', filePath, true);
-    xhr.onload = function() {
-      document.open();
-      document.write(xhr.responseText);
-      document.close();
-    };
-    xhr.onerror = function() {
-      alert('XHR failed');
+    var topDoc = fgWindow.document;
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        topDoc.open();
+        var pageContent = xhr.responseText || 'Page load failed.';
+        var headIndex = pageContent.indexOf('<head>');
+        if (headIndex != -1) {
+          chrome.mobile.impl.windowCreateCallback = callback;
+          var endIndex = headIndex + '<head>'.length;
+          topDoc.write(pageContent.slice(0, endIndex));
+          topDoc.write('<link rel="stylesheet" type="text/css" href="chromeappstyles.css">');
+          // Set up the callback to be called before the page contents loads.
+          if (callback) {
+            createWindowCallback = callback;
+            topDoc.write('<script>chrome.mobile.impl.createWindowHook()</script>');
+          }
+          topDoc.write(pageContent.slice(endIndex));
+        } else {
+          topDoc.write(pageContent);
+          // Callback is called even when the URL is invalid.
+          callback && callback(createdAppWindow);
+        }
+        topDoc.close();
+      }
     };
     xhr.send();
+  };
+
+  chrome.app.window.current = function() {
+    return window == fgWindow ? createdAppWindow : null;
   };
 })();
 
