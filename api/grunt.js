@@ -12,7 +12,7 @@ module.exports = function(grunt) {
         'Google Inc.; Licensed MIT */'
     },
     lint: {
-      files: ['grunt.js', 'chrome/**/*.js', 'helpers/**/*.js'] // prefix.js and suffix.js are deliberately excluded, they would never pass.
+      files: ['grunt.js', 'chrome.js', 'chrome/**/*.js', 'helpers/**/*.js'] // prefix.js and suffix.js are deliberately excluded, they would never pass.
     },
     concat: {
       dist: {
@@ -28,8 +28,8 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      files: '<config:lint.files>',
-      tasks: 'lint'
+      files: ['<config:lint.files>', 'grunt.js', 'suffix.js', 'prefix.js', 'chrome.js'],
+      tasks: 'lint concat min'
     },
     jshint: {
       options: {

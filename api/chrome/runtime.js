@@ -11,7 +11,9 @@ __modules['chrome.runtime'] = function(require, module, chrome) {
   // Uses a trampoline to bind the Cordova pause event on the first call.
   chrome.runtime.onSuspend.addListener = function(f) {
     window.document.addEventListener('pause', chrome.runtime.onSuspend.fire, false);
-    chrome.runtime.onSuspend.addListener = events.addListener('onSuspend');
+    var h = events.addListener('onSuspend');
+    console.log('sub-handler type: ' + typeof h);
+    chrome.runtime.onSuspend.addListener = h;
     chrome.runtime.onSuspend.addListener(f);
   };
 };

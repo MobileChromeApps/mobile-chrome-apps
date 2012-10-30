@@ -1,1 +1,1 @@
-../api/chromeapi.js
+../api/dist/chromeapi.js

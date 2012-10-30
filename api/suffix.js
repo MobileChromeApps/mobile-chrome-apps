@@ -8,17 +8,20 @@ function require(target) {
     return;
   }
 
-  if (typeof mod == 'Function') {
+  if (typeof mod == 'function') {
     // This layer of indirection is present so that the module code can change exports to point to something new, like a function.
     var module = {};
-    modules.exports = {};
+    module.exports = {};
     mod(require, module, window.chrome);
     __modules[target] = module;
+    return module.exports;
     // Now each module is a singleton run only once, and this allows static data.
     // Modules are passed an object they should treat as being the "chrome" object.
     // Currently this is literally window.chrome, but we can change that in future if necessary.
-  } else if (typeof mod == 'Object') {
+  } else if (typeof mod == 'object') {
     return mod.exports;
+  } else {
+    console.error('unsupported module type: ' + typeof mod);
   }
 }
 
@@ -26,5 +29,5 @@ function require(target) {
 window.chrome = {};
 require('chrome');
 
-// Closing the wrapping function and call it.
+// Close the wrapping function and call it.
 })();
