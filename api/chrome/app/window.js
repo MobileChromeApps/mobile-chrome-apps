@@ -43,7 +43,7 @@ __modules['chrome.app.window'] = function(require, module, chrome) {
           topDoc.write('<link rel="stylesheet" type="text/css" href="chromeappstyles.css">');
           // Set up the callback to be called before the page contents loads.
           if (callback) {
-            module.exports.createWindowCallback = callback;
+            common.createWindowCallback = callback;
             topDoc.write('<script>chrome.mobile.impl.createWindowHook()</script>');
           }
           topDoc.write(pageContent.slice(endIndex));
