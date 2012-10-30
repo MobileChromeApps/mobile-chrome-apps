@@ -1,0 +1,8 @@
+/*
+ * Contains extra user-agent styles to apply to all Chrome App windows.
+ *
+ * These should be kept in sync with:
+ * http://code.google.com/searchframe#OAMlx_jo-ck/src/chrome/renderer/resources/extensions/platform_app.css
+ */
+body { -webkit-user-select: none; }
+html, body { overflow: hidden; }
