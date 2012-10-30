@@ -1,4 +1,4 @@
-__modules['helpers.events'] = function(require, module, chrome) {
+__modules['helpers.events'] = function(require, module) {
 
   var listeners = {};
   module.exports.addListener = function(name) {
@@ -13,8 +13,8 @@ __modules['helpers.events'] = function(require, module, chrome) {
 
   module.exports.fire = function(name) {
     return function() {
-      for (var i = 0, f; f = listeners[name][i]; ++i) {
-        f();
+      for (var i = 0; i < listeners[name].length; i++) {
+        listeners[name][i]();
       }
     };
   };

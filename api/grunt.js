@@ -17,7 +17,7 @@ module.exports = function(grunt) {
     concat: {
       dist: {
         // This should ensure that the top-level API gets included first, before any other files or subdirectories.
-        src: ['<banner:meta.banner>', '<file_strip_banner:prefix.js>', '<file_strip_banner:chrome/**/*.js>', '<file_strip_banner:helpers/**/*.js', '<file_strip_banner:chrome.js', '<file_strip_banner:suffix.js>'],
+        src: ['<banner:meta.banner>', 'prefix.js', 'chrome/**/*.js', 'helpers/**/*.js', 'chrome.js', 'suffix.js'],
         dest: 'dist/chromeapi.js'
       }
     },
@@ -35,19 +35,25 @@ module.exports = function(grunt) {
       options: {
         curly: true,
         eqeqeq: true,
+        eqnull: true,
+        evil: true, // Complains about document.write otherwise. We still shouldn't use eval() itself.
         immed: true,
+        indent: 2,
         latedef: true,
         newcap: true,
         noarg: true,
+        quotmark: 'single',
         sub: true,
+        trailing: true,
         undef: true,
-        boss: true,
-        eqnull: true,
-        browser: true
+        unused: true,
+        white: false,
+
+        browser: true, // document, window, navigator, etc.
+        devel: true    // console, alert, etc.
       },
       globals: {
-        exports: true,
-        module: false
+        __modules: false // Allow global __modules, but no overriding it.
       }
     },
     uglify: {}

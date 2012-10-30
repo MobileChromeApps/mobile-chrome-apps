@@ -4,7 +4,7 @@ __modules['chrome.app.window'] = function(require, modules, chrome) {
   }
 
   chrome.app.window = {};
-  chrome.app.window.create = function(filePath, opt_options, opt_callback) {
+  chrome.app.window.create = function(filePath /*, opt_options, opt_callback*/) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', filePath, true);
     xhr.onload = function() {

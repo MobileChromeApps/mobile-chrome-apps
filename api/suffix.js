@@ -27,4 +27,4 @@ window.chrome = {};
 require('chrome');
 
 // Closing the wrapping function and call it.
-)();
+})();
