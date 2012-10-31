@@ -6,12 +6,12 @@ I opted to use a custom module loader based on the CommonJS pattern (similar to 
 
 Each module is wrapped with the following code:
 
-    __modules['chrome.some.api'] = function(require, modules, chrome) {
-    };
+    define('chrome.some.api', function(require, modules, chrome) {
+    });
 
 This enables modules to use the `require()` function themselves to require their dependencies. They also get passed the `chrome` object, which right now is an alias to `window.chrome` but in future we might need to do something more complicated.
 
-The third argument, `module`, is an object containing a single property, `module.exports`.
+The other argument, `module`, is an object containing a single property, `module.exports`.
 This indirection is useful because then the module can completely change `module.exports`, rather than just its properties.
 Occasionally it is useful to have a modules value be a function instead of an object.
 The return value of `require('some.module')` is the value of `module.exports`, whatever type it may be.
@@ -23,6 +23,15 @@ For example, several event handling APIs do
     var events = require('helpers.events');
     chrome.some.api.someEvent.addListener = events.addListener('someEvent');
 
+The system will catch and reject duplicate `define()`s and circular `require()`s.
+
+### Module and file names
+
+Also the module names, like `'chrome.some.api'`, are simply names. Despite being spelled with dots, they are not actually namespaced. If the modules `chrome.foo.bar` and `chrome.foo.baz` are defined but `chrome.foo` is not, `require('chrome.foo')` will fail.
+
+The recommended structure for sections of the API is to have a `chrome/foo.js` which defines the `chrome.foo = {};` object and calls `require('chrome.foo.bar')` and `require('chrome.foo.baz')`. These two modules should by convention be defined in `chrome/foo/bar.js` and `chrome/foo/baz.js`, though note that this is not enforced. Grunt includes `chrome/**/*.js` and module order in the concatenated file is irrelevant. Do not rely on concatenation order. Require your dependencies, and you can be sure they will be ready. Subsequent `require()`s for a module are fast.
+
+To summarize: `chrome.js` should `require()` all the first-tier APIs, like `chrome.runtime`, `chrome.app` and so on, which each `require()` their children.
 
 ## Under the hood
 
