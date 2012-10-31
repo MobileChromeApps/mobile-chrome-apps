@@ -1,4 +1,4 @@
-__modules['chrome.runtime'] = function(require, module, chrome) {
+define('chrome.runtime', function(require, module, chrome) {
   if (!chrome.runtime) {
     chrome.runtime = {};
   }
@@ -16,5 +16,5 @@ __modules['chrome.runtime'] = function(require, module, chrome) {
     chrome.runtime.onSuspend.addListener = h;
     chrome.runtime.onSuspend.addListener(f);
   };
-};
+});
 

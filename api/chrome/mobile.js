@@ -1,4 +1,4 @@
-__modules['chrome.mobile'] = function(require, module, chrome) {
+define('chrome.mobile', function(require, module, chrome) {
   var common = require('chrome.common');
 
   chrome.mobile = {};
@@ -13,4 +13,4 @@ __modules['chrome.mobile'] = function(require, module, chrome) {
     common.windowCreateCallback();
     common.windowCreateCallback = null;
   };
-};
+});

@@ -1,4 +1,4 @@
-__modules['helpers.events'] = function(require, module) {
+define('helpers.events', function(require, module) {
 
   var listeners = {};
   module.exports.addListener = function(name) {
@@ -18,5 +18,5 @@ __modules['helpers.events'] = function(require, module) {
       }
     };
   };
-};
+});
 

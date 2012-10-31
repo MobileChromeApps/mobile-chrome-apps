@@ -53,7 +53,8 @@ module.exports = function(grunt) {
       },
       globals: {
         __modules: false, // Allow global __modules, but no overriding it.
-        unsupportedApi: false
+        unsupportedApi: false,
+        define: false
       }
     },
     uglify: {}

@@ -7,6 +7,13 @@
   }
 
   var __modules = {};
+  function define(name, fn) {
+    if (__modules[name]) {
+      console.log('WARNING - duplicate definition of module: ' + name);
+      return;
+    }
+    __modules[name] = fn;
+  }
 
   function unsupportedApi(name) {
     return function() {

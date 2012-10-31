@@ -1,4 +1,4 @@
-__modules['chrome.app.window'] = function(require, module, chrome) {
+define('chrome.app.window', function(require, module, chrome) {
   var mobile = require('chrome.mobile');
   var common = require('chrome.common');
 
@@ -63,4 +63,4 @@ __modules['chrome.app.window'] = function(require, module, chrome) {
   chrome.app.window.current = function() {
     return window == mobile.fgWindow ? createdAppWindow : null;
   };
-};
+});
