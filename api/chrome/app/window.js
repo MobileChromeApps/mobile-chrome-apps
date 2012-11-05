@@ -1,4 +1,5 @@
 define('chrome.app.window', function(require, module, chrome) {
+  var events = require('helpers.events');
   var mobile = require('chrome.mobile');
   var common = require('chrome.common');
 
@@ -18,7 +19,8 @@ define('chrome.app.window', function(require, module, chrome) {
     focus: unsupportedApi('AppWindow.focus'),
     resizeTo: unsupportedApi('AppWindow.resizeTo'),
     maximize: unsupportedApi('AppWindow.maximize'),
-    close: unsupportedApi('AppWindow.close')
+    close: unsupportedApi('AppWindow.close'),
+    onClosed: { addListener: events.addListener('onClosed') }
   };
 
   chrome.app.window = {};
