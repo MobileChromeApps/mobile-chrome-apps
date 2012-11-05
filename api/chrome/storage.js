@@ -44,7 +44,9 @@ define('chrome.storage', function(require, module, chrome) {
         items[localStorage.key(i)] = null;
       }
     } else if (typeof items === 'string') {
-      items = { items: null };
+      var tmp = items;
+      items = {};
+      items[tmp] = null;
     } else if (Object.prototype.toString.call(items) === '[object Array]') {
         var newItems = {};
         items.forEach(function(e) {
