@@ -37,13 +37,14 @@ define('chrome.app.window', function(require, module, chrome) {
         var pageContent = xhr.responseText || 'Page load failed.';
         var headIndex = pageContent.indexOf('<head>');
         if (headIndex != -1) {
-          common.windowCreateCallback = callback;
           var endIndex = headIndex + '<head>'.length;
           topDoc.write(pageContent.slice(0, endIndex));
           topDoc.write('<link rel="stylesheet" type="text/css" href="chromeappstyles.css">');
           // Set up the callback to be called before the page contents loads.
           if (callback) {
-            common.createWindowCallback = callback;
+            common.windowCreateCallback = function() {
+              callback(createdAppWindow);
+            };
             topDoc.write('<script>chrome.mobile.impl.createWindowHook()</script>');
           }
           topDoc.write(pageContent.slice(endIndex));
