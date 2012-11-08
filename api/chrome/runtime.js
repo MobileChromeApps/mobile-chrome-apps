@@ -1,20 +1,17 @@
-define('chrome.runtime', function(require, module, chrome) {
-  if (!chrome.runtime) {
-    chrome.runtime = {};
-  }
-
+define('chrome.runtime', function(require, module) {
   var events = require('helpers.events');
-  chrome.runtime.onSuspend = {};
+  var exports = module.exports;
+  exports.onSuspend = {};
 
-  chrome.runtime.onSuspend.fire = events.fire('onSuspend');
+  exports.onSuspend.fire = events.fire('onSuspend');
 
   // Uses a trampoline to bind the Cordova pause event on the first call.
-  chrome.runtime.onSuspend.addListener = function(f) {
-    window.document.addEventListener('pause', chrome.runtime.onSuspend.fire, false);
+  exports.onSuspend.addListener = function(f) {
+    window.document.addEventListener('pause', exports.onSuspend.fire, false);
     var h = events.addListener('onSuspend');
     console.log('sub-handler type: ' + typeof h);
-    chrome.runtime.onSuspend.addListener = h;
-    chrome.runtime.onSuspend.addListener(f);
+    exports.onSuspend.addListener = h;
+    exports.onSuspend.addListener(f);
   };
 });
 

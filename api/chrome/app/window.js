@@ -1,7 +1,8 @@
-define('chrome.app.window', function(require, module, chrome) {
+define('chrome.app.window', function(require, module) {
   var events = require('helpers.events');
-  var mobile = require('chrome.mobile');
-  var common = require('chrome.common');
+  var mobile = require('chrome.mobile.impl');
+  var common = require('common');
+  var exports = module.exports;
 
   // The AppWindow created by chrome.app.window.create.
   var createdAppWindow = null;
@@ -23,8 +24,7 @@ define('chrome.app.window', function(require, module, chrome) {
     onClosed: { addListener: events.addListener('onClosed') }
   };
 
-  chrome.app.window = {};
-  chrome.app.window.create = function(filePath, options, callback) {
+  exports.create = function(filePath, options, callback) {
     if (createdAppWindow) {
       console.log('ERROR - chrome.app.window.create called multiple times. This is unsupported.');
       return;
@@ -63,7 +63,7 @@ define('chrome.app.window', function(require, module, chrome) {
     xhr.send();
   };
 
-  chrome.app.window.current = function() {
+  exports.current = function() {
     return window == mobile.fgWindow ? createdAppWindow : null;
   };
 });

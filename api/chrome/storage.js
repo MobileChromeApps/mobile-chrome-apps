@@ -1,6 +1,4 @@
-define('chrome.storage', function(require, module, chrome) {
-  chrome.storage = {};
-
+define('chrome.storage', function(require, module) {
   function StorageArea() {
   }
 
@@ -73,18 +71,23 @@ define('chrome.storage', function(require, module, chrome) {
   StorageChange.prototype = {
   };
 
-  chrome.storage.local = new StorageArea();
-  chrome.storage.local.QUOTA_BYTES = 5242880;
+  var local = new StorageArea();
+  local.QUOTA_BYTES = 5242880;
 
-  chrome.storage.sync = new StorageArea();
-  chrome.storage.sync.MAX_ITEMS = 512;
-  chrome.storage.sync.MAX_WRITE_OPERATIONS_PER_HOUR = 1000;
-  chrome.storage.sync.QUOTA_BYTES_PER_ITEM = 4096;
-  chrome.storage.sync.MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 10;
-  chrome.storage.sync.QUOTA_BYTES = 102400;
+  var sync = new StorageArea();
+  sync.MAX_ITEMS = 512;
+  sync.MAX_WRITE_OPERATIONS_PER_HOUR = 1000;
+  sync.QUOTA_BYTES_PER_ITEM = 4096;
+  sync.MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 10;
+  sync.QUOTA_BYTES = 102400;
+
+
+  var exports = module.exports;
+  exports.local = local;
+  exports.sync = sync;
 
   var events = require('helpers.events');
-  chrome.storage.onChanged = {}; // TODO(mmocny)
-  chrome.storage.onChanged.addListener = events.addListener('onChanged');
-  chrome.storage.onChanged.fire = events.fire('onChanged');
+  exports.onChanged = {}; // TODO(mmocny)
+  exports.onChanged.addListener = events.addListener('onChanged');
+  exports.onChanged.fire = events.fire('onChanged');
 });

@@ -7,8 +7,8 @@
   }
 
   var require, define;
+  var modules = {};
   (function() {
-    var modules = {};
     define = function define(name, fn) {
       if (modules[name]) {
         console.log('WARNING - duplicate definition of module: ' + name);
@@ -37,7 +37,7 @@
         // This layer of indirection is present so that the module code can change exports to point to something new, like a function.
         var module = {};
         module.exports = {};
-        mod(require, module, window.chrome);
+        mod(require, module);
         modules[target] = module;
 
         // No longer resolving this module.
@@ -45,8 +45,6 @@
 
         return module.exports;
         // Each module is a singleton run only once, and this allows static data.
-        // Modules are passed an object they should treat as being the "chrome" object.
-        // Currently this is literally window.chrome, but we can change that in future if necessary.
       } else if (typeof mod == 'object') {
         return mod.exports;
       } else {
