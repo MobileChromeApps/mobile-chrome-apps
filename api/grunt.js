@@ -33,6 +33,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       options: {
+        boss: true,
         curly: true,
         eqnull: true,
         evil: true, // Complains about document.write otherwise. We still shouldn't use eval() itself.
@@ -52,6 +53,7 @@ module.exports = function(grunt) {
         devel: true    // console, alert, etc.
       },
       globals: {
+        cordova: false,
         unsupportedApi: false,
         define: false
       }
