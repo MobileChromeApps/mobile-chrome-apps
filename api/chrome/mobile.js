@@ -1,15 +1,10 @@
 define('chrome.mobile.impl', function(require, module) {
-  var common = require('common');
   var exports = module.exports;
 
-  exports.init = function(_fgWindow, _bgWindow) {
-    exports.fgWindow = _fgWindow;
-    exports.bgWindow = _bgWindow;
+  exports.init = function(fgWindow, eventIframe) {
+    exports.fgWindow = fgWindow;
+    exports.bgWindow = eventIframe.contentWindow;
+    exports.eventIframe = eventIframe;
     exports.bgWindow.chrome = window.chrome;
-  };
-
-  exports.createWindowHook = function() {
-    common.windowCreateCallback();
-    common.windowCreateCallback = null;
   };
 });

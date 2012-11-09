@@ -21,8 +21,8 @@
 
   function loadIframe(callback) {
     var iframe = document.createElement('iframe');
-    // Load the 
     iframe.src = 'chromebgpage.html';
+    iframe.style.display = 'none';
     iframe.onload = function() {
       iframe.onload = null;
       eventIframe = iframe;
@@ -57,7 +57,7 @@
         chrome.app.runtime.onLaunched.fire();
       }
     };
-    chrome.mobile.impl.init(window, iframeWin);
+    chrome.mobile.impl.init(window, eventIframe);
 
     for (var i = 0, scriptPath; scriptPath = scripts[i]; ++i) {
       injectScript(scriptPath);
@@ -69,6 +69,8 @@
       loadBgPage();
     }
   }
+  // Remove this script node from the DOM so it doens't cause trouble later.
+  document.body.innerHTML = '';
   loadIframe(pageReady);
   fetchManifestJson(pageReady);
 })();
