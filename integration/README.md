@@ -19,3 +19,24 @@ Files that should not be edited (you should symlink these):
     * `../api/dist/chromeapi.min.js` as a minified alternative. If you want to use this one, change the filename in `chromeapp.html`.
 * `cordova.android.js`: Required on Android.
 * `cordova.ios.js`: Required on iOS.
+
+## How to create an iOS spec project ###
+Run these commands:
+
+    incubator-cordova-ios/bin/create --shared dirName com.google.name ProjectID
+    cd dirName
+    rm -r www
+    open ProjectID.xcodeproj
+
+Change Classes/AppDelegate.m:
+
+    self.viewController.useSplashScreen = NO;
+    self.viewController.startPage = @"chromeapp.html";
+
+Change the Build Phases:
+
+1. Click on the top project entry on the left-nav
+1. Click the application target
+1. Click the "Build Phases" tab
+1. Change the "touch www" phase to:
+        exec ${PROJECT_DIR}/../../chrome-cordova/integration/iosbuildstep.sh "../../chrome-cordova/spec"
