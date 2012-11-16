@@ -20,13 +20,15 @@ Files that should not be edited (you should symlink these):
 * `cordova.android.js`: Required on Android.
 * `cordova.ios.js`: Required on iOS.
 
-## How to create an iOS spec project ###
+## How to create an iOS Chrome App project ###
 Run these commands:
 
     incubator-cordova-ios/bin/create --shared dirName com.google.name ProjectID
     cd dirName
     rm -r www
     open ProjectID.xcodeproj
+
+Delete the reference to www within Xcode (blue icon within the Navigator).
 
 Change Classes/AppDelegate.m:
 
@@ -39,4 +41,12 @@ Change the Build Phases:
 1. Click the application target
 1. Click the "Build Phases" tab
 1. Change the "touch www" phase to:
-        exec ${PROJECT_DIR}/../../chrome-cordova/integration/iosbuildstep.sh "../../chrome-cordova/spec"
+        exec ${PROJECT_DIR}/../../chrome-cordova/integration/iosbuildstep.sh "path/to/chrome-app" "path/to/cordova.js"
+
+Example values for the path to cordova.js argument:
+* ../../incubator-cordova-ios/CordovaLib
+* ../../incubator-cordova-js/pkg
+* some/path/to/cordova.ios.js
+
+If you have a cordova.js file within your path/to/chrome-app, then you can leave off the second argument.
+
