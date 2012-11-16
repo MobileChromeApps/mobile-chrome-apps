@@ -69,7 +69,11 @@ define('chrome.app.window', function(require, module) {
       applyAttributes(RegExp.lastParen, fgHead);
 
       headHtml = '<link rel="stylesheet" href="chromeappstyles.css">\n' + headHtml;
-      fgHead.innerHTML = headHtml;
+      // fgHead.innerHTML causes a DOMException on Android 2.3.
+      while (fgHead.lastChild) {
+        fgHead.removeChild(fgHead.lastChild);
+      }
+      fgHead.insertAdjacentHTML('beforeend', headHtml);
       evalScripts(fgHead);
 
       // Copy the <body> tag attributes.
