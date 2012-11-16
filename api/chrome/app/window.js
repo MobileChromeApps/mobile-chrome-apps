@@ -54,7 +54,7 @@ define('chrome.app.window', function(require, module) {
 
     var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
     if (startIndex == -1) {
-      mobile.eventIframe.insertSiblingHTML(pageContent);
+      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
     } else {
       startIndex = startIndex + RegExp.lastMatch.length;
       // Copy over the attributes of the <html> tag.
