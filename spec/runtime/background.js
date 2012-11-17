@@ -5,51 +5,19 @@
  * @see http://developer.chrome.com/trunk/apps/app.window.html
  */
 
-var wnd = null;
-var doc = null;
-
-chrome.app.runtime.onLaunched.addListener(function() {
-  chrome.app.window.create('index.html', {
-    width: 320,
-    height: 380,
-  }, function(w) {
-    wnd = w.contentWindow;
-    doc = wnd.document;
-    wnd.onload = onLoad;
+function initPage() {
+  addActionButton('Check onLaunched exists', function() {
+    log(chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found");
   });
-});
-
-function onLoad() {
-  addButtonClickListeners();
-}
-
-function addButtonClickListeners() {
-  var buttons = doc.getElementsByClassName('btn');
-  for (var i = 0, btn; btn = buttons[i]; ++i) {
-    btn.onclick = window[btn.id];
-  }
-}
-
-// Check that chrome.app.runtime.onLaunched exists.
-function checkOnLaunched() {
-  doc.getElementById('status').innerHTML = chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found";
-};
-
-// Check that chrome.app.runtime.onSuspend exists.
-function checkOnSuspend() {
-  doc.getElementById('status').innerHTML = chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found";
-};
-
-// Attach a handler to onSuspend that will populate the status field when it gets called.
-function attachOnSuspend() {
-  var buttonTime = new Date();
-  chrome.runtime.onSuspend.addListener(function() {
-    var callbackTime = new Date();
-    doc.getElementById('status').innerHTML = 'onSuspend fired: ' + (callbackTime.getTime() - buttonTime.getTime()) + 'ms after button';
+  addActionButton('Check onSuspend exists', function() {
+    log(chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found");
   });
-}
-
-function backHome() {
-  wnd.location = '../chromeapp.html';
+  addActionButton('Attach onSuspend', function() {
+    var buttonTime = new Date();
+    chrome.runtime.onSuspend.addListener(function() {
+      var callbackTime = new Date();
+      log('onSuspend fired: ' + (callbackTime - buttonTime) + 'ms after button');
+    });
+  });
 }
 

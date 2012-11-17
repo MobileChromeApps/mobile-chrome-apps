@@ -160,3 +160,5 @@ function init() {
     document.addEventListener("deviceready", deviceInfo, true);
 }
 
+window.onload = init;
+

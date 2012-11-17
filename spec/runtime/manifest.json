@@ -6,7 +6,10 @@
   "version": "0.1.0",
   "app": {
     "background": {
-      "scripts": ["background.js"]
+      "scripts": [
+        "spec_common/spec_bootstrap.js",
+        "background.js"
+      ]
     }
   }
 }
