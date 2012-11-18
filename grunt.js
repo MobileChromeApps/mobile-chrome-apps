@@ -2,7 +2,8 @@
 module.exports = function(grunt) {
 
   // Project configuration.
-  grunt.initConfig({
+  var config = {
+    clean: [ 'grunt_output' ],
     meta: {
       version: '0.1.0',
       api_banner: '/*! Cordova for Chrome - v<%= meta.version %> - ' +
@@ -30,8 +31,8 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      files: ['<config:concat.api.src>'],
-      tasks: 'lint concat'
+      files: ['!(grunt_output)', '!(grunt_output)/**/*'],
+      tasks: 'default'
     },
     jshint: {
       options: {
@@ -60,10 +61,42 @@ module.exports = function(grunt) {
         define: false
       }
     },
-    uglify: {}
-  });
+    uglify: {},
+    copy: {
+      spec: {
+        files: {
+          'grunt_output/spec/': 'spec/**' // Resolves symlinks.
+        }
+      },
+      cordova_spec1: {
+        files: {
+          'grunt_output/cordova_spec/': 'spec/**'
+        }
+      },
+      cordova_spec2: {
+        files: {
+          'grunt_output/cordova_spec/': [
+            'integration/chrome*',
+            'grunt_output/api/chromeapi.js'
+          ],
+          'grunt_output/cordova_spec/runtime/': [
+            'integration/chrome*',
+            'grunt_output/api/chromeapi.js'
+          ]
+        },
+        options: {
+          flatten: true
+        }
+      }
+    }
+  };
 
-  // Default task.
-  grunt.registerTask('default', 'lint concat min');
+  grunt.initConfig(config);
 
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+
+  grunt.registerTask('spec', 'concat copy');
+  grunt.registerTask('default', 'lint concat copy');
 };
+

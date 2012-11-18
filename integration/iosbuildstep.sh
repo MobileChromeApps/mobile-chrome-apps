@@ -38,4 +38,4 @@ cp -RL "$SRC_WWW_PATH" "$DST_WWW_PATH"
 cp "$SRC_JS_PATH" "$DST_WWW_PATH"/cordova.js
 # Add in the chrome files.
 cp "$CRCDV_PATH"/integration/chrome* "$DST_WWW_PATH"
-cp "$CRCDV_PATH"/api/dist/chromeapi.js "$DST_WWW_PATH"
+cp "$CRCDV_PATH"/grunt_output/api/chromeapi.js "$DST_WWW_PATH"
