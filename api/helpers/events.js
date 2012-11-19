@@ -13,7 +13,8 @@ define('helpers.events', function(require, module) {
 
   module.exports.fire = function(name) {
     return function() {
-      for (var i = 0; i < listeners[name].length; i++) {
+      var len = listeners[name] ? listeners[name].length : 0;
+      for (var i = 0; i < len; i++) {
         listeners[name][i]();
       }
     };
