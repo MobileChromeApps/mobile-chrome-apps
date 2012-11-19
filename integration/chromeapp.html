@@ -12,7 +12,6 @@
 <script>
 (function() {
   var eventIframe = null;
-  var manifestJson = null;
 
   function loadIframe(callback) {
     var iframe = document.createElement('iframe');
@@ -26,16 +25,8 @@
     document.body.appendChild(iframe);
   }
 
-  function fetchManifestJson(callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'manifest.json', true);
-    xhr.onload = function() {
-      manifestJson = JSON.parse(xhr.responseText);
-      callback();
-    };
-    xhr.send(null);
-  }
   function loadBgPage() {
+    var manifestJson = chrome.runtime.getManifest();
     var scripts = manifestJson.app.background.scripts;
     var iframeWin = eventIframe.contentWindow;
     var iframeDoc = eventIframe.contentDocument;
@@ -59,15 +50,9 @@
     }
   }
 
-  function pageReady() {
-    if (eventIframe && manifestJson) {
-      loadBgPage();
-    }
-  }
   // Remove this script node from the DOM so it doens't cause trouble later.
   document.body.innerHTML = '';
-  loadIframe(pageReady);
-  fetchManifestJson(pageReady);
+  loadIframe(loadBgPage);
 })();
 </script>
 </html>

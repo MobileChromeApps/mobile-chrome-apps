@@ -1,6 +1,8 @@
 define('chrome.runtime', function(require, module) {
   var events = require('helpers.events');
   var exports = module.exports;
+  var manifestJson = null;
+
   exports.onSuspend = {};
 
   exports.onSuspend.fire = events.fire('onSuspend');
@@ -12,6 +14,16 @@ define('chrome.runtime', function(require, module) {
     console.log('sub-handler type: ' + typeof h);
     exports.onSuspend.addListener = h;
     exports.onSuspend.addListener(f);
+  };
+
+  exports.getManifest = function() {
+    if (!manifestJson) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'manifest.json', false /* sync */);
+      xhr.send(null);
+      manifestJson = JSON.parse(xhr.responseText);
+    }
+    return manifestJson;
   };
 });
 
