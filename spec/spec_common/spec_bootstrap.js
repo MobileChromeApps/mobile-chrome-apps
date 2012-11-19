@@ -22,11 +22,22 @@ var doc = null;
     });
   }
 
+  function ensureCordovaInitializes() {
+    var timerId = window.setTimeout(function() {
+      log('Cordova failed to initialize.');
+    }, 500);
+    doc.addEventListener('deviceready', function() {
+      window.clearTimeout(timerId);
+      log('Cordova initialized. platform: ' + wnd.device.platform);
+    }, false);
+  }
+
   function onScriptsLoaded() {
     doc.body.insertAdjacentHTML('beforeend', '<h1></h1><h2>Manual Actions</h2><div id=btns></div>' +
         '<div class="btn back-btn" tabindex=1>Back</div><h2>Logs</h2><div id=logs></div>');
     doc.querySelector('h1').textContent = chrome.runtime.getManifest().name;
     doc.querySelector('.back-btn').onclick = backHome;
+    ensureCordovaInitializes();
     initPage();
   }
 
