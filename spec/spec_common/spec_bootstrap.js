@@ -14,7 +14,7 @@ var doc = null;
   });
 
   function onLoad() {
-    injectStyle('spec_common/master.css');
+    injectStyle('spec_common/spec_styles.css');
     injectStyle('spec_common/jasmine/jasmine-html.js');
     // Must be loaded in serial.
     injectScript('spec_common/jasmine/jasmine.js', function() {
