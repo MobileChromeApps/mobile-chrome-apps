@@ -1,5 +1,38 @@
 /*global module:false*/
 module.exports = function(grunt) {
+  'use strict';
+
+  var defaultJsHintOptions = {
+    boss: true, // Allow for (var i = 0, person; person = people[i]; i++) {}
+    curly: true,
+    eqnull: true,
+    evil: true, // Complains about document.write otherwise. We still shouldn't use eval() itself.
+    immed: true,
+    indent: 2,
+    latedef: true,
+    newcap: true,
+    noarg: true,
+    noempty: true,
+    nonew: true,
+    quotmark: 'single',
+    sub: true,
+    trailing: true,
+    undef: true,
+    unused: true,
+    white: false,
+    devel: true    // console, alert, etc.
+  };
+
+  function mergeObjs(o1, o2) {
+    var ret = {};
+    for (var key in o1) {
+      ret[key] = o1[key];
+    }
+    for (key in o2) {
+      ret[key] = o2[key];
+    }
+    return ret;
+  }
 
   // Project configuration.
   var config = {
@@ -13,9 +46,9 @@ module.exports = function(grunt) {
         'Google Inc.; Licensed MIT */'
     },
     lint: {
-      files: ['grunt.js', 'api/**/!(prefix|suffix).js']
-      // TODO(agrieve): Enable linting for spec.
-      // files: ['grunt.js', 'api/**/!(prefix|suffix).js', 'spec/**/!(jasmine*).js']
+      api: ['api/**/!(prefix|suffix).js'],
+      grunt: ['grunt.js'],
+      spec: ['spec/**/!(jasmine*).js']
     },
     concat: {
       api: {
@@ -37,34 +70,34 @@ module.exports = function(grunt) {
       },
       spec: {
         files: ['spec/**/*', 'integration/*', 'third_party/**/*'],
-        tasks: 'copy'
+        tasks: 'spec'
       }
     },
     jshint: {
-      options: {
-        boss: true,
-        curly: true,
-        eqnull: true,
-        evil: true, // Complains about document.write otherwise. We still shouldn't use eval() itself.
-        immed: true,
-        indent: 2,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        quotmark: 'single',
-        sub: true,
-        trailing: true,
-        undef: true,
-        unused: true,
-        white: false,
-
-        browser: true, // document, window, navigator, etc.
-        devel: true    // console, alert, etc.
+      // Options for all targets (http://www.jshint.com/docs/).
+      // Per-taget options.
+      api: {
+        options: mergeObjs(defaultJsHintOptions, {
+          browser: true, // document, window, navigator, etc.
+          forin: true // Apps may add things to Object.prototype.
+        }),
+        globals: {
+          cordova: false,
+          unsupportedApi: false, // TODO(agrieve): Remove.
+          define: false
+        }
       },
-      globals: {
-        cordova: false,
-        unsupportedApi: false,
-        define: false
+      grunt: {
+        options: mergeObjs(defaultJsHintOptions, {
+          node: true
+        })
+      },
+      spec: {
+        options: mergeObjs(defaultJsHintOptions, {
+          browser: true,
+          undef: false, // TODO(agrieve): Modularize spec js.
+          unused: false
+        })
       }
     },
     uglify: {},
@@ -103,9 +136,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.renameTask('watch', '_watch');
-  grunt.registerTask('api', 'lint concat');
-  grunt.registerTask('spec', 'api copy');
-  grunt.registerTask('build', 'api copy');
+  grunt.registerTask('api', 'lint:api concat');
+  grunt.registerTask('spec', 'api lint:spec copy');
+  grunt.registerTask('build', 'lint:grunt spec');
   grunt.registerTask('watch', 'clean build _watch');
   grunt.registerTask('default', 'clean build');
 };
