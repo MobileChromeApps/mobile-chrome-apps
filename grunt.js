@@ -31,8 +31,14 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      files: ['!(grunt_output)', '!(grunt_output)/**/*'],
-      tasks: 'default'
+      api: {
+        files: ['<%= concat.api.src %>'],
+        tasks: 'api copy:cordova_spec2'
+      },
+      spec: {
+        files: ['spec/**/*', 'integration/*', 'third_party/**/*'],
+        tasks: 'copy'
+      }
     },
     jshint: {
       options: {
@@ -96,7 +102,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
 
-  grunt.registerTask('spec', 'concat copy');
-  grunt.registerTask('default', 'lint concat copy');
+  grunt.renameTask('watch', '_watch');
+  grunt.registerTask('api', 'lint concat');
+  grunt.registerTask('spec', 'api copy');
+  grunt.registerTask('build', 'api copy');
+  grunt.registerTask('watch', 'clean build _watch');
+  grunt.registerTask('default', 'clean build');
 };
 
