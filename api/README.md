@@ -2,13 +2,7 @@
 
 This document describes the structure and use of the Chrome Javascript API. See [MODULES.md](https://github.com/MobileChromeApps/chrome-cordova/blob/master/api/MODULES.md) for a description of the module system.
 
-Most of the API lives in `chrome/`, in subdirectories and files named according to the `chrome.*` namespace. We use Grunt, a Javascript build system, to concatenate, lint and minify the API, producing `dist/chromeapi.js` and `dist/chromeapi.min.js`, which are the files you need for your project.
-
-
-## Grunt usage
-
-To install Grunt, run `sudo npm install -g grunt`. Then you can run `grunt` from the `api/` directory (or any subdirectory) to build the project.
-Currently there are no unit tests or incremental builds. Our Grunt build takes a fraction of a second, so I'm not inclined to make it incremental.
+Most of the API lives in `chrome/`, in subdirectories and files named according to the `chrome.*` namespace. Refer to ../README.md for build instructions.
 
 ### Linting
 
@@ -20,8 +14,3 @@ JSHint also disallows global variables in general. The `browser` option allows `
 
 The linter errors are compile-blocking errors by default, rather than warnings, and I think we should keep it that way.
 
-### `grunt watch`
-
-Grunt has a mode where it will watch the files and automatically rebuild if any of them changes. This has been working well for me, and will be several kinds of awesome once we have a local server and in-app refresh working.
-
-NB: Running `grunt watch` does not do a build right away, so if you've already changed things, run `grunt` alone first.
