@@ -1,6 +1,39 @@
 var wnd = null;
 var doc = null;
 
+function log(text) {
+  var logElem = doc.querySelector('#logs');
+  var newPre = doc.createElement('pre');
+  newPre.textContent = text;
+  logElem.appendChild(newPre);
+  console.log(text);
+}
+
+function addActionButton(name, func) {
+  var btnsElem = doc.querySelector('#btns');
+  var newButton = doc.createElement('div');
+  newButton.textContent = name;
+  newButton.className = 'btn';
+  newButton.onclick = func;
+  newButton.tabIndex = 1;
+  btnsElem.appendChild(newButton);
+}
+
+function runJasmine() {
+  var jasmineEnv = jasmine.getEnv();
+  jasmineEnv.updateInterval = 1000;
+
+  var htmlReporter = new jasmine.HtmlReporter(doc);
+
+  jasmineEnv.addReporter(htmlReporter);
+
+  jasmineEnv.specFilter = function(spec) {
+    return htmlReporter.specFilter(spec);
+  };
+
+  jasmineEnv.execute();
+}
+
 (function() {
   chrome.app.runtime.onLaunched.addListener(function() {
     chrome.app.window.create('wnd.html', {
@@ -60,35 +93,3 @@ var doc = null;
   }
 })();
 
-function log(text) {
-  var logElem = doc.querySelector('#logs');
-  var newPre = doc.createElement('pre');
-  newPre.textContent = text;
-  logElem.appendChild(newPre);
-  console.log(text);
-}
-
-function addActionButton(name, func) {
-  var btnsElem = doc.querySelector('#btns');
-  var newButton = doc.createElement('div');
-  newButton.textContent = name;
-  newButton.className = 'btn';
-  newButton.onclick = func;
-  newButton.tabIndex = 1;
-  btnsElem.appendChild(newButton);
-}
-
-function runJasmine() {
-  var jasmineEnv = jasmine.getEnv();
-  jasmineEnv.updateInterval = 1000;
-
-  var htmlReporter = new jasmine.HtmlReporter(doc);
-
-  jasmineEnv.addReporter(htmlReporter);
-
-  jasmineEnv.specFilter = function(spec) {
-    return htmlReporter.specFilter(spec);
-  };
-
-  jasmineEnv.execute();
-}

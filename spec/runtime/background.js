@@ -7,10 +7,10 @@
 
 function initPage() {
   addActionButton('Check onLaunched exists', function() {
-    log(chrome.app.runtime.onLaunched ? "onLaunched exists" : "onLaunched not found");
+    log(chrome.app.runtime.onLaunched ? 'onLaunched exists' : 'onLaunched not found');
   });
   addActionButton('Check onSuspend exists', function() {
-    log(chrome.runtime.onSuspend ? "onSuspend exists" : "onSuspend not found");
+    log(chrome.runtime.onSuspend ? 'onSuspend exists' : 'onSuspend not found');
   });
   addActionButton('Attach onSuspend', function() {
     var buttonTime = new Date();

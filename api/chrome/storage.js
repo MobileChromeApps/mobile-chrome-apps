@@ -3,7 +3,7 @@ define('chrome.storage', function(require, module) {
   }
 
   StorageArea.prototype = {
-      getBytesInUse: unsupportedApi('StorageArea.getBytesInUse')
+    getBytesInUse: unsupportedApi('StorageArea.getBytesInUse')
   };
 
   StorageArea.prototype.clear = function(callback) {
@@ -12,22 +12,24 @@ define('chrome.storage', function(require, module) {
       callback();
     }
   };
-  
+
   StorageArea.prototype.set = function(items, callback) {
     for (var key in items) {
-      localStorage.setItem(key, JSON.stringify(items[key]));
+      if (items.hasOwnProperty(key)) {
+        localStorage.setItem(key, JSON.stringify(items[key]));
+      }
     }
     if (callback) {
       callback();
     }
   };
-  
+
   StorageArea.prototype.remove = function(keys, callback) {
     if (typeof keys === 'string') {
       keys = [keys];
     }
-    for (var key in keys) {
-      localStorage.removeItem(key);
+    for (var i = 0; i < keys.length; ++i) {
+      localStorage.removeItem(keys[i]);
     }
     if (callback) {
       callback();
@@ -35,10 +37,11 @@ define('chrome.storage', function(require, module) {
   };
 
   StorageArea.prototype.get = function(items, callback) {
+    var i;
     if (typeof items === 'function') {
       callback = items;
       items = {};
-      for (var i = 0; i < localStorage.length; i++) {
+      for (i = 0; i < localStorage.length; i++) {
         items[localStorage.key(i)] = null;
       }
     } else if (typeof items === 'string') {
@@ -46,16 +49,18 @@ define('chrome.storage', function(require, module) {
       items = {};
       items[tmp] = null;
     } else if (Object.prototype.toString.call(items) === '[object Array]') {
-        var newItems = {};
-        items.forEach(function(e) {
-            newItems[e] = null;
-        });
-        items = newItems;
+      var newItems = {};
+      for (i = 0; i < items.length; ++i) {
+        newItems[items[i]] = null;
+      }
+      items = newItems;
     }
     for (var key in items) {
-      var item = localStorage.getItem(key);
-      if (item != null) {
-        items[key] = JSON.parse(item);
+      if (items.hasOwnProperty(key)) {
+        var item = localStorage.getItem(key);
+        if (item !== null) {
+          items[key] = JSON.parse(item);
+        }
       }
     }
     if (callback) {
@@ -64,8 +69,8 @@ define('chrome.storage', function(require, module) {
   };
 
   function StorageChange() {
-      this.newValue = null;
-      this.oldValue = null;
+    this.newValue = null;
+    this.oldValue = null;
   }
 
   StorageChange.prototype = {
