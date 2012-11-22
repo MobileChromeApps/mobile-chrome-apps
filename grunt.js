@@ -1,4 +1,7 @@
-/*global module:false*/
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 module.exports = function(grunt) {
   'use strict';
 
@@ -39,11 +42,12 @@ module.exports = function(grunt) {
     clean: [ 'grunt_output' ],
     meta: {
       version: '0.1.0',
-      api_banner: '/*! Cordova for Chrome - v<%= meta.version %> - ' +
-        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-        '* http://github.com/MobileChromeApps/\n' +
-        '* Copyright (c) <%= grunt.template.today("yyyy") %> ' +
-        'Google Inc.; Licensed MIT */'
+      api_banner:
+        '// Copyright (c) <%= grunt.template.today("yyyy") %> The Chromium Authors. All rights reserved.\n' +
+        '// Use of this source code is governed by a BSD-style license that can be\n' +
+        '// found in the LICENSE file.\n' +
+        '// http://github.com/MobileChromeApps/chrome-cordova\n' +
+        '// Built on <%= grunt.template.today("yyyy-mm-dd") %>\n'
     },
     lint: {
       api: ['api/**/!(prefix|suffix).js'],
