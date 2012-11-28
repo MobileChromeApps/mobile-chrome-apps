@@ -8,6 +8,7 @@ module.exports = function(grunt) {
   var defaultJsHintOptions = {
     boss: true, // Allow for (var i = 0, person; person = people[i]; i++) {}
     curly: true,
+    expr: true, // Allow this.callback && this.callback();
     eqnull: true,
     evil: true, // Complains about document.write otherwise. We still shouldn't use eval() itself.
     immed: true,
