@@ -12,5 +12,5 @@ found in the LICENSE file.
         <script src="chromeapi.js"></script>
         <script src="cordova.js"></script>
     </head>
-    <body onload="chrome.mobile.impl.init()"></body>
+    <body onload="document.body.removeAttribute('onload');chrome.mobile.impl.init()"></body>
 </html>
