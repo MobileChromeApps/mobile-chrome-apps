@@ -12,52 +12,5 @@ found in the LICENSE file.
         <script src="chromeapi.js"></script>
         <script src="cordova.js"></script>
     </head>
-    <body>
-    </body>
-<script>
-(function() {
-  var eventIframe = null;
-
-  function loadIframe(callback) {
-    var iframe = document.createElement('iframe');
-    iframe.src = 'chromebgpage.html';
-    iframe.style.display = 'none';
-    iframe.onload = function() {
-      iframe.onload = null;
-      eventIframe = iframe;
-      callback();
-    };
-    document.body.appendChild(iframe);
-  }
-
-  function loadBgPage() {
-    var manifestJson = chrome.runtime.getManifest();
-    var scripts = manifestJson.app.background.scripts;
-    var iframeWin = eventIframe.contentWindow;
-    var iframeDoc = eventIframe.contentDocument;
-    var numScriptsLoaded = 0;
-    function injectScript(path) {
-      var scriptNode = iframeDoc.createElement('script');
-      scriptNode.onload = afterScriptsLoaded;
-      scriptNode.src = path;
-      iframeDoc.body.appendChild(scriptNode);
-    }
-    function afterScriptsLoaded() {
-      this.onload = null;
-      if (++numScriptsLoaded == scripts.length) {
-        chrome.app.runtime.onLaunched.fire();
-      }
-    };
-    chrome.mobile.impl.init(window, eventIframe);
-
-    for (var i = 0, scriptPath; scriptPath = scripts[i]; ++i) {
-      injectScript(scriptPath);
-    }
-  }
-
-  // Remove this script node from the DOM so it doens't cause trouble later.
-  document.body.innerHTML = '';
-  loadIframe(loadBgPage);
-})();
-</script>
+    <body onload="chrome.mobile.impl.init()"></body>
 </html>
