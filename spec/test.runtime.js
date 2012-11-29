@@ -4,8 +4,13 @@
 
 chromeSpec(function(runningInBackground) {
   describe('chrome.runtime', function() {
-    it('should have onSuspend exist.', function() {
+    it('should have onSuspend exist', function() {
       expect(chrome.runtime.onSuspend).not.toBeUndefined();
+    });
+    it('getManifest() should have a name that is a string', function() {
+      var manifest = chrome.runtime.getManifest();
+      expect(typeof manifest.name).toBe('string');
     });
   });
 });
+

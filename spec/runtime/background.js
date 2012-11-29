@@ -5,10 +5,6 @@
  * @see http://developer.chrome.com/trunk/apps/app.window.html
  */
 
-var specScripts = [
-  'runtime_spec.js'
-];
-
 function initPage() {
   addActionButton('Attach onSuspend', function() {
     var buttonTime = new Date();
