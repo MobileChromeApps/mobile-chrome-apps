@@ -56,34 +56,30 @@ define('chrome.app.window', function(require, module) {
     var fgBody = mobile.fgWindow.document.body;
     var fgHead = fgBody.previousElementSibling;
 
+    // fgHead.innerHTML causes a DOMException on Android 2.3.
+    while (fgHead.lastChild) {
+      fgHead.removeChild(fgHead.lastChild);
+    }
+
     var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
     if (startIndex == -1) {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
     } else {
-      startIndex = startIndex + RegExp.lastMatch.length;
+      startIndex += RegExp.lastMatch.length;
       // Copy over the attributes of the <html> tag.
       applyAttributes(RegExp.lastParen, fgBody.parentNode);
+      // Put everything before the body tag in the head.
+      var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
+      applyAttributes(RegExp.lastParen, fgBody);
 
-      var endIndex = pageContent.search(/<\/head\s*>/i);
+      // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
       var headHtml = pageContent.slice(startIndex, endIndex);
-      pageContent = pageContent.slice(endIndex + RegExp.lastMatch.length);
-
-      // Remove the <head> tag.
-      // The head tag isn't allowed to have attributes (at least not on Desktop Chrome).
-      headHtml = headHtml.replace(/<head\b([\s\S]*?)>/i, '');
+      pageContent = pageContent.slice(endIndex);
 
       headHtml = '<link rel="stylesheet" href="chromeappstyles.css">\n' + headHtml;
-      // fgHead.innerHTML causes a DOMException on Android 2.3.
-      while (fgHead.lastChild) {
-        fgHead.removeChild(fgHead.lastChild);
-      }
       fgHead.insertAdjacentHTML('beforeend', headHtml);
       evalScripts(fgHead);
 
-      // Copy the <body> tag attributes.
-      pageContent.search(/<body([\s\S]*?)>/i);
-      applyAttributes(RegExp.lastParen, fgBody);
-      // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
       evalScripts(fgBody);
     }
