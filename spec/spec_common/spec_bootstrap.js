@@ -55,6 +55,7 @@ var doc = null;
   }
 
   function UiSyncReporter() {
+    this.bgElem = null;
     this.fgElem = null;
     this.intervalId = 0;
   }
@@ -66,13 +67,9 @@ var doc = null;
 
   UiSyncReporter.prototype.sync = function() {
     this.fgElem = this.fgElem || doc && doc.getElementById('jasmine-container');
-    var bgElems = document.getElementsByClassName('jasmine_reporter');
-    if (this.fgElem) {
-      var newHtml = '';
-      for (var i = 0, bgElem; bgElem = bgElems[i]; ++i) {
-        newHtml += bgElem.outerHTML;
-      }
-      this.fgElem.innerHTML = newHtml;
+    this.bgElem = this.bgElem || document.getElementById('HTMLReporter');
+    if (this.fgElem && this.bgElem) {
+      this.fgElem.innerHTML = this.bgElem.outerHTML;
     }
   };
 
@@ -80,6 +77,9 @@ var doc = null;
     window.clearInterval(this.intervalId);
     this.sync();
     this.intervalId = 0;
+    // Remove the reporter node in case the tests are run again.
+    this.bgElem.parentNode.removeChild(this.bgElem);
+    this.bgElem = null;
   };
 
   function initJasmine(callback) {
@@ -97,31 +97,53 @@ var doc = null;
           'spec_common/jasmine/jasmine-html.js',
           'spec_common/jasmine_helper.js'
           ];
-      injectScripts(document, scripts, function() {
-        var jasmineEnv = jasmine.getEnv();
-        jasmineEnv.updateInterval = 1000;
-        var htmlReporter = new jasmine.HtmlReporter();
-        htmlReporter.logRunningSpecs = true;
-        jasmineEnv.addReporter(htmlReporter);
-        uiSyncReporter = new UiSyncReporter();
-        jasmineEnv.addReporter(uiSyncReporter);
-        afterJasmineLoaded();
-      });
+      injectScripts(document, scripts, afterJasmineLoaded);
     } else {
       afterJasmineLoaded();
     }
   }
 
+  function resetJasmineRunner(runner) {
+    function resetQueue(queue) {
+      queue.index = 0;
+      queue.abort = false;
+    }
+
+    // Reset the results in case this is not the first run.
+    var specs = runner.specs();
+    for (var i = 0, spec; spec = specs[i]; ++i) {
+      jasmine.NestedResults.call(spec.results());
+      resetQueue(spec.queue);
+    }
+    var suites = runner.suites();
+    for (var j = 0, suite; suite = suites[j]; ++j) {
+      resetQueue(suite.queue);
+    }
+    resetQueue(runner.queue);
+  }
+
   function runJasmine(finishCallback) {
     var jasmineEnv = jasmine.getEnv();
-    if (finishCallback) {
-      var doneReporter = new jasmine.Reporter();
-      doneReporter.reportRunnerResults = function() {
-        delete doneReporter.reportRunnerResults;
-        finishCallback();
-      };
+    jasmineEnv.updateInterval = 1000;
+    resetJasmineRunner(jasmineEnv.currentRunner());
+
+    // Re-using HtmlReporter causes an exception, so we recreate.
+    jasmineEnv.reporter = new jasmine.MultiReporter();
+    var htmlReporter = new jasmine.HtmlReporter();
+    htmlReporter.logRunningSpecs = true;
+    jasmineEnv.addReporter(htmlReporter);
+
+    uiSyncReporter = new UiSyncReporter();
+    jasmineEnv.addReporter(uiSyncReporter);
+
+    // runJasmine can be called as an event handler, and so finishCallback is
+    // not of the right type.
+    if (typeof finishCallback == 'function') {
+      var doneReporter = {};
+      doneReporter.reportRunnerResults = finishCallback;
       jasmineEnv.addReporter(doneReporter);
     }
+
     jasmineEnv.execute();
   }
 
@@ -176,11 +198,14 @@ var doc = null;
 
   function onScriptsLoaded() {
     doc.body.insertAdjacentHTML('beforeend', '<h1></h1>' +
+        '<div class="btn right-btn" tabindex=1>Run Again</div>' +
         '<h2>Jasmine Tests</h2><div id="jasmine-container"></div>' +
         '<h2>Manual Actions</h2><div id=btns></div>' +
-        '<div class="btn back-btn" tabindex=1>Back</div><h2>Logs</h2><div id=logs></div>');
+        '<div class="btn right-btn" tabindex=1>Back</div>' +
+        '<h2>Logs</h2><div id=logs></div>');
     doc.querySelector('h1').textContent = chrome.runtime.getManifest().name;
-    doc.querySelector('.back-btn').onclick = backHome;
+    doc.querySelectorAll('.right-btn')[0].onclick = runJasmine;
+    doc.querySelectorAll('.right-btn')[1].onclick = backHome;
     uiSyncReporter && uiSyncReporter.sync();
     ensureCordovaInitializes();
     // This function is defined in app's background.js.
