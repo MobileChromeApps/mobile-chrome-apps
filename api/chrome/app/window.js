@@ -68,9 +68,9 @@ define('chrome.app.window', function(require, module) {
       var headHtml = pageContent.slice(startIndex, endIndex);
       pageContent = pageContent.slice(endIndex + RegExp.lastMatch.length);
 
-      // Remove the <head> tag, and copy over its attributes.
+      // Remove the <head> tag.
+      // The head tag isn't allowed to have attributes (at least not on Desktop Chrome).
       headHtml = headHtml.replace(/<head\b([\s\S]*?)>/i, '');
-      applyAttributes(RegExp.lastParen, fgHead);
 
       headHtml = '<link rel="stylesheet" href="chromeappstyles.css">\n' + headHtml;
       // fgHead.innerHTML causes a DOMException on Android 2.3.
