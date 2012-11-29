@@ -70,7 +70,7 @@ module.exports = function(grunt) {
     },
     watch: {
       api: {
-        files: ['<%= concat.api.src %>'],
+        files: ['api/**/*.js'],
         tasks: 'api copy:cordova_spec2'
       },
       spec: {
