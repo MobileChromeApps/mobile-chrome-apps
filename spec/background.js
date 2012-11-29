@@ -1,5 +1,8 @@
 var specScripts = [
-  'test.runtime.js'
+  'test.chrome.app.runtime.js',
+  'test.chrome.app.window.js',
+  'test.chrome.runtime.js',
+  'test.pageload.js'
 ];
 
 function initPage() {

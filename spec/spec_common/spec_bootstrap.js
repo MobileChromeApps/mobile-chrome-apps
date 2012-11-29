@@ -1,5 +1,9 @@
 var wnd = null;
 var doc = null;
+var chromeSpecs = {
+  'true': [],
+  'false': []
+};
 
 (function() {
   var jasmineLoaded = false;
@@ -155,7 +159,16 @@ var doc = null;
 
   function injectJasmineScripts(doc_, scriptSrcs, callback) {
     initJasmine(function() {
-      injectScripts(doc_, scriptSrcs, callback);
+      injectScripts(doc_, scriptSrcs, function() {
+        var runningInBackground = doc_ == document;
+        var wndName = runningInBackground ? 'bg' : 'fg';
+        describe('In ' + wndName + ':', function() {
+          for (var i = 0, f; f = chromeSpecs[runningInBackground][i]; ++i) {
+            f(runningInBackground);
+          }
+        });
+        callback && callback();
+      });
     });
   }
 
@@ -170,6 +183,7 @@ var doc = null;
       doc = wnd.document;
       wnd.onload = onUiWindowLoad;
       wnd.jasmine = window.jasmine;
+      wnd.chromeSpecs = chromeSpecs;
       if (typeof onLoadCallback == 'function') {
         onLoadCallback(w);
       }
