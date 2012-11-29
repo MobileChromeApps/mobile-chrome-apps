@@ -21,6 +21,15 @@ chromeSpec(function(runningInBackground) {
         var n = document.getElementById('dont-forget3');
         expect(n.parentNode).toBe(document.body);
       });
+      it('should maintain text in script nodes.', function() {
+        var n = document.querySelector('script[type=foo]');
+        expect(n.innerHTML).toBe('Some data', 'Some data');
+        n = document.getElementById('dont-execute');
+        expect(n.innerHTML).toBe('shouldNotExecute=1', 'shouldNotExecute=1');
+      });
+      it('should not have executed inline scripts', function() {
+        expect(window.shouldNotExecute).toBeUndefined();
+      });
     });
   }
 });
