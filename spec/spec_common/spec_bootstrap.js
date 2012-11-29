@@ -1,5 +1,8 @@
 var wnd = null;
 var doc = null;
+// A flag for jasmine_helper.js.
+window.runningInBg = true;
+
 var chromeSpecs = {
   'true': [],
   'false': []
