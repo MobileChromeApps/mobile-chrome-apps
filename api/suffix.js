@@ -6,6 +6,7 @@
 // Load the module 'chrome' to kick things off.
 
   function exportSymbol(name, object) {
+    object.__namespace__ = name;
     var parts = name.split('.');
     var cur = window;
     for (var i = 0, part; part = parts[i++];) {
