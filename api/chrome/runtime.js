@@ -3,7 +3,10 @@
 // found in the LICENSE file.
 
 define('chrome.runtime', function(require, module) {
+  var argscheck = cordova.require('cordova/argscheck');
   var events = require('helpers.events');
+  var stubs = require('helpers.stubs');
+  var mobile = require('chrome.mobile.impl');
   var exports = module.exports;
   var manifestJson = null;
 
@@ -29,5 +32,28 @@ define('chrome.runtime', function(require, module) {
     }
     return manifestJson;
   };
+
+  exports.getBackgroundPage = function(callback) {
+    argscheck.checkArgs('f', 'chrome.runtime.getBackgroundPage', arguments);
+    setTimeout(function() {
+      callback(mobile.bgWindow);
+    }, 0);
+  };
+
+  exports.getURL = function(subResource) {
+    argscheck.checkArgs('s', 'chrome.runtime.getURL', arguments);
+    if (subResource.charAt(0) == '/') {
+      subResource = subResource.slice(1);
+    }
+    var prefix = location.href.replace(/[^\/]*$/, '');
+    return prefix + subResource;
+  };
+
+  exports.reload = function() {
+    location.reload();
+  };
+
+  stubs.createStub(exports, 'id', '{appId}');
+  stubs.createStub(exports, 'requestUpdateCheck', function(){});
 });
 
