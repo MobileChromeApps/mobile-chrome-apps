@@ -13,5 +13,8 @@ function initPage() {
       log('onSuspend fired: ' + (callbackTime - buttonTime) + 'ms after button');
     });
   });
+  addActionButton('chrome.runtime.reload()', function() {
+    chrome.runtime.reload();
+  });
 }
 
