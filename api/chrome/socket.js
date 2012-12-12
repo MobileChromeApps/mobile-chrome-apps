@@ -43,14 +43,15 @@ exports.connect = function(socketId, address, port, callback) {
 };
 
 exports.write = function(socketId, data, callback) {
-    if (typeof data == "string")
+    if (typeof data == 'string') {
         data = stringToArrayBuffer(data).buffer;
+    }
     data = encodeUint8ArrayAsBase64(new Uint8Array(data));
 
     cordova.exec(function(bytesWritten) {
         var writeInfo = {};
         writeInfo.bytesWritten = bytesWritten;
-        if (!!callback && typeof callback == "function") {
+        if (!!callback && typeof callback == 'function') {
             callback(writeInfo);
         }
     }, null, 'Socket', 'write', [{ socketId: socketId, data: data }]);
@@ -65,7 +66,7 @@ exports.read = function(socketId, bufferSize, callback) {
         var readInfo = {};
         readInfo.resultCode = 0;
         readInfo.data = decodeUint8ArrayFromBase64(base64data).buffer;
-        if (!!callback && typeof callback == "function") {
+        if (!!callback && typeof callback == 'function') {
             callback(readInfo);
         }
     }, null, 'Socket', 'read', [{ socketId: socketId, bufferSize: bufferSize }]);
