@@ -44,11 +44,12 @@ define('chrome.app.window', function(require, module) {
     var scripts = rootNode.getElementsByTagName('script');
     var doc = rootNode.ownerDocument;
     for (var i = 0, script; script = scripts[i]; ++i) {
-      var replacement = doc.createElement('script');
-      copyAttributes(script, replacement);
-      // Don't bother with copying the innerHTML since chrome apps do not
-      // support inline scripts.
-      script.parentNode.replaceChild(replacement, script);
+      // Don't bother with inline scripts since they aren't evalled on desktop.
+      if (script.src) {
+        var replacement = doc.createElement('script');
+        copyAttributes(script, replacement);
+        script.parentNode.replaceChild(replacement, script);
+      }
     }
   }
 
