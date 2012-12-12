@@ -18,6 +18,7 @@ module.exports = function(grunt) {
     noarg: true,
     noempty: true,
     nonew: true,
+    proto: true, // Allow use of __proto__
     quotmark: 'single',
     sub: true,
     trailing: true,
