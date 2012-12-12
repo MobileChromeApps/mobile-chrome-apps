@@ -10,6 +10,19 @@ define('chrome.mobile.impl', function(require, module) {
   exports.bgWindow = null;
   exports.eventIframe = null;
 
+  function createBgChrome() {
+    return {
+      __proto__: chrome,
+      app: {
+        __proto__: chrome.app,
+        window: {
+          __proto__: chrome.app.window,
+          current: function() { return null; }
+        }
+      }
+    };
+  }
+
   exports.init = function() {
     // Self-destruct so that code in here can be GC'ed.
     exports.init = null;
@@ -24,7 +37,7 @@ define('chrome.mobile.impl', function(require, module) {
     // Self-destruct so that code in here can be GC'ed.
     exports.bgInit = null;
     exports.bgWindow = bgWnd;
-    bgWnd.chrome = chrome;
+    bgWnd.chrome = createBgChrome();
 
     function onLoad() {
       bgWnd.removeEventListener('load', onLoad, false);
