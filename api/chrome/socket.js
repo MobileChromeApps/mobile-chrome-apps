@@ -1,5 +1,4 @@
 define('chrome.socket', function(require, module) {
-  //unsupportedApi('StorageArea.getBytesInUse')
 
 var stringToArrayBuffer = function(str) {
     var ret = new Int8Array(str.length);
@@ -18,7 +17,12 @@ var encodeUint8ArrayAsBase64 = function(arr) {
     return window.btoa(binary);
 };
 
-  var exports = module.exports;
+var decodeUint8ArrayFromBase64 = function(b64) {
+    var decoded = atob(b64);
+    return stringToArrayBuffer(decoded);
+};
+
+var exports = module.exports;
 
 exports.create = function(socketMode, stuff, callback) {
     cordova.exec(function(socketId) {
@@ -39,21 +43,32 @@ exports.connect = function(socketId, address, port, callback) {
 };
 
 exports.write = function(socketId, data, callback) {
-    if (typeof data == 'string') {
-        data = stringToArrayBuffer (data).buffer;
-    }
+    if (typeof data == "string")
+        data = stringToArrayBuffer(data).buffer;
     data = encodeUint8ArrayAsBase64(new Uint8Array(data));
-    cordova.exec(function(result) {
-        if (!!callback && typeof callback == 'function') {
-            callback(result);
+
+    cordova.exec(function(bytesWritten) {
+        var writeInfo = {};
+        writeInfo.bytesWritten = bytesWritten;
+        if (!!callback && typeof callback == "function") {
+            callback(writeInfo);
         }
     }, null, 'Socket', 'write', [{ socketId: socketId, data: data }]);
 };
 
-exports.ondata = function() {
-};
-
-exports.read = function() {
+exports.read = function(socketId, bufferSize, callback) {
+    if (!callback) {
+        callback = bufferSize;
+        bufferSize = 1;
+    }
+    cordova.exec(function(base64data) {
+        var readInfo = {};
+        readInfo.resultCode = 0;
+        readInfo.data = decodeUint8ArrayFromBase64(base64data).buffer;
+        if (!!callback && typeof callback == "function") {
+            callback(readInfo);
+        }
+    }, null, 'Socket', 'read', [{ socketId: socketId, bufferSize: bufferSize }]);
 };
 
 exports.disconnect = function(socketId) {
@@ -63,4 +78,5 @@ exports.disconnect = function(socketId) {
 exports.destroy = function(socketId) {
     cordova.exec(null, null, 'Socket', 'destroy', [{ socketId: socketId }]);
 };
+
 });
