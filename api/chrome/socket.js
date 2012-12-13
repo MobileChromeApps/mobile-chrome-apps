@@ -1,7 +1,7 @@
 define('chrome.socket', function(require, module) {
 
 var stringToArrayBuffer = function(str) {
-    var ret = new Int8Array(str.length);
+    var ret = new Uint8Array(str.length);
     for (var i = 0; i < str.length; i++) {
         ret[i] = str.charCodeAt(i);
     }
@@ -60,12 +60,14 @@ exports.write = function(socketId, data, callback) {
 exports.read = function(socketId, bufferSize, callback) {
     if (!callback) {
         callback = bufferSize;
-        bufferSize = 1;
+        bufferSize = 0;
     }
     cordova.exec(function(base64data) {
+        //console.log('received');
         var readInfo = {};
-        readInfo.resultCode = 0;
+        readInfo.resultCode = 1;
         readInfo.data = decodeUint8ArrayFromBase64(base64data).buffer;
+        //console.log(new Uint8Array(readInfo.data));
         if (!!callback && typeof callback == 'function') {
             callback(readInfo);
         }
