@@ -25,7 +25,17 @@ define('chrome.app.window', function(require, module) {
     resizeTo: unsupportedApi('AppWindow.resizeTo'),
     maximize: unsupportedApi('AppWindow.maximize'),
     close: unsupportedApi('AppWindow.close'),
+    setBounds: unsupportedApi('AppWindow.setBounds'),
+    onBoundsChanged: new Event('onBoundsChanged'),
     onClosed: new Event('onClosed')
+  };
+  AppWindow.prototype.getBounds = function() {
+    return {
+      width: 0,
+      height: 0,
+      left: 0,
+      top: 0
+    };
   };
 
   function copyAttributes(srcNode, destNode) {
