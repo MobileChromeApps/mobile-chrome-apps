@@ -4,22 +4,20 @@
 
 define('chrome.runtime', function(require, module) {
   var argscheck = cordova.require('cordova/argscheck');
-  var events = require('helpers.events');
+  var Event = require('chrome.Event');
   var stubs = require('helpers.stubs');
   var mobile = require('chrome.mobile.impl');
   var exports = module.exports;
   var manifestJson = null;
 
-  exports.onSuspend = {};
+  exports.onSuspend = new Event('onSuspend');
 
-  exports.onSuspend.fire = events.fire('onSuspend');
+  var original_addListener = exports.onSuspend.addListener;
 
   // Uses a trampoline to bind the Cordova pause event on the first call.
   exports.onSuspend.addListener = function(f) {
     window.document.addEventListener('pause', exports.onSuspend.fire, false);
-    var h = events.addListener('onSuspend');
-    console.log('sub-handler type: ' + typeof h);
-    exports.onSuspend.addListener = h;
+    exports.onSuspend.addListener = original_addListener;
     exports.onSuspend.addListener(f);
   };
 
