@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 define('chrome.app.window', function(require, module) {
-  var events = require('helpers.events');
+  var Event = require('chrome.Event');
   var mobile = require('chrome.mobile.impl');
   var exports = module.exports;
 
@@ -25,7 +25,7 @@ define('chrome.app.window', function(require, module) {
     resizeTo: unsupportedApi('AppWindow.resizeTo'),
     maximize: unsupportedApi('AppWindow.maximize'),
     close: unsupportedApi('AppWindow.close'),
-    onClosed: { addListener: events.addListener('onClosed') }
+    onClosed: new Event('onClosed')
   };
 
   function copyAttributes(srcNode, destNode) {
