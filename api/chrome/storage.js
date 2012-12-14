@@ -86,8 +86,7 @@ define('chrome.storage', function(require, module) {
   exports.local = local;
   exports.sync = sync;
 
-  var events = require('helpers.events');
-  exports.onChanged = {}; // TODO(mmocny)
-  exports.onChanged.addListener = events.addListener('onChanged');
-  exports.onChanged.fire = events.fire('onChanged');
+  // TODO(mmocny): Hook up this event so it actually gets called(?)
+  var Event = require('chrome.Event');
+  exports.onChanged = new Event('onChanged');
 });
