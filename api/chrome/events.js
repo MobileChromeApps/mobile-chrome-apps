@@ -36,8 +36,8 @@ define('chrome.Event', function(require, module) {
   };
 
   Event.prototype.fire = function() {
-    for (var i = 0; i < this.listeners_.length; i++) {
-      this.listeners_[i]();
+    for (var i = 0; i < this.listeners.length; i++) {
+      this.listeners[i]();
     }
   };
 

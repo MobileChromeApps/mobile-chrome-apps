@@ -11,6 +11,10 @@ define('chrome.runtime', function(require, module) {
   var manifestJson = null;
 
   exports.onSuspend = new Event('onSuspend');
+  exports.onInstalled = new Event('onInstalled');
+  exports.onStartup = new Event('onStartup');
+  exports.onSuspendCanceled = new Event('onSuspendCanceled');
+  exports.onUpdateAvailable = new Event('onUpdateAvailable');
 
   var original_addListener = exports.onSuspend.addListener;
 
