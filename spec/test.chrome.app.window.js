@@ -5,16 +5,29 @@
 chromeSpec(function(runningInBackground) {
   describe('chrome.app.window', function() {
     if (runningInBackground) {
-      it('create() should return null', function() {
+      it('current() should return null', function() {
         expect(chrome.app.window.current()).toBeNull();
       });
     } else {
-      it('create() should return an AppWindow', function() {
+      it('current() should return an AppWindow', function() {
         var wnd = chrome.app.window.current();
         expect(wnd).not.toBeNull();
         expect(wnd.onClosed).not.toBeUndefined();
       });
     }
+  });
+  describe('window', function() {
+    describe('opener', function() {
+      if (runningInBackground) {
+        it ('should return null', function() {
+          expect(window.opener).toBeNull();
+        });
+      } else {
+        it ('should return the background window', function() {
+          expect(window.opener).toEqual(window.bgWindow);
+        });
+      }
+    });
   });
 });
 

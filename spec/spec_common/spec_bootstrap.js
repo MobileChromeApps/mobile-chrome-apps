@@ -187,6 +187,7 @@ var chromeSpecs = {
       wnd.onload = onUiWindowLoad;
       wnd.jasmine = window.jasmine;
       wnd.chromeSpecs = chromeSpecs;
+      wnd.bgWindow = window;
       if (typeof onLoadCallback == 'function') {
         onLoadCallback(w);
       }
