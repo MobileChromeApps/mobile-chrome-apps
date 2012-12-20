@@ -38,6 +38,7 @@ define('chrome.mobile.impl', function(require, module) {
     exports.bgInit = null;
     exports.bgWindow = bgWnd;
     bgWnd.chrome = createBgChrome();
+    exports.fgWindow.opener = exports.bgWindow;
 
     function onLoad() {
       bgWnd.removeEventListener('load', onLoad, false);
