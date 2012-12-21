@@ -5,7 +5,7 @@ function chromeSpec(func) {
 
 function itShouldHaveAnEvent(obj, eventName) {
   it('should have an event called ' + eventName, function() {
-    expect(obj[eventName].constructor == chrome.Event).toBe(true);
+    expect(obj[eventName]).toEqual(jasmine.any(chrome.Event));
   });
 }
 

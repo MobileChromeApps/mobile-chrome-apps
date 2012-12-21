@@ -6,7 +6,7 @@ chromeSpec(function(runningInBackground) {
   describe('chrome.runtime', function() {
     it('getManifest() should have a name that is a string', function() {
       var manifest = chrome.runtime.getManifest();
-      expect(typeof manifest.name).toBe('string');
+      expect(typeof manifest.name).toBe('string'); // .isEqual(jasmine.any(String)) seems to not work
     });
     it('getBackgroundPage() should throw when args are invalid', function() {
       expect(function() {chrome.runtime.getBackgroundPage();}).toThrow();
