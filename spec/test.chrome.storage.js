@@ -205,6 +205,6 @@ chromeSpec(function(runningInBackground) {
     }
 
     test_storagearea('local', chrome.storage.local);
-    //test_storagearea('sync', chrome.storage.sync);
+    test_storagearea('sync', chrome.storage.sync);
   });
 });
