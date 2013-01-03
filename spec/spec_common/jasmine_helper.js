@@ -15,3 +15,12 @@ function itShouldHaveAPropertyOfType(obj, propName, typeName) {
   });
 }
 
+function waitUntil(callback) {
+  var done = false;
+  var wrapped = function() {
+    done = true;
+    return callback.apply(this, arguments);
+  };
+  waitsFor(function() { return done; });
+  return wrapped;
+}
