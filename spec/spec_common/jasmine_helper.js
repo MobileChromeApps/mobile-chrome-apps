@@ -1,4 +1,3 @@
-
 function chromeSpec(func) {
   chromeSpecs[!!window.runningInBg].push(func);
 }
@@ -15,7 +14,7 @@ function itShouldHaveAPropertyOfType(obj, propName, typeName) {
   });
 }
 
-function waitUntil(callback) {
+function waitUntilCalled(callback) {
   var done = false;
   var wrapped = function() {
     done = true;
@@ -23,4 +22,10 @@ function waitUntil(callback) {
   };
   waitsFor(function() { return done; });
   return wrapped;
+}
+
+function waitUntilCalledAndThenRun(callback, andthen) {
+  var ret = waitUntilCalled(callback);
+  runs(andthen);
+  return ret;
 }
