@@ -6,80 +6,78 @@ define('chrome.storage', function(require, module) {
   function StorageArea() {
   }
 
-  StorageArea.prototype = {
-    getBytesInUse: unsupportedApi('StorageArea.getBytesInUse')
-  };
+  StorageArea.prototype.getBytesInUse = unsupportedApi('StorageArea.getBytesInUse');
 
-  StorageArea.prototype.clear = function(callback) {
+  StorageArea.prototype.clear = function() {
     localStorage.clear();
-    if (callback) {
-      callback();
-    }
   };
 
-  StorageArea.prototype.set = function(items, callback) {
+  StorageArea.prototype.set = function(items) {
     for (var key in items) {
       if (items.hasOwnProperty(key)) {
         localStorage.setItem(key, JSON.stringify(items[key]));
       }
     }
-    if (callback) {
-      callback();
-    }
   };
 
-  StorageArea.prototype.remove = function(keys, callback) {
-    if (typeof keys === 'string') {
+  StorageArea.prototype.remove = function(keys) {
+    if (typeof keys == 'string') {
       keys = [keys];
     }
     for (var i = 0; i < keys.length; ++i) {
       localStorage.removeItem(keys[i]);
     }
-    if (callback) {
-      callback();
-    }
   };
 
   StorageArea.prototype.get = function(items, callback) {
-    var i;
-    if (typeof items === 'function') {
+    var ret = {};
+
+    if (typeof items == 'function') {
       callback = items;
-      items = {};
-      for (i = 0; i < localStorage.length; i++) {
-        items[localStorage.key(i)] = null;
-      }
-    } else if (typeof items === 'string') {
-      var tmp = items;
-      items = {};
-      items[tmp] = null;
-    } else if (Object.prototype.toString.call(items) === '[object Array]') {
-      var newItems = {};
-      for (i = 0; i < items.length; ++i) {
-        newItems[items[i]] = null;
-      }
-      items = newItems;
+      items = null;
     }
-    for (var key in items) {
-      if (items.hasOwnProperty(key)) {
+    if (typeof callback != 'function') {
+      throw 'callback must be a function';
+    }
+
+    var getLocalStorageValuesForKeys = function(keys) {
+      var ret = {};
+      keys.forEach(function(key) {
         var item = localStorage.getItem(key);
-        if (item !== null) {
-          items[key] = JSON.parse(item);
+        if (item != null) {
+          ret[key] = JSON.parse(item);
         }
+      });
+      return ret;
+    };
+
+
+    if (items == null) {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        keys.push(localStorage.key(i));
       }
+      ret = getLocalStorageValuesForKeys(keys);
+    } else if (typeof items == 'string') {
+      ret = getLocalStorageValuesForKeys([items]);
+    } else if (Object.prototype.toString.call(items) == Object.prototype.toString.call([])) {
+      ret = getLocalStorageValuesForKeys(items);
+    } else {
+      ret = items; // assign defaults
+      var o = getLocalStorageValuesForKeys(Object.keys(items));
+      Object.keys(o).forEach(function(key) {
+          ret[key] = o[key];
+      });
     }
-    if (callback) {
-      callback(items);
-    }
+    callback(ret);
+    return;
   };
-
-  function StorageChange() {
-    this.newValue = null;
-    this.oldValue = null;
+/*
+  function StorageChange(oldValue, newValue) {
+    this.oldValue = oldValue;
+    this.newValue = newValue;
   }
-
-  StorageChange.prototype = {
-  };
-
+*/
   var local = new StorageArea();
   local.QUOTA_BYTES = 5242880;
 
@@ -90,7 +88,6 @@ define('chrome.storage', function(require, module) {
   sync.MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 10;
   sync.QUOTA_BYTES = 102400;
 
-
   var exports = module.exports;
   exports.local = local;
   exports.sync = sync;
@@ -98,4 +95,6 @@ define('chrome.storage', function(require, module) {
   // TODO(mmocny): Hook up this event so it actually gets called(?)
   var Event = require('chrome.Event');
   exports.onChanged = new Event('onChanged');
+  //chrome.storage.onChanged.addListener(function(object changes, string areaName) {...});
+
 });
