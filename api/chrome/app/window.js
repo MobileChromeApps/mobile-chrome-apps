@@ -73,14 +73,18 @@ define('chrome.app.window', function(require, module) {
     }
 
     var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
-    if (startIndex == -1) {
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-    } else {
+    if (startIndex != -1) {
       startIndex += RegExp.lastMatch.length;
       // Copy over the attributes of the <html> tag.
       applyAttributes(RegExp.lastParen, fgBody.parentNode);
-      // Put everything before the body tag in the head.
-      var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
+    } else {
+      startIndex = 0;
+    }
+    // Put everything before the body tag in the head.
+    var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
+    if (endIndex == -1) {
+      mobile.eventIframe.insertAdjacentHTML('afterend', 'Load error: Page is missing body tag.');
+    } else {
       applyAttributes(RegExp.lastParen, fgBody);
 
       // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
