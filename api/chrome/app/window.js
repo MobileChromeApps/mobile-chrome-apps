@@ -63,7 +63,7 @@ define('chrome.app.window', function(require, module) {
     }
   }
 
-  function rewritePage(pageContent) {
+  function rewritePage(pageContent, filePath) {
     var fgBody = mobile.fgWindow.document.body;
     var fgHead = fgBody.previousElementSibling;
 
@@ -91,12 +91,22 @@ define('chrome.app.window', function(require, module) {
       var headHtml = pageContent.slice(startIndex, endIndex);
       pageContent = pageContent.slice(endIndex);
 
-      headHtml = '<link rel="stylesheet" href="chromeappstyles.css">\n' + headHtml;
-      fgHead.insertAdjacentHTML('beforeend', headHtml);
-      evalScripts(fgHead);
+      fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="chromeappstyles.css">');
+      var baseUrl = filePath.replace(/\/.*?$/, '');
+      if (baseUrl) {
+        fgHead.insertAdjacentHTML('beforeend', '<base href="' + encodeURIComponent(baseUrl) + '/">\n');
+        // setTimeout required for <base> to take effect for <link> elements (browser bug).
+        window.setTimeout(afterBase, 0);
+      } else {
+        afterBase();
+      }
+      function afterBase() {
+        fgHead.insertAdjacentHTML('beforeend', headHtml);
+        evalScripts(fgHead);
 
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody);
+        mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+        evalScripts(fgBody);
+      }
     }
   }
 
@@ -115,7 +125,7 @@ define('chrome.app.window', function(require, module) {
           callback(createdAppWindow);
         }
         var pageContent = xhr.responseText || 'Page load failed.';
-        rewritePage(pageContent);
+        rewritePage(pageContent, filePath);
         cordova.fireWindowEvent('DOMContentReady');
         cordova.fireWindowEvent('load');
       }
