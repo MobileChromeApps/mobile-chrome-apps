@@ -80,6 +80,14 @@ define('chrome.app.window', function(require, module) {
     } else {
       startIndex = 0;
     }
+
+    function afterBase() {
+      fgHead.insertAdjacentHTML('beforeend', headHtml);
+      evalScripts(fgHead);
+
+      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+      evalScripts(fgBody);
+    }
     // Put everything before the body tag in the head.
     var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
     if (endIndex == -1) {
@@ -99,13 +107,6 @@ define('chrome.app.window', function(require, module) {
         window.setTimeout(afterBase, 0);
       } else {
         afterBase();
-      }
-      function afterBase() {
-        fgHead.insertAdjacentHTML('beforeend', headHtml);
-        evalScripts(fgHead);
-
-        mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-        evalScripts(fgBody);
       }
     }
   }
