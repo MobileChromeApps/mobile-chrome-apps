@@ -139,10 +139,10 @@ var chromeSpecs = {
     jasmineEnv.reporter = new jasmine.MultiReporter();
     var htmlReporter = new jasmine.HtmlReporter();
     // TODO(agrieve): Make this spec filter work without a page reload.
-    var specQueryParam =
-        decodeURIComponent(parent.location.search.split('=')[1]);
+    var specQueryParam = parent.location.search.split('=')[1];
+    specQueryParam = specQueryParam && decodeURIComponent(specQueryParam);
     jasmineEnv.specFilter = function(spec) {
-      return spec.getFullName() == specQueryParam;
+      return !specQueryParam || spec.getFullName() == specQueryParam;
     };
     htmlReporter.logRunningSpecs = true;
     jasmineEnv.addReporter(htmlReporter);
