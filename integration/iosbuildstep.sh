@@ -33,6 +33,8 @@ if [[ ! -e "$SRC_WWW_PATH" || ! -e "$SRC_JS_PATH" ]]; then
   exit 1
 fi
 
+set -e # Fail on error.
+set -x # Echo commands.
 # Start with a clean www.
 rm -rf "$DST_WWW_PATH"
 # Copy in their copy, resolving symlinks.
