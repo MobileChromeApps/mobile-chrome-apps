@@ -25,7 +25,17 @@ define('chrome.app.window', function(require, module) {
     resizeTo: unsupportedApi('AppWindow.resizeTo'),
     maximize: unsupportedApi('AppWindow.maximize'),
     close: unsupportedApi('AppWindow.close'),
+    setBounds: unsupportedApi('AppWindow.setBounds'),
+    onBoundsChanged: new Event('onBoundsChanged'),
     onClosed: new Event('onClosed')
+  };
+  AppWindow.prototype.getBounds = function() {
+    return {
+      width: 0,
+      height: 0,
+      left: 0,
+      top: 0
+    };
   };
 
   function copyAttributes(srcNode, destNode) {
@@ -53,7 +63,7 @@ define('chrome.app.window', function(require, module) {
     }
   }
 
-  function rewritePage(pageContent) {
+  function rewritePage(pageContent, filePath) {
     var fgBody = mobile.fgWindow.document.body;
     var fgHead = fgBody.previousElementSibling;
 
@@ -63,26 +73,41 @@ define('chrome.app.window', function(require, module) {
     }
 
     var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
-    if (startIndex == -1) {
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-    } else {
+    if (startIndex != -1) {
       startIndex += RegExp.lastMatch.length;
       // Copy over the attributes of the <html> tag.
       applyAttributes(RegExp.lastParen, fgBody.parentNode);
-      // Put everything before the body tag in the head.
-      var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
+    } else {
+      startIndex = 0;
+    }
+
+    function afterBase() {
+      fgHead.insertAdjacentHTML('beforeend', headHtml);
+      evalScripts(fgHead);
+
+      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+      evalScripts(fgBody);
+    }
+    // Put everything before the body tag in the head.
+    var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
+    if (endIndex == -1) {
+      mobile.eventIframe.insertAdjacentHTML('afterend', 'Load error: Page is missing body tag.');
+    } else {
       applyAttributes(RegExp.lastParen, fgBody);
 
       // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
       var headHtml = pageContent.slice(startIndex, endIndex);
       pageContent = pageContent.slice(endIndex);
 
-      headHtml = '<link rel="stylesheet" href="chromeappstyles.css">\n' + headHtml;
-      fgHead.insertAdjacentHTML('beforeend', headHtml);
-      evalScripts(fgHead);
-
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody);
+      fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="chromeappstyles.css">');
+      var baseUrl = filePath.replace(/\/.*?$/, '');
+      if (baseUrl != filePath) {
+        fgHead.insertAdjacentHTML('beforeend', '<base href="' + encodeURIComponent(baseUrl) + '/">\n');
+        // setTimeout required for <base> to take effect for <link> elements (browser bug).
+        window.setTimeout(afterBase, 0);
+      } else {
+        afterBase();
+      }
     }
   }
 
@@ -101,7 +126,7 @@ define('chrome.app.window', function(require, module) {
           callback(createdAppWindow);
         }
         var pageContent = xhr.responseText || 'Page load failed.';
-        rewritePage(pageContent);
+        rewritePage(pageContent, filePath);
         cordova.fireWindowEvent('DOMContentReady');
         cordova.fireWindowEvent('load');
       }

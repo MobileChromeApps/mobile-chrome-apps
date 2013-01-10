@@ -132,11 +132,18 @@ var chromeSpecs = {
   function runJasmine(finishCallback) {
     var jasmineEnv = jasmine.getEnv();
     jasmineEnv.updateInterval = 1000;
+    jasmineEnv.defaultTimeoutInterval = 300;
     resetJasmineRunner(jasmineEnv.currentRunner());
 
     // Re-using HtmlReporter causes an exception, so we recreate.
     jasmineEnv.reporter = new jasmine.MultiReporter();
     var htmlReporter = new jasmine.HtmlReporter();
+    // TODO(agrieve): Make this spec filter work without a page reload.
+    var specQueryParam = parent.location.search.split('=')[1];
+    specQueryParam = specQueryParam && decodeURIComponent(specQueryParam);
+    jasmineEnv.specFilter = function(spec) {
+      return !specQueryParam || spec.getFullName() == specQueryParam;
+    };
     htmlReporter.logRunningSpecs = true;
     jasmineEnv.addReporter(htmlReporter);
 
