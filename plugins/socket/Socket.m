@@ -9,8 +9,7 @@
 #import "Socket.h"
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
-#import "NSData+Base64.h"
-#import "NSString+Base64.h"
+#import <Cordova/NSData+Base64.h>
 
 @interface  Socket()
 
@@ -50,7 +49,6 @@
 }
 
 - (void)create:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Create");
     NSDictionary* options = [command.arguments objectAtIndex:0];
     
     NSString* socketMode = [options objectForKey:@"socketMode"];
@@ -66,7 +64,6 @@
 }
 
 - (void)connect:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Connect");
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString* socketId = [options objectForKey:@"socketId"];
     NSString* address = [options objectForKey:@"address"];
@@ -86,11 +83,10 @@
 }
 
 - (void)write:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Write");
+    assert([command.arguments count] == 2);
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString* socketId = [options objectForKey:@"socketId"];
-    NSString *payload = [options objectForKey:@"data"];
-    NSData* data = [NSData dataWithBase64EncodedString:payload]; // [payload dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* data = [command.arguments objectAtIndex:1];
     
     GCDAsyncSocket* socket = [self.sockets objectForKey:socketId];
     NSString* address = [self.socketsAddress objectForKey:socketId];
@@ -107,20 +103,15 @@
 }
 
 - (void)read:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Read");
-//    static NSUInteger numReads = 0;
-//    NSLog(@"num Reads: %ul", ++numReads);
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString* socketId = [options objectForKey:@"socketId"];
     NSUInteger bufferSize = [[options objectForKey:@"bufferSize"] unsignedIntegerValue];
 
     GCDAsyncSocket* socket = [self.sockets objectForKey:socketId];
-    if (bufferSize == 0)
-        bufferSize = 1;
     if (bufferSize != 0) {
         [socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
     } else {
-        [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:-1];
+        [socket readDataWithTimeout:-1 tag:-1];
     }
     
     [self.readCallbacks addObject:[^(NSData* data){
@@ -131,7 +122,6 @@
 }
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Disconnect");
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString* socketId = [options objectForKey:@"socketId"];
     
@@ -147,7 +137,6 @@
 }
 
 - (void)destroy:(CDVInvokedUrlCommand*)command {
-//    NSLog(@"Destroy");
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString* socketId = [options objectForKey:@"socketId"];
     
@@ -195,6 +184,5 @@
     
     [self.writeCallbacks removeObjectAtIndex:0];
 }
-
 
 @end

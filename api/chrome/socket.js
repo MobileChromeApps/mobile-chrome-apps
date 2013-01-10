@@ -8,15 +8,6 @@ var stringToArrayBuffer = function(str) {
     return ret;
 };
 
-var encodeUint8ArrayAsBase64 = function(arr) {
-    var binary = '';
-    var len = arr.length;
-    for (var i = 0; i < len; i++) {
-        binary += String.fromCharCode(arr[i]);
-    }
-    return window.btoa(binary);
-};
-
 var decodeUint8ArrayFromBase64 = function(b64) {
     var decoded = atob(b64);
     return stringToArrayBuffer(decoded);
@@ -46,7 +37,6 @@ exports.write = function(socketId, data, callback) {
     if (typeof data == 'string') {
         data = stringToArrayBuffer(data).buffer;
     }
-    data = encodeUint8ArrayAsBase64(new Uint8Array(data));
 
     cordova.exec(function(bytesWritten) {
         var writeInfo = {};
@@ -54,7 +44,7 @@ exports.write = function(socketId, data, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(writeInfo);
         }
-    }, null, 'Socket', 'write', [{ socketId: socketId, data: data }]);
+    }, null, 'Socket', 'write', [{ socketId: socketId}, data]);
 };
 
 exports.read = function(socketId, bufferSize, callback) {
