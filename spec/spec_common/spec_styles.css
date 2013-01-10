@@ -64,6 +64,7 @@ h2 {
   max-height: 300px;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  -webkit-user-select: initial;
 }
 
 .jasmine_reporter {
