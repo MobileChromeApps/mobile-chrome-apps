@@ -60,6 +60,12 @@ h2 {
  min-width: 75px;
 }
 
+#jasmine-container {
+  max-height: 300px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .jasmine_reporter {
   background: #eee;
   padding-bottom: 4px;
