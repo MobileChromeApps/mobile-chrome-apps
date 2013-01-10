@@ -132,6 +132,7 @@ var chromeSpecs = {
   function runJasmine(finishCallback) {
     var jasmineEnv = jasmine.getEnv();
     jasmineEnv.updateInterval = 1000;
+    jasmineEnv.defaultTimeoutInterval = 300;
     resetJasmineRunner(jasmineEnv.currentRunner());
 
     // Re-using HtmlReporter causes an exception, so we recreate.
