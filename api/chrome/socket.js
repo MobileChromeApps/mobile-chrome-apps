@@ -44,7 +44,7 @@ exports.write = function(socketId, data, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(writeInfo);
         }
-    }, null, 'Socket', 'write', [{ socketId: socketId}, data]);
+    }, null, 'Socket', 'write', [{ socketId: socketId }, data]);
 };
 
 exports.read = function(socketId, bufferSize, callback) {
@@ -53,11 +53,9 @@ exports.read = function(socketId, bufferSize, callback) {
         bufferSize = 0;
     }
     cordova.exec(function(base64data) {
-        //console.log('received');
         var readInfo = {};
         readInfo.resultCode = 1;
         readInfo.data = decodeUint8ArrayFromBase64(base64data).buffer;
-        //console.log(new Uint8Array(readInfo.data));
         if (!!callback && typeof callback == 'function') {
             callback(readInfo);
         }
