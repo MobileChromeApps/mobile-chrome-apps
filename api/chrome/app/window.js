@@ -101,7 +101,7 @@ define('chrome.app.window', function(require, module) {
 
       fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="chromeappstyles.css">');
       var baseUrl = filePath.replace(/\/.*?$/, '');
-      if (baseUrl) {
+      if (baseUrl != filePath) {
         fgHead.insertAdjacentHTML('beforeend', '<base href="' + encodeURIComponent(baseUrl) + '/">\n');
         // setTimeout required for <base> to take effect for <link> elements (browser bug).
         window.setTimeout(afterBase, 0);
