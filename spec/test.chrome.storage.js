@@ -35,11 +35,38 @@ chromeSpec(function(runningInBackground) {
 
     function test_storagearea(type, storagearea) {
       var obj = {
-        'a': 1,
-        'b': 2.345,
-        'c': 'test',
-        'd': [1,2,3],
-        'e': {'a':1,'b':'2','c':3.456}
+        'int': 1,
+        'double': 2.345,
+        'string': 'test',
+        'String': Object('test'),
+        'Array': [1,2,3],
+        'object': {'a':1,'b':'2','c':3.456},
+        'object_with_toJSON': {'a':1, 'toJSON': function() { return 'foo'; }},
+        'Window': window,
+        'RegExp': /hello/,
+        'date': new Date(1000),
+        'undefined': undefined, // This gets ignored by .set().
+        'null': null,
+        'function': function hello() { return 1; },
+        'DivElement': document.createElement('div'),
+        'Document': document
+      };
+
+      var expected = {
+        'int': 1,
+        'double': 2.345,
+        'string': 'test',
+        'String': {'0': 't', '1': 'e', '2': 's', '3': 't'},
+        'Array': [1,2,3],
+        'object': {'a':1,'b':'2','c':3.456},
+        'object_with_toJSON': {'a':1, 'toJSON': {}},
+        'Window': {},
+        'RegExp': {},
+        'date': {},
+        'null': null,
+        'function': {},
+        'DivElement': {},
+        'Document': {}
       };
 
       describe('chrome.storage.' + type, function() {
@@ -49,15 +76,15 @@ chromeSpec(function(runningInBackground) {
           });
 
           Object.keys(obj).forEach(function(key) {
-            it('set(object) with single value of type: ' + typeof obj[key], function() {
+            it('set(object) with single value of type: ' + key, function() {
               var temp = {};
               temp[key] = obj[key];
               storagearea.set(temp);
               storagearea.get(key, waitUntilCalled(function(items) {
-                expect(items[key]).toEqual(obj[key]);
+                expect(items[key]).toEqual(expected[key]);
 
                 storagearea.get(waitUntilCalled(function(items) {
-                  expect(Object.keys(items).length).toEqual(1);
+                  expect(Object.keys(items).length).toEqual(+(key in expected));
                 }));
               }));
             });
@@ -66,10 +93,10 @@ chromeSpec(function(runningInBackground) {
           it('set(object) with multiple values', function() {
             storagearea.set(obj);
             storagearea.get(Object.keys(obj), waitUntilCalled(function(items) {
-              expect(items).toEqual(obj);
+              expect(items).toEqual(expected);
 
               storagearea.get(waitUntilCalled(function(items) {
-                expect(Object.keys(items).length).toBeGreaterThan(0);
+                expect(items).toEqual(expected);
               }));
             }));
           });
@@ -83,44 +110,45 @@ chromeSpec(function(runningInBackground) {
 
           it('get() should return all items', function() {
             storagearea.get(waitUntilCalled(function(items) {
-              expect(items).toEqual(obj);
+              expect(items).toEqual(expected);
             }));
           });
 
           it('get(null) should return all items', function() {
             storagearea.get(null, waitUntilCalled(function(items) {
-              expect(items).toEqual(obj);
+              expect(items).toEqual(expected);
             }));
           });
 
           it('get(string) should return item with that key', function() {
-            storagearea.get('a', waitUntilCalled(function(items) {
-              expect(items).toEqual({'a': obj.a});
+            storagearea.get('int', waitUntilCalled(function(items) {
+              expect(items).toEqual({'int': expected.int});
             }));
           });
 
           it('get(object) should return all items with those keys, or items with default values provided', function() {
             var request = {
-              'a': 'should ignore',
-              'b': 'also ignore',
+              'int': 'should ignore',
+              'double': 'also ignore',
               'z': 'should not ignore'
             };
-            var expected = {
-              'a': obj.a,
-              'b': obj.b,
+            var answer = {
+              'int': expected.int,
+              'double': expected.double,
               'z': request.z
             };
             storagearea.get(request, waitUntilCalled(function(items) {
-              expect(items).toEqual(expected);
+              expect(items).toEqual(answer);
             }));
           });
 
           it('get([string, ...]) should return items with those keys, ignoring keys that arent found', function() {
-            storagearea.get(['a','b','c','d','e','x','y','z'], waitUntilCalled(function(items) {
-              expect(items).toEqual(obj);
-            }));
-            storagearea.get(['a','b','c'], waitUntilCalled(function(items) {
-              expect(items).toNotEqual(obj);
+            var answer = {
+              'int': expected.int,
+              'double': expected.double
+            };
+            storagearea.get(['int','double','x','y','z'], waitUntilCalled(function(items) {
+              expect(items).toEqual(answer);
             }));
             storagearea.get([], waitUntilCalled(function(items) {
               expect(items).toEqual({});
@@ -136,7 +164,7 @@ chromeSpec(function(runningInBackground) {
           it('should delete all items', function() {
             storagearea.set(obj);
             storagearea.get(waitUntilCalled(function(items) {
-              expect(Object.keys(items).length).toEqual(Object.keys(obj).length);
+              expect(Object.keys(items).length).toEqual(Object.keys(expected).length);
 
               storagearea.clear();
               storagearea.get(waitUntilCalled(function(items) {
@@ -153,35 +181,26 @@ chromeSpec(function(runningInBackground) {
           });
 
           it('remove(string) should remove item with key', function() {
-            storagearea.remove('a');
-            var expected = {
-              'b': obj.b,
-              'c': obj.c,
-              'd': obj.d,
-              'e': obj.e
-            };
+            storagearea.remove('int');
             storagearea.get(waitUntilCalled(function(items) {
-              expect(items).not.toEqual(obj);
-              expect(items).toEqual(expected);
+              expect(items.int).toBeUndefined();
+              expect(Object.keys(items).length).toEqual(Object.keys(expected).length - 1);
             }));
           });
 
           it('remove(string) with invalid key should be ignored', function() {
             storagearea.remove('z');
             storagearea.get(waitUntilCalled(function(items) {
-              expect(items).toEqual(obj);
+              expect(items).toEqual(expected);
             }));
           });
 
           it('remove([string, ...]) should remove item with key, ignoring invalid keys', function() {
-            storagearea.remove(['a','b','z']);
-            var expected = {
-              'c': obj.c,
-              'd': obj.d,
-              'e': obj.e
-            };
+            storagearea.remove(['int','string','z']);
             storagearea.get(waitUntilCalled(function(items) {
-              expect(items).toEqual(expected);
+              expect(items.int).toBeUndefined();
+              expect(items.string).toBeUndefined();
+              expect(Object.keys(items).length).toEqual(Object.keys(expected).length - 2);
             }));
           });
         });
