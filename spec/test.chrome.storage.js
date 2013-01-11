@@ -38,9 +38,11 @@ chromeSpec(function(runningInBackground) {
         'int': 1,
         'double': 2.345,
         'string': 'test',
-        'String': Object('test'),
+// TODO(agrieve): Uncomment these tests if http://crbug.com/169397 gets fixed.
+//        'String': Object('test'),
+//        'object_with_window': {'':window},
         'Array': [1,2,3],
-        'object': {'a':1,'b':'2','c':3.456},
+        'object': {'':'','a':1,'b':'2','c':3.456},
         'object_with_toJSON': {'a':1, 'toJSON': function() { return 'foo'; }},
         'Window': window,
         'RegExp': /hello/,
@@ -49,16 +51,18 @@ chromeSpec(function(runningInBackground) {
         'null': null,
         'function': function hello() { return 1; },
         'DivElement': document.createElement('div'),
-        'Document': document
+        'Document': document,
+        'proto': { __proto__: {a:1}, b:2 }
       };
 
       var expected = {
         'int': 1,
         'double': 2.345,
         'string': 'test',
-        'String': {'0': 't', '1': 'e', '2': 's', '3': 't'},
+//        'String': {'0': 't', '1': 'e', '2': 's', '3': 't'},
+//        'object_with_window': {'':{}},
         'Array': [1,2,3],
-        'object': {'a':1,'b':'2','c':3.456},
+        'object': {'':'','a':1,'b':'2','c':3.456},
         'object_with_toJSON': {'a':1, 'toJSON': {}},
         'Window': {},
         'RegExp': {},
@@ -66,7 +70,8 @@ chromeSpec(function(runningInBackground) {
         'null': null,
         'function': {},
         'DivElement': {},
-        'Document': {}
+        'Document': {},
+        'proto': { b:2 }
       };
 
       describe('chrome.storage.' + type, function() {

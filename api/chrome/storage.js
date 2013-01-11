@@ -3,6 +3,21 @@
 // found in the LICENSE file.
 
 define('chrome.storage', function(require, module) {
+
+  function jsonReplacer(key) {
+    // Don't use the value passed in since it has already gone through toJSON().
+    var value = this[key];
+    // Refer to:
+    // chrome/src/content/renderer/v8_value_converter_impl.cc&l=165
+    if (value && (typeof value == 'object' || typeof value == 'function')) {
+      var typeName = Object.prototype.toString.call(value).slice(8, -1);
+      if (typeName != 'Array' && typeName != 'Object') {
+        value = {};
+      }
+    }
+    return value;
+  }
+
   function StorageArea() {
   }
 
@@ -15,7 +30,10 @@ define('chrome.storage', function(require, module) {
   StorageArea.prototype.set = function(items) {
     for (var key in items) {
       if (items.hasOwnProperty(key)) {
-        localStorage.setItem(key, JSON.stringify(items[key]));
+        if (typeof items[key] != 'undefined') {
+          var value = JSON.stringify(items[key], jsonReplacer);
+          localStorage.setItem(key, value);
+        }
       }
     }
   };
