@@ -18,13 +18,21 @@ define('chrome.storage', function(require, module) {
     return value;
   }
 
-  function StorageArea() {
+  function StorageArea(namespaceChar) {
+    this._namespace = '_%_' + namespaceChar;
   }
 
   StorageArea.prototype.getBytesInUse = unsupportedApi('StorageArea.getBytesInUse');
 
   StorageArea.prototype.clear = function() {
-    localStorage.clear();
+    var toRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k.slice(0, 4) == this._namespace) {
+        toRemove.push(k);
+      }
+    }
+    toRemove.forEach(localStorage.removeItem, localStorage);
   };
 
   StorageArea.prototype.set = function(items) {
@@ -32,7 +40,7 @@ define('chrome.storage', function(require, module) {
       if (items.hasOwnProperty(key)) {
         if (typeof items[key] != 'undefined') {
           var value = JSON.stringify(items[key], jsonReplacer);
-          localStorage.setItem(key, value);
+          localStorage.setItem(this._namespace + key, value);
         }
       }
     }
@@ -43,7 +51,7 @@ define('chrome.storage', function(require, module) {
       keys = [keys];
     }
     for (var i = 0; i < keys.length; ++i) {
-      localStorage.removeItem(keys[i]);
+      localStorage.removeItem(this._namespace + keys[i]);
     }
   };
 
@@ -58,27 +66,28 @@ define('chrome.storage', function(require, module) {
       throw 'callback must be a function';
     }
 
-    var getLocalStorageValuesForKeys = function(keys) {
+    var namespace = this._namespace;
+    function getLocalStorageValuesForKeys(keys) {
       var ret = {};
       keys.forEach(function(key) {
-        var item = localStorage.getItem(key);
-        if (item != null) {
+        var item = localStorage.getItem(namespace + key);
+        if (item !== null) {
           ret[key] = JSON.parse(item);
         }
       });
       return ret;
-    };
+    }
 
 
     if (items == null) {
       var keys = [];
       for (var i = 0; i < localStorage.length; i++) {
-        keys.push(localStorage.key(i));
+        keys.push(localStorage.key(i).slice(4));
       }
       ret = getLocalStorageValuesForKeys(keys);
     } else if (typeof items == 'string') {
       ret = getLocalStorageValuesForKeys([items]);
-    } else if (Object.prototype.toString.call(items) == Object.prototype.toString.call([])) {
+    } else if (Object.prototype.toString.call(items).slice(8, -1) == 'Array') {
       ret = getLocalStorageValuesForKeys(items);
     } else {
       ret = items; // assign defaults
@@ -88,7 +97,6 @@ define('chrome.storage', function(require, module) {
       });
     }
     callback(ret);
-    return;
   };
 /*
   function StorageChange(oldValue, newValue) {
@@ -96,10 +104,10 @@ define('chrome.storage', function(require, module) {
     this.newValue = newValue;
   }
 */
-  var local = new StorageArea();
+  var local = new StorageArea('l');
   local.QUOTA_BYTES = 5242880;
 
-  var sync = new StorageArea();
+  var sync = new StorageArea('s');
   sync.MAX_ITEMS = 512;
   sync.MAX_WRITE_OPERATIONS_PER_HOUR = 1000;
   sync.QUOTA_BYTES_PER_ITEM = 4096;

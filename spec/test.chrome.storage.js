@@ -230,5 +230,38 @@ chromeSpec(function(runningInBackground) {
 
     test_storagearea('local', chrome.storage.local);
     test_storagearea('sync', chrome.storage.sync);
+
+    describe('testing storage areas are distinct', function() {
+      beforeEach(function() {
+        chrome.storage.local.clear();
+        chrome.storage.sync.clear();
+      });
+      it('Value set in local should not be fetched by sync', function() {
+        chrome.storage.local.set({a:1});
+        chrome.storage.sync.get(waitUntilCalled(function(items) {
+          expect(items.a).toBeUndefined();
+        }));
+      });
+      it('Value set in sync should not be fetched by local', function() {
+        chrome.storage.sync.set({a:1});
+        chrome.storage.local.get(waitUntilCalled(function(items) {
+          expect(items.a).toBeUndefined();
+        }));
+      });
+      it('Clearing local should not clear sync', function() {
+        chrome.storage.sync.set({a:1});
+        chrome.storage.local.clear();
+        chrome.storage.sync.get(waitUntilCalled(function(items) {
+          expect(items.a).toBe(1);
+        }));
+      });
+      it('Clearing sync should not clear local', function() {
+        chrome.storage.local.set({a:1});
+        chrome.storage.sync.clear();
+        chrome.storage.local.get(waitUntilCalled(function(items) {
+          expect(items.a).toBe(1);
+        }));
+      });
+    });
   });
 });
