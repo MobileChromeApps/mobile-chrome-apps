@@ -9,7 +9,6 @@
 #import "Socket.h"
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
-#import <Cordova/NSData+Base64.h>
 
 @interface  Socket()
 
@@ -77,7 +76,6 @@
     [socket connectToHost:address onPort:port error:nil];
     
     self.connectCallback = [^() {
-        NSLog(@"Calling callback for connect");
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
     } copy];
 }
@@ -115,9 +113,7 @@
     }
     
     [self.readCallbacks addObject:[^(NSData* data){
-        NSString* dataAsBase64EncodedString = [data base64EncodedString];
-//        NSLog(@"Read: %u, encoded: %@", ((unsigned char*)[data bytes])[0], dataAsBase64EncodedString);
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:dataAsBase64EncodedString] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
     } copy]];
 }
 
@@ -142,7 +138,6 @@
     
     GCDAsyncUdpSocket* socket = [self.sockets objectForKey:socketId];
     assert(socket != nil);
-    [socket closeAfterSending];
     
     [self.sockets removeObjectForKey:socketId];
 }
