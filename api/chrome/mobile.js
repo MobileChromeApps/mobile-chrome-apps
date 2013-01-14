@@ -38,6 +38,7 @@ define('chrome.mobile.impl', function(require, module) {
     exports.bgInit = null;
     exports.bgWindow = bgWnd;
     bgWnd.chrome = createBgChrome();
+    bgWnd.cordova = cordova;
     exports.fgWindow.opener = exports.bgWindow;
 
     function onLoad() {
