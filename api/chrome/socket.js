@@ -33,6 +33,11 @@ exports.write = function(socketId, data, callback) {
         data = stringToArrayBuffer(data);
     }
 
+    var type = Object.prototype.toString.call(data).slice(8, -1);
+    if (type != 'ArrayBuffer') {
+      throw 'chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')';
+    }
+
     cordova.exec(function(bytesWritten) {
         var writeInfo = {};
         writeInfo.bytesWritten = bytesWritten;

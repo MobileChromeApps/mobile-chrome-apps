@@ -1,0 +1,15 @@
+{
+  "name": "chrome.runtime Tests",
+  "description": "Manual tests from chrome.runtime APIs",
+  "manifest_version": 2,
+  "minimum_chrome_version": "23",
+  "version": "0.1.0",
+  "app": {
+    "background": {
+      "scripts": [
+        "spec_common/spec_bootstrap.js",
+        "background.js"
+      ]
+    }
+  }
+}

@@ -10,4 +10,7 @@ function initPage() {
   addActionButton('chrome.runtime', function() {
     top.location = 'runtime/chromeapp.html';
   });
+  addActionButton('chrome.socket', function() {
+    top.location = 'socket/chromeapp.html';
+  });
 }
