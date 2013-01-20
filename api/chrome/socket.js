@@ -1,13 +1,5 @@
 define('chrome.socket', function(require, module) {
 
-var stringToArrayBuffer = function(str) {
-    var ret = new Uint8Array(str.length);
-    for (var i = 0; i < str.length; i++) {
-        ret[i] = str.charCodeAt(i);
-    }
-    return ret.buffer;
-};
-
 var exports = module.exports;
 
 exports.create = function(socketMode, stuff, callback) {
@@ -17,7 +9,7 @@ exports.create = function(socketMode, stuff, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(socketInfo);
         }
-    }, null, 'Socket', 'create', [{ socketMode: socketMode }]);
+    }, null, 'ChromeSocket', 'create', [{ socketMode: socketMode }]);
 };
 
 exports.connect = function(socketId, address, port, callback) {
@@ -25,14 +17,34 @@ exports.connect = function(socketId, address, port, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(result);
         }
-    }, null, 'Socket', 'connect', [{ socketId: socketId, address: address, port: port }]);
+    }, null, 'ChromeSocket', 'connect', [{ socketId: socketId, address: address, port: port }]);
+};
+
+exports.listen = function(socketId, address, port, backlog, callback) {
+    if (typeof backlog == 'function') {
+      callback = backlog;
+      backlog = 0;
+    }
+    cordova.exec(function(result) {
+        if (!!callback && typeof callback == 'function') {
+            callback(result);
+        }
+    }, null, 'ChromeSocket', 'listen', [{ socketId: socketId, address: address, port: port, backlog: backlog }]);
+};
+
+exports.accept = function(socketId, callback) {
+    console.log('accept');
+    cordova.exec(function(socketId) {
+        var acceptInfo = {};
+        acceptInfo.resultCode = 0;
+        acceptInfo.socketId = socketId;
+        if (!!callback && typeof callback == 'function') {
+            callback(acceptInfo);
+        }
+    }, null, 'ChromeSocket', 'accept', [{ socketId: socketId }]);
 };
 
 exports.write = function(socketId, data, callback) {
-    if (typeof data == 'string') {
-        data = stringToArrayBuffer(data);
-    }
-
     var type = Object.prototype.toString.call(data).slice(8, -1);
     if (type != 'ArrayBuffer') {
       throw 'chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')';
@@ -44,7 +56,7 @@ exports.write = function(socketId, data, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(writeInfo);
         }
-    }, null, 'Socket', 'write', [{ socketId: socketId }, data]);
+    }, null, 'ChromeSocket', 'write', [{ socketId: socketId }, data]);
 };
 
 exports.read = function(socketId, bufferSize, callback) {
@@ -59,15 +71,15 @@ exports.read = function(socketId, bufferSize, callback) {
         if (!!callback && typeof callback == 'function') {
             callback(readInfo);
         }
-    }, null, 'Socket', 'read', [{ socketId: socketId, bufferSize: bufferSize }]);
+    }, null, 'ChromeSocket', 'read', [{ socketId: socketId, bufferSize: bufferSize }]);
 };
 
 exports.disconnect = function(socketId) {
-    cordova.exec(null, null, 'Socket', 'disconnect', [{ socketId: socketId }]);
+    cordova.exec(null, null, 'ChromeSocket', 'disconnect', [{ socketId: socketId }]);
 };
 
 exports.destroy = function(socketId) {
-    cordova.exec(null, null, 'Socket', 'destroy', [{ socketId: socketId }]);
+    cordova.exec(null, null, 'ChromeSocket', 'destroy', [{ socketId: socketId }]);
 };
 
 });

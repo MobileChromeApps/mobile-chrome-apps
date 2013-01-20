@@ -9,12 +9,14 @@
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
 
-@interface Socket : CDVPlugin
+@interface ChromeSocket : CDVPlugin
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
 
 - (void)create:(CDVInvokedUrlCommand*)command;
 - (void)connect:(CDVInvokedUrlCommand*)command;
+- (void)listen:(CDVInvokedUrlCommand*)command;
+- (void)accept:(CDVInvokedUrlCommand*)command;
 - (void)write:(CDVInvokedUrlCommand*)command;
 - (void)read:(CDVInvokedUrlCommand*)command;
 - (void)disconnect:(CDVInvokedUrlCommand*)command;
