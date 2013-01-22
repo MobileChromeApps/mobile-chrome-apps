@@ -33,7 +33,7 @@
 @property (nonatomic, strong) NSMutableDictionary* sockets;
 @property (nonatomic) NSUInteger nextSocketId;
 
-- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode;
+- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(GCDAsyncSocket*)theSocket;
 
 @end
 
@@ -50,7 +50,7 @@
 @synthesize readCallbacks;
 @synthesize writeCallbacks;
 
-- (ChromeSocketSocket*)initWithId:(NSUInteger)theSocketId mode:(NSString*)theMode plugin:(ChromeSocket*)thePlugin
+- (ChromeSocketSocket*)initWithId:(NSUInteger)theSocketId mode:(NSString*)theMode plugin:(ChromeSocket*)thePlugin socket:theSocket
 {
     self = [super init];
     if (self) {
@@ -61,8 +61,13 @@
         self.readCallbacks = [NSMutableArray array];
         self.writeCallbacks = [NSMutableArray array];
         
-        GCDAsyncSocket* socket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-        self.socket = socket;
+        
+        if (theSocket == nil) {
+            theSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+        } else {
+            [theSocket setDelegate:self];
+        }
+        self.socket = theSocket;
     }
     return self;
 }
@@ -90,7 +95,8 @@
 - (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
 {
     // TODO: retain newSocket or else
-    ChromeSocketSocket* socket = [self.plugin createNewSocketWithMode:self.mode];
+    ChromeSocketSocket* socket = [self.plugin createNewSocketWithMode:self.mode socket:newSocket];
+
     void (^ callback)(NSUInteger socketId) = self.acceptCallback;
     assert(callback != nil);
 
@@ -108,6 +114,8 @@
 {
     //    NSLog(@"didReadData: %@ tag: %lu", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], tag);
     
+    NSLog(@"my socketId: %u", self.socketId);
+    assert([self.readCallbacks count] != 0);
     void (^ callback)(NSData*) = [self.readCallbacks objectAtIndex:0];
     assert(callback != nil);
 
@@ -120,6 +128,8 @@
 {
     //    NSLog(@"didWriteDataWithTag: %lu", tag);
     
+    NSLog(@"my socketId: %u", self.socketId);
+    assert([self.writeCallbacks count] != 0);
     void (^ callback)() = [self.writeCallbacks objectAtIndex:0];
     assert(callback != nil);
 
@@ -149,7 +159,12 @@
 
 - (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode
 {
-    ChromeSocketSocket* socket = [[ChromeSocketSocket alloc] initWithId:self.nextSocketId++ mode:mode plugin:self];
+    return [self createNewSocketWithMode:mode socket:nil];
+}
+
+- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(GCDAsyncSocket*)theSocket
+{
+    ChromeSocketSocket* socket = [[ChromeSocketSocket alloc] initWithId:self.nextSocketId++ mode:mode plugin:self socket:theSocket];
     [self.sockets setObject:socket forKey:[NSNumber numberWithUnsignedInteger:socket.socketId]];
     return socket;
 }
@@ -225,6 +240,7 @@
     
     ChromeSocketSocket* socket = [self.sockets objectForKey:socketId];
     assert(socket != nil);
+    assert(socket.socketId == [socketId unsignedIntegerValue]);
     
     [socket.socket writeData:data withTimeout:-1 tag:-1];
     
@@ -241,6 +257,7 @@
 
     ChromeSocketSocket* socket = [self.sockets objectForKey:socketId];
     assert(socket != nil);
+    assert(socket.socketId == [socketId unsignedIntegerValue]);
     
     if (bufferSize != 0) {
         [socket.socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
