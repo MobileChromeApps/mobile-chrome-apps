@@ -10,6 +10,32 @@
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
 
+#ifndef CHROME_SOCKET_VERBOSE_LOGGING
+#define CHROME_SOCKET_VERBOSE_LOGGING 0
+#endif
+
+#if CHROME_SOCKET_VERBOSE_LOGGING
+#define VERBOSE_LOG NSLog
+#else
+#define VERBOSE_LOG(args...) do {} while (false)
+#endif
+
+
+#if CHROME_SOCKET_VERBOSE_LOGGING
+static NSString* stringFromData(NSData* data) {
+    NSUInteger len = [data length];
+    if (len > 200) {
+        len = 200;
+    }
+    char* buf = (char*)malloc(len + 1);
+    memcpy(buf, [data bytes], len);
+    buf[len] = 0;
+    NSString* ret = [NSString stringWithUTF8String:buf];
+    free(buf);
+    return ret;
+}
+#endif  // CHROME_SOCKET_VERBOSE_LOGGING
+
 @interface ChromeSocketSocket : NSObject {}
 
 @property (nonatomic, weak) ChromeSocket* plugin;
@@ -114,7 +140,7 @@
 {
     //    NSLog(@"didReadData: %@ tag: %lu", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], tag);
     
-    NSLog(@"my socketId: %u", self.socketId);
+    VERBOSE_LOG(@"my socketId: %u", self.socketId);
     assert([self.readCallbacks count] != 0);
     void (^ callback)(NSData*) = [self.readCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -128,7 +154,7 @@
 {
     //    NSLog(@"didWriteDataWithTag: %lu", tag);
     
-    NSLog(@"my socketId: %u", self.socketId);
+    VERBOSE_LOG(@"my socketId: %u", self.socketId);
     assert([self.writeCallbacks count] != 0);
     void (^ callback)() = [self.writeCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -178,6 +204,7 @@
     
     ChromeSocketSocket* socket = [self createNewSocketWithMode:socketMode];
 
+    VERBOSE_LOG(@"NTFY %d.%@ Create", socket.socketId, command.callbackId);
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socket.socketId] callbackId:command.callbackId];
 }
 
@@ -195,7 +222,9 @@
     socket.addr = address;
     socket.port = port;
     
+    VERBOSE_LOG(@"REQ %@.%@ Connect", socketId, command.callbackId);
     socket.connectCallback = [^() {
+        VERBOSE_LOG(@"ACK %@.%@ Connect", socketId, command.callbackId);
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
     } copy];
 }
@@ -211,6 +240,7 @@
     ChromeSocketSocket* socket = [self.sockets objectForKey:socketId];
     assert(socket != nil);
 
+    VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
     [socket.socket acceptOnPort:port error:nil];
     // TODO: Queue up connections until next accept called
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
@@ -226,7 +256,9 @@
     ChromeSocketSocket* socket = [self.sockets objectForKey:socketId];
     assert(socket != nil);
     
+    VERBOSE_LOG(@"REQ %@.%@ Accept", socketId, command.callbackId);
     socket.acceptCallback = [^(NSUInteger socketId) {
+        VERBOSE_LOG(@"ACK %d.%@ Accept", socketId, command.callbackId);
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socketId] callbackId:command.callbackId];
     } copy];
 }
@@ -242,11 +274,13 @@
     assert(socket != nil);
     assert(socket.socketId == [socketId unsignedIntegerValue]);
     
-    [socket.socket writeData:data withTimeout:-1 tag:-1];
-    
     [socket.writeCallbacks addObject:[^(){
+        VERBOSE_LOG(@"ACK %@.%@ Write", socketId, command.callbackId);
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
     } copy]];
+
+    VERBOSE_LOG(@"REQ %@.%@ Write Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
+    [socket.socket writeData:data withTimeout:-1 tag:-1];
 }
 
 - (void)read:(CDVInvokedUrlCommand*)command
@@ -259,15 +293,17 @@
     assert(socket != nil);
     assert(socket.socketId == [socketId unsignedIntegerValue]);
     
+    [socket.readCallbacks addObject:[^(NSData* data){
+        VERBOSE_LOG(@"ACK %@.%@ Read Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
+    } copy]];
+    
     if (bufferSize != 0) {
         [socket.socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
     } else {
         [socket.socket readDataWithTimeout:-1 tag:-1];
     }
-    
-    [socket.readCallbacks addObject:[^(NSData* data){
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
-    } copy]];
+    VERBOSE_LOG(@"REQ %@.%@ Read", socketId, command.callbackId);
 }
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command
@@ -281,6 +317,7 @@
     [socket.socket disconnectAfterReadingAndWriting];
     socket.addr = nil;
     socket.port = 0;
+    VERBOSE_LOG(@"NTFY %@.%@ Disconnect", socketId, command.callbackId);
 }
 
 - (void)destroy:(CDVInvokedUrlCommand*)command
@@ -292,6 +329,7 @@
     assert(socket != nil);
     
     [self.sockets removeObjectForKey:[NSNumber numberWithUnsignedInteger:socket.socketId]];
+    VERBOSE_LOG(@"NTFY %@.%@ Destroy", socketId, command.callbackId);
 }
 
 @end
