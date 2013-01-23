@@ -178,9 +178,7 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)create:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    
-    NSString* socketMode = [options objectForKey:@"socketMode"];
+    NSString* socketMode = [command argumentAtIndex:0];
     assert([socketMode isEqualToString:@"tcp"]);
     
     ChromeSocketSocket* socket = [self createNewSocketWithMode:socketMode];
@@ -191,10 +189,9 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)connect:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
-    NSString* address = [options objectForKey:@"address"];
-    NSUInteger port = [[options objectForKey:@"port"] unsignedIntegerValue];
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSString* address = [command argumentAtIndex:1];
+    NSUInteger port = [[command argumentAtIndex:2] unsignedIntegerValue];
     
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -212,11 +209,10 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)listen:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
-//    NSString* address = [options objectForKey:@"address"];
-    NSUInteger port = [[options objectForKey:@"port"] unsignedIntegerValue];
-//    NSUInteger backlog = [[options objectForKey:@"backlog"] unsignedIntegerValue];
+    NSNumber* socketId = [command argumentAtIndex:0];
+//    NSString* address = [command argumentAtIndex:1];
+    NSUInteger port = [[command argumentAtIndex:2] unsignedIntegerValue];
+//    NSUInteger backlog = [[command argumentAtIndex:3] unsignedIntegerValue];
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -229,10 +225,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)accept:(CDVInvokedUrlCommand*)command
 {
-    // TODO: support a queue of accepted sockets, in case a client connects before server accepts.
-    
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
+    // TODO: support a queue of accepted sockets, in case a client connects before server accepts.    
+    NSNumber* socketId = [command argumentAtIndex:0];
     
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -246,10 +240,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)write:(CDVInvokedUrlCommand*)command
 {
-    assert([command.arguments count] == 2);
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
-    NSData* data = [command.arguments objectAtIndex:1];
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSData* data = [command argumentAtIndex:1];
     
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -266,9 +258,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)read:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
-    NSUInteger bufferSize = [[options objectForKey:@"bufferSize"] unsignedIntegerValue];
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSUInteger bufferSize = [[command argumentAtIndex:1] unsignedIntegerValue];
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -289,8 +280,7 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
+    NSNumber* socketId = [command argumentAtIndex:0];
     
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -303,8 +293,7 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)destroy:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0];
-    NSNumber* socketId = [options objectForKey:@"socketId"];
+    NSNumber* socketId = [command argumentAtIndex:0];
     
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
