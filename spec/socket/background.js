@@ -88,4 +88,3 @@ function initPage() {
   addActionButton('TCP: read', function() {
   });
 }
-

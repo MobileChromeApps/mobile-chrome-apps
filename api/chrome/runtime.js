@@ -58,4 +58,3 @@ define('chrome.runtime', function(require, module) {
   stubs.createStub(exports, 'id', '{appId}');
   stubs.createStub(exports, 'requestUpdateCheck', function(){});
 });
-

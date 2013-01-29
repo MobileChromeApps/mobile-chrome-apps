@@ -13,4 +13,3 @@ In a similar vein, it will enforce 2 spaces for indentation with no tabs. Unused
 JSHint also disallows global variables in general. The `browser` option allows `alert`, `console`, `document` and so on, but any new global variables (say things defined in `prefix.js`) can be added to the `globals` array in `grunt.js`. The boolean value accompanying these is `true` if code is allowed to overwrite said global variable (usually we want `false`, then).
 
 The linter errors are compile-blocking errors by default, rather than warnings, and I think we should keep it that way.
-

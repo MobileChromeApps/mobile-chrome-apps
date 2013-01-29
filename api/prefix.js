@@ -62,4 +62,3 @@
       console.warn('API is not supported on mobile: ' + name);
     }
   }
-

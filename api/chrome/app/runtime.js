@@ -7,4 +7,3 @@ define('chrome.app.runtime', function(require, module) {
   var exports = module.exports;
   exports.onLaunched = new Event('onLaunched');
 });
-

@@ -17,4 +17,3 @@ function initPage() {
     chrome.runtime.reload();
   });
 }
-

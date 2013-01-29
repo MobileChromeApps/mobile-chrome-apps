@@ -61,4 +61,3 @@ This design meets all the requirements I came up with:
 * Nothing leaks into the global scope unless we want it to. The whole ordeal is wrapped in `(function() { ... })();`, so the only effect on global state should be the explicitly set `window.chrome`.
 
 Comments, critique and improvements welcome.
-

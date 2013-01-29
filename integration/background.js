@@ -10,4 +10,3 @@ chrome.app.runtime.onLaunched.addListener(function() {
     height: 380,
   });
 });
-

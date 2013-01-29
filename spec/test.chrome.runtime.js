@@ -47,4 +47,3 @@ chromeSpec(function(runningInBackground) {
     itShouldHaveAPropertyOfType(chrome.runtime, 'requestUpdateCheck', 'function');
   });
 });
-

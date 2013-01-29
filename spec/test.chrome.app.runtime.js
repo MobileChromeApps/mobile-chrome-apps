@@ -9,4 +9,3 @@ chromeSpec(function(runningInBackground) {
     });
   });
 });
-
