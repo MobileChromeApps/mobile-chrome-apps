@@ -1,0 +1,35 @@
+#!/bin/bash
+
+exec 1>&2
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+    against=HEAD
+else
+    # Initial commit: diff against an empty tree object
+    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+IFS='
+'
+# Find files with trailing whitespace
+for FILE in $(
+    git diff-index --check --cached $against -- \
+    | sed '/^[+-]/d' \
+    | ( sed -E 's/:[0-9]+:.*//' || sed -E 's/:[0-9]+:.*//' ) \
+    | uniq \
+)
+do
+  # Ignore binary files.
+  ( file --mime "$FILE" | grep charset=binary >/dev/null ) && continue
+  # Ignore third_party.
+  [[ "$FILE" = *third_party* ]] && continue
+
+  if grep -E '\s+$' "$FILE"; then
+    echo -n "Fixing whitespace in $FILE"
+  fi
+  # Fix up trailing white-space & extra lines at EOF.
+  sed -i '' 's/[  ]*$//' "$FILE" && \
+      sed -i '' -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' "$FILE" && \
+      git add "$FILE"
+done
