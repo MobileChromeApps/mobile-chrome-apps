@@ -7,7 +7,11 @@
   "app": {
     "background": {
       "scripts": [
-        "spec_common/spec_bootstrap.js",
+        "spec_bootstrap.js",
+        "page.chromespec.js",
+        "page.jasmine.js",
+        "page.runtime.js",
+        "page.socket.js",
         "background.js"
       ]
     }
