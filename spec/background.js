@@ -1,16 +1,14 @@
-var specScripts = [
-  'test.chrome.app.runtime.js',
-  'test.chrome.app.window.js',
-  'test.chrome.runtime.js',
-  'test.chrome.storage.js',
-  'test.pageload.js'
-];
+chromespec.registerJasmineTest('chrome.app.runtime');
+chromespec.registerJasmineTest('chrome.app.window');
+chromespec.registerJasmineTest('chrome.runtime');
+chromespec.registerJasmineTest('chrome.storage');
+chromespec.registerJasmineTest('pageload');
 
 function initPage() {
-  addActionButton('chrome.runtime', function() {
+  chromespec.addActionButton('chrome.runtime', function() {
     top.location = 'runtime/chromeapp.html';
   });
-  addActionButton('chrome.socket', function() {
+  chromespec.addActionButton('chrome.socket', function() {
     top.location = 'socket/chromeapp.html';
   });
 }

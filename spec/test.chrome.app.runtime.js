@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-chromeSpec(function(runningInBackground) {
-  describe('chrome.app.runtime', function() {
-    it('should have onLaunched exist', function() {
-      expect(chrome.app.runtime.onLaunched).not.toBeUndefined();
-    });
+chromeSpec('chrome.app.runtime', function(runningInBackground) {
+  it('should have onLaunched exist', function() {
+    expect(chrome.app.runtime.onLaunched).not.toBeUndefined();
   });
 });

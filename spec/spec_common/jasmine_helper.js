@@ -1,5 +1,5 @@
-function chromeSpec(func) {
-  chromeSpecs[!!window.runningInBg].push(func);
+function chromeSpec(name, func) {
+  chromespec.registerJasmineTestInstance(!!window.runningInBg, name, func);
 }
 
 function itShouldHaveAnEvent(obj, eventName) {

@@ -71,3 +71,9 @@ h2 {
   background: #eee;
   padding-bottom: 4px;
 }
+
+.clear-logs {
+  font-size: 11pt;
+  margin-left: 20px;
+  color: #55f;
+}

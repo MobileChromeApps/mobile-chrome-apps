@@ -1,5 +1,5 @@
 
-chromeSpec(function(runningInBackground) {
+chromeSpec('pageload', function(runningInBackground) {
   if (!runningInBackground) {
     describe('page loading', function() {
       // Attributes are stripped off of the head tag in desktop Chrome, so don't test that.

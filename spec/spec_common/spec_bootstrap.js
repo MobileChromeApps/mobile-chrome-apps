@@ -1,47 +1,60 @@
-var wnd = null;
-var doc = null;
+chromespec = {};
+chromespec.fgWnd = null;
+chromespec.fgDoc = null;
+chromespec.bgWnd = window;
+
 // A flag for jasmine_helper.js.
 window.runningInBg = true;
 
-var chromeSpecs = {
-  'true': [],
-  'false': []
-};
-
 (function() {
   var jasmineLoaded = false;
+  var jasmineScripts = {};
   var uiSyncReporter = null;
-  var specScriptsLoadCount = 0;
 
-  window.log = function log(text) {
-    var logElem = doc.querySelector('#logs');
-    var newPre = doc.createElement('pre');
-    newPre.textContent = text;
-    logElem.appendChild(newPre);
+
+  function log(text) {
+    if (chromespec.fgDoc) {
+      var logElem = chromespec.fgDoc.querySelector('#logs');
+      if (logElem) {
+        var newPre = chromespec.fgDoc.createElement('pre');
+        newPre.textContent = text;
+        logElem.appendChild(newPre);
+      }
+    }
     console.log(text);
-  };
+  }
 
-  window.addActionButton = function addActionButton(name, func) {
-    var btnsElem = doc.querySelector('#btns');
-    var newButton = doc.createElement('div');
+  function clearLogs() {
+    var logElem = chromespec.fgDoc.querySelector('#logs');
+    logElem.innerHTML = '';
+  }
+
+  function createButton(name, func) {
+    var newButton = chromespec.fgDoc.createElement('div');
     newButton.textContent = name;
     newButton.className = 'btn';
     newButton.onclick = func;
     newButton.tabIndex = 1;
-    btnsElem.appendChild(newButton);
-  };
+    return newButton;
+  }
 
-  window.injectScript = function injectScript(doc_, src, callback) {
-    console.log('injecting script into ' + (doc_ == doc ? 'fg' : 'bg') + ': ' + src);
-    var n = doc_.createElement('script');
+  function addActionButton(name, func) {
+    var btnsElem = chromespec.fgDoc.querySelector('#btns');
+    var newButton = createButton(name, func);
+    btnsElem.appendChild(newButton);
+  }
+
+  function injectScript(doc, src, callback) {
+    log('injecting script into ' + (doc == chromespec.fgDoc ? 'fg' : 'bg') + ': ' + src);
+    var n = doc.createElement('script');
     n.onload = callback;
     n.src = src;
-    var head = doc_.querySelector('head');
+    var head = doc.querySelector('head');
     head.appendChild(n);
-  };
+  }
 
   // Loads scripts in sequence.
-  window.injectScripts = function injectScripts(doc, srcs, callback) {
+  function injectScripts(doc, srcs, callback) {
     srcs = srcs.concat();
     function helper() {
       var src = srcs.shift();
@@ -52,15 +65,30 @@ var chromeSpecs = {
       }
     }
     helper();
-  };
-
-  function injectStyle(src) {
-    var n = doc.createElement('link');
-    n.setAttribute('rel', 'stylesheet');
-    n.setAttribute('href', src);
-    doc.querySelector('head').appendChild(n);
   }
 
+  function registerJasmineTest(testName) {
+    jasmineScripts[testName] = {
+      name: testName,
+      jsFile: 'test.' + testName + '.js',
+      bgInstance: null,
+      fgInstance: null
+    };
+  }
+
+  function registerJasmineTestInstance(runningInBg, name, func) {
+    jasmineScripts[name][runningInBg ? 'bgInstance' : 'fgInstance'] = func;
+  }
+
+  function injectStyle(src) {
+    var n = chromespec.fgDoc.createElement('link');
+    n.setAttribute('rel', 'stylesheet');
+    n.setAttribute('href', src);
+    chromespec.fgDoc.querySelector('head').appendChild(n);
+  }
+
+  // The purpose of this is to mirror the jasmine HTML from the
+  // background page onto the foreground page.
   function UiSyncReporter() {
     this.bgElem = null;
     this.fgElem = null;
@@ -73,7 +101,7 @@ var chromeSpecs = {
   };
 
   UiSyncReporter.prototype.sync = function() {
-    this.fgElem = this.fgElem || doc && doc.getElementById('jasmine-container');
+    this.fgElem = this.fgElem || chromespec.fgDoc && chromespec.fgDoc.getElementById('jasmine-container');
     this.bgElem = this.bgElem || document.getElementById('HTMLReporter');
     if (this.fgElem && this.bgElem) {
       this.fgElem.innerHTML = this.bgElem.outerHTML;
@@ -92,8 +120,8 @@ var chromeSpecs = {
   function initJasmine(callback) {
     function afterJasmineLoaded() {
       // Make sure both pages use the same jasmine context.
-      if (wnd) {
-        wnd.jasmine = jasmine;
+      if (chromespec.fgWnd) {
+        chromespec.fgWnd.jasmine = window.jasmine;
       }
       callback();
     }
@@ -129,14 +157,14 @@ var chromeSpecs = {
     resetQueue(runner.queue);
   }
 
-  function runJasmine(finishCallback) {
+  function resetJasmine(finishCallback) {
+    jasmine.currentEnv_ = new jasmine.Env();
     var jasmineEnv = jasmine.getEnv();
     jasmineEnv.updateInterval = 1000;
     jasmineEnv.defaultTimeoutInterval = 300;
-    resetJasmineRunner(jasmineEnv.currentRunner());
+    // resetJasmineRunner(jasmineEnv.currentRunner());
 
-    // Re-using HtmlReporter causes an exception, so we recreate.
-    jasmineEnv.reporter = new jasmine.MultiReporter();
+    // jasmineEnv.reporter = new jasmine.MultiReporter();
     var htmlReporter = new jasmine.HtmlReporter();
     // TODO(agrieve): Make this spec filter work without a page reload.
     var specQueryParam = parent.location.search.split('=')[1];
@@ -150,112 +178,147 @@ var chromeSpecs = {
     uiSyncReporter = new UiSyncReporter();
     jasmineEnv.addReporter(uiSyncReporter);
 
-    // runJasmine can be called as an event handler, and so finishCallback is
-    // not of the right type.
-    if (typeof finishCallback == 'function') {
+    if (finishCallback) {
       var doneReporter = {};
       doneReporter.reportRunnerResults = finishCallback;
       jasmineEnv.addReporter(doneReporter);
     }
-
-    jasmineEnv.execute();
   }
 
-  function maybeRunSpecScripts() {
-    if (++specScriptsLoadCount == 2) {
-      runJasmine();
+  function loadJasmineTest(testName, runInFg, runInBg) {
+    if (runInBg) {
+      describe(testName + ' (In bg):', function() {
+        jasmineScripts[testName].bgInstance(true);
+      });
+    }
+    if (runInFg) {
+      describe(testName + ' (In fg):', function() {
+        jasmineScripts[testName].fgInstance(false);
+      });
     }
   }
 
-  function injectJasmineScripts(doc_, scriptSrcs, callback) {
+  function injectSpecScripts(doc, callback) {
+    var scriptSrcs = [];
+    for (var k in jasmineScripts) {
+      scriptSrcs.push(jasmineScripts[k].jsFile);
+    }
     initJasmine(function() {
-      injectScripts(doc_, scriptSrcs, function() {
-        var runningInBackground = doc_ == document;
-        var wndName = runningInBackground ? 'bg' : 'fg';
-        describe('In ' + wndName + ':', function() {
-          for (var i = 0, f; f = chromeSpecs[runningInBackground][i]; ++i) {
-            f(runningInBackground);
-          }
-        });
-        callback && callback();
-      });
+      injectScripts(doc, scriptSrcs, callback);
     });
   }
 
-  window.createUiWindow = function createUiWindow(onLoadCallback) {
+  function createUiWindow(onLoadCallback) {
     chrome.app.window.create('wnd.html', {
       width: 320,
       height: 380,
       id: 'ui'
     }, function(w) {
-      console.log('UI window init start.');
-      wnd = w.contentWindow;
-      doc = wnd.document;
+      log('UI window init start.');
+      var wnd = w.contentWindow;
+      chromespec.fgWnd = wnd;
+      chromespec.fgDoc = wnd.document;
       wnd.onload = onUiWindowLoad;
       wnd.jasmine = window.jasmine;
-      wnd.chromeSpecs = chromeSpecs;
-      wnd.bgWindow = window;
+      wnd.chromespec = chromespec;
       if (typeof onLoadCallback == 'function') {
         onLoadCallback(w);
       }
     });
-  };
+  }
 
   function onUiWindowLoad() {
     injectStyle('spec_common/jasmine/jasmine.css');
     injectStyle('spec_common/spec_styles.css');
+    // Inject jasmine.js again so that it will register it's global helper functions (e.g. it, describe).
     var scripts = [
         'spec_common/jasmine/jasmine.js',
         'spec_common/jasmine_helper.js'
     ];
-    injectScripts(doc, scripts, onScriptsLoaded);
+    injectScripts(chromespec.fgDoc, scripts, onScriptsLoaded);
   }
 
   function ensureCordovaInitializes() {
     var timerId = window.setTimeout(function() {
       log('Cordova failed to initialize.');
     }, 500);
-    doc.addEventListener('deviceready', function() {
+    chromespec.fgDoc.addEventListener('deviceready', function() {
       window.clearTimeout(timerId);
-      log('Cordova initialized. platform: ' + wnd.device.platform);
+      log('Cordova initialized. platform: ' + chromespec.fgWnd.device.platform);
     }, false);
   }
 
+  function onRunJasmineClick() {
+    var runInFg = chromespec.fgDoc.getElementById('jasmine-run-in-fg').checked;
+    var runInBg = chromespec.fgDoc.getElementById('jasmine-run-in-bg').checked;
+    var specName = this.textContent;
+    resetJasmine();
+    if (specName == 'Run All') {
+      for (var k in jasmineScripts) {
+        loadJasmineTest(k, runInFg, runInBg);
+      }
+    } else {
+      loadJasmineTest(specName, runInFg, runInBg);
+    }
+    jasmine.getEnv().execute();
+  }
+
+  function createJasmineUi() {
+    var container = chromespec.fgDoc.getElementById('jasmine-ui');
+    container.innerHTML =
+        '<div>Run in:<label><input type=checkbox id="jasmine-run-in-fg" checked>FG</label>' +
+        '<label><input type=checkbox id="jasmine-run-in-bg" checked>BG</label></div>';
+    var newButton = createButton('Run All', onRunJasmineClick);
+    container.appendChild(newButton);
+    for (var k in jasmineScripts) {
+      newButton = createButton(jasmineScripts[k].name, onRunJasmineClick);
+      container.appendChild(newButton);
+    }
+  }
+
   function onScriptsLoaded() {
-    doc.body.insertAdjacentHTML('beforeend', '<h1></h1>' +
-        '<div class="btn right-btn" tabindex=1>Run Again</div>' +
-        '<h2>Jasmine Tests</h2><div id="jasmine-container"></div>' +
+    chromespec.fgDoc.body.insertAdjacentHTML('beforeend', '<h1></h1>' +
+        '<h2>Jasmine Tests</h2><div id="jasmine-ui"></div><div id="jasmine-container"></div>' +
         '<h2>Manual Actions</h2><div id=btns></div>' +
-        '<div class="btn right-btn" tabindex=1>Back</div>' +
-        '<h2>Logs</h2><div id=logs></div>');
-    doc.querySelector('h1').textContent = chrome.runtime.getManifest().name;
-    doc.querySelectorAll('.right-btn')[0].onclick = runJasmine;
-    doc.querySelectorAll('.right-btn')[1].onclick = backHome;
+        '<h2>Logs<a href="javascript:;" class="clear-logs">clear</span></h2><div id=logs></div>');
+    chromespec.fgDoc.querySelector('h1').textContent = chrome.runtime.getManifest().name;
+    chromespec.fgDoc.querySelector('.clear-logs').onclick = clearLogs;
     uiSyncReporter && uiSyncReporter.sync();
     ensureCordovaInitializes();
     // This function is defined in app's background.js.
     window.initPage && initPage();
-    if (window.specScripts) {
-      injectJasmineScripts(doc, specScripts, maybeRunSpecScripts);
-    }
-    console.log('UI window init complete.');
-  }
 
-  function backHome() {
-    wnd.location = '../chromeapp.html';
+    var cnt = 0;
+    function next() {
+      if (++cnt > 1) {
+        createJasmineUi();
+      }
+    }
+    initJasmine(function() {
+      injectSpecScripts(chromespec.fgDoc, function() {
+        log('UI window load complete.');
+        next();
+      });
+      injectSpecScripts(document, function() {
+        log('bgWindow load complete');
+        next();
+      });
+    });
   }
 
   function startUpLogic() {
-    console.log('onLaunched called.');
+    log('onLaunched called.');
     if (!window.noAutoCreateWindow) {
       createUiWindow();
     }
   }
-  console.log('App started.');
-  window.onload = function() {
-    if (window.specScripts) {
-      injectJasmineScripts(document, specScripts, maybeRunSpecScripts);
-    }
-  };
+
+  log('App started.');
   chrome.app.runtime.onLaunched.addListener(startUpLogic);
+
+  chromespec.addActionButton = addActionButton;
+  chromespec.createUiWindow = createUiWindow;
+  chromespec.log = log;
+  chromespec.registerJasmineTest = registerJasmineTest;
+  chromespec.registerJasmineTestInstance = registerJasmineTestInstance;
 })();
