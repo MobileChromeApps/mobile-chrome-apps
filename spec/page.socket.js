@@ -7,48 +7,103 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
   var port = 1234;
   var log = chromespec.log;
 
-  function callbackAndThen(callback, args, andthen) {
-    if (callback && typeof callback == 'function') {
-      callback.apply(null, args.concat(andthen));
-    } else {
-      andthen();
-    }
-  }
-
-  function createThenDestroy(callback) {
-    chrome.socket.create('tcp', {}, function(socketInfo) {
-      log('create: success');
-
-      callbackAndThen(callback, [socketInfo], function() {
-        chrome.socket.destroy(socketInfo.socketId);
-        log('destroy: success');
-      });
-    });
-  }
-
-  function connectThenDisconnect(callback) {
-    createThenDestroy(function(socketInfo, andthen) {
+  function connectAndWrite(type, data) {
+    chrome.socket.create(type, {}, function(socketInfo) {
       chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
         var connected = (connectResult === 0);
-        log('connect: ' + (connected ? 'success' : 'failure'));
         if (connected) {
-          callbackAndThen(callback, [socketInfo], function() {
+          chrome.socket.write(socketInfo.socketId, data, function(writeResult) {
+            log('connectAndWrite: success');
             chrome.socket.disconnect(socketInfo.socketId);
-            log('disconnect: success');
-            andthen();
+            chrome.socket.destroy(socketInfo.socketId);
           });
-        } else {
-          andthen();
         }
       });
     });
   }
 
-  function writeMessage(message) {
-    connectThenDisconnect(function(socketInfo, andthen) {
-      chrome.socket.write(socketInfo.socketId, message, function(result) {
-        log('write: success');
-        andthen();
+  function connectAndRead(type) {
+    chrome.socket.create(type, {}, function(socketInfo) {
+      chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
+        var connected = (connectResult === 0);
+        if (connected) {
+          chrome.socket.read(socketInfo.socketId, function(readResult) {
+            log('connectAndRead: success');
+            chrome.socket.disconnect(socketInfo.socketId);
+            chrome.socket.destroy(socketInfo.socketId);
+          });
+        }
+      });
+    });
+  }
+
+  function acceptAndWrite(type) {
+  }
+
+  function acceptAndRead(type) {
+    chrome.socket.create(type, {}, function(socketInfo) {
+      chrome.socket.listen(socketInfo.socketId, addr, port, function(listenResult) {
+        chrome.socket.accept(socketInfo.socketId, function(acceptInfo) {
+          chrome.socket.read(acceptInfo.socketId, function(readResult) {
+            log('acceptAndRead: success');
+            chrome.socket.disconnect(acceptInfo.socketId);
+            chrome.socket.destroy(acceptInfo.socketId);
+            chrome.socket.disconnect(socketInfo.socketId);
+            chrome.socket.destroy(socketInfo.socketId);
+          });
+        });
+      });
+    });
+  }
+
+  function acceptConnectReadWrite(type, data) {
+    chrome.socket.create(type, {}, function(socketInfo) {
+      chrome.socket.listen(socketInfo.socketId, addr, port, function(listenResult) {
+
+        chrome.socket.accept(socketInfo.socketId, function(acceptInfo) {
+          chrome.socket.read(acceptInfo.socketId, function(readResult) {
+            var sent = new Uint8Array(data);
+            var recv = new Uint8Array(readResult.data);
+
+            chrome.socket.disconnect(acceptInfo.socketId);
+            chrome.socket.destroy(acceptInfo.socketId);
+            chrome.socket.disconnect(socketInfo.socketId);
+            chrome.socket.destroy(socketInfo.socketId);
+
+            if (recv.length != sent.length) {
+              return;
+            }
+
+            for (var i = 0; i < recv.length; i++) {
+              if (recv[i] != sent[i]) {
+                return;
+              }
+            }
+
+            log('acceptConnectReadWrite: success');
+          });
+        });
+
+        chrome.socket.create(type, {}, function(socketInfo) {
+          chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
+            var connected = (connectResult === 0);
+            if (connected) {
+              chrome.socket.write(socketInfo.socketId, data, function(writeResult) {
+                chrome.socket.disconnect(socketInfo.socketId);
+                chrome.socket.destroy(socketInfo.socketId);
+              });
+            }
+          });
+        });
+      });
+    });
+  }
+
+  function sendTo(type, data) {
+    chrome.socket.create(type, {}, function(socketInfo) {
+      chrome.socket.sendTo(socketInfo.socketId, data, addr, port, function(result) {
+        log('sendTo: success');
+        chrome.socket.destroy(socketInfo.socketId);
       });
     });
   }
@@ -61,31 +116,43 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
   function initPage() {
     log('Run this in terminal:');
     log('while true; do');
-    log('  (nc -lv 1234 | xxd) || break;');
-    log('  echo;');
+    log('  (nc -lv 1234 | xxd) || break; echo;');
     log('done');
 
-    addButton('TCP: create & destroy', function() {
-      log('Starting');
-      createThenDestroy();
+    var arr = new Uint8Array(256);
+    for (var i = 0; i<256; i++) {
+      arr[i] = i;
+    }
+
+    addButton('TCP: connect & write', function() {
+      connectAndWrite('tcp', arr.buffer);
     });
 
-    addButton('TCP: connect & disconnect', function() {
-      log('Starting');
-      connectThenDisconnect();
+    addButton('TCP: connect & read', function() {
+      connectAndRead('tcp');
     });
 
-    addButton('TCP: write ArrayBuffer', function() {
-      log('Starting');
-      var arr = new Uint8Array(256);
-      for (var i = 0; i<256; i++) {
-        arr[i] = i;
-      }
-      writeMessage(arr.buffer);
+    addButton('TCP: accept & read', function() {
+      acceptAndRead('tcp');
     });
 
-    addButton('TCP: read', function() {
+    addButton('TCP: accept & connect & read & write', function() {
+      acceptConnectReadWrite('tcp', arr.buffer);
+    });
+
+
+    addButton('UDP: connect & write', function() {
+      connectAndWrite('udp', arr.buffer);
+    });
+
+    addButton('UDP: connect & read', function() {
+      connectAndRead('udp', arr.buffer);
+    });
+
+    addButton('UDP: sendTo ArrayBuffer', function() {
+      sendTo('udp', arr.buffer);
     });
   }
+
   initPage();
 });
