@@ -105,4 +105,26 @@ chromespec.registerSubPage('chrome.fileSystem', function(rootEl) {
 
     chrome.fileSystem.chooseEntry(chooseEntryOptions, chooseEntryCallback);
   });
+
+  addButton('chooseEntry, images only', function() {
+    // This method is called when a file entry is retrieved.
+    var chooseEntryCallback = function(fileEntry) {
+      chromespec.log('File entry path: ' + fileEntry.fullPath);
+    };
+
+    var chooseEntryOptions = { accepts: [{ mimeTypes: ['image/*'] }] };
+
+    chrome.fileSystem.chooseEntry(chooseEntryOptions, chooseEntryCallback);
+  });
+
+  addButton('chooseEntry, videos only', function() {
+    // This method is called when a file entry is retrieved.
+    var chooseEntryCallback = function(fileEntry) {
+      chromespec.log('File entry path: ' + fileEntry.fullPath);
+    };
+
+    var chooseEntryOptions = { accepts: [{ mimeTypes: ['video/*'] }] };
+
+    chrome.fileSystem.chooseEntry(chooseEntryOptions, chooseEntryCallback);
+  });
 });
