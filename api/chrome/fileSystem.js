@@ -19,6 +19,12 @@ define('chrome.fileSystem', function(require, module) {
   };
 
   exports.chooseEntry = function(options, callback) {
+    // Ensure that the type is either unspecified or specified as 'openFile', as nothing else is supported.
+    if (options.type && options.type != 'openFile') {
+      // TODO(maxw): Determine a "more correct" way to fail here.
+      return;
+    }
+
     // Create the callback for getPicture.
     // It creates a file entry and passes it to the chooseEntry callback.
     var onPictureReceived = function(nativeUri) {
