@@ -3,6 +3,7 @@ define('chrome.socket', function(require, module) {
 var exports = module.exports;
 
 exports.create = function(socketMode, stuff, callback) {
+    callback = callback || stuff;
     var win = callback && function(socketId) {
         var socketInfo = {
             socketId: socketId
@@ -57,12 +58,16 @@ exports.read = function(socketId, bufferSize, callback) {
     }
     var win = callback && function(data) {
         var readInfo = {
-            resultCode: 1,
+            resultCode: data.byteLength || 1,
             data: data
         };
         callback(readInfo);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'read', [socketId, bufferSize]);
+    var fail = callback && function() {
+        var readInfo = { resultCode: 0 };
+        callback(readInfo);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'read', [socketId, bufferSize]);
 };
 
 exports.disconnect = function(socketId) {
