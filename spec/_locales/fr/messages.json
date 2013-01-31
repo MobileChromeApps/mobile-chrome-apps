@@ -1,0 +1,16 @@
+{
+  "appname": {
+    "message": "Le Chrome Spec",
+  },
+  "@test1": {
+    "message": "Bonjour $NAME$. $NAME$, voulez-vous des $STUFF$?",
+    "placeholders": {
+      "StUfF": {
+        "content": "le $2 $NAME$"
+      }
+    }
+  },
+  "test2": {
+    "message": "Bonjour $1, $2, et $3",
+  }
+}

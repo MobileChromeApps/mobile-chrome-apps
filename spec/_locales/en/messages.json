@@ -1,0 +1,27 @@
+{
+  "appname": {
+    "message": "Chrome Spec",
+    "description": "The title of our app."
+  },
+  "@test1": {
+    "message": "Welcome $NAME$. $NAME$, would you like some $STUFF$?",
+    "description": "Tests named placeholders",
+    "placeholders": {
+      "NaMe": {
+        "content": "$1",
+        "example": "John"
+      },
+      "StUfF": {
+        "content": "fun $2 $NAME$"
+      }
+    }
+  },
+  "test2": {
+    "message": "Hello $1, $2, and $3",
+    "description": "Tests multiple args & also non-existant args."
+  },
+  "test3": {
+    "message": "_$$_",
+    "description": "Tests $ literals"
+  }
+}
