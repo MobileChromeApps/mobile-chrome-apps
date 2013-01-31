@@ -124,6 +124,10 @@ module.exports = function(grunt) {
             'integration/chrome*',
             'grunt_output/api/chromeapi.js'
           ],
+          'grunt_output/cordova_spec/fileSystem/': [
+            'integration/chrome*',
+            'grunt_output/api/chromeapi.js'
+          ],
           'grunt_output/cordova_spec/runtime/': [
             'integration/chrome*',
             'grunt_output/api/chromeapi.js'

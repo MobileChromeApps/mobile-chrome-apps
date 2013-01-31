@@ -10,6 +10,7 @@
         "spec_bootstrap.js",
         "page.chromespec.js",
         "page.jasmine.js",
+        "page.fileSystem.js",
         "page.runtime.js",
         "page.socket.js",
         "background.js"
