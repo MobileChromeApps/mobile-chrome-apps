@@ -78,11 +78,6 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
       connectThenDisconnect();
     });
 
-    addButton('TCP: write hello', function() {
-      log('Starting');
-      writeMessage('hello');
-    });
-
     addButton('TCP: write ArrayBuffer', function() {
       log('Starting');
       var arr = new Uint8Array(256);
