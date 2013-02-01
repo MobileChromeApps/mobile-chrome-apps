@@ -159,11 +159,14 @@ window.runningInBg = true;
 
     chromespec.fgDoc.querySelector('.clear-logs').onclick = clearLogs;
 
-    changePage(0);
+    chrome.storage.local.get('chromespec-page', function(values) {
+      changePage(values['chromespec-page'] || 0);
+    });
     ensureCordovaInitializes();
   }
 
   function changePage(pageIndex) {
+    chrome.storage.local.set({'chromespec-page': pageIndex});
     clearLogs();
     var page = chromespec.subPages[pageIndex];
     var doc = chromespec.fgDoc;
