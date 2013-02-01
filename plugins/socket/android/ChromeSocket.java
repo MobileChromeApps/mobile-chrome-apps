@@ -36,16 +36,15 @@ import org.json.JSONObject;
 import android.util.Log;
 import android.util.Pair;
 
-public class SocketPlugin extends CordovaPlugin {
+public class ChromeSocket extends CordovaPlugin {
 
-    private static final String LOG_TAG = "CordovaSocket";
+    private static final String LOG_TAG = "ChromeSocket";
 
     Map<Integer, SocketData> sockets = new HashMap<Integer, SocketData>();
     int nextSocket = 1;
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        Log.i("Braden", "action: " + action);
         if ("create".equals(action)) {
             create(args, callbackContext);
             return true;
@@ -71,12 +70,10 @@ public class SocketPlugin extends CordovaPlugin {
 
     private void create(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         String socketType = args.getString(0);
-        Log.i("Braden", "Create " + socketType);
         if (socketType.equals("tcp")) {
             SocketData sd = new SocketData(SocketData.Type.TCP);
             sockets.put(Integer.valueOf(nextSocket), sd);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, nextSocket));
-            Log.i("Braden", "Returning socket " + nextSocket);
             nextSocket++;
         } else if (socketType.equals("udp")) {
             Log.w(LOG_TAG, "UDP is not currently supported");
@@ -260,7 +257,6 @@ public class SocketPlugin extends CordovaPlugin {
                             out = temp;
                         }
 
-                        Log.i("Braden", "Successfully read: " + new String(out));
                         readData.second.success(out);
                     } catch (IOException ioe) {
                         Log.w(LOG_TAG, "Failed to read from socket.", ioe);
