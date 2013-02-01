@@ -1,9 +1,6 @@
-/**
- * Listens for the app launching then creates the window.
- * Ignores the provided window size.
- *
- * @see http://developer.chrome.com/trunk/apps/app.window.html
- */
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 chromespec.registerSubPage('chrome.socket', function(rootEl) {
   var addr = '127.0.0.1';
