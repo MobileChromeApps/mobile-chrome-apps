@@ -19,6 +19,15 @@ define('chrome.fileSystem', function(require, module) {
   };
 
   exports.chooseEntry = function(options, callback) {
+    // Ensure that the type is either unspecified or specified as 'openFile', as nothing else is supported.
+    if (options.type && options.type != 'openFile') {
+      // TODO(maxw): Determine a "more correct" way to fail here.
+      return;
+    }
+
+    // Determine the media type.
+    var mediaType = determineMediaType(options.accepts, options.acceptsAllTypes);
+
     // Create the callback for getPicture.
     // It creates a file entry and passes it to the chooseEntry callback.
     var onPictureReceived = function(nativeUri) {
@@ -28,9 +37,56 @@ define('chrome.fileSystem', function(require, module) {
 
     // Prepare the options for getting the picture.
     var getPictureOptions = { destinationType: navigator.camera.DestinationType.NATIVE_URI,
-                              sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY };
+                              sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY,
+                              mediaType: mediaType };
 
     // Get a picture.
     navigator.camera.getPicture(onPictureReceived, null, getPictureOptions);
   };
+
+  function determineMediaType(acceptOptions, acceptsAllTypes) {
+    if (acceptsAllTypes) {
+      return navigator.camera.MediaType.ALLMEDIA;
+    }
+
+    var imageMimeTypeRegex = /^image\//;
+    var videoMimeTypeRegex = /^video\//;
+    var imageExtensionRegex = /^(?:jpg|png)$/;
+    var videoExtensionRegex = /^mov$/;
+    var imagesAllowed = false;
+    var videosAllowed = false;
+
+    // Iterate through all accept options.
+    // If we see anything image related, allow images.  If we see anything video related, allow videos.
+    if (acceptOptions) {
+      for (var i = 0; i < acceptOptions.length; i++) {
+        if (acceptOptions[i].mimeTypes) {
+          for (var j = 0; j < acceptOptions[i].mimeTypes.length; j++) {
+            if (imageMimeTypeRegex.test(acceptOptions[i].mimeTypes[j])) {
+              imagesAllowed = true;
+            } else if (videoMimeTypeRegex.test(acceptOptions[i].mimeTypes[j])) {
+              videosAllowed = true;
+            }
+          }
+        }
+        if (acceptOptions[i].extensions) {
+          for (var k = 0; k < acceptOptions[i].extensions.length; k++) {
+            if (imageExtensionRegex.test(acceptOptions[i].extensions[k])) {
+              imagesAllowed = true;
+            } else if (videoExtensionRegex.test(acceptOptions[i].extensions[k])) {
+              videosAllowed = true;
+            }
+          }
+        }
+      }
+    }
+
+    if (imagesAllowed && !videosAllowed) {
+      return navigator.camera.MediaType.PICTURE;
+    } else if (!imagesAllowed && videosAllowed) {
+      return navigator.camera.MediaType.VIDEO;
+    }
+
+    return navigator.camera.MediaType.ALLMEDIA;
+  }
 });
