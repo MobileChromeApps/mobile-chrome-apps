@@ -83,7 +83,7 @@ h2 {
 
 .i18n_test {
   color: __MSG_testColor__;
-  background-image: url('chrome-extension://__MSG_@@extension_id__/assets/i18n_img.gif');
+  background-image: url(__MSG_@@extENSIOn_id__.png);
   padding-__MSG_@@bidi_start_edge__: 2px;
   padding-__MSG_@@bidi_end_edge__: 4px;
   direction: __MSG_@@bidi_dir__;

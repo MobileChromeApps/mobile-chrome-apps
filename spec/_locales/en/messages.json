@@ -1,5 +1,5 @@
 {
-  "appname": {
+  "AppName": {
     "message": "Chrome Spec",
     "description": "The title of our app."
   },
@@ -12,16 +12,20 @@
         "example": "John"
       },
       "StUfF": {
-        "content": "fun $2 $NAME$"
+        "content": "fun $2 $NaMe$ $$"
       }
     }
   },
   "test2": {
-    "message": "Hello $1, $2, and $3",
+    "message": "$1, $2, and $3",
     "description": "Tests multiple args & also non-existant args."
   },
   "test3": {
     "message": "_$$_",
     "description": "Tests $ literals"
+  },
+  "testColor": {
+    "message": "#ccc",
+    "description": "Test CSS replacement"
   }
 }
