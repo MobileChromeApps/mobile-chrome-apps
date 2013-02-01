@@ -79,7 +79,25 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
             expect(testNode.offsetWidth).toBe(0);
             return true;
           }
-        });
+        }, 1000);
+      });
+      it('should not replace placeholders XHR\'d text files', function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'assets/i18n_test.txt', true);
+        // Even with Mime-type set, it's not processed.
+        xhr.overrideMimeType('text/css');
+        xhr.onload = waitUntilCalled(function() {
+          expect(xhr.responseText).toMatch(/@@/);
+        }, 1000);
+        xhr.send();
+      });
+      it('should replace placeholders XHR\'d CSS files', function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'assets/i18n_test.css', true);
+        xhr.onload = waitUntilCalled(function() {
+          expect(xhr.responseText).toMatch(chrome.runtime.id);
+        }, 1000);
+        xhr.send();
       });
     });
   }

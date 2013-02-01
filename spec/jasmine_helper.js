@@ -18,13 +18,13 @@ function itShouldHaveAPropertyOfType(obj, propName, typeName) {
   });
 }
 
-function waitUntilCalled(callback) {
+function waitUntilCalled(callback, opt_timeout) {
   var done = false;
   var wrapped = function() {
     done = true;
     return callback.apply(this, arguments);
   };
-  waitsFor(function() { return done; });
+  waitsFor(function() { return done; }, opt_timeout);
   return wrapped;
 }
 
