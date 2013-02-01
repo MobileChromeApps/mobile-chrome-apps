@@ -7,6 +7,7 @@
   "app": {
     "background": {
       "scripts": [
+        "polyfills/function_bind.js",
         "spec_bootstrap.js",
         "page.chromespec.js",
         "page.jasmine.js",
