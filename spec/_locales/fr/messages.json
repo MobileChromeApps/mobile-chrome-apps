@@ -1,16 +1,44 @@
+// Locale = fr.
 {
-  "appname": {
+  "AppName": {
     "message": "Le Chrome Spec",
+    "description": "The title of our app."
   },
   "@test1": {
     "message": "Bonjour $NAME$. $NAME$, voulez-vous des $STUFF$?",
+    "description": "Tests named placeholders",
     "placeholders": {
+      "NaMe": {
+        "content": "$1",
+        "example": "John"
+      },
       "StUfF": {
-        "content": "le $2 $NAME$"
+        "content": "fun $2 $NaMe$ $$"
       }
     }
   },
   "test2": {
-    "message": "Bonjour $1, $2, et $3",
+    "message": "$1, $2, et $3",
+    "description": "Tests multiple args & also non-existant args."
+  },
+  "test3": {
+    "message": "_$$_",
+    "description": "Tests $ literals"
+  },
+  "testColor": {
+    "message": "#ccc",
+    "description": "Test CSS replacement"
+  },
+  "testWidth": {
+    "message": "5px"
+  },
+  "extended_char": {
+    "message": "᠀\u1801"
+  },
+  "override2": {
+    "message": "échec"
+  },
+  "override3": {
+    "message": "échec"
   }
 }
