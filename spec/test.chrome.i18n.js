@@ -24,46 +24,67 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
       expect(document.getElementById('i18n-html-test').innerHTML).toBe('__MSG_appname__');
     });
 
-    it('should replace placeholders within CSS', function() {
-      testNode = document.createElement('div');
-      testNode.className = 'i18n_test';
-      document.body.appendChild(testNode);
-      var computed = window.getComputedStyle(testNode, null);
-      expect(computed.getPropertyValue('color')).toBe('rgb(204, 204, 204)');
-      expect(computed.getPropertyValue('background-image')).toMatch(new RegExp('^url.*' + chrome.runtime.id + '.png\\)$'));
-      expect(computed.getPropertyValue('padding-left')).toBe('2px');
-      expect(computed.getPropertyValue('padding-right')).toBe('4px');
-      expect(computed.getPropertyValue('direction')).toBe('ltr');
-    });
-
     it('should replace placeholders within manifest.json', function() {
       var manifest = chrome.runtime.getManifest();
       expect(manifest.name).toBe('Chrome Spec');
     });
-  }
 
-  it('should not replace placeholders within style attributes', function() {
-    testNode = document.createElement('div');
-    testNode.style.backgroundImage = 'url(__MSG_@@extension_id__.png)';
-    document.body.appendChild(testNode);
-    var computed = window.getComputedStyle(testNode, null);
-    expect(computed.getPropertyValue('background-image')).toMatch(/^url.*__MSG_.*.png\)$/);
-  });
+    describe('CSS', function() {
+      it('should replace placeholders within CSS', function() {
+        testNode = document.createElement('div');
+        testNode.className = 'i18n_test';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('color')).toBe('rgb(204, 204, 204)');
+        expect(computed.getPropertyValue('background-image')).toMatch(new RegExp('^url.*' + chrome.runtime.id + '.png\\)$'));
+        expect(computed.getPropertyValue('padding-left')).toBe('2px');
+        expect(computed.getPropertyValue('padding-right')).toBe('4px');
+        expect(computed.getPropertyValue('direction')).toBe('ltr');
+      });
 
-  it('should not replace placeholders within injected style tags', function() {
-    var styleNode = document.createElement('style');
-    styleNode.innerHTML = '.asdf { padding-__MSG_@@bidi_start_edge__: 2px; }';
-    document.querySelector('head').appendChild(styleNode);
+      it('should not replace placeholders within style attributes', function() {
+        testNode = document.createElement('div');
+        testNode.style.backgroundImage = 'url(__MSG_@@extension_id__.png)';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('background-image')).toMatch(/^url.*__MSG_.*.png\)$/);
+      });
 
-    this.after(function() {
-      styleNode.parentNode.removeChild(styleNode);
+      it('should not replace placeholders within injected style tags', function() {
+        var styleNode = document.createElement('style');
+        styleNode.innerHTML = '.asdf { padding-__MSG_@@bidi_start_edge__: 2px; }';
+        document.querySelector('head').appendChild(styleNode);
+
+        this.after(function() {
+          styleNode.parentNode.removeChild(styleNode);
+        });
+        testNode = document.createElement('div');
+        testNode.className = 'asdf';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('padding-left')).toBe('0px');
+      });
+
+      it('should not replace placeholders within Blob URL style tags', function() {
+        var linkNode = document.createElement('link');
+        var blob = new Blob(['.asdf { padding-__MSG_@@bidi_start_edge__: 2px; }'], {'type' : 'text/css'});
+        var url = URL.createObjectURL(blob);
+        this.after(function() {
+          linkNode.parentNode.removeChild(linkNode);
+          URL.revokeObjectURL(url);
+        });
+        linkNode.rel = 'stylesheet';
+        linkNode.href = url;
+        document.querySelector('head').appendChild(linkNode);
+
+        testNode = document.createElement('div');
+        testNode.className = 'asdf';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('padding-left')).toBe('0px');
+      });
     });
-    testNode = document.createElement('div');
-    testNode.className = 'asdf';
-    document.body.appendChild(testNode);
-    var computed = window.getComputedStyle(testNode, null);
-    expect(computed.getPropertyValue('padding-left')).toBe('0px');
-  });
+  }
 
   describe('getMessage()', function() {
     it('should handle named placeholders', function() {
