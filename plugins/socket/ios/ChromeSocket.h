@@ -10,14 +10,24 @@
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
 
 - (void)create:(CDVInvokedUrlCommand*)command;
+- (void)destroy:(CDVInvokedUrlCommand*)command;
+
 - (void)connect:(CDVInvokedUrlCommand*)command;
+- (void)bind:(CDVInvokedUrlCommand*)command;
+- (void)disconnect:(CDVInvokedUrlCommand*)command;
+
+- (void)read:(CDVInvokedUrlCommand*)command;
+- (void)write:(CDVInvokedUrlCommand*)command;
+
+- (void)recvFrom:(CDVInvokedUrlCommand*)command;
+- (void)sendTo:(CDVInvokedUrlCommand*)command;
+
 - (void)listen:(CDVInvokedUrlCommand*)command;
 - (void)accept:(CDVInvokedUrlCommand*)command;
-- (void)write:(CDVInvokedUrlCommand*)command;
-- (void)read:(CDVInvokedUrlCommand*)command;
-- (void)sendTo:(CDVInvokedUrlCommand*)command;
-//- (void)recvFrom:(CDVInvokedUrlCommand*)command;
-- (void)disconnect:(CDVInvokedUrlCommand*)command;
-- (void)destroy:(CDVInvokedUrlCommand*)command;
+
+//- (void)setKeepAlive:(CDVInvokedUrlCommand*)command;
+//- (void)setNoDelay:(CDVInvokedUrlCommand*)command;
+//- (void)getInfo:(CDVInvokedUrlCommand*)command;
+//- (void)getNetworkList:(CDVInvokedUrlCommand*)command;
 
 @end

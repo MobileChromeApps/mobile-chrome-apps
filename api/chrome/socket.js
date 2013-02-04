@@ -7,7 +7,10 @@ define('chrome.socket', function(require, module) {
 var exports = module.exports;
 
 exports.create = function(socketMode, stuff, callback) {
-    callback = callback || stuff;
+    if (typeof stuff == 'function') {
+        callback = stuff;
+        stuff = {};
+    }
     var win = callback && function(socketId) {
         var socketInfo = {
             socketId: socketId
@@ -22,8 +25,7 @@ exports.connect = function(socketId, address, port, callback) {
 };
 
 exports.bind = function(socketId, address, port, callback) {
-  console.warn('chrome.socket.bind not implemented yet');
-  callback(0);
+  cordova.exec(callback, null, 'ChromeSocket', 'bind', [socketId, address, port]);
 };
 
 exports.listen = function(socketId, address, port, backlog, callback) {
@@ -35,10 +37,10 @@ exports.listen = function(socketId, address, port, backlog, callback) {
 };
 
 exports.accept = function(socketId, callback) {
-    var win = callback && function(socketId) {
+    var win = callback && function(acceptedSocketId) {
         var acceptInfo = {
             resultCode: 0,
-            socketId: socketId
+            socketId: acceptedSocketId
         };
         callback(acceptInfo);
     };
@@ -94,8 +96,26 @@ exports.sendTo = function(socketId, data, address, port, callback) {
     cordova.exec(win, null, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
 };
 
-// TODO: Raw functionality is almost the exact same, so reusing implementation for now.  This will need to change though.
-exports.recvFrom = exports.read;
+exports.recvFrom = function(socketId, bufferSize, callback) {
+    if (typeof bufferSize == 'function') {
+        callback = bufferSize;
+        bufferSize = 0;
+    }
+    var win = callback && function(data) {
+        var recvFromInfo = {
+            resultCode: data.byteLength || 1,
+            data: data,
+            address: '', // TODO
+            port: 0 // TODO
+        };
+        callback(recvFromInfo);
+    };
+    var fail = callback && function() {
+        var readInfo = { resultCode: 0 };
+        callback(readInfo);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'recvFrom', [socketId, bufferSize]);
+};
 
 exports.disconnect = function(socketId) {
     cordova.exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
