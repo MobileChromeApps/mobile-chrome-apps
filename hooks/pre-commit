@@ -32,7 +32,10 @@ for FILE in $(git diff --cached --name-only $against); do
       sed -i '' -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' "$FILE" && \
       git add "$FILE"
 
+  # Ignore assets for license header.
+  [[ "$FILE" = *assets/* ]] && continue
   # Check for missing license header.
+  [[ "$FILE" = *third_party* ]] && continue
   echo checking $FILE
   if ! head "$FILE" | grep 'The Chromium Authors' > /dev/null; then
     missing_license=1

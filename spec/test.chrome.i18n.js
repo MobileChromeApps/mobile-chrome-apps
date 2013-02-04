@@ -130,6 +130,9 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
     it('should be case insensitive', function() {
       expect(chrome.i18n.getMessage('TeSt3', 'A')).toBe('_$_');
     });
+    it('should handle unicode characters', function() {
+      expect(chrome.i18n.getMessage('extended_char')).toBe('\u1800\x01\u1801');
+    });
     if (langEnUs) {
       it('should override to values in en/messages.json', function() {
         expect(chrome.i18n.getMessage('override2')).toBe('Hurray');

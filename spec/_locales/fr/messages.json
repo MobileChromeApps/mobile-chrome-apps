@@ -37,7 +37,7 @@
     "message": "5px"
   },
   "extended_char": {
-    "message": "᠀\u1801"
+    "message": "᠀\x01\u1801"
   },
   "override2": {
     "message": "échec"
