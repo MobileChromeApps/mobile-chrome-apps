@@ -21,6 +21,11 @@ exports.connect = function(socketId, address, port, callback) {
     cordova.exec(callback, null, 'ChromeSocket', 'connect', [socketId, address, port]);
 };
 
+exports.bind = function(socketId, address, port, callback) {
+  console.warn('chrome.socket.bind not implemented yet');
+  callback(0);
+};
+
 exports.listen = function(socketId, address, port, backlog, callback) {
     if (typeof backlog == 'function') {
         callback = backlog;
@@ -30,7 +35,7 @@ exports.listen = function(socketId, address, port, backlog, callback) {
 };
 
 exports.accept = function(socketId, callback) {
-    var win = callback && function() {
+    var win = callback && function(socketId) {
         var acceptInfo = {
             resultCode: 0,
             socketId: socketId
@@ -74,12 +79,35 @@ exports.read = function(socketId, bufferSize, callback) {
     cordova.exec(win, fail, 'ChromeSocket', 'read', [socketId, bufferSize]);
 };
 
+exports.sendTo = function(socketId, data, address, port, callback) {
+    var type = Object.prototype.toString.call(data).slice(8, -1);
+    if (type != 'ArrayBuffer') {
+        throw new Error('chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')');
+    }
+
+    var win = callback && function(bytesWritten) {
+        var writeInfo = {
+            bytesWritten: bytesWritten
+        };
+        callback(writeInfo);
+    };
+    cordova.exec(win, null, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
+};
+
+// TODO: Raw functionality is almost the exact same, so reusing implementation for now.  This will need to change though.
+exports.recvFrom = exports.read;
+
 exports.disconnect = function(socketId) {
     cordova.exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
 };
 
 exports.destroy = function(socketId) {
     cordova.exec(null, null, 'ChromeSocket', 'destroy', [socketId]);
+};
+
+exports.getNetworkList = function(callback) {
+  console.warn('chrome.socket.getNetworkList not implemented yet');
+  callback(null);
 };
 
 });

@@ -7,7 +7,7 @@
 #import "GCDAsyncUdpSocket.h"
 
 #ifndef CHROME_SOCKET_VERBOSE_LOGGING
-#define CHROME_SOCKET_VERBOSE_LOGGING 0
+#define CHROME_SOCKET_VERBOSE_LOGGING 1
 #endif
 
 #if CHROME_SOCKET_VERBOSE_LOGGING
@@ -15,7 +15,6 @@
 #else
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
-
 
 #if CHROME_SOCKET_VERBOSE_LOGGING
 static NSString* stringFromData(NSData* data) {
@@ -38,10 +37,7 @@ static NSString* stringFromData(NSData* data) {
 
     NSUInteger _socketId;
     NSString* _mode;
-    GCDAsyncSocket* _socket;
-
-    NSString* _addr;
-    NSUInteger _port;
+    id _socket;
 
     id _connectCallback;
     id _acceptCallback;
@@ -54,7 +50,7 @@ static NSString* stringFromData(NSData* data) {
     NSMutableDictionary* _sockets;
     NSUInteger _nextSocketId;
 }
-- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(GCDAsyncSocket*)theSocket;
+- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(id)theSocket;
 @end
 
 
@@ -73,7 +69,11 @@ static NSString* stringFromData(NSData* data) {
 
 
         if (theSocket == nil) {
-            theSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+            if ([_mode isEqualToString:@"tcp"]) {
+                theSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+            } else {
+                theSocket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+            }
         } else {
             [theSocket setDelegate:self];
         }
@@ -90,10 +90,8 @@ static NSString* stringFromData(NSData* data) {
 }
 
 
-- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)thePort
+- (void)socket:(GCDAsyncSocket*)sock didConnectToHost:(NSString *)host port:(UInt16)thePort
 {
-    //    NSLog(@"didConnectToHost: %@ port: %u", host, thePort);
-
     void (^ callback)() = _connectCallback;
     assert(callback != nil);
 
@@ -102,7 +100,26 @@ static NSString* stringFromData(NSData* data) {
     _connectCallback = nil;
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didConnectToAddress:(NSData *)address
+{
+    void (^ callback)() = _connectCallback;
+    assert(callback != nil);
+
+    callback();
+
+    _connectCallback = nil;
+}
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotConnect:(NSError *)error
+{
+    void (^ callback)() = _connectCallback;
+    assert(callback != nil);
+    _connectCallback = nil;
+
+    NSLog(@"Failed to connect");
+}
+
+- (void)socket:(GCDAsyncSocket*)sock didAcceptNewSocket:(id)newSocket
 {
     // TODO: retain newSocket or else
     ChromeSocketSocket* socket = [_plugin createNewSocketWithMode:_mode socket:newSocket];
@@ -115,30 +132,18 @@ static NSString* stringFromData(NSData* data) {
     _acceptCallback = nil;
 }
 
-- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)error
+- (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError *)error
 {
-    //    NSLog(@"socketDidDisconnect:");
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
+- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
 {
-    //    NSLog(@"didReadData: %@ tag: %lu", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], tag);
 
-    VERBOSE_LOG(@"my socketId: %u", _socketId);
-    assert([_readCallbacks count] != 0);
-    void (^ callback)(NSData*) = [_readCallbacks objectAtIndex:0];
-    assert(callback != nil);
-
-    callback(data);
-
-    [_readCallbacks removeObjectAtIndex:0];
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag
+- (void)socket:(GCDAsyncSocket*)sock didWriteDataWithTag:(long)tag
 {
-    //    NSLog(@"didWriteDataWithTag: %lu", tag);
-
-    VERBOSE_LOG(@"my socketId: %u", _socketId);
+    VERBOSE_LOG(@"socket:didWriteDataWithTag socketId: %u", _socketId);
     assert([_writeCallbacks count] != 0);
     void (^ callback)() = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -146,6 +151,53 @@ static NSString* stringFromData(NSData* data) {
     callback();
 
     [_writeCallbacks removeObjectAtIndex:0];
+}
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didSendDataWithTag:(long)tag
+{
+    VERBOSE_LOG(@"udpSocket:didSendDataWithTag socketId: %u", _socketId);
+    assert([_writeCallbacks count] != 0);
+    void (^ callback)() = [_writeCallbacks objectAtIndex:0];
+    assert(callback != nil);
+
+    callback();
+
+    [_writeCallbacks removeObjectAtIndex:0];
+}
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotSendDataWithTag:(long)tag dueToError:(NSError *)error
+{
+    VERBOSE_LOG(@"udpSocket:didNotSendDataWithTag socketId: %u", _socketId);
+    assert([_writeCallbacks count] != 0);
+    void (^ callback)() = [_writeCallbacks objectAtIndex:0];
+    assert(callback != nil);
+    [_writeCallbacks removeObjectAtIndex:0];
+
+    NSLog(@"Failed to send");
+}
+
+- (void)socket:(GCDAsyncSocket*)sock didReadData:(NSData *)data withTag:(long)tag
+{
+    VERBOSE_LOG(@"socket:didReadData socketId: %u", _socketId);
+    assert([_readCallbacks count] != 0);
+    void (^ callback)(NSData* data, NSString* address, uint16_t port) = [_readCallbacks objectAtIndex:0];
+    assert(callback != nil);
+
+    callback(data, [sock connectedHost], [sock connectedPort]);
+
+    [_readCallbacks removeObjectAtIndex:0];
+}
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock didReceiveData:(NSData *)data fromAddress:(NSData *)address withFilterContext:(id)filterContext
+{
+    VERBOSE_LOG(@"udbSocket:didReceiveData socketId: %u", _socketId);
+    assert([_readCallbacks count] != 0);
+    void (^ callback)(NSData* data, NSString* address, uint16_t port) = [_readCallbacks objectAtIndex:0];
+    assert(callback != nil);
+
+    callback(data, [GCDAsyncUdpSocket hostFromAddress:address], [GCDAsyncUdpSocket portFromAddress:address]);
+
+    [_readCallbacks removeObjectAtIndex:0];
 }
 
 @end
@@ -169,7 +221,7 @@ static NSString* stringFromData(NSData* data) {
     return [self createNewSocketWithMode:mode socket:nil];
 }
 
-- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(GCDAsyncSocket*)theSocket
+- (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode socket:(id)theSocket
 {
     ChromeSocketSocket* socket = [[ChromeSocketSocket alloc] initWithId:_nextSocketId++ mode:mode plugin:self socket:theSocket];
     [_sockets setObject:socket forKey:[NSNumber numberWithUnsignedInteger:socket->_socketId]];
@@ -179,13 +231,14 @@ static NSString* stringFromData(NSData* data) {
 - (void)create:(CDVInvokedUrlCommand*)command
 {
     NSString* socketMode = [command argumentAtIndex:0];
-    assert([socketMode isEqualToString:@"tcp"]);
 
     ChromeSocketSocket* socket = [self createNewSocketWithMode:socketMode];
 
     VERBOSE_LOG(@"NTFY %d.%@ Create", socket->_socketId, command.callbackId);
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socket->_socketId] callbackId:command.callbackId];
 }
+
+// TODO: bind, udp only
 
 - (void)connect:(CDVInvokedUrlCommand*)command
 {
@@ -196,15 +249,27 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
 
-    [socket->_socket connectToHost:address onPort:port error:nil];
-    socket->_addr = address;
-    socket->_port = port;
-
-    VERBOSE_LOG(@"REQ %@.%@ Connect", socketId, command.callbackId);
     socket->_connectCallback = [^() {
         VERBOSE_LOG(@"ACK %@.%@ Connect", socketId, command.callbackId);
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
     } copy];
+
+    VERBOSE_LOG(@"REQ %@.%@ Connect", socketId, command.callbackId);
+    [socket->_socket connectToHost:address onPort:port error:nil]; // same selector for both tcp and udp
+}
+
+- (void)disconnect:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+
+    VERBOSE_LOG(@"NTFY %@.%@ Disconnect", socketId, command.callbackId);
+
+    if ([socket->_mode isEqualToString:@"tcp"]) {
+        [socket->_socket disconnectAfterReadingAndWriting];
+    }
 }
 
 - (void)listen:(CDVInvokedUrlCommand*)command
@@ -216,9 +281,11 @@ static NSString* stringFromData(NSData* data) {
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
+    assert([socket->_mode isEqualToString:@"tcp"]);
 
     VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
     [socket->_socket acceptOnPort:port error:nil];
+
     // TODO: Queue up connections until next accept called
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
 }
@@ -230,12 +297,15 @@ static NSString* stringFromData(NSData* data) {
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
+    assert([socket->_mode isEqualToString:@"tcp"]);
 
-    VERBOSE_LOG(@"REQ %@.%@ Accept", socketId, command.callbackId);
     socket->_acceptCallback = [^(NSUInteger socketId) {
         VERBOSE_LOG(@"ACK %d.%@ Accept", socketId, command.callbackId);
+
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socketId] callbackId:command.callbackId];
     } copy];
+
+    VERBOSE_LOG(@"REQ %@.%@ Accept", socketId, command.callbackId);
 }
 
 - (void)write:(CDVInvokedUrlCommand*)command
@@ -247,13 +317,41 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert(socket->_socketId == [socketId unsignedIntegerValue]);
 
-    [socket->_writeCallbacks addObject:[^(){
+    [socket->_writeCallbacks addObject:[^() {
+        VERBOSE_LOG(@"ACK %@.%@ Write", socketId, command.callbackId);
+
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+    } copy]];
+
+    VERBOSE_LOG(@"REQ %@.%@ Write Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
+    if ([socket->_mode isEqualToString:@"tcp"]) {
+        [socket->_socket writeData:data withTimeout:-1 tag:-1];
+    } else {
+        [socket->_socket sendData:data withTimeout:-1 tag:-1];
+    }
+}
+
+
+- (void)sendTo:(CDVInvokedUrlCommand*)command
+{
+    NSDictionary* arguments = [command argumentAtIndex:0];
+    NSNumber* socketId = [arguments objectForKey:@"socketId"];
+    NSString* address = [arguments objectForKey:@"address"];
+    NSNumber* port = [arguments objectForKey:@"port"];
+    NSData* data = [command argumentAtIndex:1];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+    assert(socket->_socketId == [socketId unsignedIntegerValue]);
+    assert([socket->_mode isEqualToString:@"udp"]);
+
+    [socket->_writeCallbacks addObject:[^() {
         VERBOSE_LOG(@"ACK %@.%@ Write", socketId, command.callbackId);
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
     } copy]];
 
     VERBOSE_LOG(@"REQ %@.%@ Write Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
-    [socket->_socket writeData:data withTimeout:-1 tag:-1];
+    [socket->_socket sendData:data toHost:address port:[port unsignedIntegerValue] withTimeout:-1 tag:-1];
 }
 
 - (void)read:(CDVInvokedUrlCommand*)command
@@ -265,30 +363,19 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert(socket->_socketId == [socketId unsignedIntegerValue]);
 
-    [socket->_readCallbacks addObject:[^(NSData* data){
+    [socket->_readCallbacks addObject:[^(NSData* data, NSString* address, uint16_t port) {
         VERBOSE_LOG(@"ACK %@.%@ Read Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
+
+        // TODO: also return address and port.  Requires sending NSData along with other values back from plugin.
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
     } copy]];
 
+    VERBOSE_LOG(@"REQ %@.%@ Read", socketId, command.callbackId);
     if (bufferSize != 0) {
         [socket->_socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
     } else {
         [socket->_socket readDataWithTimeout:-1 tag:-1];
     }
-    VERBOSE_LOG(@"REQ %@.%@ Read", socketId, command.callbackId);
-}
-
-- (void)disconnect:(CDVInvokedUrlCommand*)command
-{
-    NSNumber* socketId = [command argumentAtIndex:0];
-
-    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
-    assert(socket != nil);
-
-    [socket->_socket disconnectAfterReadingAndWriting];
-    socket->_addr = nil;
-    socket->_port = 0;
-    VERBOSE_LOG(@"NTFY %@.%@ Disconnect", socketId, command.callbackId);
 }
 
 - (void)destroy:(CDVInvokedUrlCommand*)command
