@@ -30,7 +30,7 @@ define('chrome.runtime', function(require, module) {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', 'manifest.json', false /* sync */);
       xhr.send(null);
-      manifestJson = JSON.parse(xhr.responseText);
+      manifestJson = eval('(' + xhr.responseText + ')'); //JSON.parse(xhr.responseText);
     }
     return manifestJson;
   };
