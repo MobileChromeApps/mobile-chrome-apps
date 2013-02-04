@@ -1,3 +1,7 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 {
   "name": "__MSG_appname__",
   "description": "Automated and manual tests for Cordova and Chrome APIs",
@@ -7,6 +11,7 @@
   "app": {
     "background": {
       "scripts": [
+        "polyfills/function_bind.js",
         "spec_bootstrap.js",
         "page.chromespec.js",
         "page.jasmine.js",
@@ -25,5 +30,5 @@
   "permissions": [
     "storage"
   ],
-  "default_locale": "en"
+  "default_locale": "fr"
 }

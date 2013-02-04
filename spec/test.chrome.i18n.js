@@ -3,21 +3,103 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.i18n', function(runningInBackground) {
+  var testNode = null;
+  var langEnUs = navigator.language == 'en-US';
+
+  this.afterEach(function() {
+    if (testNode) {
+      testNode.parentNode.removeChild(testNode);
+      testNode = null;
+    }
+  });
+
+  it('language should be set to en-US', function() {
+    expect(navigator.language).toBe('en-US');
+  });
+
   if (!runningInBackground) {
     it('should not replace placeholders in html', function() {
       expect(document.getElementById('i18n-html-test').innerHTML).toBe('__MSG_appname__');
     });
 
-    it('should replace placeholders within CSS', function() {
-      // TODO
-    });
+    describe('CSS', function() {
+      it('should replace placeholders within CSS', function() {
+        testNode = document.createElement('img');
+        testNode.className = 'i18n_test';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('color')).toBe('rgb(204, 204, 204)');
+        expect(computed.getPropertyValue('background-image')).toMatch(new RegExp('^url.*' + chrome.runtime.id + '.png\\)$'));
+        expect(computed.getPropertyValue('margin-left')).toBe('2px');
+        expect(computed.getPropertyValue('margin-right')).toBe('4px');
+        expect(computed.getPropertyValue('direction')).toBe('ltr');
+        expect(testNode.offsetWidth).toBe(5);
+      });
 
-    it('should replace placeholders within manifest.json', function() {
-      // TODO
+      it('should not replace placeholders within style attributes', function() {
+        testNode = document.createElement('div');
+        testNode.style.backgroundImage = 'url(__MSG_@@extension_id__.png)';
+        document.body.appendChild(testNode);
+        var computed = window.getComputedStyle(testNode, null);
+        expect(computed.getPropertyValue('background-image')).toMatch(/^url.*__MSG_.*.png\)$/);
+      });
+
+      it('should not replace placeholders within injected style tags', function() {
+        var styleNode = document.createElement('style');
+        styleNode.innerHTML = '.asdf { height: 2px; width: __MSG_testwidth__; }';
+        document.querySelector('head').appendChild(styleNode);
+
+        this.after(function() {
+          styleNode.parentNode.removeChild(styleNode);
+        });
+        testNode = document.createElement('img');
+        testNode.className = 'asdf';
+        document.body.appendChild(testNode);
+        expect(testNode.offsetHeight).toBe(2);
+        expect(testNode.offsetWidth).toBe(0);
+      });
+
+      it('should not replace placeholders within Blob URL style tags', function() {
+        var linkNode = document.createElement('link');
+        var blob = new Blob(['.asdf { height:1px; width: __MSG_testwidth__; }'], {'type' : 'text/css'});
+        var url = URL.createObjectURL(blob);
+        this.after(function() {
+          linkNode.parentNode.removeChild(linkNode);
+          URL.revokeObjectURL(url);
+        });
+        linkNode.rel = 'stylesheet';
+        linkNode.href = url;
+        document.querySelector('head').appendChild(linkNode);
+
+        testNode = document.createElement('img');
+        testNode.className = 'asdf';
+        document.body.appendChild(testNode);
+        waitsFor(function() {
+          if (testNode.offsetHeight == 1) {
+            expect(testNode.offsetWidth).toBe(0);
+            return true;
+          }
+        });
+      });
     });
   }
 
   describe('getMessage()', function() {
+    it('should handle named placeholders', function() {
+      expect(chrome.i18n.getMessage('@test1', ['foo', 'bar'])).toBe('Bonjour foo. foo, voulez-vous des fun bar NaMe $?');
+    });
+    it('should use blank for missing named placeholders', function() {
+      expect(chrome.i18n.getMessage('@test1')).toBe('Bonjour . , voulez-vous des fun  NaMe $?');
+    });
+    it('should handle inline placeholders', function() {
+      expect(chrome.i18n.getMessage('test2', ['foo', 'bar', 'baz', 'a'])).toBe('foo, bar, et baz');
+    });
+    it('should use blank for missing inline placeholders', function() {
+      expect(chrome.i18n.getMessage('test2', ['foo'])).toBe('foo, , et ');
+    });
+    it('should toString placeholder values', function() {
+      expect(chrome.i18n.getMessage('test2', [{}, 3, /a/])).toBe('[object Object], 3, et /a/');
+    });
     it('should handle dollar signs', function() {
       expect(chrome.i18n.getMessage('test3')).toBe('_$_');
     });
@@ -30,13 +112,30 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
     it('should be case insensitive', function() {
       expect(chrome.i18n.getMessage('TeSt3', 'A')).toBe('_$_');
     });
+    if (langEnUs) {
+      it('should override to values in en/messages.json', function() {
+        expect(chrome.i18n.getMessage('override2')).toBe('Hurray');
+      });
+      it('should override to values in en-US/messages.json', function() {
+        expect(chrome.i18n.getMessage('override3')).toBe('win');
+      });
+    }
   });
 
-  describe('getAcceptLanguages()', function() {
-    it('should return a list', function() {
-      chrome.i18n.getAcceptLanguages(waitUntilCalled(function(x) {
-        expect(x.length).toBeGreaterThan(0);
-      }));
+  if (langEnUs) {
+    it('should replace placeholders within manifest.json', function() {
+      var manifest = chrome.runtime.getManifest();
+      expect(manifest.name).toBe('Chrome Spec');
     });
-  });
+
+    describe('getAcceptLanguages()', function() {
+      it('should return a list', function() {
+        chrome.i18n.getAcceptLanguages(waitUntilCalled(function(x) {
+          for (var i = 0; i < x.length; ++i) {
+            expect(x[i]).toMatch(/^en/);
+          }
+        }));
+      });
+    });
+  }
 });

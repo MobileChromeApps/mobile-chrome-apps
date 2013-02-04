@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
 exec 1>&2
 
@@ -10,21 +13,17 @@ else
     against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
 fi
 
+missing_license=0
+
 IFS='
 '
-# Find files with trailing whitespace
-for FILE in $(
-    git diff-index --check --cached $against -- \
-    | sed '/^[+-]/d' \
-    | ( sed -E 's/:[0-9]+:.*//' || sed -E 's/:[0-9]+:.*//' ) \
-    | uniq \
-)
-do
+for FILE in $(git diff --cached --name-only $against); do
   # Ignore binary files.
   ( file --mime "$FILE" | grep charset=binary >/dev/null ) && continue
   # Ignore third_party.
   [[ "$FILE" = *third_party* ]] && continue
 
+  # Find files with trailing whitespace
   if grep -E '\s+$' "$FILE"; then
     echo -n "Fixing whitespace in $FILE"
   fi
@@ -32,4 +31,13 @@ do
   sed -i '' 's/[  ]*$//' "$FILE" && \
       sed -i '' -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' "$FILE" && \
       git add "$FILE"
+
+  # Check for missing license header.
+  echo checking $FILE
+  if ! head "$FILE" | grep 'The Chromium Authors' > /dev/null; then
+    missing_license=1
+    echo "Missing license header: $FILE"
+  fi
 done
+
+exit $missing_license

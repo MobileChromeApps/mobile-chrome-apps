@@ -1,3 +1,6 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 (function() {
   var jasmineContainerEl = null;
@@ -68,11 +71,12 @@
   function loadJasmineTest(testName, runInBg) {
     var pageName = runInBg ? 'bg' : 'fg';
     describe(testName + ' (In ' + pageName + '):', function() {
-      chromespec.jasmineScripts[testName][pageName + 'Instance'](runInBg);
+      chromespec.jasmineScripts[testName][pageName + 'Instance'].call(this, runInBg);
     });
   }
 
   function onRunJasmineClick(specName) {
+    chrome.storage.local.set({'chromespec-jasmine-last-test': specName});
     var runInFg = rootDiv.querySelector('#jasmine-run-in-fg').checked;
     var runInBg = rootDiv.querySelector('#jasmine-run-in-bg').checked;
     var countDown = 0;
@@ -122,5 +126,12 @@
       newButton = chromespec.createButton(chromespec.jasmineScripts[k].name, onRunJasmineClick.bind(null, k));
       containerEl.appendChild(newButton);
     }
+    // Auto-run most recent test on start-up.
+    chrome.storage.local.get('chromespec-jasmine-last-test', function(values) {
+      var testName = values['chromespec-jasmine-last-test'];
+      if (testName) {
+        onRunJasmineClick(testName);
+      }
+    });
   });
 })();

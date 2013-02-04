@@ -2,15 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Locale = en.
+// Locale = en_US.
 {
-  "appNaMe": {
-    "message": "Chrome Spec"
-  },
-  "override2": {
-    "message": "Hurray"
-  },
-  "override3": {
-    "message": "fail"
+  "ovERride3": {
+    "message": "win"
   }
 }

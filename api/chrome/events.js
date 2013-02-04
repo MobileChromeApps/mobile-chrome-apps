@@ -1,3 +1,7 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 define('chrome.Event', function(require, module) {
   var Event = function(opt_eventName) {
     this.name = opt_eventName || '';
