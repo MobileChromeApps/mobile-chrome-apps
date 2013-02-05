@@ -22,7 +22,6 @@ import org.apache.cordova.api.PluginResult;
 import org.json.JSONException;
 
 import android.util.Log;
-import android.util.Pair;
 
 public class ChromeSocket extends CordovaPlugin {
 
@@ -187,7 +186,7 @@ public class ChromeSocket extends CordovaPlugin {
         public enum Type { TCP, UDP; }
         private Type type;
 
-        BlockingQueue<Pair<Integer, CallbackContext>> readQueue;
+        BlockingQueue<ReadData> readQueue;
         private ReadThread readThread;
 
         BlockingQueue<CallbackContext> acceptQueue;
@@ -219,7 +218,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         private void init() {
-            readQueue = new LinkedBlockingQueue<Pair<Integer, CallbackContext>>();
+            readQueue = new LinkedBlockingQueue<ReadData>();
             readThread = new ReadThread();
             readThread.start();
         }
@@ -246,7 +245,7 @@ public class ChromeSocket extends CordovaPlugin {
 
             synchronized(readQueue) {
                 try {
-					readQueue.put(new Pair<Integer, CallbackContext>(Integer.valueOf(bufferLength), context));
+					readQueue.put(new ReadData(bufferLength, context));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -259,10 +258,11 @@ public class ChromeSocket extends CordovaPlugin {
                     acceptThread.setStop();
                     serverSocket.close();
                 } else {
-                    readThread.setStop();
+                    readQueue.put(new ReadData(true));
                     socket.close();
                 }
             } catch (IOException ioe) {
+            } catch (InterruptedException ie) {
             }
             socket = null;
             serverSocket = null;
@@ -307,27 +307,45 @@ public class ChromeSocket extends CordovaPlugin {
             }
         }
 
+        private static class ReadData {
+            public int size;
+            public boolean killThread;
+            public CallbackContext context;
+
+            public ReadData(int size, CallbackContext context) {
+                this.size = size;
+                this.context = context;
+                this.killThread = false;
+            }
+
+            public ReadData(boolean killThread) {
+                this.killThread = true;
+            }
+        }
+
+
         private class ReadThread extends Thread {
-            private boolean doStop = false;
-
             public void run() {
-                while (!doStop) {
+                try {
+                    while (true) {
                     // Read from the blocking queue
-                	try {
-                		Pair<Integer, CallbackContext> readData = null;
-                        while (!doStop && readData == null) {
-                            readData = SocketData.this.readQueue.poll(120L, TimeUnit.SECONDS);
+                		ReadData readData = SocketData.this.readQueue.take();
+                        if(readData.killThread) return;
+
+                		int toRead = readData.size;
+                        byte[] out;
+                        int bytesRead;
+
+                		if (toRead > 0) {
+                            out = new byte[toRead];
+                            bytesRead = SocketData.this.socket.getInputStream().read(out);
+                		} else {
+                            int firstByte = SocketData.this.socket.getInputStream().read();
+                            out = new byte[SocketData.this.socket.getInputStream().available() + 1];
+                            out[0] = (byte) firstByte;
+                            bytesRead = SocketData.this.socket.getInputStream().read(out, 1, out.length - 1);
+                            bytesRead++;
                         }
-                        if(doStop) return;
-
-                		int toRead = readData.first.intValue();
-                		if (toRead <= 0) {
-                			toRead = 128;
-                		}
-                		byte[] out = new byte[toRead];
-                		int bytesRead = SocketData.this.socket.getInputStream().read(out);
-
-                        if(doStop) return;
 
                         // Check for EOF
                         if (bytesRead < 0) {
@@ -335,27 +353,19 @@ public class ChromeSocket extends CordovaPlugin {
                             return;
                         }
 
-                        // Copy into a properly-sized array when the size wasn't given.
-                        if (readData.first.intValue() <= 0) {
-                            byte[] temp = new byte[bytesRead];
-                            for (int i = 0; i < bytesRead; i++) {
-                                temp[i] = out[i];
-                            }
-                            out = temp;
-                        }
-
-                        readData.second.success(out);
-                    } catch (IOException ioe) {
+                        readData.context.success(out);
+                    } // while
+                } catch (IOException ioe) {
+                    Socket s = SocketData.this.socket;
+                    if (s != null && s.isClosed()) {
+                        Log.i(LOG_TAG, "Socket closed.");
+                    } else {
                         Log.w(LOG_TAG, "Failed to read from socket.", ioe);
-                    } catch (InterruptedException ie) {
-                    	Log.w(LOG_TAG, "Thread interrupted", ie);
                     }
-                } // while
+                } catch (InterruptedException ie) {
+                    Log.w(LOG_TAG, "Thread interrupted", ie);
+                }
             } // run()
-
-            public void setStop() {
-                doStop = true;
-            }
         } // ReadThread
 
         private class AcceptThread extends Thread {
