@@ -5,16 +5,13 @@
 package org.apache.cordova;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
@@ -189,7 +186,7 @@ public class ChromeSocket extends CordovaPlugin {
         BlockingQueue<ReadData> readQueue;
         private ReadThread readThread;
 
-        BlockingQueue<CallbackContext> acceptQueue;
+        BlockingQueue<AcceptData> acceptQueue;
         private AcceptThread acceptThread;
 
         private boolean isServer = false;
@@ -255,7 +252,7 @@ public class ChromeSocket extends CordovaPlugin {
         public void disconnect() {
             try {
                 if (isServer) {
-                    acceptThread.setStop();
+                    acceptQueue.put(new AcceptData(true));
                     serverSocket.close();
                 } else {
                     readQueue.put(new ReadData(true));
@@ -293,14 +290,14 @@ public class ChromeSocket extends CordovaPlugin {
             }
 
             if (acceptQueue == null && acceptThread == null) {
-                acceptQueue = new LinkedBlockingQueue<CallbackContext>();
+                acceptQueue = new LinkedBlockingQueue<AcceptData>();
                 acceptThread = new AcceptThread();
                 acceptThread.start();
             }
 
             synchronized(acceptQueue) {
                 try {
-                    acceptQueue.put(context);
+                    acceptQueue.put(new AcceptData(context));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -368,48 +365,47 @@ public class ChromeSocket extends CordovaPlugin {
             } // run()
         } // ReadThread
 
-        private class AcceptThread extends Thread {
-            private boolean doStop = false;
+        private static class AcceptData {
+            public boolean killThread;
+            public CallbackContext context;
 
+            public AcceptData(boolean killThread) {
+                this.killThread = killThread;
+            }
+
+            public AcceptData(CallbackContext context) {
+                this.context = context;
+                this.killThread = false;
+            }
+        }
+
+        private class AcceptThread extends Thread {
             public void run() {
                 try {
-                    serverSocket.setSoTimeout(120000); // 120 seconds
-                } catch (SocketException se) {
-                    Log.w(LOG_TAG, "Failed to set timeout for server socket", se);
-                }
+                    while(true) {
+                        AcceptData acceptData = SocketData.this.acceptQueue.take();
+                        if (acceptData.killThread) return;
 
-                while(!doStop) {
-                    try {
-                        CallbackContext context = null;
-                        while (!doStop && context == null) {
-                            context = SocketData.this.acceptQueue.poll(120L, TimeUnit.SECONDS);
+                        Socket incoming = SocketData.this.serverSocket.accept();
+                        if (SocketData.this.serverSocket == null || SocketData.this.serverSocket.isClosed()) {
+                            if (incoming != null) incoming.close();
+                            return;
                         }
-                        if (doStop) return;
-
-                        Socket incoming = null;
-                        while (!doStop && incoming == null) {
-                            try {
-                                incoming = serverSocket.accept();
-                            } catch (InterruptedIOException iioe) {
-                                // Just silently try again.
-                            } catch (IOException ioe) {
-                                // Just silently try again.
-                            }
-                        }
-                        if (doStop) return;
 
                         SocketData sd = new SocketData(incoming);
                         int id = ChromeSocket.addSocket(sd);
-                        context.sendPluginResult(new PluginResult(PluginResult.Status.OK, id));
-                    } catch (InterruptedException ie) {
-                        Log.w(LOG_TAG, "Thread interrupted", ie);
+                        acceptData.context.sendPluginResult(new PluginResult(PluginResult.Status.OK, id));
+                    }
+                } catch (InterruptedException ie) {
+                    Log.w(LOG_TAG, "Thread interrupted", ie);
+                } catch (IOException ioe) {
+                    if (SocketData.this.serverSocket == null || SocketData.this.serverSocket.isClosed()) {
+                        Log.i(LOG_TAG, "Killing accept() thread; server socket closed.");
+                    } else {
+                        Log.w(LOG_TAG, "Error in accept() thread.", ioe);
                     }
                 }
             } // run()
-
-            public void setStop() {
-                doStop = true;
-            }
         } // AcceptThread
     } // SocketData
 }
