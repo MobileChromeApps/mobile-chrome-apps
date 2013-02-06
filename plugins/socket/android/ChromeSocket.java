@@ -5,8 +5,12 @@
 package org.apache.cordova;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +21,7 @@ import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
 import org.apache.cordova.api.PluginResult;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.util.Log;
 
@@ -41,6 +46,12 @@ public class ChromeSocket extends CordovaPlugin {
         } else if ("read".equals(action)) {
             read(args, callbackContext);
             return true;
+        } else if ("sendTo".equals(action)) {
+            sendTo(args, callbackContext);
+            return true;
+        } else if ("recvFrom".equals(action)) {
+            recvFrom(args, callbackContext);
+            return true;
         } else if ("disconnect".equals(action)) {
             disconnect(args, callbackContext);
             return true;
@@ -60,12 +71,10 @@ public class ChromeSocket extends CordovaPlugin {
 
     private void create(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         String socketType = args.getString(0);
-        if (socketType.equals("tcp")) {
-            SocketData sd = new SocketData(SocketData.Type.TCP);
+        if (socketType.equals("tcp") || socketType.equals("udp")) {
+            SocketData sd = new SocketData(socketType.equals("tcp") ? SocketData.Type.TCP : SocketData.Type.UDP);
             int id = addSocket(sd);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, id));
-        } else if (socketType.equals("udp")) {
-            Log.w(LOG_TAG, "UDP is not currently supported");
         } else {
             Log.e(LOG_TAG, "Unknown socket type: " + socketType);
         }
@@ -117,6 +126,36 @@ public class ChromeSocket extends CordovaPlugin {
 
         // Will call the callback once it has some data.
         sd.read(bufferSize, callbackContext);
+    }
+
+    private void sendTo(CordovaArgs args, final CallbackContext context) throws JSONException {
+        JSONObject opts = args.getJSONObject(0);
+        int socketId = opts.getInt("socketId");
+        String address = opts.getString("address");
+        int port = opts.getInt("port");
+        byte[] data = args.getArrayBuffer(1);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        int result = sd.sendTo(data, address, port);
+        context.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+    }
+
+    private void recvFrom(CordovaArgs args, final CallbackContext context) throws JSONException {
+        int socketId = args.getInt(0);
+        int bufferSize = args.getInt(1);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        sd.recvFrom(bufferSize, context);
     }
 
     private void disconnect(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -177,11 +216,19 @@ public class ChromeSocket extends CordovaPlugin {
 
 
     private static class SocketData {
-        Socket socket;
+        Socket tcpSocket;
+        DatagramSocket udpSocket;
         ServerSocket serverSocket;
 
         public enum Type { TCP, UDP; }
         private Type type;
+
+        // Cached values used by UDP read()/write().
+        private InetAddress address;
+        private int port;
+        private boolean connected = false; // Only applies to UDP, where connect() restricts who the socket will receive from.
+
+        private boolean isServer = false;
 
         BlockingQueue<ReadData> readQueue;
         private ReadThread readThread;
@@ -189,7 +236,6 @@ public class ChromeSocket extends CordovaPlugin {
         BlockingQueue<AcceptData> acceptQueue;
         private AcceptThread acceptThread;
 
-        private boolean isServer = false;
 
         public SocketData(Type type) {
             this.type = type;
@@ -197,18 +243,28 @@ public class ChromeSocket extends CordovaPlugin {
 
         public SocketData(Socket incoming) {
             this.type = Type.TCP;
-            socket = incoming;
+            tcpSocket = incoming;
             init();
         }
 
         public int connect(String address, int port) {
             if (isServer) return 1; // error
             try {
-                socket = new Socket(address, port);
+                if (type == Type.TCP) {
+                    tcpSocket = new Socket(address, port);
+                } else {
+                    udpSocket = new DatagramSocket(port);
+                    this.port = port;
+                    this.address = InetAddress.getByName(address);
+                    this.connected = true;
+                    udpSocket.connect(this.address, this.port);
+                }
                 init();
             } catch(UnknownHostException uhe) {
+                Log.e(LOG_TAG, "Unknown host exception while connecting socket", uhe);
                 return 1; // error
             } catch(IOException ioe) {
+                Log.e(LOG_TAG, "IOException while connecting socket", ioe);
                 return 1; // error
             }
             return 0; // success
@@ -221,13 +277,55 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         public int write(byte[] data) throws JSONException {
-            if (socket == null || isServer) return -1;
+            if ((tcpSocket == null && udpSocket == null) || isServer) return -1;
 
             int bytesWritten = 0;
             try {
-                socket.getOutputStream().write(data);
-                bytesWritten = data.length;
+                if (type == Type.TCP) {
+                    tcpSocket.getOutputStream().write(data);
+                    bytesWritten = data.length;
+                } else {
+                    if (!connected) {
+                        Log.e(LOG_TAG, "Cannot write() to unconnected UDP socket.");
+                        return -1;
+                    }
+
+                    DatagramPacket packet = new DatagramPacket(data, data.length, this.address, this.port);
+                    udpSocket.send(packet);
+                    bytesWritten = data.length;
+                }
             } catch(IOException ioe) {
+                Log.w(LOG_TAG, "IOException while writing to socket", ioe);
+                bytesWritten = -1;
+            }
+
+            return bytesWritten;
+        }
+
+        public int sendTo(byte[] data, String address, int port) {
+            if (type != Type.UDP) {
+                Log.w(LOG_TAG, "sendTo() can only be called for UDP sockets.");
+                return -1;
+            }
+
+            // Create the socket and initialize the reading side, if connect() was never called.
+            if (udpSocket == null) {
+                try {
+                    udpSocket = new DatagramSocket();
+                } catch (SocketException se) {
+                    Log.w(LOG_TAG, "SocketException while trying to create a UDP socket in sendTo()", se);
+                    return -1;
+                }
+                init();
+            }
+
+            int bytesWritten = 0;
+            try {
+                DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName(address), port);
+                udpSocket.send(packet);
+                bytesWritten = data.length;
+            } catch (IOException ioe) {
+                Log.w(LOG_TAG, "IOException in sendTo", ioe);
                 bytesWritten = -1;
             }
 
@@ -249,6 +347,21 @@ public class ChromeSocket extends CordovaPlugin {
             }
         }
 
+        public void recvFrom(int bufferSize, CallbackContext context) {
+            if (type != Type.UDP) {
+                context.error("recvFrom() is not allowed on non-UDP sockets");
+                return;
+            }
+
+            synchronized(readQueue) {
+                try {
+                    readQueue.put(new ReadData(bufferSize, context));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         public void disconnect() {
             try {
                 if (isServer) {
@@ -256,17 +369,22 @@ public class ChromeSocket extends CordovaPlugin {
                     serverSocket.close();
                 } else {
                     readQueue.put(new ReadData(true));
-                    socket.close();
+                    if(type == Type.TCP) {
+                        tcpSocket.close();
+                    } else {
+                        udpSocket.close();
+                    }
                 }
             } catch (IOException ioe) {
             } catch (InterruptedException ie) {
             }
-            socket = null;
+            tcpSocket = null;
+            udpSocket = null;
             serverSocket = null;
         }
 
         public void destroy() {
-            if (socket != null || serverSocket != null) {
+            if (tcpSocket != null || udpSocket != null || serverSocket != null) {
                 disconnect();
             }
         }
@@ -333,27 +451,49 @@ public class ChromeSocket extends CordovaPlugin {
                         byte[] out;
                         int bytesRead;
 
-                		if (toRead > 0) {
-                            out = new byte[toRead];
-                            bytesRead = SocketData.this.socket.getInputStream().read(out);
-                		} else {
-                            int firstByte = SocketData.this.socket.getInputStream().read();
-                            out = new byte[SocketData.this.socket.getInputStream().available() + 1];
-                            out[0] = (byte) firstByte;
-                            bytesRead = SocketData.this.socket.getInputStream().read(out, 1, out.length - 1);
-                            bytesRead++;
-                        }
+                        if (type == Type.TCP) {
+                            if (toRead > 0) {
+                                out = new byte[toRead];
+                                bytesRead = SocketData.this.tcpSocket.getInputStream().read(out);
+                            } else {
+                                int firstByte = SocketData.this.tcpSocket.getInputStream().read();
+                                out = new byte[SocketData.this.tcpSocket.getInputStream().available() + 1];
+                                out[0] = (byte) firstByte;
+                                bytesRead = SocketData.this.tcpSocket.getInputStream().read(out, 1, out.length - 1);
+                                bytesRead++;
+                            }
 
-                        // Check for EOF
-                        if (bytesRead < 0) {
-                            SocketData.this.disconnect();
-                            return;
-                        }
+                            // Check for EOF
+                            if (bytesRead < 0) {
+                                SocketData.this.disconnect();
+                                return;
+                            }
 
-                        readData.context.success(out);
+                            readData.context.success(out);
+                        } else {
+                            if (toRead > 0) {
+                                out = new byte[toRead];
+                            } else {
+                                out = new byte[4096]; // Defaults to 4K chunks.
+                            }
+
+                            DatagramPacket packet = new DatagramPacket(out, out.length);
+                            udpSocket.receive(packet);
+
+                            // Truncate the buffer if the message was shorter than it.
+                            if (packet.getLength() != out.length) {
+                                byte[] temp = new byte[packet.getLength()];
+                                for(int i = 0; i < packet.getLength(); i++) {
+                                    temp[i] = out[i];
+                                }
+                                out = temp;
+                            }
+
+                            readData.context.success(out);
+                        }
                     } // while
                 } catch (IOException ioe) {
-                    Socket s = SocketData.this.socket;
+                    Socket s = SocketData.this.tcpSocket;
                     if (s != null && s.isClosed()) {
                         Log.i(LOG_TAG, "Socket closed.");
                     } else {
