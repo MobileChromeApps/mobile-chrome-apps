@@ -40,6 +40,9 @@ public class ChromeSocket extends CordovaPlugin {
         } else if ("connect".equals(action)) {
             connect(args, callbackContext);
             return true;
+        } else if ("bind".equals(action)) {
+            bind(args, callbackContext);
+            return true;
         } else if ("write".equals(action)) {
             write(args, callbackContext);
             return true;
@@ -98,6 +101,21 @@ public class ChromeSocket extends CordovaPlugin {
 
         int result = sd.connect(address, port);
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+    }
+
+    private void bind(CordovaArgs args, final CallbackContext context) throws JSONException {
+        int socketId = args.getInt(0);
+        String address = args.getString(1);
+        int port = args.getInt(2);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        boolean success = sd.bind(address, port);
+        success ? context.success() : context.error("Failed to bind.");
     }
 
     private void write(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -276,6 +294,16 @@ public class ChromeSocket extends CordovaPlugin {
             readThread.start();
         }
 
+        public void udpInit() {
+            try {
+                udpSocket = new DatagramSocket();
+            } catch (SocketException se) {
+                Log.w(LOG_TAG, "SocketException while trying to create a UDP socket in sendTo()", se);
+                return;
+            }
+            init();
+        }
+
         public int write(byte[] data) throws JSONException {
             if ((tcpSocket == null && udpSocket == null) || isServer) return -1;
 
@@ -310,13 +338,7 @@ public class ChromeSocket extends CordovaPlugin {
 
             // Create the socket and initialize the reading side, if connect() was never called.
             if (udpSocket == null) {
-                try {
-                    udpSocket = new DatagramSocket();
-                } catch (SocketException se) {
-                    Log.w(LOG_TAG, "SocketException while trying to create a UDP socket in sendTo()", se);
-                    return -1;
-                }
-                init();
+                udpInit();
             }
 
             int bytesWritten = 0;
@@ -338,6 +360,11 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
 
+            if (type == Type.UDP && !connected) {
+                context.error("read() is not allowed on unconnected UDP sockets.");
+                return;
+            }
+
             synchronized(readQueue) {
                 try {
 					readQueue.put(new ReadData(bufferLength, context));
@@ -353,9 +380,15 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
 
+            // Create the socket and initialize the reading side, if connect() was never called.
+            if (udpSocket == null) {
+                udpInit();
+            }
+
             synchronized(readQueue) {
                 try {
-                    readQueue.put(new ReadData(bufferSize, context));
+                    // Flagged as recvFrom, therefore the two-part callback.
+                    readQueue.put(new ReadData(bufferSize, context, true));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -425,12 +458,21 @@ public class ChromeSocket extends CordovaPlugin {
         private static class ReadData {
             public int size;
             public boolean killThread;
+            public boolean recvFrom;
             public CallbackContext context;
 
             public ReadData(int size, CallbackContext context) {
                 this.size = size;
                 this.context = context;
                 this.killThread = false;
+                this.recvFrom = false;
+            }
+
+            public ReadData(int size, CallbackContext context, boolean recvFrom) {
+                this.size = size;
+                this.context = context;
+                this.killThread = false;
+                this.recvFrom = recvFrom;
             }
 
             public ReadData(boolean killThread) {
@@ -489,7 +531,23 @@ public class ChromeSocket extends CordovaPlugin {
                                 out = temp;
                             }
 
-                            readData.context.success(out);
+                            PluginResult dataResult = new PluginResult(PluginResult.Status.OK, out);
+                            // If this was a recvFrom() call, keep the callback for the two-part response.
+                            // If this was a read() call, don't keep the callback.
+                            dataResult.setKeepCallback(readData.recvFrom);
+                            readData.context.sendPluginResult(dataResult);
+
+                            if (readData.recvFrom) {
+                                JSONObject obj = new JSONObject();
+                                try {
+                                    obj.put("address", packet.getAddress().getHostAddress());
+                                    obj.put("port", packet.getPort());
+                                } catch (JSONException je) {
+                                    Log.e(LOG_TAG, "Error constructing JSON object to return from recvFrom()", je);
+                                    return;
+                                }
+                                readData.context.success(obj);
+                            }
                         }
                     } // while
                 } catch (IOException ioe) {

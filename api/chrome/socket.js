@@ -5,6 +5,7 @@
 define('chrome.socket', function(require, module) {
 
 var exports = module.exports;
+var platform = cordova.require('cordova/platform').id;
 
 exports.create = function(socketMode, stuff, callback) {
     if (typeof stuff == 'function') {
@@ -101,15 +102,44 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
         callback = bufferSize;
         bufferSize = 0;
     }
-    var win = callback && function(data) {
-        var recvFromInfo = {
-            resultCode: data.byteLength || 1,
-            data: data,
-            address: '', // TODO
-            port: 0 // TODO
+    var win;
+    if (platform == 'android') {
+        console.log('Android platform confirmed');
+        win = callback && (function() {
+            console.log('closure function called');
+            var data;
+            var call = 0;
+            return function(arg) {
+                console.log('win: call = ' + call);
+                if (call === 0) {
+                    data = arg;
+                    call++;
+                } else {
+                    var recvFromInfo = {
+                        resultCode: data.byteLength || 1,
+                        data: data,
+                        address: arg.address,
+                        port: arg.port
+                    };
+
+                    console.log('calling callback');
+                    callback(recvFromInfo);
+                }
+            };
+        })();
+    } else {
+        win = callback && function(data) {
+            var recvFromInfo = {
+                resultCode: data.byteLength || 1,
+                data: data,
+                address: 0, // TODO
+                port: 0 // TODO
+            };
+
+            callback(recvFromInfo);
         };
-        callback(recvFromInfo);
-    };
+    }
+
     var fail = callback && function() {
         var readInfo = { resultCode: 0 };
         callback(readInfo);
