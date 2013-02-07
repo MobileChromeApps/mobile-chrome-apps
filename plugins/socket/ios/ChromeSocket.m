@@ -104,31 +104,32 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)socket:(GCDAsyncSocket*)sock didConnectToHost:(NSString *)host port:(UInt16)thePort
 {
-    void (^ callback)() = _connectCallback;
+    void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
 
-    callback();
+    callback(YES);
 
     _connectCallback = nil;
 }
 
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didConnectToAddress:(NSData *)address
 {
-    void (^ callback)() = _connectCallback;
+    void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
 
-    callback();
+    callback(YES);
 
     _connectCallback = nil;
 }
 
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotConnect:(NSError *)error
 {
-    void (^ callback)() = _connectCallback;
+    void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
-    _connectCallback = nil;
 
-    NSLog(@"Failed to connect");
+    callback(NO);
+
+    _connectCallback = nil;
 }
 
 - (void)socket:(GCDAsyncSocket*)sock didAcceptNewSocket:(id)newSocket
@@ -156,10 +157,10 @@ static NSString* stringFromData(NSData* data) {
 {
     VERBOSE_LOG(@"socket:didWriteDataWithTag socketId: %u", _socketId);
     assert([_writeCallbacks count] != 0);
-    void (^ callback)() = [_writeCallbacks objectAtIndex:0];
+    void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
 
-    callback();
+    callback(YES);
 
     [_writeCallbacks removeObjectAtIndex:0];
 }
@@ -168,10 +169,10 @@ static NSString* stringFromData(NSData* data) {
 {
     VERBOSE_LOG(@"udpSocket:didSendDataWithTag socketId: %u", _socketId);
     assert([_writeCallbacks count] != 0);
-    void (^ callback)() = [_writeCallbacks objectAtIndex:0];
+    void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
 
-    callback();
+    callback(YES);
 
     [_writeCallbacks removeObjectAtIndex:0];
 }
@@ -180,11 +181,12 @@ static NSString* stringFromData(NSData* data) {
 {
     VERBOSE_LOG(@"udpSocket:didNotSendDataWithTag socketId: %u", _socketId);
     assert([_writeCallbacks count] != 0);
-    void (^ callback)() = [_writeCallbacks objectAtIndex:0];
+    void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
-    [_writeCallbacks removeObjectAtIndex:0];
 
-    NSLog(@"Failed to send");
+    callback(NO);
+
+    [_writeCallbacks removeObjectAtIndex:0];
 }
 
 - (void)socket:(GCDAsyncSocket*)sock didReadData:(NSData *)data withTag:(long)tag
@@ -279,13 +281,24 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
 
-    socket->_connectCallback = [^() {
-        VERBOSE_LOG(@"ACK %@.%@ Connect", socketId, command.callbackId);
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
+    socket->_connectCallback = [^(BOOL success) {
+        VERBOSE_LOG(@"ACK %@.%@ Connect: %d", socketId, command.callbackId, success);
+
+        if (success) {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        } else {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+        }
     } copy];
 
     VERBOSE_LOG(@"REQ %@.%@ Connect", socketId, command.callbackId);
-    [socket->_socket connectToHost:address onPort:port error:nil]; // same selector for both tcp and udp
+    // same selector for both tcp and udp
+    BOOL success = [socket->_socket connectToHost:address onPort:port error:nil];
+    if (!success) {
+        void(^callback)(BOOL) = socket->_connectCallback;
+        callback(NO);
+        socket->_connectCallback = nil;
+    }
 }
 
 - (void)bind:(CDVInvokedUrlCommand*)command
@@ -298,12 +311,13 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"udp"]);
 
-    VERBOSE_LOG(@"NTFY %@.%@ Bind", socketId, command.callbackId);
-    NSError *__autoreleasing error = nil;
-    [socket->_socket bindToPort:port interface:address error:&error];
-    assert(error == nil);
-
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
+    BOOL success = [socket->_socket bindToPort:port interface:address error:nil];
+    VERBOSE_LOG(@"NTFY %@.%@ Bind: %d", socketId, command.callbackId, success);
+    if (success) {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
 }
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command
@@ -338,13 +352,19 @@ static NSString* stringFromData(NSData* data) {
     } copy]];
 
     VERBOSE_LOG(@"REQ %@.%@ Read", socketId, command.callbackId);
+    BOOL success = YES;
 
     if ([socket->_mode isEqualToString:@"udp"]) {
-        [socket->_socket receiveOnce:nil];
+        success = [socket->_socket receiveOnce:nil];
     } else if (bufferSize == 0) {
         [socket->_socket readDataWithTimeout:-1 tag:-1];
     } else {
         [socket->_socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
+    }
+
+    if (!success) {
+        [socket->_readCallbacks removeLastObject];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
     }
 }
 
@@ -357,10 +377,14 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert(socket->_socketId == [socketId unsignedIntegerValue]);
 
-    [socket->_writeCallbacks addObject:[^() {
-        VERBOSE_LOG(@"ACK %@.%@ Write", socketId, command.callbackId);
+    [socket->_writeCallbacks addObject:[^(BOOL success) {
+        VERBOSE_LOG(@"ACK %@.%@ Write: %d", socketId, command.callbackId, success);
 
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+        if (success) {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+        } else {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+        }
     } copy]];
 
     VERBOSE_LOG(@"REQ %@.%@ Write Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
@@ -390,8 +414,12 @@ static NSString* stringFromData(NSData* data) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
     } copy]];
 
-    VERBOSE_LOG(@"REQ %@.%@ recvFrom", socketId, command.callbackId);
-    [socket->_socket receiveOnce:nil];
+    BOOL success = [socket->_socket receiveOnce:nil];
+    VERBOSE_LOG(@"REQ %@.%@ recvFrom: %d", socketId, command.callbackId, success);
+    if (!success) {
+        [socket->_readCallbacks removeLastObject];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
 }
 
 - (void)sendTo:(CDVInvokedUrlCommand*)command
@@ -407,9 +435,14 @@ static NSString* stringFromData(NSData* data) {
     assert(socket->_socketId == [socketId unsignedIntegerValue]);
     assert([socket->_mode isEqualToString:@"udp"]);
 
-    [socket->_writeCallbacks addObject:[^() {
-        VERBOSE_LOG(@"ACK %@.%@ Write", socketId, command.callbackId);
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+    [socket->_writeCallbacks addObject:[^(BOOL success) {
+        VERBOSE_LOG(@"ACK %@.%@ Write: %d", socketId, command.callbackId, success);
+
+        if (success) {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+        } else {
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+        }
     } copy]];
 
     VERBOSE_LOG(@"REQ %@.%@ Write Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
@@ -429,11 +462,15 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"tcp"]);
 
+    BOOL success = [socket->_socket acceptOnPort:port error:nil];
     VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
-    [socket->_socket acceptOnPort:port error:nil];
 
     // TODO: Queue up connections until next accept called
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0] callbackId:command.callbackId];
+    if (success) {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
 }
 
 - (void)accept:(CDVInvokedUrlCommand*)command
