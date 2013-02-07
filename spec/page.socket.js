@@ -22,15 +22,17 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
     });
   }
 
-  function connectAndRead(type) {
+  function connectAndRead(type, data) {
     chrome.socket.create(type, {}, function(socketInfo) {
       chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
         var connected = (connectResult === 0);
         if (connected) {
-          chrome.socket.read(socketInfo.socketId, function(readResult) {
-            log('connectAndRead: success');
-            chrome.socket.disconnect(socketInfo.socketId);
-            chrome.socket.destroy(socketInfo.socketId);
+          chrome.socket.write(socketInfo.socketId, data, function(writeResult) {
+            chrome.socket.read(socketInfo.socketId, function(readResult) {
+              log('connectAndRead: success');
+              chrome.socket.disconnect(socketInfo.socketId);
+              chrome.socket.destroy(socketInfo.socketId);
+            });
           });
         }
       });
@@ -213,7 +215,7 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
     });
 
     addButton('TCP: connect & read', function() {
-      connectAndRead('tcp');
+      connectAndRead('tcp', arr.buffer);
     });
 
     addButton('TCP: accept & read', function() {

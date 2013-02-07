@@ -21,47 +21,35 @@ exports.create = function(socketMode, stuff, callback) {
     cordova.exec(win, null, 'ChromeSocket', 'create', [socketMode]);
 };
 
+exports.destroy = function(socketId) {
+    cordova.exec(null, null, 'ChromeSocket', 'destroy', [socketId]);
+};
+
+
 exports.connect = function(socketId, address, port, callback) {
-    cordova.exec(callback, null, 'ChromeSocket', 'connect', [socketId, address, port]);
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function() {
+        callback(-1);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'connect', [socketId, address, port]);
 };
 
 exports.bind = function(socketId, address, port, callback) {
-  cordova.exec(callback, null, 'ChromeSocket', 'bind', [socketId, address, port]);
-};
-
-exports.listen = function(socketId, address, port, backlog, callback) {
-    if (typeof backlog == 'function') {
-        callback = backlog;
-        backlog = 0;
-    }
-    cordova.exec(callback, null, 'ChromeSocket', 'listen', [socketId, address, port, backlog]);
-};
-
-exports.accept = function(socketId, callback) {
-    var win = callback && function(acceptedSocketId) {
-        var acceptInfo = {
-            resultCode: 0,
-            socketId: acceptedSocketId
-        };
-        callback(acceptInfo);
+    var win = callback && function() {
+        callback(0);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'accept', [socketId]);
-};
-
-exports.write = function(socketId, data, callback) {
-    var type = Object.prototype.toString.call(data).slice(8, -1);
-    if (type != 'ArrayBuffer') {
-        throw new Error('chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')');
-    }
-
-    var win = callback && function(bytesWritten) {
-        var writeInfo = {
-            bytesWritten: bytesWritten
-        };
-        callback(writeInfo);
+    var fail = callback && function() {
+        callback(-1);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'write', [socketId, data]);
+    cordova.exec(win, fail, 'ChromeSocket', 'bind', [socketId, address, port]);
 };
+
+exports.disconnect = function(socketId) {
+    cordova.exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
+};
+
 
 exports.read = function(socketId, bufferSize, callback) {
     if (typeof bufferSize == 'function') {
@@ -76,26 +64,34 @@ exports.read = function(socketId, bufferSize, callback) {
         callback(readInfo);
     };
     var fail = callback && function() {
-        var readInfo = { resultCode: 0 };
+        var readInfo = {
+            resultCode: 0
+        };
         callback(readInfo);
     };
     cordova.exec(win, fail, 'ChromeSocket', 'read', [socketId, bufferSize]);
 };
 
-exports.sendTo = function(socketId, data, address, port, callback) {
+exports.write = function(socketId, data, callback) {
     var type = Object.prototype.toString.call(data).slice(8, -1);
     if (type != 'ArrayBuffer') {
         throw new Error('chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')');
     }
-
     var win = callback && function(bytesWritten) {
         var writeInfo = {
             bytesWritten: bytesWritten
         };
         callback(writeInfo);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
+    var fail = callback && function() {
+        var writeInfo = {
+            bytesWritten: 0
+        };
+        callback(writeInfo);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'write', [socketId, data]);
 };
+
 
 exports.recvFrom = function(socketId, bufferSize, callback) {
     if (typeof bufferSize == 'function') {
@@ -141,23 +137,75 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
     }
 
     var fail = callback && function() {
-        var readInfo = { resultCode: 0 };
+        var readInfo = {
+            resultCode: 0
+        };
         callback(readInfo);
     };
     cordova.exec(win, fail, 'ChromeSocket', 'recvFrom', [socketId, bufferSize]);
 };
 
-exports.disconnect = function(socketId) {
-    cordova.exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
+exports.sendTo = function(socketId, data, address, port, callback) {
+    var type = Object.prototype.toString.call(data).slice(8, -1);
+    if (type != 'ArrayBuffer') {
+        throw new Error('chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')');
+    }
+    var win = callback && function(bytesWritten) {
+        var writeInfo = {
+            bytesWritten: bytesWritten
+        };
+        callback(writeInfo);
+    };
+    var fail = callback && function() {
+        var writeInfo = {
+            bytesWritten: 0
+        };
+        callback(writeInfo);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
 };
 
-exports.destroy = function(socketId) {
-    cordova.exec(null, null, 'ChromeSocket', 'destroy', [socketId]);
+
+exports.listen = function(socketId, address, port, backlog, callback) {
+    if (typeof backlog == 'function') {
+        callback = backlog;
+        backlog = 0;
+    }
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function() {
+        callback(-1);
+    };
+    cordova.exec(win, fail, 'ChromeSocket', 'listen', [socketId, address, port, backlog]);
 };
 
-exports.getNetworkList = function(callback) {
+exports.accept = function(socketId, callback) {
+    var win = callback && function(acceptedSocketId) {
+        var acceptInfo = {
+            resultCode: 0,
+            socketId: acceptedSocketId
+        };
+        callback(acceptInfo);
+    };
+    cordova.exec(win, null, 'ChromeSocket', 'accept', [socketId]);
+};
+
+
+exports.setKeepAlive = function() {
+  console.warn('chrome.socket.setKeepAlive not implemented yet');
+};
+
+exports.setNoDelay = function() {
+  console.warn('chrome.socket.setNoDelay not implemented yet');
+};
+
+exports.getInfo = function() {
+  console.warn('chrome.socket.getInfo not implemented yet');
+};
+
+exports.getNetworkList = function() {
   console.warn('chrome.socket.getNetworkList not implemented yet');
-  callback(null);
 };
 
 });
