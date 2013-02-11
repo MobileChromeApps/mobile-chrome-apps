@@ -4,6 +4,7 @@
 
 define('chrome.fileSystem', function(require, module) {
   var exports = module.exports;
+  var platformId = cordova.require('cordova/platform').id;
   var FileEntry = cordova.require('cordova/plugin/FileEntry');
 
   exports.getDisplayPath = function(fileEntry, callback) {
@@ -25,24 +26,42 @@ define('chrome.fileSystem', function(require, module) {
       return;
     }
 
-    // Determine the media type.
-    var mediaType = determineMediaType(options.accepts, options.acceptsAllTypes);
-
-    // Create the callback for getPicture.
+    // Create the callback for getFile.
     // It creates a file entry and passes it to the chooseEntry callback.
-    var onPictureReceived = function(nativeUri) {
+    var onFileReceived = function(nativeUri) {
       var fileEntry = new FileEntry('image.png', nativeUri);
       callback(fileEntry);
     };
 
-    // Prepare the options for getting the picture.
-    var getPictureOptions = { destinationType: navigator.camera.DestinationType.NATIVE_URI,
-                              sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY,
-                              mediaType: mediaType };
-
-    // Get a picture.
-    navigator.camera.getPicture(onPictureReceived, null, getPictureOptions);
+    if (platformId == 'ios') {
+      getFileIos(options, onFileReceived);
+    } else if (platformId == 'android') {
+      getFileAndroid(options, onFileReceived);
+    }
   };
+
+  function getFileIos(options, onFileReceivedCallback) {
+    // Determine the media type.
+    var mediaType = determineMediaType(options.accepts, options.acceptsAllTypes);
+
+    // Prepare the options for getting the file.
+    var getFileOptions = { destinationType: navigator.camera.DestinationType.NATIVE_URI,
+                           sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY,
+                           mediaType: mediaType };
+
+    // Use the camera to get an image or video.
+    navigator.camera.getPicture(onFileReceivedCallback, null, getFileOptions);
+  }
+
+  function getFileAndroid(options, onFileReceivedCallback) {
+    var AndroidFileChooser = cordova.require('cordova/plugin/android/filechooser');
+
+    // Determine the relevant mime types.
+    var mimeTypes = determineMimeTypes(options.accepts, options.acceptsAllTypes);
+
+    // Use the file chooser to get a file.
+    AndroidFileChooser.chooseFile(onFileReceivedCallback, null, mimeTypes);
+  }
 
   function determineMediaType(acceptOptions, acceptsAllTypes) {
     if (acceptsAllTypes) {
@@ -88,5 +107,30 @@ define('chrome.fileSystem', function(require, module) {
     }
 
     return navigator.camera.MediaType.ALLMEDIA;
+  }
+
+  function determineMimeTypes(acceptOptions, acceptsAllTypes) {
+    if (acceptsAllTypes) {
+      return [ '*/*' ];
+    }
+
+    // Pull out all the mime types.
+    // TODO(maxw): Determine mime types from extensions and add them to the returned list.
+    var mimeTypes = [ ];
+    if (acceptOptions) {
+      for (var i = 0; i < acceptOptions.length; i++) {
+        if (acceptOptions[i].mimeTypes) {
+          for (var j = 0; j < acceptOptions[i].mimeTypes.length; j++) {
+            mimeTypes.push(acceptOptions[i].mimeTypes[j]);
+          }
+        }
+      }
+    }
+
+    if (mimeTypes.length !== 0) {
+      return mimeTypes;
+    }
+
+    return [ '*/*' ];
   }
 });
