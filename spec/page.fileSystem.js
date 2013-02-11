@@ -115,7 +115,8 @@ chromespec.registerSubPage('chrome.fileSystem', function(rootEl) {
       chromespec.log('File entry path: ' + fileEntry.fullPath);
     };
 
-    var chooseEntryOptions = { accepts: [{ mimeTypes: ['image/*'] }] };
+    var chooseEntryOptions = { acceptsAllTypes: false,
+                               accepts: [{ mimeTypes: ['image/*'] }] };
 
     chrome.fileSystem.chooseEntry(chooseEntryOptions, chooseEntryCallback);
   });
@@ -126,7 +127,8 @@ chromespec.registerSubPage('chrome.fileSystem', function(rootEl) {
       chromespec.log('File entry path: ' + fileEntry.fullPath);
     };
 
-    var chooseEntryOptions = { accepts: [{ mimeTypes: ['video/*'] }] };
+    var chooseEntryOptions = { acceptsAllTypes: false,
+                               accepts: [{ mimeTypes: ['video/*'] }] };
 
     chrome.fileSystem.chooseEntry(chooseEntryOptions, chooseEntryCallback);
   });
