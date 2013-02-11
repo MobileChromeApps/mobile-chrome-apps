@@ -100,13 +100,10 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
     }
     var win;
     if (platform == 'android') {
-        console.log('Android platform confirmed');
         win = callback && (function() {
-            console.log('closure function called');
             var data;
             var call = 0;
             return function(arg) {
-                console.log('win: call = ' + call);
                 if (call === 0) {
                     data = arg;
                     call++;
@@ -118,7 +115,6 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
                         port: arg.port
                     };
 
-                    console.log('calling callback');
                     callback(recvFromInfo);
                 }
             };

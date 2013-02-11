@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -99,8 +100,9 @@ public class ChromeSocket extends CordovaPlugin {
             return;
         }
 
-        int result = sd.connect(address, port);
-        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        boolean success = sd.connect(address, port);
+        if(success) callbackContext.success();
+        else callbackContext.error("Failed to connect");
     }
 
     private void bind(CordovaArgs args, final CallbackContext context) throws JSONException {
@@ -115,7 +117,8 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         boolean success = sd.bind(address, port);
-        success ? context.success() : context.error("Failed to bind.");
+        if(success) context.success();
+        else context.error("Failed to bind.");
     }
 
     private void write(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -129,7 +132,11 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         int result = sd.write(data);
-        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        if (result <= 0) {
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, result));
+        } else {
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        }
     }
 
     private void read(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -160,7 +167,11 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         int result = sd.sendTo(data, address, port);
-        context.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        if (result <= 0) {
+            context.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, result));
+        } else {
+            context.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        }
     }
 
     private void recvFrom(CordovaArgs args, final CallbackContext context) throws JSONException {
@@ -216,8 +227,9 @@ public class ChromeSocket extends CordovaPlugin {
         String address = args.getString(1);
         int port = args.getInt(2);
         int backlog = args.getInt(3);
-        sd.listen(address, port, backlog);
-        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, 1));
+        boolean success = sd.listen(address, port, backlog);
+        if(success) callbackContext.success();
+        else callbackContext.error("Failed to listen()");
     }
 
     private void accept(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -245,6 +257,7 @@ public class ChromeSocket extends CordovaPlugin {
         private InetAddress address;
         private int port;
         private boolean connected = false; // Only applies to UDP, where connect() restricts who the socket will receive from.
+        private boolean bound = false;
 
         private boolean isServer = false;
 
@@ -265,27 +278,29 @@ public class ChromeSocket extends CordovaPlugin {
             init();
         }
 
-        public int connect(String address, int port) {
-            if (isServer) return 1; // error
+        public boolean connect(String address, int port) {
+            if (isServer) return false;
             try {
                 if (type == Type.TCP) {
                     tcpSocket = new Socket(address, port);
                 } else {
-                    udpSocket = new DatagramSocket(port);
+                    if (udpSocket == null) {
+                        udpSocket = new DatagramSocket();
+                    }
                     this.port = port;
                     this.address = InetAddress.getByName(address);
                     this.connected = true;
-                    udpSocket.connect(this.address, this.port);
+                    udpSocket.connect(this.address, port);
                 }
                 init();
             } catch(UnknownHostException uhe) {
                 Log.e(LOG_TAG, "Unknown host exception while connecting socket", uhe);
-                return 1; // error
+                return false;
             } catch(IOException ioe) {
                 Log.e(LOG_TAG, "IOException while connecting socket", ioe);
-                return 1; // error
+                return false;
             }
-            return 0; // success
+            return true;
         }
 
         private void init() {
@@ -302,6 +317,27 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
             init();
+        }
+
+        public boolean bind(String address, int port) {
+            if (type != Type.UDP) {
+                Log.e(LOG_TAG, "bind() cannot be called on TCP sockets.");
+                return false;
+            }
+
+            try {
+                if (udpSocket == null) {
+                    udpSocket = new DatagramSocket(port);
+                    init();
+                } else {
+                    udpSocket.bind(new InetSocketAddress(port));
+                }
+                this.bound = true;
+            } catch (SocketException se) {
+                Log.e(LOG_TAG, "Failed to create UDP socket.", se);
+                return false;
+            }
+            return true;
         }
 
         public int write(byte[] data) throws JSONException {
@@ -360,8 +396,8 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
 
-            if (type == Type.UDP && !connected) {
-                context.error("read() is not allowed on unconnected UDP sockets.");
+            if (type == Type.UDP && !bound) {
+                context.error("read() is not allowed on unbound UDP sockets.");
                 return;
             }
 
@@ -381,8 +417,9 @@ public class ChromeSocket extends CordovaPlugin {
             }
 
             // Create the socket and initialize the reading side, if connect() was never called.
-            if (udpSocket == null) {
-                udpInit();
+            if (!bound) {
+                context.error("Cannot recvFrom() without bind() first.");
+                return;
             }
 
             synchronized(readQueue) {
@@ -423,15 +460,17 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
 
-        public void listen(String address, int port, int backlog) {
-            if (type != Type.TCP) return;
+        public boolean listen(String address, int port, int backlog) {
+            if (type != Type.TCP) return false;
             isServer = true;
 
             try {
                 serverSocket = new ServerSocket(port, backlog);
             } catch (IOException ioe) {
                 Log.e(LOG_TAG, "Error creating server socket", ioe);
+                return false;
             }
+            return true;
         }
 
         public void accept(CallbackContext context) {
