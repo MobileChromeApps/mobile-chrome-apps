@@ -5,6 +5,8 @@
 #import "ChromeSocket.h"
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
+#include <arpa/inet.h>
+#import <netdb.h>
 
 #ifndef CHROME_SOCKET_VERBOSE_LOGGING
 #define CHROME_SOCKET_VERBOSE_LOGGING 1
@@ -546,6 +548,20 @@ static NSString* stringFromData(NSData* data) {
     }
 
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:socketInfo] callbackId:command.callbackId];
+}
+
+const char* GetLocalIP() {
+    char buf[256];
+    if(gethostname(buf,sizeof(buf)))
+        return NULL;
+    struct hostent* he = gethostbyname(buf);
+    if(!he)
+        return NULL;
+    for(int i=0; he->h_addr_list[i]; i++) {
+        char* ip = inet_ntoa(*(struct in_addr*)he->h_addr_list[i]);
+        if(ip != (char*)-1) return ip;
+    }
+    return NULL;
 }
 
 @end
