@@ -33,7 +33,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     }
     var data = arr.buffer;
 
-    it('accept connect read write', asyncItWaitsForDone(function(done) {
+    itWaitsForDone('accept connect read write', function(done) {
       chrome.socket.create('tcp', {}, function(socketInfo) {
         expect(socketInfo).toBeTruthy();
         expect(socketInfo.socketId).toBeDefined();
@@ -88,9 +88,9 @@ chromeSpec('chrome.socket', function(runningInBackground) {
           });
         });
       });
-    }));
+    });
 
-    it('connect before accept', asyncItWaitsForDone(function(done) {
+    itWaitsForDone('connect before accept', function(done) {
       chrome.socket.create('tcp', {}, function(socketInfo1) {
         expect(socketInfo1).toBeTruthy();
         expect(socketInfo1.socketId).toBeDefined();
@@ -126,7 +126,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
           });
         });
       });
-    }));
+    });
 
   });
 
@@ -139,7 +139,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     }
     var data = arr.buffer;
 
-    it('bind recvFrom sendTo', asyncItWaitsForDone(function(done) {
+    itWaitsForDone('bind recvFrom sendTo', function(done) {
       chrome.socket.create('udp', {}, function(socketInfo) {
         expect(socketInfo).toBeTruthy();
         expect(socketInfo.socketId).toBeDefined();
@@ -150,7 +150,9 @@ chromeSpec('chrome.socket', function(runningInBackground) {
           chrome.socket.recvFrom(socketInfo.socketId, function(readResult) {
             expect(readResult).toBeTruthy();
             expect(readResult.resultCode).toBeGreaterThan(0);
-            expect(readResult.data).toBeTruthy();
+            expect(readResult.data).toBeDefined();
+            expect(readResult.address).toBeDefined();
+            expect(readResult.port).toBeDefined();
 
             expect(Object.prototype.toString.call(data).slice(8,-1)).toEqual('ArrayBuffer');
             expect(Object.prototype.toString.call(readResult.data).slice(8,-1)).toEqual('ArrayBuffer');
@@ -163,9 +165,9 @@ chromeSpec('chrome.socket', function(runningInBackground) {
               expect(recv[i]).toEqual(sent[i]);
             }
 
-            chrome.socket.destroy(socketInfo.socketId);
-
-            done();
+            chrome.socket.sendTo(socketInfo.socketId, data, readResult.address, readResult.port, function(writeResult) {
+              chrome.socket.destroy(socketInfo.socketId);
+            });
           });
 
           chrome.socket.create('udp', {}, function(socketInfo) {
@@ -175,15 +177,19 @@ chromeSpec('chrome.socket', function(runningInBackground) {
             chrome.socket.sendTo(socketInfo.socketId, data, addr, port, function(writeResult) {
               expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
-              chrome.socket.destroy(socketInfo.socketId);
+              chrome.socket.recvFrom(socketInfo.socketId, function(readResult) {
+                chrome.socket.destroy(socketInfo.socketId);
+
+                done();
+              });
             });
           });
         });
       });
-    }));
+    });
 
 
-    it('bind connect x2 read write', asyncItWaitsForDone(function(done) {
+    itWaitsForDone('bind connect x2 read write', function(done) {
       chrome.socket.create('udp', {}, function(socketInfo1) {
         expect(socketInfo1).toBeTruthy();
         expect(socketInfo1.socketId).toBeDefined();
@@ -239,7 +245,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
 
         });
       });
-    }));
+    });
 
   });
 });

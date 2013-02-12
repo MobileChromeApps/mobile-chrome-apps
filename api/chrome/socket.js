@@ -5,7 +5,7 @@
 define('chrome.socket', function(require, module) {
 
 var exports = module.exports;
-var platform = cordova.require('cordova/platform').id;
+var platform = cordova.require('cordova/platform');
 
 exports.create = function(socketMode, stuff, callback) {
     if (typeof stuff == 'function') {
@@ -99,7 +99,7 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
         bufferSize = 0;
     }
     var win;
-    if (platform == 'android') {
+    if (platform.id == 'android') {
         win = callback && (function() {
             var data;
             var call = 0;
@@ -120,14 +120,13 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
             };
         })();
     } else {
-        win = callback && function(data) {
+        win = callback && function(data, address, port) {
             var recvFromInfo = {
                 resultCode: data.byteLength || 1,
                 data: data,
-                address: 0, // TODO
-                port: 0 // TODO
+                address: address,
+                port: port
             };
-
             callback(recvFromInfo);
         };
     }

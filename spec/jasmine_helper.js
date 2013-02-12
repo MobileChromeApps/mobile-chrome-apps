@@ -40,7 +40,7 @@ function waitUntilCalledAndThenRun(callback, andthen) {
   return ret;
 }
 
-function asyncItWaitsForDone(callback, opt_timeout) {
+function itWaitsForDone(description, callback, opt_timeout) {
   var done = false;
   var ondone = function() {
     done = true;
@@ -52,5 +52,5 @@ function asyncItWaitsForDone(callback, opt_timeout) {
     waitsFor(isdone, opt_timeout);
     return callback(ondone);
   };
-  return wrapped;
+  return it(description, wrapped);
 }

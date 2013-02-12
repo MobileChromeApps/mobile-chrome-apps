@@ -426,10 +426,10 @@ static NSString* stringFromData(NSData* data) {
     assert([socket->_mode isEqualToString:@"udp"]);
 
     [socket->_readCallbacks addObject:[^(NSData* data, NSString* address, uint16_t port) {
-        VERBOSE_LOG(@"ACK %@.%@ recvFrom Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
+        VERBOSE_LOG(@"ACK %@.%@ recvFrom Payload(%d): %@, address: %@, port: %u", socketId, command.callbackId, [data length], stringFromData(data), address, port);
 
         // TODO: also return address and port.  Requires sending NSData along with other values back from plugin.
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:@[data, address, [NSNumber numberWithUnsignedInt:port]]] callbackId:command.callbackId];
     } copy]];
 
     BOOL success = [socket->_socket receiveOnce:nil];
