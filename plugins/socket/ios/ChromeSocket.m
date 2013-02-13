@@ -104,6 +104,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)socket:(GCDAsyncSocket*)sock didConnectToHost:(NSString *)host port:(UInt16)thePort
 {
+    VERBOSE_LOG(@"socket:didConnectToHost socketId: %u", _socketId);
+
     void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
 
@@ -114,6 +116,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didConnectToAddress:(NSData *)address
 {
+    VERBOSE_LOG(@"udpSocket:didConnectToAddress socketId: %u", _socketId);
+
     void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
 
@@ -124,6 +128,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotConnect:(NSError *)error
 {
+    VERBOSE_LOG(@"udpSocket:didNotConnect socketId: %u", _socketId);
+
     void (^ callback)(BOOL) = _connectCallback;
     assert(callback != nil);
 
@@ -134,6 +140,8 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)socket:(GCDAsyncSocket*)sock didAcceptNewSocket:(id)newSocket
 {
+    VERBOSE_LOG(@"socket:didAcceptNewSocket socketId: %u", _socketId);
+
     ChromeSocketSocket* socket = [_plugin createNewSocketWithMode:_mode socket:newSocket];
 
     void (^ callback)(NSUInteger socketId) = _acceptCallback;
@@ -146,16 +154,18 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError *)error
 {
+    VERBOSE_LOG(@"socketDidDisconnect socketId: %u", _socketId);
 }
 
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
 {
-
+    VERBOSE_LOG(@"udpSocketDidClose socketId: %u", _socketId);
 }
 
 - (void)socket:(GCDAsyncSocket*)sock didWriteDataWithTag:(long)tag
 {
     VERBOSE_LOG(@"socket:didWriteDataWithTag socketId: %u", _socketId);
+
     assert([_writeCallbacks count] != 0);
     void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -168,6 +178,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didSendDataWithTag:(long)tag
 {
     VERBOSE_LOG(@"udpSocket:didSendDataWithTag socketId: %u", _socketId);
+
     assert([_writeCallbacks count] != 0);
     void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -180,6 +191,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotSendDataWithTag:(long)tag dueToError:(NSError *)error
 {
     VERBOSE_LOG(@"udpSocket:didNotSendDataWithTag socketId: %u", _socketId);
+
     assert([_writeCallbacks count] != 0);
     void (^ callback)(BOOL) = [_writeCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -192,6 +204,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)socket:(GCDAsyncSocket*)sock didReadData:(NSData *)data withTag:(long)tag
 {
     VERBOSE_LOG(@"socket:didReadData socketId: %u", _socketId);
+
     assert([_readCallbacks count] != 0);
     void (^ callback)(NSData* data, NSString* address, uint16_t port) = [_readCallbacks objectAtIndex:0];
     assert(callback != nil);
@@ -204,6 +217,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didReceiveData:(NSData *)data fromAddress:(NSData *)address withFilterContext:(id)filterContext
 {
     VERBOSE_LOG(@"udbSocket:didReceiveData socketId: %u", _socketId);
+
     assert([_readCallbacks count] != 0);
     void (^ callback)(NSData* data, NSString* address, uint16_t port) = [_readCallbacks objectAtIndex:0];
     assert(callback != nil);

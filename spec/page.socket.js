@@ -191,7 +191,6 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
 
       });
     });
-
   }
 
   function addButton(name, func) {

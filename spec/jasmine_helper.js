@@ -20,11 +20,17 @@ function itShouldHaveAPropertyOfType(obj, propName, typeName) {
 
 function waitUntilCalled(callback, opt_timeout) {
   var done = false;
-  var wrapped = function() {
+  var ondone = function() {
     done = true;
+  };
+  var isdone = function() {
+    return done;
+  };
+  var wrapped = function() {
+    ondone();
     return callback.apply(this, arguments);
   };
-  waitsFor(function() { return done; }, opt_timeout);
+  waitsFor(isdone, opt_timeout);
   return wrapped;
 }
 
@@ -32,4 +38,19 @@ function waitUntilCalledAndThenRun(callback, andthen) {
   var ret = waitUntilCalled(callback);
   runs(andthen);
   return ret;
+}
+
+function asyncItWaitsForDone(callback, opt_timeout) {
+  var done = false;
+  var ondone = function() {
+    done = true;
+  };
+  var isdone = function() {
+    return done;
+  };
+  var wrapped = function() {
+    waitsFor(isdone, opt_timeout);
+    return callback(ondone);
+  };
+  return wrapped;
 }
