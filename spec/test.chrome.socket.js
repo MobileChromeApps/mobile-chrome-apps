@@ -44,7 +44,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
           chrome.socket.accept(socketInfo.socketId, function(acceptInfo) {
             expect(acceptInfo).toBeTruthy();
             expect(acceptInfo.resultCode).toEqual(0);
-            expect(socketInfo.socketId).toBeDefined();
+            expect(acceptInfo.socketId).toBeDefined();
 
             chrome.socket.read(acceptInfo.socketId, function(readResult) {
               expect(readResult).toBeTruthy();
@@ -89,6 +89,45 @@ chromeSpec('chrome.socket', function(runningInBackground) {
         });
       });
     }));
+
+    it('connect before accept', asyncItWaitsForDone(function(done) {
+      chrome.socket.create('tcp', {}, function(socketInfo1) {
+        expect(socketInfo1).toBeTruthy();
+        expect(socketInfo1.socketId).toBeDefined();
+
+        chrome.socket.listen(socketInfo1.socketId, addr, port, function(listenResult) {
+          expect(listenResult).toEqual(0);
+
+          chrome.socket.create('tcp', {}, function(socketInfo2) {
+            expect(socketInfo2).toBeTruthy();
+            expect(socketInfo2.socketId).toBeDefined();
+
+            chrome.socket.connect(socketInfo2.socketId, addr, port, function(connectResult) {
+              expect(connectResult).toEqual(0);
+
+              chrome.socket.disconnect(socketInfo2.socketId);
+              chrome.socket.destroy(socketInfo2.socketId);
+            });
+
+            setTimeout(function() {
+              chrome.socket.accept(socketInfo1.socketId, function(acceptInfo) {
+                expect(acceptInfo).toBeTruthy();
+                expect(acceptInfo.resultCode).toEqual(0);
+                expect(acceptInfo.socketId).toBeDefined();
+
+                chrome.socket.disconnect(acceptInfo.socketId);
+                chrome.socket.destroy(acceptInfo.socketId);
+                chrome.socket.disconnect(socketInfo1.socketId);
+                chrome.socket.destroy(socketInfo1.socketId);
+
+                done();
+              });
+            }, 100);
+          });
+        });
+      });
+    }));
+
   });
 
   describe('UDP tests', function() {

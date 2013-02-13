@@ -47,6 +47,8 @@ static NSString* stringFromData(NSData* data) {
     id _acceptCallback;
     NSMutableArray* _readCallbacks;
     NSMutableArray* _writeCallbacks;
+
+    NSMutableArray* _acceptSocketQueue;
 }
 @end
 
@@ -77,7 +79,7 @@ static NSString* stringFromData(NSData* data) {
 
         _readCallbacks = [NSMutableArray array];
         _writeCallbacks = [NSMutableArray array];
-
+        _acceptSocketQueue = [NSMutableArray array];
 
         if (theSocket == nil) {
             if ([_mode isEqualToString:@"tcp"]) {
@@ -145,9 +147,11 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketSocket* socket = [_plugin createNewSocketWithMode:_mode socket:newSocket];
 
     void (^ callback)(NSUInteger socketId) = _acceptCallback;
-    assert(callback != nil);
-
-    callback(socket->_socketId);
+    if (callback != nil) {
+        callback(socket->_socketId);
+    } else {
+        [_acceptSocketQueue addObject:socket];
+    }
 
     _acceptCallback = nil;
 }
@@ -468,7 +472,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)listen:(CDVInvokedUrlCommand*)command
 {
     NSNumber* socketId = [command argumentAtIndex:0];
-//    NSString* address = [command argumentAtIndex:1];
+    NSString* address = [command argumentAtIndex:1];
     NSUInteger port = [[command argumentAtIndex:2] unsignedIntegerValue];
 //    NSUInteger backlog = [[command argumentAtIndex:3] unsignedIntegerValue];
 
@@ -476,7 +480,7 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"tcp"]);
 
-    BOOL success = [socket->_socket acceptOnPort:port error:nil];
+    BOOL success = [socket->_socket acceptOnInterface:address port:port error:nil];
     VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
 
     // TODO: Queue up connections until next accept called
@@ -496,13 +500,21 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"tcp"]);
 
-    socket->_acceptCallback = [^(NSUInteger socketId) {
-        VERBOSE_LOG(@"ACK %d.%@ Accept", socketId, command.callbackId);
+    void (^callback)(NSUInteger socketId) = [^(NSUInteger socketId) {
+        VERBOSE_LOG(@"ACK %d.%@ Accepted socketId: %u", socket->_socketId, command.callbackId, socketId);
 
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socketId] callbackId:command.callbackId];
     } copy];
 
     VERBOSE_LOG(@"REQ %@.%@ Accept", socketId, command.callbackId);
+
+    if ([socket->_acceptSocketQueue count] == 0) {
+        socket->_acceptCallback = callback;
+    } else {
+        ChromeSocketSocket* acceptSocket = [socket->_acceptSocketQueue dequeue];
+
+        callback(acceptSocket->_socketId);
+    }
 }
 
 @end
