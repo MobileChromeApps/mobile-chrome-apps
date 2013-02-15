@@ -4,7 +4,7 @@
 
 chromeSpec('chrome.i18n', function(runningInBackground) {
   var testNode = null;
-  var langEnUs = navigator.language == 'en-US';
+  var langEnUs = navigator.language.toLowerCase() == 'en-us';
 
   this.afterEach(function() {
     if (testNode) {
@@ -14,7 +14,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
   });
 
   it('language should be set to en-US', function() {
-    expect(navigator.language).toBe('en-US');
+    expect(navigator.language.toLowerCase()).toBe('en-us');
   });
 
   if (!runningInBackground) {
