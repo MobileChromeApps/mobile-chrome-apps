@@ -5,11 +5,6 @@
 if (!Function.prototype.bind) {
   Object.defineProperty(Function.prototype, 'bind', { value: function(ctx) {
     var func = this;
-    if (arguments.length < 2) {
-      return function() {
-        return func.apply(ctx, arguments);
-      };
-    }
     var boundArgs = Array.prototype.slice.call(arguments, 1);
     return function() {
       var newArgs = boundArgs.concat(boundArgs.slice.call(arguments));
