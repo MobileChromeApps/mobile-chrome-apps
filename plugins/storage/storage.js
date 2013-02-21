@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-define('chrome.storage', function(require, module) {
-
 var exports = module.exports;
 var exec = cordova.require('cordova/exec');
 
@@ -183,7 +181,11 @@ StorageArea.prototype.clear = function(callback) {
     exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
 };
 
+// TODO(braden): How do we want to handle this event when we're not in a Chrome app?
 var Event = require('chrome.Event');
+if (Event) {
+  exports.onChanged = new Event('onChanged');
+}
 exports.onChanged = new Event('onChanged');
 
 var local = new StorageArea(false, exports.onChanged);
@@ -197,4 +199,4 @@ sync.QUOTA_BYTES = 102400;
 
 exports.local = local;
 exports.sync = sync;
-});
+
