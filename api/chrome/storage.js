@@ -87,7 +87,7 @@ define('chrome.storage', function(require, module) {
       ret = getLocalStorageValuesForKeys(keys);
     } else if (typeof items == 'string') {
       ret = getLocalStorageValuesForKeys([items]);
-    } else if (Object.prototype.toString.call(items).slice(8, -1) == 'Array') {
+    } else if (Array.isArray(items)) {
       ret = getLocalStorageValuesForKeys(items);
     } else {
       ret = items; // assign defaults
