@@ -25,7 +25,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
   });
 
   describe('TCP tests', function() {
-    var addr = 'localhost';
+    var addr = '127.0.0.1';
     var port = 1234;
     var arr = new Uint8Array(256);
     for (var i = 0; i < arr.length; i++) {
@@ -71,7 +71,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
             });
           });
 
-          chrome.socket.create('tcp', {}, function(socketInfo) {
+          chrome.socket.create('tcp', function(socketInfo) {
             expect(socketInfo).toBeTruthy();
             expect(socketInfo.socketId).toBeDefined();
 
@@ -98,7 +98,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
         chrome.socket.listen(socketInfo1.socketId, addr, port, function(listenResult) {
           expect(listenResult).toEqual(0);
 
-          chrome.socket.create('tcp', {}, function(socketInfo2) {
+          chrome.socket.create('tcp', function(socketInfo2) {
             expect(socketInfo2).toBeTruthy();
             expect(socketInfo2.socketId).toBeDefined();
 
@@ -131,7 +131,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
   });
 
   describe('UDP tests', function() {
-    var addr = 'localhost';
+    var addr = '127.0.0.1';
     var port = 1234;
     var arr = new Uint8Array(256);
     for (var i = 0; i < arr.length; i++) {
@@ -170,11 +170,12 @@ chromeSpec('chrome.socket', function(runningInBackground) {
             });
           });
 
-          chrome.socket.create('udp', {}, function(socketInfo) {
+          chrome.socket.create('udp', function(socketInfo) {
             expect(socketInfo).toBeTruthy();
             expect(socketInfo.socketId).toBeDefined();
 
             chrome.socket.sendTo(socketInfo.socketId, data, addr, port, function(writeResult) {
+              expect(writeResult).toBeTruthy();
               expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
               chrome.socket.recvFrom(socketInfo.socketId, function(readResult) {
@@ -197,7 +198,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
         chrome.socket.bind(socketInfo1.socketId, addr, port, function(bindResult1) {
           expect(bindResult1).toEqual(0);
 
-          chrome.socket.create('udp', {}, function(socketInfo2) {
+          chrome.socket.create('udp', function(socketInfo2) {
             expect(socketInfo2).toBeTruthy();
             expect(socketInfo2.socketId).toBeDefined();
 

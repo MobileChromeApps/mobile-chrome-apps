@@ -28,7 +28,10 @@
     "128": "assets/icon-128x128.png"
   },
   "permissions": [
-    "storage"
+    "storage",
+    {
+      "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind" ]
+    }
   ],
   "default_locale": "fr"
 }
