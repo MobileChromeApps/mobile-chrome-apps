@@ -90,7 +90,7 @@ static NSString* stringFromData(NSData* data) {
         } else {
             [theSocket setDelegate:self];
         }
-        // TODO: is this going to retain?
+
         _socket = theSocket;
     }
     return self;
@@ -418,8 +418,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)recvFrom:(CDVInvokedUrlCommand*)command
 {
     NSNumber* socketId = [command argumentAtIndex:0];
-    // TODO: use bufferSize
-//    NSUInteger bufferSize = [[command argumentAtIndex:1] unsignedIntegerValue];
+    NSUInteger bufferSize = [[command argumentAtIndex:1] unsignedIntegerValue];
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
@@ -427,8 +426,10 @@ static NSString* stringFromData(NSData* data) {
 
     [socket->_readCallbacks addObject:[^(NSData* data, NSString* address, uint16_t port) {
         VERBOSE_LOG(@"ACK %@.%@ recvFrom Payload(%d): %@, address: %@, port: %u", socketId, command.callbackId, [data length], stringFromData(data), address, port);
+        if (bufferSize > 0 && [data length] > bufferSize) {
+            data = [NSData dataWithBytes:data.bytes length:bufferSize];
+        }
 
-        // TODO: also return address and port.  Requires sending NSData along with other values back from plugin.
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:@[data, address, [NSNumber numberWithUnsignedInt:port]]] callbackId:command.callbackId];
     } copy]];
 
@@ -483,7 +484,6 @@ static NSString* stringFromData(NSData* data) {
     BOOL success = [socket->_socket acceptOnInterface:address port:port error:nil];
     VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
 
-    // TODO: Queue up connections until next accept called
     if (success) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
@@ -493,7 +493,6 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)accept:(CDVInvokedUrlCommand*)command
 {
-    // TODO: support a queue of accepted sockets, in case a client connects before server accepts.
     NSNumber* socketId = [command argumentAtIndex:0];
 
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
