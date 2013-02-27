@@ -17,9 +17,9 @@
   <asset src="www/assets/i18n_test.txt" target="assets/i18n_test.txt" />
   <asset src="www/assets/icon-128x128.png" target="assets/icon-128x128.png" />
   <asset src="www/background.js" target="background.js" />
-  <asset src="www/jasmine/jasmine-html.js" target="jasmine/jasmine-html.js" />
-  <asset src="www/jasmine/jasmine.js" target="jasmine/jasmine.js" />
-  <asset src="www/jasmine/jasmine.css" target="jasmine/jasmine.css" />
+  <asset src="third_party/jasmine-1.2.0/jasmine-html.js" target="jasmine/jasmine-html.js" />
+  <asset src="third_party/jasmine-1.2.0/jasmine.js" target="jasmine/jasmine.js" />
+  <asset src="third_party/jasmine-1.2.0/jasmine.css" target="jasmine/jasmine.css" />
   <asset src="www/jasmine_helper.js" target="jasmine_helper.js" />
   <asset src="www/manifest.json" target="manifest.json" />
   <asset src="www/page.chromespec.js" target="page.chromespec.js" />
