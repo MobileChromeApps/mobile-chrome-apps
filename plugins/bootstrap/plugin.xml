@@ -10,22 +10,26 @@
   <name>Chrome Apps Core</name>
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
-  <js-module src="app/runtime.js" name="app.runtime">
+  <js-module src="api/bootstrap.js" name="bootstrap">
+    <runs />
+  </js-module>
+
+  <js-module src="api/app/runtime.js" name="app.runtime">
     <clobbers target="chrome.app.runtime" />
   </js-module>
 
-  <js-module src="app/window.js" name="app.window">
-    <clobbers target="chrome.app.runtime" />
+  <js-module src="api/app/window.js" name="app.window">
+    <clobbers target="chrome.app.window" />
   </js-module>
 
-  <js-module src="helpers/stubs.js" name="helpers.stubs">
+  <js-module src="api/helpers/stubs.js" name="helpers.stubs">
   </js-module>
 
-  <js-module src="mobile.js" name="mobile.impl">
-    <clobbers target="chrome.mobile" />
+  <js-module src="api/mobile.js" name="mobile.impl">
+    <clobbers target="chrome.mobile.impl" />
   </js-module>
 
-  <js-module src="runtime.js" name="runtime">
+  <js-module src="api/runtime.js" name="runtime">
     <clobbers target="chrome.runtime" />
   </js-module>
 

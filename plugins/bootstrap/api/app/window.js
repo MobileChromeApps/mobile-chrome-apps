@@ -13,6 +13,13 @@ function AppWindow() {
   this.contentWindow = mobile.fgWindow;
   this.id = '';
 }
+
+function unsupportedApi(api) {
+  return function() {
+    console.warn(api + ' is not supported on mobile.');
+  };
+}
+
 AppWindow.prototype = {
   restore: unsupportedApi('AppWindow.restore'),
   moveTo: unsupportedApi('AppWindow.moveTo'),

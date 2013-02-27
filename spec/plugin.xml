@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<plugin xmlns="http://phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="chrome.spec"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=2.4.0" />
+  </engines>
+
+  <name>Chrome Apps Spec Tests</name>
+
+  <!-- Web assets to be copied in -->
+  <asset src="www/_locales/en/messages.json" target="_locales/en/messages.json" />
+  <asset src="www/_locales/En-Us/messages.json" target="_locales/En-Us/messages.json" />
+  <asset src="www/_locales/fr/messages.json" target="_locales/fr/messages.json" />
+  <asset src="www/assets/i18n_test.css" target="assets/i18n_test.css" />
+  <asset src="www/assets/i18n_test.txt" target="assets/i18n_test.txt" />
+  <asset src="www/assets/icon-128x128.png" target="assets/icon-128x128.png" />
+  <asset src="www/background.js" target="background.js" />
+  <asset src="www/jasmine/jasmine-html.js" target="jasmine/jasmine-html.js" />
+  <asset src="www/jasmine/jasmine.js" target="jasmine/jasmine.js" />
+  <asset src="www/jasmine/jasmine.css" target="jasmine/jasmine.css" />
+  <asset src="www/jasmine_helper.js" target="jasmine_helper.js" />
+  <asset src="www/manifest.json" target="manifest.json" />
+  <asset src="www/page.chromespec.js" target="page.chromespec.js" />
+  <asset src="www/page.fileSystem.js" target="page.fileSystem.js" />
+  <asset src="www/page.jasmine.js" target="page.jasmine.js" />
+  <asset src="www/page.runtime.js" target="page.runtime.js" />
+  <asset src="www/page.socket.js" target="page.socket.js" />
+  <asset src="www/polyfills/function_bind.js" target="polyfills/function_bind.js" />
+  <asset src="www/spec_bootstrap.js" target="spec_bootstrap.js" />
+  <asset src="www/spec_styles.css" target="spec_styles.css" />
+  <asset src="www/test.chrome.app.runtime.js" target="test.chrome.app.runtime.js" />
+  <asset src="www/test.chrome.app.window.js" target="test.chrome.app.window.js" />
+  <asset src="www/test.chrome.fileSystem.js" target="test.chrome.fileSystem.js" />
+  <asset src="www/test.chrome.i18n.js" target="test.chrome.i18n.js" />
+  <asset src="www/test.chrome.runtime.js" target="test.chrome.runtime.js" />
+  <asset src="www/test.chrome.socket.js" target="test.chrome.socket.js" />
+  <asset src="www/test.chrome.storage.js" target="test.chrome.storage.js" />
+  <asset src="www/test.pageload.js" target="test.pageload.js" />
+  <asset src="www/wnd.html" target="wnd.html" />
+
+  <!-- Empty platforms; this is a JS-only plugin. -->
+  <platform name="android"></platform>
+  <platform name="ios"></platform>
+</plugin>

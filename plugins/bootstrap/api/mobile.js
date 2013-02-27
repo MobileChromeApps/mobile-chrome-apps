@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 var chrome = window.chrome;
-var exports = module.exports;
 
 exports.fgWindow = window;
 exports.bgWindow = null;
