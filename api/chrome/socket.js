@@ -188,19 +188,27 @@ exports.accept = function(socketId, callback) {
 
 
 exports.setKeepAlive = function() {
-  console.warn('chrome.socket.setKeepAlive not implemented yet');
+    console.warn('chrome.socket.setKeepAlive not implemented yet');
 };
 
 exports.setNoDelay = function() {
-  console.warn('chrome.socket.setNoDelay not implemented yet');
+    console.warn('chrome.socket.setNoDelay not implemented yet');
 };
 
-exports.getInfo = function() {
-  console.warn('chrome.socket.getInfo not implemented yet');
+exports.getInfo = function(socketId, callback) {
+    if (platform.id == 'android') {
+        console.warn('chrome.socket.getInfo not implemented yet');
+        return;
+    }
+    var win = callback && function(result) {
+        result.connected = !!result.connected;
+        callback(result);
+    };
+    cordova.exec(win, null, 'ChromeSocket', 'getInfo', [socketId]);
 };
 
 exports.getNetworkList = function() {
-  console.warn('chrome.socket.getNetworkList not implemented yet');
+    console.warn('chrome.socket.getNetworkList not implemented yet');
 };
 
 });

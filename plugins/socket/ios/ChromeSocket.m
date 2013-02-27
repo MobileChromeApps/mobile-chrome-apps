@@ -516,4 +516,36 @@ static NSString* stringFromData(NSData* data) {
     }
 }
 
+
+- (void)getInfo:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+
+    NSString* socketType = socket->_mode;
+    NSNumber* connected = [NSNumber numberWithBool:[socket->_socket isConnected]];
+    NSString* localAddress = [socket->_socket localHost];
+    NSNumber* localPort = [NSNumber numberWithUnsignedInt:[socket->_socket localPort]];
+    NSString* peerAddress = [socket->_socket connectedHost];
+    NSNumber* peerPort = [NSNumber numberWithUnsignedInt:[socket->_socket connectedPort]];
+
+    NSMutableDictionary* socketInfo = [@{
+        @"socketType": socketType,
+        @"connected": connected,
+    } mutableCopy];
+
+    if (localAddress) {
+        [socketInfo setObject:localAddress forKey:@"localAddress"];
+        [socketInfo setObject:localPort forKey:@"localPort"];
+    }
+    if (peerAddress) {
+        [socketInfo setObject:peerAddress forKey:@"peerAddress"];
+        [socketInfo setObject:peerPort forKey:@"peerPort"];
+    }
+
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:socketInfo] callbackId:command.callbackId];
+}
+
 @end
