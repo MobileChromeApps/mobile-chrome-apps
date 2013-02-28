@@ -24,7 +24,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
   it('should have properties', function() {
   });
 
-  describe('TCP tests', function() {
+  describe('TCP', function() {
     var addr = '127.0.0.1';
     var port = 1234;
     var arr = new Uint8Array(256);
@@ -32,6 +32,24 @@ chromeSpec('chrome.socket', function(runningInBackground) {
       arr[i] = i;
     }
     var data = arr.buffer;
+
+    itWaitsForDone('port is available (sanity test)', function(done) {
+      chrome.socket.create('tcp', function(createInfo) {
+        chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+          expect(listenResult).toEqual(0);
+          chrome.socket.destroy(createInfo.socketId);
+        });
+      });
+    });
+
+    itWaitsForDone('port is available (sanity test)', function(done) {
+      chrome.socket.create('tcp', function(createInfo) {
+        chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+          expect(listenResult).toEqual(0);
+          chrome.socket.destroy(createInfo.socketId);
+        });
+      });
+    });
 
     itWaitsForDone('accept connect read write', function(done) {
       chrome.socket.create('tcp', {}, function(socketInfo) {
@@ -130,7 +148,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
 
   });
 
-  describe('UDP tests', function() {
+  describe('UDP', function() {
     var addr = '127.0.0.1';
     var port = 1234;
     var arr = new Uint8Array(256);
