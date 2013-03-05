@@ -210,18 +210,50 @@ chromeSpec('chrome.storage', function(runningInBackground) {
       });
 
       describe('testing getBytesInUse', function() {
-        // TODO
+        beforeEach(function() {
+          storagearea.clear();
+          storagearea.set(obj);
+        });
+
+        // Size depends on storage format. Thus use a range of acceptable values
+        // Use JSON notation length as estimate along with 100 bytes of overhead
         it('getBytesInUse()', function() {
+           storagearea.getBytesInUse(function(bytes) {
+             expect(bytes).toBeEqualTo(0);
+           });
         });
 
         it('getBytesInUse(null)', function() {
+           var answer = obj;
+           storagearea.getBytesInUse(null, function(bytes) {
+             var approxSize = JSON.stringify(answer).length;
+             expect(bytes).toBeGreaterThan(0.5 * approxSize);
+             expect(bytes).toBeLessThan(1.5 * approxSize + 100);
+           });
         });
 
         it('getBytesInUse(string)', function() {
+           var request = 'int';
+           var answer = { request : obj[request]};
+           storagearea.getBytesInUse(request, function(bytes) {
+             var approxSize = JSON.stringify(answer).length;
+             expect(bytes).toBeGreaterThan(0.5 * approxSize);
+             expect(bytes).toBeLessThan(1.5 * approxSize + 100);
+           });
         });
 
         it('getBytesInUse([string, ...])', function() {
           // note: dont forget that [] should return 0
+           var request = ['int', 'string'];
+           var answer = {};
+           for(var i =0; i < request.length; i++) {
+             answer[request[i]] = obj[request[i]];
+           }
+           storagearea.getBytesInUse(request, function(bytes) {
+             var approxSize = JSON.stringify(answer).length;
+             expect(bytes).toBeGreaterThan(0.5 * approxSize);
+             expect(bytes).toBeLessThan(1.5 * approxSize + 100);
+           });
         });
       });
     });
