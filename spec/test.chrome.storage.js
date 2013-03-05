@@ -217,29 +217,32 @@ chromeSpec('chrome.storage', function(runningInBackground) {
 
         // Size depends on storage format. Thus use a range of acceptable values
         // Use JSON notation length as estimate along with 100 bytes of overhead
-        it('getBytesInUse()', function() {
-           storagearea.getBytesInUse(function(bytes) {
-             expect(bytes).toBeEqualTo(0);
-           });
-        });
-
-        it('getBytesInUse(null)', function() {
-           var answer = obj;
-           storagearea.getBytesInUse(null, function(bytes) {
+        it('getBytesInUse() should return size of all items', function() {
+           var answer = expected;
+           storagearea.getBytesInUse(waitUntilCalled(function(bytes) {
              var approxSize = JSON.stringify(answer).length;
              expect(bytes).toBeGreaterThan(0.5 * approxSize);
              expect(bytes).toBeLessThan(1.5 * approxSize + 100);
-           });
+           }));
+        });
+
+        it('getBytesInUse(null) should return size of all items', function() {
+           var answer = expected;
+           storagearea.getBytesInUse(null, waitUntilCalled(function(bytes) {
+             var approxSize = JSON.stringify(answer).length;
+             expect(bytes).toBeGreaterThan(0.5 * approxSize);
+             expect(bytes).toBeLessThan(1.5 * approxSize + 100);
+           }));
         });
 
         it('getBytesInUse(string)', function() {
            var request = 'int';
-           var answer = { request : obj[request]};
-           storagearea.getBytesInUse(request, function(bytes) {
+           var answer = { request : expected[request]};
+           storagearea.getBytesInUse(request, waitUntilCalled(function(bytes) {
              var approxSize = JSON.stringify(answer).length;
              expect(bytes).toBeGreaterThan(0.5 * approxSize);
              expect(bytes).toBeLessThan(1.5 * approxSize + 100);
-           });
+           }));
         });
 
         it('getBytesInUse([string, ...])', function() {
@@ -247,13 +250,13 @@ chromeSpec('chrome.storage', function(runningInBackground) {
            var request = ['int', 'string'];
            var answer = {};
            for(var i =0; i < request.length; i++) {
-             answer[request[i]] = obj[request[i]];
+             answer[request[i]] = expected[request[i]];
            }
-           storagearea.getBytesInUse(request, function(bytes) {
+           storagearea.getBytesInUse(request, waitUntilCalled(function(bytes) {
              var approxSize = JSON.stringify(answer).length;
              expect(bytes).toBeGreaterThan(0.5 * approxSize);
              expect(bytes).toBeLessThan(1.5 * approxSize + 100);
-           });
+           }));
         });
       });
     });
