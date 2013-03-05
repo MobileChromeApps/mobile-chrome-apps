@@ -180,7 +180,7 @@ public class ChromeStorage extends CordovaPlugin {
                         for (String key : keys) {
                             Object oldValue = storage.opt(key);
                             if(oldValue != null) {
-                                oldValues.put(key, storage.get(key));
+                                oldValues.put(key, oldValue);
                             }
                             storage.put(key, jsonObject.get(key));
                         }
@@ -220,7 +220,7 @@ public class ChromeStorage extends CordovaPlugin {
                         for(String key : keys) {
                             Object oldValue = storage.opt(key);
                             if(oldValue != null) {
-                                oldValues.put(key, storage.get(key));
+                                oldValues.put(key, oldValue);
                             }
                             storage.remove(key);
                         }

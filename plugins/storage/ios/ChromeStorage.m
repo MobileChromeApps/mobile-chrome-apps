@@ -184,21 +184,26 @@
         BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
         NSDictionary* jsonObject = [command.arguments objectAtIndex:1];
         NSArray* keys = [jsonObject allKeys];
-        
+        NSMutableDictionary* oldValues = [NSMutableDictionary dictionary];
+
         if(keys != nil && [keys count]) {
             NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageWithSync:sync]];
             for (NSString* key in keys) {
+                id oldValue = [storage objectForKey:key];
+                if (oldValue != nil) {
+                    [oldValues setObject:oldValue forKey:key];
+                }
                 NSObject* value = [jsonObject objectForKey:key];
                 [storage setValue:value forKey:key];
             }
             [self setStorage:storage withSync:sync];
         }
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException *exception) {
         VERBOSE_LOG(@"%@ - %@", @"Could not update storage", [exception debugDescription]);
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not update storage"];
     }
-    
+
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -216,10 +221,11 @@
         BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
         id argumentAtIndexOne = [command.arguments objectAtIndex:1];
         NSArray* keys = [NSArray array];
-        
+
         NSDictionary* jsonObject = nil;
         NSArray* jsonArray = nil;
-        
+        NSMutableDictionary* oldValues = [NSMutableDictionary dictionary];
+
         if (argumentAtIndexOne != nil) {
             if ([argumentAtIndexOne isKindOfClass:[NSDictionary class]]) {
                 jsonObject = argumentAtIndexOne;
@@ -229,13 +235,19 @@
                 keys = jsonArray;
             }
         }
-        
+
         if (keys == nil || [keys count]) {
             NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageWithSync:sync]];
-            [storage removeObjectsForKeys:keys];
+            for (NSString* key in keys) {
+                id oldValue = [storage objectForKey:key];
+                if (oldValue != nil) {
+                    [oldValues setObject:oldValue forKey:key];
+                }
+                [storage removeObjectForKey:key];
+            }
             [self setStorage:storage withSync:sync];
         }
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException* exception) {
         VERBOSE_LOG(@"%@ - %@", @"Could not update storage", [exception debugDescription]);
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not update storage"];
@@ -253,12 +265,13 @@
 - (void)_clear:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = nil;
-    
+
     @try {
         BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
+        NSDictionary* oldValues = [self getStorageWithSync:sync];
         NSMutableDictionary* storage = [NSMutableDictionary dictionary];
         [self setStorage:storage withSync:sync];
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException* exception) {
         VERBOSE_LOG(@"%@ - %@", @"Could not clear storage", [exception debugDescription]);
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not clear storage"];
