@@ -6,17 +6,12 @@ define('chrome.storage', function(require, module) {
 
 var exports = module.exports;
 
-function StorageChange(_oldValue, _newValue) {
-    this.oldValue = _oldValue;
-    this.newValue = _newValue;
+function StorageChange(oldValue, newValue) {
+    this.oldValue = oldValue;
+    this.newValue = newValue;
 }
 
-function StorageArea(syncStorage, changedEvent) {
-    this._sync = syncStorage;
-    this._changedEvent = changedEvent;
-}
-
-StorageArea.prototype._jsonReplacer = function(key) {
+function _jsonReplacer(key) {
     // Don't use the value passed in since it has already gone through toJSON().
     var value = this[key];
     // Refer to:
@@ -28,32 +23,28 @@ StorageArea.prototype._jsonReplacer = function(key) {
         }
     }
     return value;
-};
+}
 
-StorageArea.prototype._scrubValues = function(o) {
+function _scrubValues(o) {
     if (typeof o != 'undefined') {
-        var t = JSON.stringify(o, this._jsonReplacer);
+        var t = JSON.stringify(o, _jsonReplacer);
         return JSON.parse(t);
     }
-};
+}
 
-StorageArea.prototype._getAreaName = function() {
-    return (this._sync? 'sync' : 'local');
-};
-
-StorageArea.prototype._calculateChanges = function(oldKeyVals, newKeyVals) {
+function _calculateChanges(oldKeyVals, newKeyVals) {
     var ret = {};
     for(var key in newKeyVals) {
-        if (true) { //required for lint
+        if (newKeyVals.hasOwnProperty(key)) {
             ret[key] = new StorageChange(oldKeyVals[key], newKeyVals[key]);
         }
     }
     return ret;
-};
+}
 
-StorageArea.prototype._convertToObject = function(obj) {
+function _convertToObject(obj) {
     var ret;
-    if (Object.prototype.toString.call(obj) === '[object Array]') {
+    if (Array.isArray(obj)) {
         ret = {};
         for(var i = 0; i < obj.length; i++) {
             ret[obj[i]] = undefined;
@@ -65,6 +56,15 @@ StorageArea.prototype._convertToObject = function(obj) {
         ret[obj] = undefined;
     }
     return ret;
+}
+
+function StorageArea(syncStorage, changedEvent) {
+    this._sync = syncStorage;
+    this._changedEvent = changedEvent;
+}
+
+StorageArea.prototype._getAreaName = function() {
+    return (this._sync? 'sync' : 'local');
 };
 
 StorageArea.prototype.get = function(keys, callback) {
@@ -80,7 +80,7 @@ StorageArea.prototype.get = function(keys, callback) {
     var fail = callback && function() {
         callback();
     };
-    var param = this._scrubValues(keys);
+    var param = _scrubValues(keys);
     cordova.exec(win, fail, 'ChromeStorage', 'get', [this._sync, param]);
 };
 
@@ -97,7 +97,7 @@ StorageArea.prototype.getBytesInUse = function(keys, callback) {
     var fail = callback && function() {
         callback(-1);
     };
-    var param = this._scrubValues(keys);
+    var param = _scrubValues(keys);
     cordova.exec(win, fail, 'ChromeStorage', 'getBytesInUse', [this._sync, param]);
 };
 
@@ -107,30 +107,26 @@ StorageArea.prototype.set = function(keyVals, callback) {
         keyVals = null;
     }
     var self = this;
-    var param = self._scrubValues(keyVals);
+    var param = _scrubValues(keyVals);
     var fail = callback && function() {
         callback(-1);
     };
+    var win;
     if(self._changedEvent.hasListeners()) {
-        self.get(keyVals, function(oldKeyVals) {
-            var win = function() {
-                if(callback) {
-                    callback(0);
-                }
-                var newKeyVals = self._convertToObject(param);
-                var storageChanges = self._calculateChanges(oldKeyVals, newKeyVals);
-                self._changedEvent.fire(storageChanges, self._getAreaName());
-            };
-            cordova.exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
-        });
-    } else {
-        var win = function() {
+        win = function(oldKeyVals) {
             if(callback) {
                 callback(0);
             }
+            var newKeyVals = _convertToObject(param);
+            var storageChanges = _calculateChanges(oldKeyVals, newKeyVals);
+            self._changedEvent.fire(storageChanges, self._getAreaName());
         };
-        cordova.exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
+    } else {
+        win = callback && function() {
+            callback(0);
+        };
     }
+    cordova.exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
 };
 
 StorageArea.prototype.remove = function(keys, callback) {
@@ -141,30 +137,26 @@ StorageArea.prototype.remove = function(keys, callback) {
         keys = [keys];
     }
     var self = this;
-    var param = self._scrubValues(keys);
+    var param = _scrubValues(keys);
     var fail = callback && function() {
         callback(-1);
     };
+    var win;
     if(self._changedEvent.hasListeners()) {
-        self.get(keys, function(oldKeyVals) {
-            var win = function() {
-                if(callback) {
-                    callback(0);
-                }
-                var newKeyVals = self._convertToObject(Object.keys(oldKeyVals));
-                var storageChanges = self._calculateChanges(oldKeyVals, newKeyVals);
-                self._changedEvent.fire(storageChanges, self._getAreaName());
-            };
-            cordova.exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
-        });
-    } else {
-        var win = function() {
+        win = function(oldKeyVals) {
             if(callback) {
                 callback(0);
             }
+            var newKeyVals = _convertToObject(Object.keys(oldKeyVals));
+            var storageChanges = _calculateChanges(oldKeyVals, newKeyVals);
+            self._changedEvent.fire(storageChanges, self._getAreaName());
         };
-        cordova.exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
+    } else {
+        win = callback && function() {
+            callback(0);
+        };
     }
+    cordova.exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
 };
 
 StorageArea.prototype.clear = function(callback) {
@@ -172,26 +164,22 @@ StorageArea.prototype.clear = function(callback) {
     var fail = callback && function() {
         callback(-1);
     };
+    var win;
     if(self._changedEvent.hasListeners()) {
-        self.get(null, function(oldKeyVals) {
-            var win = function() {
-                if(callback) {
-                    callback(0);
-                }
-                var newKeyVals = self._convertToObject(Object.keys(oldKeyVals));
-                var storageChanges = self._calculateChanges(oldKeyVals, newKeyVals);
-                self._changedEvent.fire(storageChanges, self._getAreaName());
-            };
-            cordova.exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
-        });
+       win = function(oldKeyVals) {
+           if(callback) {
+               callback(0);
+           }
+           var newKeyVals = _convertToObject(Object.keys(oldKeyVals));
+           var storageChanges = _calculateChanges(oldKeyVals, newKeyVals);
+           self._changedEvent.fire(storageChanges, self._getAreaName());
+       };
     } else {
-        var win = function() {
-            if(callback) {
-                 callback(0);
-            }
+        win = callback && function() {
+            callback(0);
         };
-        cordova.exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
     }
+    cordova.exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
 };
 
 var Event = require('chrome.Event');

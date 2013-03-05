@@ -40,9 +40,8 @@ define('chrome.Event', function(require, module) {
   };
 
   Event.prototype.fire = function() {
-    var args = Array.prototype.slice.call(arguments, 0);
     for (var i = 0; i < this.listeners.length; i++) {
-      this.listeners[i].apply(this.listeners[i], args);
+      this.listeners[i].apply(this, arguments);
     }
   };
 
