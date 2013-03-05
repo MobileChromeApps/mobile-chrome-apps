@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<plugin xmlns="http://phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="chrome.identity"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=2.4.0" />
+  </engines>
+
+  <name>Chrome Apps Identity API</name>
+
+  <js-module src="identity.js" name="Identity">
+    <clobbers target="chrome.identity" />
+    <clobbers target="chrome.experimental.identity" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="ChromeIdentity.java" target-dir="src/org/apache/cordova" />
+
+    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
+      <plugin name="ChromeIdentity" value="org.apache.cordova.ChromeIdentity" />
+    </config-file>
+  </platform>
+  <!-- this is a JS-only plugin for iOS -->
+  <platform name="ios">
+  </platform>
+</plugin>

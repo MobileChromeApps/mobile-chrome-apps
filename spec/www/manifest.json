@@ -16,6 +16,7 @@
         "page.chromespec.js",
         "page.jasmine.js",
         "page.fileSystem.js",
+        "page.identity.js",
         "page.runtime.js",
         "page.socket.js",
         "background.js"
@@ -33,5 +34,15 @@
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind" ]
     }
   ],
-  "default_locale": "fr"
+  "default_locale": "fr",
+  "oauth2": {
+    "client_id": "665859454684.apps.googleusercontent.com",
+    "scopes": [
+      "https://docs.google.com/feeds/",
+      "https://docs.googleusercontent.com/",
+      "https://spreadsheets.google.com/feeds/",
+      "https://www.googleapis.com/auth/drive",
+      "https://www.googleapis.com/auth/adsense"
+    ]
+  }
 }
