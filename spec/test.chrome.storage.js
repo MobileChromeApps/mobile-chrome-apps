@@ -259,6 +259,98 @@ chromeSpec('chrome.storage', function(runningInBackground) {
            }));
         });
       });
+
+      describe('testing onChanged', function() {
+        beforeEach(function() {
+          storagearea.clear();
+          storagearea.set(obj);
+        });
+
+        it('should alert for a single change', function() {
+          var request = {
+            'int': 5
+          };
+          var answer = {
+            'int': { 'oldValue' : 1, 'newValue' : 5}
+          };
+          var callback = function(items, areaName) {
+            expect(items).toEqual(answer);
+            expect(areaName).toEqual(type);
+            chrome.storage.onChanged.removeListener(wrappedCallback);
+          };
+          var wrappedCallback = waitUntilCalled(callback);
+          chrome.storage.onChanged.addListener(wrappedCallback);
+          storagearea.set(request);
+        });
+
+        it('should alert for multiple changes', function() {
+          var request = {
+            'int': 5,
+            'string': 'test123'
+          };
+          var answer = {
+            'int': { 'oldValue' : 1, 'newValue' : 5},
+            'string': { 'oldValue' : 'test', 'newValue' : 'test123'}
+          };
+          var callback = function(items, areaName) {
+            expect(items).toEqual(answer);
+            expect(areaName).toEqual(type);
+            chrome.storage.onChanged.removeListener(wrappedCallback);
+          };
+          var wrappedCallback = waitUntilCalled(callback);
+          chrome.storage.onChanged.addListener(wrappedCallback);
+          storagearea.set(request);
+        });
+
+        it('should alert on remove', function() {
+          var request = [
+            'int',
+            'string'
+          ];
+          var answer = {
+            'int': { 'oldValue' : 1, 'newValue' : undefined},
+            'string': { 'oldValue' : 'test', 'newValue' : undefined}
+          };
+          var callback = function(items, areaName) {
+            expect(items).toEqual(answer);
+            expect(areaName).toEqual(type);
+            chrome.storage.onChanged.removeListener(wrappedCallback);
+          };
+          var wrappedCallback = waitUntilCalled(callback);
+          chrome.storage.onChanged.addListener(wrappedCallback);
+          storagearea.remove(request);
+        });
+
+        it('should alert on clear', function() {
+          var request = obj;
+          var answer = {
+            'int': { 'oldValue' : 1, 'newValue' : undefined},
+            'double': { 'oldValue' :  2.345, 'newValue' : undefined},
+            'string': { 'oldValue' : 'test', 'newValue' : undefined},
+//            'String': {'0': 't', '1': 'e', '2': 's', '3': 't'},
+//            'object_with_window': {'':{}},
+            'Array':  { 'oldValue' : [1,2,3], 'newValue' : undefined},
+            'object':  { 'oldValue' : {'':'','a':1,'b':'2','c':3.456}, 'newValue' : undefined},
+            'object_with_toJSON':  { 'oldValue' : {'a':1, 'toJSON': {}}, 'newValue' : undefined},
+            'Window':  { 'oldValue' : {}, 'newValue' : undefined},
+            'RegExp':  { 'oldValue' : {}, 'newValue' : undefined},
+            'date':  { 'oldValue' : {}, 'newValue' : undefined},
+            'null':  { 'oldValue' : null, 'newValue' : undefined},
+            'function':  { 'oldValue' : {}, 'newValue' : undefined},
+            'DivElement':  { 'oldValue' : {}, 'newValue' : undefined},
+            'Document':  { 'oldValue' : {}, 'newValue' : undefined},
+            'proto':  { 'oldValue' : { b:2 }, 'newValue' : undefined}
+          };
+          var callback = function(items, areaName) {
+            expect(items).toEqual(answer);
+            expect(areaName).toEqual(type);
+            chrome.storage.onChanged.removeListener(wrappedCallback);
+          };
+          var wrappedCallback = waitUntilCalled(callback);
+          chrome.storage.onChanged.addListener(wrappedCallback);
+          storagearea.clear();
+        });
+      });
     });
   }
 

@@ -172,16 +172,21 @@ public class ChromeStorage extends CordovaPlugin {
                     boolean sync = args.getBoolean(0);
                     JSONObject jsonObject = (JSONObject) args.getJSONObject(1);
                     JSONArray keyArray = jsonObject.names();
+                    JSONObject oldValues = new JSONObject();
 
                     if (keyArray != null) {
                         List<String> keys = JSONUtils.toStringList(keyArray);
                         JSONObject storage = getStorage(sync);
                         for (String key : keys) {
+                            Object oldValue = storage.opt(key);
+                            if(oldValue != null) {
+                                oldValues.put(key, oldValue);
+                            }
                             storage.put(key, jsonObject.get(key));
                         }
                         setStorage(sync, storage);
                     }
-                    callbackContext.success();
+                    callbackContext.success(oldValues);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not update storage", e);
                     callbackContext.error("Could not update storage");
@@ -200,6 +205,7 @@ public class ChromeStorage extends CordovaPlugin {
                     JSONArray jsonArray = args.optJSONArray(1);
                     boolean isNull = args.isNull(1);
                     List<String> keys = new ArrayList<String>();
+                    JSONObject oldValues = new JSONObject();
 
                     if (jsonObject != null) {
                         keys = JSONUtils.toStringList(jsonObject.names());
@@ -212,11 +218,15 @@ public class ChromeStorage extends CordovaPlugin {
                     if (keys != null && !keys.isEmpty()) {
                         JSONObject storage = getStorage(sync);
                         for(String key : keys) {
+                            Object oldValue = storage.opt(key);
+                            if(oldValue != null) {
+                                oldValues.put(key, oldValue);
+                            }
                             storage.remove(key);
                         }
                         setStorage(sync, storage);
                     }
-                    callbackContext.success();
+                    callbackContext.success(oldValues);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not update storage", e);
                     callbackContext.error("Could not update storage");
@@ -231,8 +241,9 @@ public class ChromeStorage extends CordovaPlugin {
             public void run() {
                 try {
                     boolean sync = args.getBoolean(0);
+                    JSONObject oldValues = getStorage(sync);
                     setStorage(sync, new JSONObject());
-                    callbackContext.success();
+                    callbackContext.success(oldValues);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not clear storage", e);
                     callbackContext.error("Could not update storage");
