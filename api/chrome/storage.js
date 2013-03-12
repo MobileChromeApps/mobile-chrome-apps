@@ -5,6 +5,7 @@
 define('chrome.storage', function(require, module) {
 
 var exports = module.exports;
+var exec = cordova.require('cordova/exec');
 
 function StorageChange(oldValue, newValue) {
     this.oldValue = oldValue;
@@ -81,7 +82,7 @@ StorageArea.prototype.get = function(keys, callback) {
         callback();
     };
     var param = _scrubValues(keys);
-    cordova.exec(win, fail, 'ChromeStorage', 'get', [this._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'get', [this._sync, param]);
 };
 
 StorageArea.prototype.getBytesInUse = function(keys, callback) {
@@ -98,7 +99,7 @@ StorageArea.prototype.getBytesInUse = function(keys, callback) {
         callback(-1);
     };
     var param = _scrubValues(keys);
-    cordova.exec(win, fail, 'ChromeStorage', 'getBytesInUse', [this._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'getBytesInUse', [this._sync, param]);
 };
 
 StorageArea.prototype.set = function(keyVals, callback) {
@@ -126,7 +127,7 @@ StorageArea.prototype.set = function(keyVals, callback) {
             callback(0);
         };
     }
-    cordova.exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
 };
 
 StorageArea.prototype.remove = function(keys, callback) {
@@ -156,7 +157,7 @@ StorageArea.prototype.remove = function(keys, callback) {
             callback(0);
         };
     }
-    cordova.exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
 };
 
 StorageArea.prototype.clear = function(callback) {
@@ -179,7 +180,7 @@ StorageArea.prototype.clear = function(callback) {
             callback(0);
         };
     }
-    cordova.exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
+    exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
 };
 
 var Event = require('chrome.Event');

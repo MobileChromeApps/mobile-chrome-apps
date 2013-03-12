@@ -6,6 +6,7 @@ define('chrome.socket', function(require, module) {
 
 var exports = module.exports;
 var platform = cordova.require('cordova/platform');
+var exec = cordova.require('cordova/exec');
 
 exports.create = function(socketMode, stuff, callback) {
     if (typeof stuff == 'function') {
@@ -18,11 +19,11 @@ exports.create = function(socketMode, stuff, callback) {
         };
         callback(socketInfo);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'create', [socketMode]);
+    exec(win, null, 'ChromeSocket', 'create', [socketMode]);
 };
 
 exports.destroy = function(socketId) {
-    cordova.exec(null, null, 'ChromeSocket', 'destroy', [socketId]);
+    exec(null, null, 'ChromeSocket', 'destroy', [socketId]);
 };
 
 
@@ -33,7 +34,7 @@ exports.connect = function(socketId, address, port, callback) {
     var fail = callback && function() {
         callback(-1);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'connect', [socketId, address, port]);
+    exec(win, fail, 'ChromeSocket', 'connect', [socketId, address, port]);
 };
 
 exports.bind = function(socketId, address, port, callback) {
@@ -43,11 +44,11 @@ exports.bind = function(socketId, address, port, callback) {
     var fail = callback && function() {
         callback(-1);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'bind', [socketId, address, port]);
+    exec(win, fail, 'ChromeSocket', 'bind', [socketId, address, port]);
 };
 
 exports.disconnect = function(socketId) {
-    cordova.exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
+    exec(null, null, 'ChromeSocket', 'disconnect', [socketId]);
 };
 
 
@@ -69,7 +70,7 @@ exports.read = function(socketId, bufferSize, callback) {
         };
         callback(readInfo);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'read', [socketId, bufferSize]);
+    exec(win, fail, 'ChromeSocket', 'read', [socketId, bufferSize]);
 };
 
 exports.write = function(socketId, data, callback) {
@@ -89,7 +90,7 @@ exports.write = function(socketId, data, callback) {
         };
         callback(writeInfo);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'write', [socketId, data]);
+    exec(win, fail, 'ChromeSocket', 'write', [socketId, data]);
 };
 
 
@@ -137,7 +138,7 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
         };
         callback(readInfo);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'recvFrom', [socketId, bufferSize]);
+    exec(win, fail, 'ChromeSocket', 'recvFrom', [socketId, bufferSize]);
 };
 
 exports.sendTo = function(socketId, data, address, port, callback) {
@@ -157,7 +158,7 @@ exports.sendTo = function(socketId, data, address, port, callback) {
         };
         callback(writeInfo);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
+    exec(win, fail, 'ChromeSocket', 'sendTo', [{ socketId: socketId, address: address, port: port }, data]);
 };
 
 
@@ -172,7 +173,7 @@ exports.listen = function(socketId, address, port, backlog, callback) {
     var fail = callback && function() {
         callback(-1);
     };
-    cordova.exec(win, fail, 'ChromeSocket', 'listen', [socketId, address, port, backlog]);
+    exec(win, fail, 'ChromeSocket', 'listen', [socketId, address, port, backlog]);
 };
 
 exports.accept = function(socketId, callback) {
@@ -183,7 +184,7 @@ exports.accept = function(socketId, callback) {
         };
         callback(acceptInfo);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'accept', [socketId]);
+    exec(win, null, 'ChromeSocket', 'accept', [socketId]);
 };
 
 
@@ -204,7 +205,7 @@ exports.getInfo = function(socketId, callback) {
         result.connected = !!result.connected;
         callback(result);
     };
-    cordova.exec(win, null, 'ChromeSocket', 'getInfo', [socketId]);
+    exec(win, null, 'ChromeSocket', 'getInfo', [socketId]);
 };
 
 exports.getNetworkList = function() {
