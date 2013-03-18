@@ -208,8 +208,12 @@ exports.getInfo = function(socketId, callback) {
     exec(win, null, 'ChromeSocket', 'getInfo', [socketId]);
 };
 
-exports.getNetworkList = function() {
-    console.warn('chrome.socket.getNetworkList not implemented yet');
+exports.getNetworkList = function(callback) {
+    if (platform.id == 'android') {
+        console.warn('chrome.socket.getNetworkList not implemented yet');
+        return;
+    }
+    exec(callback, null, 'ChromeSocket', 'getNetworkList', []);
 };
 
 });
