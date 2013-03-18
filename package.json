@@ -4,19 +4,14 @@
   "version": "0.0.1",
   "homepage": "https://github.com/MobileChromeApps/chrome-cordova",
   "repository": {
-    "type":"git",
+    "type": "git",
     "url": "https://github.com/MobileChromeApps/chrome-cordova.git"
   },
-  "contributors":[
+  "contributors": [
     "Andrew Grieve <agrieve@chromium.org>",
     "Braden Shepherdson <braden@chromium.org>",
     "Michal Mocny <mmocny@chromium.org"
   ],
-  "dependencies": {
-  },
-  "devDependencies": {
-    "grunt-contrib-clean":"<0.4",
-    "grunt-contrib-copy":"<0.4"
-
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
