@@ -186,7 +186,6 @@ var Event = require('chrome.common.events');
 if (Event) {
   exports.onChanged = new Event('onChanged');
 }
-exports.onChanged = new Event('onChanged');
 
 var local = new StorageArea(false, exports.onChanged);
 local.QUOTA_BYTES = 5242880;
