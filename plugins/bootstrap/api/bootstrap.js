@@ -8,6 +8,5 @@
 console.log('adding event');
 document.addEventListener('deviceready', function() {
   console.log('deviceready caught');
-  chrome.mobile.impl.init();
+  require('chrome.mobile.impl').init();
 });
-
