@@ -67,7 +67,7 @@ public class ChromeStorage extends CordovaPlugin {
                 byte[] bytes = new byte[(int) file.length()];
                 fis.read(bytes);
                 String content = (new String(bytes)).trim();
-                if (!content.isEmpty()) {
+                if (content.length() > 0) {
                     oldMap = new JSONObject(content);
                 }
             } catch (FileNotFoundException e) {
@@ -154,7 +154,7 @@ public class ChromeStorage extends CordovaPlugin {
             public void run() {
                 //Don't use default values as the keys that don't have values in storage don't affect size
                 JSONObject storage = getStoredValuesForKeys(args, /*useDefaultValues*/ false);
-        
+
                 if (storage == null) {
                     callbackContext.error("Could not retrieve storage");
                 } else {
