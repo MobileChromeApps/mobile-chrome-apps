@@ -182,11 +182,10 @@ StorageArea.prototype.clear = function(callback) {
 };
 
 // TODO(braden): How do we want to handle this event when we're not in a Chrome app?
-var Event = require('chrome.Event');
+var Event = require('chrome.common.events');
 if (Event) {
   exports.onChanged = new Event('onChanged');
 }
-exports.onChanged = new Event('onChanged');
 
 var local = new StorageArea(false, exports.onChanged);
 local.QUOTA_BYTES = 5242880;
