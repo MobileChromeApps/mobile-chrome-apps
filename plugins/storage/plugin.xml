@@ -17,7 +17,7 @@
     <source-file src="ChromeStorage.java" target-dir="src/org/apache/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeSocket" value="org.apache.cordova.ChromeStorage" />
+      <plugin name="ChromeStorage" value="org.apache.cordova.ChromeStorage" />
     </config-file>
   </platform>
 
