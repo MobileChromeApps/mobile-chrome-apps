@@ -25,10 +25,10 @@
     <source-file src="ChromeSocket.m" />
     <header-file src="ChromeSocket.h" />
 
-    <source-file src="../../../third_party/GCDAsyncSocket.m" />
-    <header-file src="../../../third_party/GCDAsyncSocket.h" />
-    <source-file src="../../../third_party/GCDAsyncUdpSocket.m" />
-    <header-file src="../../../third_party/GCDAsyncUdpSocket.h" />
+    <source-file src="third_party/GCDAsyncSocket.m" />
+    <header-file src="third_party/GCDAsyncSocket.h" />
+    <source-file src="third_party/GCDAsyncUdpSocket.m" />
+    <header-file src="third_party/GCDAsyncUdpSocket.h" />
 
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeSocket" value="ChromeSocket" />
