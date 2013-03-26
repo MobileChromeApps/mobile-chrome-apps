@@ -40,8 +40,4 @@
   <asset src="www/test.chrome.storage.js" target="test.chrome.storage.js" />
   <asset src="www/test.pageload.js" target="test.pageload.js" />
   <asset src="www/wnd.html" target="wnd.html" />
-
-  <!-- Empty platforms; this is a JS-only plugin. -->
-  <platform name="android"></platform>
-  <platform name="ios"></platform>
 </plugin>
