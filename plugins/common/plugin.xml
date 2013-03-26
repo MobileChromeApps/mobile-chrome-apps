@@ -12,8 +12,4 @@
   <js-module src="events.js" name="events">
     <clobbers target="chrome.Event" />
   </js-module>
-
-  <!-- Empty platforms; this is a JS-only plugin. -->
-  <platform name="android"></platform>
-  <platform name="ios"></platform>
 </plugin>

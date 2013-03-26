@@ -37,8 +37,4 @@
   <asset src="www/chromeapp.html" target="chromeapp.html" />
   <asset src="www/chromebgpage.html" target="chromebgpage.html" />
   <asset src="www/chromeappstyles.css" target="chromeappstyles.css" />
-
-  <!-- Empty platforms; this is a JS-only plugin. -->
-  <platform name="android"></platform>
-  <platform name="ios"></platform>
 </plugin>
