@@ -47,7 +47,7 @@ exports.getAuthToken = function(details, callback) {
     }
 };
 
-exports.launchWebAuthFlow = function(details, callback) {S
+exports.launchWebAuthFlow = function(details, callback) {
     var failed = false;
     var failMessage;
     if (typeof details == 'undefined') {
