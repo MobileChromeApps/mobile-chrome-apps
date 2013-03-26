@@ -47,10 +47,10 @@ set -x # Echo all commands
 
 cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
-#cordova platform add android
+cordova platform add android
 cordova platform add ios
 SetStartPage www/config.xml
-#SetStartPage platforms/android/res/xml/config.xml
+SetStartPage platforms/android/res/xml/config.xml
 SetStartPage platforms/ios/ChromeSpec/config.xml
 rm -rf www/spec www/spec.html www/js www/index.html www/css www/img
 rm -rf platforms/ios/CordovaLib
