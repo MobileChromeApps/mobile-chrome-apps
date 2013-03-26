@@ -22,6 +22,7 @@
   </platform>
 
   <platform name="ios">
+    <framework src="Security.framework" />
     <source-file src="ChromeSocket.m" />
     <header-file src="ChromeSocket.h" />
 
