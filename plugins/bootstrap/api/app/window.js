@@ -55,17 +55,28 @@ function applyAttributes(attrText, destNode) {
   copyAttributes(dummyNode.firstChild, destNode);
 }
 
-function evalScripts(rootNode) {
-  var scripts = rootNode.getElementsByTagName('script');
+// Evals the scripts serially since sometimes browsers don't execute
+// them in the order they are injected :(.
+// TODO: This is clearly slower for multiple scripts. We could maybe see if
+// injecting after DOM mutation events fire?
+function evalScripts(rootNode, afterFunc) {
+  var scripts = Array.prototype.slice.call(rootNode.getElementsByTagName('script'));
   var doc = rootNode.ownerDocument;
-  for (var i = 0, script; script = scripts[i]; ++i) {
-    // Don't bother with inline scripts since they aren't evalled on desktop.
-    if (script.src) {
+  function helper() {
+    var script = scripts.shift();
+    if (!script) {
+      afterFunc && afterFunc();
+      // Don't bother with inline scripts since they aren't evalled on desktop.
+    } else if (script.src) {
       var replacement = doc.createElement('script');
       copyAttributes(script, replacement);
+      replacement.onload = helper;
       script.parentNode.replaceChild(replacement, script);
+    } else {
+      helper();
     }
   }
+  helper();
 }
 
 function rewritePage(pageContent, filePath) {
@@ -88,10 +99,10 @@ function rewritePage(pageContent, filePath) {
 
   function afterBase() {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
-    evalScripts(fgHead);
-
-    mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-    evalScripts(fgBody);
+    evalScripts(fgHead, function() {
+      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+      evalScripts(fgBody)
+    });
   }
   // Put everything before the body tag in the head.
   var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
