@@ -49,12 +49,12 @@ cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
 cordova platform add android
 cordova platform add ios
-SetStartPage www/config.xml
-SetStartPage platforms/android/res/xml/config.xml
-SetStartPage platforms/ios/ChromeSpec/config.xml
+SetStartPage "www/config.xml"
+SetStartPage "platforms/android/res/xml/config.xml"
+SetStartPage "platforms/ios/$TARGET/config.xml"
 rm -rf www/spec www/spec.html www/js www/index.html www/css www/img
 rm -rf platforms/ios/CordovaLib
-"$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" platforms/ios/ChromeSpec.xcodeproj
+"$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
 
 set +x # No more echo
 
