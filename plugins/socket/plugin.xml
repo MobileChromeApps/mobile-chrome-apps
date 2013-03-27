@@ -14,7 +14,7 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="ChromeSocket.java" target-dir="src/org/apache/cordova" />
+    <source-file src="src/android/ChromeSocket.java" target-dir="src/org/apache/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
       <plugin name="ChromeSocket" value="org.apache.cordova.ChromeSocket" />
@@ -23,13 +23,13 @@
 
   <platform name="ios">
     <framework src="Security.framework" />
-    <source-file src="ChromeSocket.m" />
-    <header-file src="ChromeSocket.h" />
+    <source-file src="src/ios/ChromeSocket.m" />
+    <header-file src="src/ios/ChromeSocket.h" />
 
-    <source-file src="third_party/GCDAsyncSocket.m" />
-    <header-file src="third_party/GCDAsyncSocket.h" />
-    <source-file src="third_party/GCDAsyncUdpSocket.m" />
-    <header-file src="third_party/GCDAsyncUdpSocket.h" />
+    <source-file src="src/ios/third_party/GCDAsyncSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncSocket.h" />
+    <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
 
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeSocket" value="ChromeSocket" />

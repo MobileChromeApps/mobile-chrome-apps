@@ -14,7 +14,7 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="ChromeStorage.java" target-dir="src/org/apache/cordova" />
+    <source-file src="src/android/ChromeStorage.java" target-dir="src/org/apache/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
       <plugin name="ChromeStorage" value="org.apache.cordova.ChromeStorage" />
@@ -22,8 +22,8 @@
   </platform>
 
   <platform name="ios">
-    <source-file src="ChromeStorage.m" />
-    <header-file src="ChromeStorage.h" />
+    <source-file src="src/ios/ChromeStorage.m" />
+    <header-file src="src/ios/ChromeStorage.h" />
 
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeStorage" value="ChromeStorage" />
