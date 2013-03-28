@@ -121,7 +121,7 @@
 
 - (void)get:(CDVInvokedUrlCommand*)command
 {
-    NSInvocationOperation* operation = [[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_get:) object:command] autorelease];
+    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_get:) object:command];
     [_executor addOperation:operation];
 }
 
@@ -141,7 +141,7 @@
 
 - (void)getBytesInUse:(CDVInvokedUrlCommand *)command
 {
-    NSInvocationOperation* operation = [[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_getBytesInUse:) object:command] autorelease];
+    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_getBytesInUse:) object:command];
     [_executor addOperation:operation];
 }
 
@@ -156,7 +156,6 @@
 
     if(!dataRep) {
        VERBOSE_LOG(@"Error during size calculation - %@", errorString);
-       [errorString release];
     } else {
         size = [dataRep length];
     }
@@ -172,7 +171,7 @@
 
 - (void)set:(CDVInvokedUrlCommand*)command
 {
-    NSInvocationOperation* operation = [[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_set:) object:command] autorelease];
+    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_set:) object:command];
     [_executor addOperation:operation];
 }
 
@@ -209,7 +208,7 @@
 
 - (void)remove:(CDVInvokedUrlCommand*)command
 {
-    NSInvocationOperation* operation = [[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_remove:) object:command] autorelease];
+    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_remove:) object:command];
     [_executor addOperation:operation];
 }
 
@@ -258,7 +257,7 @@
 
 - (void)clear:(CDVInvokedUrlCommand*)command
 {
-    NSInvocationOperation* operation = [[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_clear:) object:command] autorelease];
+    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_clear:) object:command];
     [_executor addOperation:operation];
 }
 
