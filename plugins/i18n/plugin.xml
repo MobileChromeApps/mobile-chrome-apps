@@ -22,8 +22,8 @@
   </platform>
 
   <platform name="ios">
-    <source-file src="ChromeI18n.m" />
-    <header-file src="ChromeI18n.h" />
+    <source-file src="src/ios/ChromeI18n.m" />
+    <header-file src="src/ios/ChromeI18n.h" />
 
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeI18n" value="ChromeI18n" />

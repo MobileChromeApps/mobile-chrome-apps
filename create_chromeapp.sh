@@ -101,8 +101,11 @@ if [ "$SHOULD_ADD_SPEC" == "y" ]; then
   add_plugin "$MCA_PATH/chrome-cordova/spec"
 fi
 
-echo "Remember to update your cordova-js manually!"
-
+echo
+echo "Successfully created $TARGET!"
+echo
 echo "cd $TARGET"
 echo "cordova prepare"
 echo "open platforms/ios/${TARGET}.xcodeproj"
+echo
+echo "ALSO: Enable ARC in build settings and add -fno-objc-arc to AppDelegate.m"
