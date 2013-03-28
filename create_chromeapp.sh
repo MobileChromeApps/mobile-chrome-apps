@@ -6,6 +6,9 @@
 # Running this script should create a working chrome-spec project.
 set -e # Fail on errors
 
+################################################################################
+# Helpers
+#
 function SetStartPage {
     sed -i '' '
 /access/ a\
@@ -13,6 +16,23 @@ function SetStartPage {
 ' "$1"
 }
 
+function AddPlugin {
+  echo cordova plugin add "$1"
+  cordova plugin add "$1"
+
+  if [ "$SHOULD_LINK" = "y" ]; then
+    PLUGIN_TARGET_PATH="plugins/$(basename $1)"
+    rm -rf "$PLUGIN_TARGET_PATH"
+    ln -s "$1" "$PLUGIN_TARGET_PATH"
+  fi
+}
+
+function UpdateForArc {
+  TARGET=$1
+  sed -i '' 's/CLANG_ENABLE_OBJC_ARC = NO/CLANG_ENABLE_OBJC_ARC = YES/' "platforms/ios/${TARGET}.xcodeproj/project.pbxproj"
+}
+
+################################################################################
 # Set default paths
 # Scripts expects to be run from a subdirectory of a mobile_chrome_apps, and expects structure to be as such:
 #
@@ -46,6 +66,9 @@ else
   TARGET="ChromeSpec"
 fi
 
+################################################################################
+# Script inputs
+#
 echo
 read -n 1 -p "Install all plugins without prompt? [y/n] " SHOULD_NOT_PROMPT
 echo
@@ -56,34 +79,22 @@ echo
 echo "Starting..."
 echo
 
-
-set -x # Echo all commands
+################################################################################
+# Create the project
+#
+set -vx # Echo all commands
 
 cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
+
 cordova platform add android
 cordova platform add ios
-SetStartPage "www/config.xml"
-SetStartPage "platforms/android/res/xml/config.xml"
-SetStartPage "platforms/ios/$TARGET/config.xml"
-rm -rf www/spec www/spec.html www/js www/index.html www/css www/img
-rm -rf platforms/ios/CordovaLib
-"$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
 
-set +x # No more echo
+set +vx # No more echo
 
-function add_plugin {
-  echo cordova plugin add "$1"
-  cordova plugin add "$1"
-
-  if [ "$SHOULD_LINK" = "y" ]; then
-    PLUGIN_TARGET_PATH="plugins/$(basename $1)"
-    rm -rf "$PLUGIN_TARGET_PATH"
-    ln -s "$1" "$PLUGIN_TARGET_PATH"
-  fi
-}
-
-# for each plugin
+################################################################################
+# Install plugins
+#
 for PLUGIN_PATH in "$MCA_PATH/chrome-cordova/plugins/"*; do
   if [ "$SHOULD_NOT_PROMPT" != "y" ]; then
     read -n 1 -p "shall I add plugin: '$(basename $PLUGIN_PATH)'? [y/n] " SHOULD_INSTALL
@@ -93,19 +104,37 @@ for PLUGIN_PATH in "$MCA_PATH/chrome-cordova/plugins/"*; do
     fi
   fi
 
-  add_plugin "$PLUGIN_PATH"
+  AddPlugin "$PLUGIN_PATH"
 done
 
-# chrome spec
+################################################################################
+# Install chrome spec
+#
 if [ "$SHOULD_ADD_SPEC" == "y" ]; then
-  add_plugin "$MCA_PATH/chrome-cordova/spec"
+  AddPlugin "$MCA_PATH/chrome-cordova/spec"
 fi
 
+################################################################################
+# Massage the workspace
+#
+set -vx # Echo all commands
+
+cordova prepare
+UpdateForArc "$TARGET"
+SetStartPage "www/config.xml"
+SetStartPage "platforms/android/res/xml/config.xml"
+SetStartPage "platforms/ios/$TARGET/config.xml"
+rm -rf www/spec www/spec.html www/js www/index.html www/css www/img
+rm -rf platforms/ios/CordovaLib
+"$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
+
+set +vx # No more echo
+
+################################################################################
+# Report results
+#
 echo
 echo "Successfully created $TARGET!"
 echo
 echo "cd $TARGET"
-echo "cordova prepare"
 echo "open platforms/ios/${TARGET}.xcodeproj"
-echo
-echo "ALSO: Enable ARC in build settings and add -fno-objc-arc to AppDelegate.m"
