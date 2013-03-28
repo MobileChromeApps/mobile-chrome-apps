@@ -568,11 +568,13 @@ static NSString* stringFromData(NSData* data) {
             if(sa_type == AF_INET || sa_type == AF_INET6) {
                 NSString *name = [NSString stringWithUTF8String:temp_addr->ifa_name];
                 NSString *addr = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)]; // pdp_ip0
-                VERBOSE_LOG(@"NTFY networkList -- name: %@ = addr: %@", name, addr);
-                [ret addObject:@{
-                          @"name": name,
-                       @"address": addr
-                }];
+                if (![name hasPrefix:@"lo"] && ![addr isEqualToString:@"0.0.0.0"]) {
+                    VERBOSE_LOG(@"NTFY networkList -- name: %@ = addr: %@", name, addr);
+                    [ret addObject:@{
+                              @"name": name,
+                           @"address": addr
+                    }];
+                }
             }
             temp_addr = temp_addr->ifa_next;
         }
