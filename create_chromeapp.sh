@@ -34,14 +34,28 @@ ROOT_PATH="${ROOT_PATH%/}"
 CORDOVA_PATH="$ROOT_PATH/$CORDOVA_DIR_NAME"
 MCA_PATH="$ROOT_PATH/$MCA_DIR_NAME"
 
-echo Expecting: $CORDOVA_PATH
-echo Expecting: $MCA_PATH
+echo Expecting path to exist: $CORDOVA_PATH
+echo Expecting path to exist: $MCA_PATH
+
+[ -d "$CORDOVA_PATH" ] || exit
+[ -d "$MCA_PATH" ] || exit
 
 if [ -n "$1" ]; then
   TARGET="$1"
 else
   TARGET="ChromeSpec"
 fi
+
+echo
+read -n 1 -p "Install all plugins without prompt? [y/n] " SHOULD_NOT_PROMPT
+echo
+read -n 1 -p "Symlink all your plugins? [y/n] " SHOULD_LINK
+echo
+read -n 1 -p "Also add chrome spec? [y/n] " SHOULD_ADD_SPEC
+echo
+echo "Starting..."
+echo
+
 
 set -x # Echo all commands
 
@@ -58,16 +72,37 @@ rm -rf platforms/ios/CordovaLib
 
 set +x # No more echo
 
-for x in "$MCA_PATH/chrome-cordova/plugins/"* "$MCA_PATH/chrome-cordova/spec"; do
-  read -n 1 -p "shall I add plugin: '$(basename $x)'? [y/n] " yn
-  echo
-  case $yn in
-      [Yy])
-        cordova plugin add "$x"
-        ;;
-      *)
-        ;;
-  esac
+function add_plugin {
+  echo cordova plugin add "$1"
+  cordova plugin add "$1"
+
+  if [ "$SHOULD_LINK" = "y" ]; then
+    PLUGIN_TARGET_PATH="plugins/$(basename $1)"
+    rm -rf "$PLUGIN_TARGET_PATH"
+    ln -s "$1" "$PLUGIN_TARGET_PATH"
+  fi
+}
+
+# for each plugin
+for PLUGIN_PATH in "$MCA_PATH/chrome-cordova/plugins/"*; do
+  if [ "$SHOULD_NOT_PROMPT" != "y" ]; then
+    read -n 1 -p "shall I add plugin: '$(basename $PLUGIN_PATH)'? [y/n] " SHOULD_INSTALL
+    echo
+    if [ "$SHOULD_INSTALL" != "y" ]; then
+      continue;
+    fi
+  fi
+
+  add_plugin "$PLUGIN_PATH"
 done
 
+# chrome spec
+if [ "$SHOULD_ADD_SPEC" == "y" ]; then
+  add_plugin "$MCA_PATH/chrome-cordova/spec"
+fi
+
 echo "Remember to update your cordova-js manually!"
+
+echo "cd $TARGET"
+echo "cordova prepare"
+echo "open platforms/ios/${TARGET}.xcodeproj"
