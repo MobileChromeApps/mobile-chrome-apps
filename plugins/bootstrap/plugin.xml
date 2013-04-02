@@ -53,7 +53,7 @@
     <header-file src="src/ios/ChromeExtensionURLs.h" />
 
     <config-file target="config.xml" parent="/widget/plugins">
-      <plugin name="ChromeExtensionURLs" value="ChromeExtensionURLs" />
+      <plugin name="ChromeExtensionURLs" value="ChromeExtensionURLs" onload="true" />
     </config-file>
   </platform>
 </plugin>
