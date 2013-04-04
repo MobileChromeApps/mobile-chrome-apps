@@ -22,6 +22,8 @@ for FILE in $(git diff --cached --name-only $against); do
   ( file --mime "$FILE" | grep charset=binary >/dev/null ) && continue
   # Ignore third_party.
   [[ "$FILE" = *third_party* ]] && continue
+  # Ignore markdown
+  [[ "$FILE" = *.md ]] && continue
 
   # Find files with trailing whitespace
   if grep -E '\s+$' "$FILE"; then
