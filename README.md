@@ -1,8 +1,8 @@
 # Chrome Apps for Mobile
 
-APIs, integration ~~shiv~~ shim and tests for running Chrome Apps on mobile using Apache Cordova.
+APIs, integration shim and tests for running Chrome Packaged Apps V2 on mobile using Apache Cordova.
 
-These tools are at a very early alpha stage. Don't use them; you have been warned.
+These tools are at a very early alpha stage.
 
 ## Components
 
@@ -13,12 +13,21 @@ These tools are at a very early alpha stage. Don't use them; you have been warne
 * Chrome-spec test suite is in `spec/`.
 * Example Chrome app files like `manifest.json` are in `templates/`.
 
-## Building
+## Getting Going
 
-Currently the only thing built when running `grunt` is the spec tests. These are cloned into `grunt_output/spec` for use as a Chrome unpacked extension, or for copying into a Cordova project's `www/`.
+Step 1: Configure the `cordova` commmand.
 
+    git clone https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
+    cd cordova-plugman
+    git checkout future
+    npm install
+    sudo npm link
+    cd ..
+    git clone https://git-wip-us.apache.org/repos/asf/cordova-cli.git
+    cd cordova-cli
+    git checkout future
+    npm install
+    sudo npm link
+    npm link plugman
 
-How to build:
-1. Run `sudo npm install -g grunt-cli` to install Grunt (build tool).
-1. Run `npm install` to install dependencies into your `node_modules` directory.
-1. Run `grunt` to do a one-time build, `grunt watch` to start continuous build mode.
+Step 2: Create a project using the `create_chromeapp.sh` script.
