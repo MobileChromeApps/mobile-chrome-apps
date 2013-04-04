@@ -31,3 +31,14 @@ Step 1: Configure the `cordova` commmand.
     npm link plugman
 
 Step 2: Create a project using the `create_chromeapp.sh` script.
+
+    $ ./chrome-cordova/create_chromeapp.sh MyProject
+    Install all plugins without prompt? [y/n] y
+    Symlink all your plugins? [y/n] n
+    Also add chrome spec? [y/n] n
+
+Step 3: If you didn't answer Y to "Also add chrome spec", then put your Chrome-app code into your newly created www/ directory.
+
+## Building & Running
+
+TODO
