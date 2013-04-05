@@ -25,7 +25,7 @@ static NSString* pathPrefix;
     self = [super initWithWebView:theWebView];
     if (self) {
         [NSURLProtocol registerClass:[ChromeURLProtocol class]];
-        
+
         pathPrefix = [[NSBundle mainBundle] pathForResource:@"chromeapp.html" ofType:@"" inDirectory:@"www"];
         NSRange range = [pathPrefix rangeOfString:@"www"];
         pathPrefix = [[pathPrefix substringToIndex:NSMaxRange(range)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
@@ -42,17 +42,11 @@ static NSString* pathPrefix;
 + (BOOL)canInitWithRequest:(NSURLRequest*)request
 {
     NSURL* url = [request URL];
-    NSLog(@"%@", url);
-    return [[url scheme] isEqualToString:kChromeExtensionURLScheme];
+    return [[url scheme] isEqualToString:kChromeExtensionURLScheme] && ![[url path] isEqualToString:@"/!gap_exec"];
 }
 
 + (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
 {
-//    NSURL *url = [request URL];
-//    NSString *pathString = [url resourceSpecifier];
-//    NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
-//
-//    return [NSURLRequest requestWithURL:[NSURL fileURLWithPath:path]];
     return request;
 }
 
@@ -66,20 +60,26 @@ static NSString* pathPrefix;
     NSURL *url = [[self request] URL];
     NSString *pathString = [url resourceSpecifier];
     NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
-        
-    NSURLResponse *response = [[NSURLResponse alloc] initWithURL:url MIMEType:nil expectedContentLength:-1 textEncodingName:nil];
+
     FILE *fp = fopen([path UTF8String], "r");
     if (fp) {
+        NSURLResponse *response = [[NSURLResponse alloc] initWithURL:url MIMEType:nil expectedContentLength:-1 textEncodingName:nil];
+        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+
         char buf[32768];
         size_t len;
-        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
         while ((len = fread(buf,1,sizeof(buf),fp))) {
             [[self client] URLProtocol:self didLoadData:[NSData dataWithBytes:buf length:len]];
         }
         fclose(fp);
+
+        [[self client] URLProtocolDidFinishLoading:self];
+    } else {
+//        [[self client] URLProtocol:self didFailWithError:nil];
+        NSURLResponse *response = [[NSURLResponse alloc] initWithURL:url MIMEType:nil expectedContentLength:-1 textEncodingName:nil];
+        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+        [[self client] URLProtocolDidFinishLoading:self];
     }
-    // TODO what if !fp? seems finishing load with no data is an error
-    [[self client] URLProtocolDidFinishLoading:self];
 }
 
 - (void)stopLoading
