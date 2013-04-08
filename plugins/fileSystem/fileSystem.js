@@ -21,14 +21,22 @@ exports.chooseEntry = function(options, callback) {
   // Ensure that the type is either unspecified or specified as 'openFile', as nothing else is supported.
   if (options.type && options.type != 'openFile') {
     // TODO(maxw): Determine a "more correct" way to fail here.
+    callback(null);
     return;
   }
 
   // Create the callback for getFile.
   // It creates a file entry and passes it to the chooseEntry callback.
   var onFileReceived = function(nativeUri) {
-    var fileEntry = new FileEntry('image.png', nativeUri);
-    callback(fileEntry);
+    var onUriResolved = function(fileEntry) {
+      callback(fileEntry);
+    };
+
+    var onUriResolveError = function(e) {
+      console.log(e.target.error.code);
+    };
+
+    resolveLocalFileSystemURI(nativeUri, onUriResolved, onUriResolveError);
   };
 
   if (platformId == 'ios') {
