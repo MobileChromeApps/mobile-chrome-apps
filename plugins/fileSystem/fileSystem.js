@@ -27,8 +27,15 @@ exports.chooseEntry = function(options, callback) {
   // Create the callback for getFile.
   // It creates a file entry and passes it to the chooseEntry callback.
   var onFileReceived = function(nativeUri) {
-    var fileEntry = new FileEntry('image.png', nativeUri);
-    callback(fileEntry);
+    var onUriResolved = function(fileEntry) {
+      callback(fileEntry);
+    };
+
+    var onUriResolveError = function(e) {
+      console.log(e.target.error.code);
+    };
+
+    resolveLocalFileSystemURI(nativeUri, onUriResolved, onUriResolveError);
   };
 
   if (platformId == 'ios') {
