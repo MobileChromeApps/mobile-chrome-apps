@@ -21,6 +21,7 @@ exports.chooseEntry = function(options, callback) {
   // Ensure that the type is either unspecified or specified as 'openFile', as nothing else is supported.
   if (options.type && options.type != 'openFile') {
     // TODO(maxw): Determine a "more correct" way to fail here.
+    callback(null);
     return;
   }
 
