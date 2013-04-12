@@ -104,7 +104,8 @@ public class ChromeIdentity extends CordovaPlugin {
         this.savedCordovaArgs = cordovaArgsToSave;
         this.savedCallbackContext = callbackContextToSave;
         this.savedContent  = true;
-        Intent intent = AccountPicker.newChooseAccountIntent(null, null, null, false, null, null, null, null);
+        // Note the "google.com" filter aqccepts both google and gmail accounts.
+        Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
         this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
     }
 
