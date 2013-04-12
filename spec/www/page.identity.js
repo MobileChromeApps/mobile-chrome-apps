@@ -15,7 +15,18 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
         if(typeof token === 'undefined'|| token === -1) {
             alert('getAuthToken Error');
         } else {
-            alert('getAuthToken Success');
+            try {
+                var xhr = new XMLHttpRequest();
+                var loc = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + token;
+                xhr.open('GET', loc, false /* sync */);
+                xhr.send(null);
+                var resp = JSON.parse(xhr.responseText);
+                alert("Attempted to retrieve name from the account: " + resp.name);
+            } catch (e) {
+                var str = "An error occurred while attempting to retrieve name from the account: " + e;
+                console.error(str);
+                alert(str);
+            }
         }
     });
   });
