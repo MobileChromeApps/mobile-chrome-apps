@@ -101,7 +101,10 @@ function rewritePage(pageContent, filePath) {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
     evalScripts(fgHead, function() {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody)
+      evalScripts(fgBody, function() {
+        cordova.fireWindowEvent('DOMContentReady');
+        cordova.fireWindowEvent('load');
+      })
     });
   }
   // Put everything before the body tag in the head.
@@ -143,8 +146,6 @@ exports.create = function(filePath, options, callback) {
       }
       var pageContent = xhr.responseText || 'Page load failed.';
       rewritePage(pageContent, filePath);
-      cordova.fireWindowEvent('DOMContentReady');
-      cordova.fireWindowEvent('load');
     }
   };
   xhr.send();
