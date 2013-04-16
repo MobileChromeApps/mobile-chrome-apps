@@ -12,7 +12,7 @@ set -e # Fail on errors
 function SetStartPage {
     sed -i '' '
 /access/ a\
-\ \ \ \ <content src="chromeapp.html" />
+\ \ \ \ <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
 ' "$1"
 }
 
