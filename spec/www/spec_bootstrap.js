@@ -85,8 +85,8 @@ window.runningInBg = true;
     if (!jasmineLoaded) {
       jasmineLoaded = true;
       var scripts = [
-          'jasmine-1.2.0/jasmine.js',
-          'jasmine-1.2.0/jasmine-html.js',
+          'third_party/jasmine-1.2.0/jasmine.js',
+          'third_party/jasmine-1.2.0/jasmine-html.js',
           'jasmine_helper.js'
           ];
       injectScripts(document, scripts, afterJasmineLoaded);
@@ -137,7 +137,7 @@ window.runningInBg = true;
     injectStyle('spec_styles.css');
     // Inject jasmine.js again so that it will register it's global helper functions (e.g. it, describe).
     var scripts = [
-        'jasmine-1.2.0/jasmine.js',
+        'third_party/jasmine-1.2.0/jasmine.js',
         'jasmine_helper.js'
     ];
     injectScripts(chromespec.fgDoc, scripts, onScriptsLoaded);
