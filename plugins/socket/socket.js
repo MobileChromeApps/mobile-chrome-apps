@@ -212,4 +212,3 @@ exports.getNetworkList = function(callback) {
     }
     exec(callback, null, 'ChromeSocket', 'getNetworkList', []);
 };
-

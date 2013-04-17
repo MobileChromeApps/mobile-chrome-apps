@@ -1,9 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
-  Copyright (c) 2012 The Chromium Authors. All rights reserved.
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
   Use of this source code is governed by a BSD-style license that can be
   found in the LICENSE file.
 -->
-<?xml version="1.0" encoding="UTF-8" ?>
 <plugin xmlns="http://phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="chrome.i18n"

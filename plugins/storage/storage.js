@@ -198,4 +198,3 @@ sync.QUOTA_BYTES = 102400;
 
 exports.local = local;
 exports.sync = sync;
-

@@ -75,7 +75,7 @@
         BOOL sync = [[arguments objectAtIndex:0] boolValue];
         id argumentAtIndexOne = [arguments objectAtIndex:1];
         NSArray* keys = [NSArray array];
-        
+
         NSDictionary* jsonObject = nil;
         NSArray* jsonArray = nil;
 
@@ -251,8 +251,8 @@
         VERBOSE_LOG(@"%@ - %@", @"Could not update storage", [exception debugDescription]);
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not update storage"];
     }
-    
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId]; 
+
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)clear:(CDVInvokedUrlCommand*)command
