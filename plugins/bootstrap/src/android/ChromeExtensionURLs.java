@@ -11,10 +11,14 @@ import java.util.TreeMap;
 
 import org.apache.cordova.api.CordovaPlugin;
 
+import android.annotation.TargetApi;
+import android.net.Uri;
+import android.os.Build;
 import android.webkit.WebResourceResponse;
 
 public class ChromeExtensionURLs extends CordovaPlugin {
 
+    @SuppressWarnings("unused")
     private static final String LOG_TAG = "ChromeExtensionURLs";
     // Plugins can register themselves to assist or modify the url decoding
     // We use a priority queue to enforce some order
@@ -28,7 +32,7 @@ public class ChromeExtensionURLs extends CordovaPlugin {
     }
 
     public static boolean registerInterfaceAtPriority(RequestModifyInterface plugin, int priority) {
-        Integer priorityObj = new Integer(priority);
+        Integer priorityObj = priority;
         if(registeredPlugins.get(priorityObj) != null) {
             return false;
         }
@@ -37,7 +41,7 @@ public class ChromeExtensionURLs extends CordovaPlugin {
     }
 
     public static boolean unregisterInterfaceAtPriority(RequestModifyInterface plugin, int priority) {
-        Integer priorityObj = new Integer(priority);
+        Integer priorityObj = priority;
         if(registeredPlugins.get(priorityObj) != plugin) {
             return false;
         }
@@ -45,13 +49,9 @@ public class ChromeExtensionURLs extends CordovaPlugin {
         return true;
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public WebResourceResponse shouldInterceptRequest(String url) {
-        // Strip the chrome-extension://<extension_id>/ prefix and then look it up
-        // from the Android assets.
-        int slash = url.indexOf('/', 19);
-        url = url.substring(slash + 1);
-
         NavigableSet<Integer> pluginPrioritySet = registeredPlugins.navigableKeySet();
         for(Integer pluginPriority : pluginPrioritySet) {
             RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
@@ -68,7 +68,8 @@ public class ChromeExtensionURLs extends CordovaPlugin {
 
         InputStream is = null;
         try {
-            is = this.cordova.getActivity().getAssets().open("www/" + url);
+            String path = Uri.parse(url).getPath();
+            is = this.cordova.getActivity().getAssets().open("www" + path);
         } catch (IOException ioe) {
             return null;
         }
