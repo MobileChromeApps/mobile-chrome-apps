@@ -51,6 +51,10 @@
         <url-filter value="chrome-extension://" />
       </plugin>
     </config-file>
+
+    <config-file target="res/xml/config.xml" parent="/cordova">
+      <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
+    </config-file>
   </platform>
   <platform name="ios">
     <source-file src="src/ios/ChromeExtensionURLs.m" />
@@ -62,7 +66,7 @@
 
     <config-file target="config.xml" parent="/widget">
       <access origin="chrome-extension://*" />
-      <content src="chrome-extension://chromeapp.html" />
+      <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
     </config-file>
 
   </platform>

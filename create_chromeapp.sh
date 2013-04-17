@@ -9,13 +9,6 @@ set -e # Fail on errors
 ################################################################################
 # Helpers
 #
-function SetStartPage {
-    sed -i '' '
-/access/ a\
-\ \ \ \ <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
-' "$1"
-}
-
 function AddPlugin {
   echo cordova plugin add "$1"
   cordova plugin add "$1"
@@ -25,11 +18,6 @@ function AddPlugin {
     rm -rf "$PLUGIN_TARGET_PATH"
     ln -s "$1" "$PLUGIN_TARGET_PATH"
   fi
-}
-
-function UpdateForArc {
-  TARGET=$1
-  sed -i '' 's/CLANG_ENABLE_OBJC_ARC = NO/CLANG_ENABLE_OBJC_ARC = YES/' "platforms/ios/${TARGET}.xcodeproj/project.pbxproj"
 }
 
 ################################################################################
@@ -120,8 +108,6 @@ fi
 set -vx # Echo all commands
 
 cordova prepare
-UpdateForArc "$TARGET"
-SetStartPage "platforms/android/res/xml/config.xml"
 rm -rf app/www/spec app/www/spec.html app/www/js app/www/index.html app/www/css app/www/img
 rm -rf platforms/ios/CordovaLib
 "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
