@@ -65,14 +65,7 @@ exports.launchWebAuthFlow = function(details, callback) {
     }
 
     var finalURL = details.url;
-    var extractedRedirectedURL = _getParameterFromUrl(finalURL, 'redirect_uri', '?', '#');
-
-    if(typeof extractedRedirectedURL == 'undefined') {
-        chrome.runtime.lastError = { 'message' : 'launchWebAuthFlow: Parameter redirect_uri not found.' };
-        callback();
-    } else {
-        _launchInAppBrowser(finalURL, extractedRedirectedURL, callback);
-    }
+    _launchInAppBrowserForOauth1and2(finalURL, callback);
 };
 
 function _getAuthTokenJS(win, fail , details) {
@@ -121,13 +114,13 @@ function _getAuthTokenJS(win, fail , details) {
     });
 }
 
-function _getParameterFromUrl(url, param, startString, endString) {
+function _getAllParametersFromUrl(url, startString, endString) {
     var splitUrl = url;
     var urlParts;
     if(typeof startString != 'undefined') {
         urlParts = splitUrl.split(startString);
         if(urlParts.length < 2) {
-            return;
+            return {};
         } else {
             splitUrl = urlParts[1];
         }
@@ -137,13 +130,17 @@ function _getParameterFromUrl(url, param, startString, endString) {
         splitUrl = urlParts[0];
     }
     var vars = splitUrl.split('&');
+    var retObj = {};
     for (var i = 0; i < vars.length; i++) {
         var pair = vars[i].split('=');
-        // If first entry with this name
-        if (pair[0] === param) {
-            return decodeURIComponent(pair[1]);
-        }
+        retObj[pair[0]] = decodeURIComponent(pair[1]);
     }
+    return retObj;
+}
+
+function _getParameterFromUrl(url, param, startString, endString) {
+    var retObj = _getAllParametersFromUrl(url, startString, endString);
+    return retObj[param];
 }
 
 function _launchInAppBrowser(authURL, redirectedURL, callback) {
@@ -158,3 +155,26 @@ function _launchInAppBrowser(authURL, redirectedURL, callback) {
     };
     oAuthBrowser.addEventListener('loadstart', listener);
 }
+
+function _launchInAppBrowserForOauth1and2(authURL, callback) {
+    var breakParams = [ "access_token", "oauth_verifier"];
+    var oAuthBrowser = window.open(authURL, '_blank', 'location=yes');
+
+    var listener = function(event) {
+        var newLoc = event.url;
+        var paramsAfterQuestion = _getAllParametersFromUrl(newLoc, "?", "#");
+        var paramsAfterPound = _getAllParametersFromUrl(newLoc, "#", "?");
+
+        for(var i = 0; i < breakParams.length; i++) {
+            if(paramsAfterQuestion.hasOwnProperty(breakParams[i]) || paramsAfterPound.hasOwnProperty(breakParams[i])) {
+                oAuthBrowser.removeEventListener('loadstart', listener);
+                oAuthBrowser.close();
+                callback(newLoc);
+                return;
+            }
+        }
+    };
+
+    oAuthBrowser.addEventListener('loadstart', listener);
+}
+
