@@ -59,5 +59,11 @@
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeExtensionURLs" value="ChromeExtensionURLs" onload="true" />
     </config-file>
+
+    <config-file target="config.xml" parent="/widget">
+      <access origin="chrome-extension://*" />
+      <content src="chrome-extension://chromeapp.html" />
+    </config-file>
+
   </platform>
 </plugin>

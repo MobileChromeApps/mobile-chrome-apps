@@ -121,10 +121,8 @@ set -vx # Echo all commands
 
 cordova prepare
 UpdateForArc "$TARGET"
-SetStartPage "www/config.xml"
 SetStartPage "platforms/android/res/xml/config.xml"
-SetStartPage "platforms/ios/$TARGET/config.xml"
-rm -rf www/spec www/spec.html www/js www/index.html www/css www/img
+rm -rf app/www/spec app/www/spec.html app/www/js app/www/index.html app/www/css app/www/img
 rm -rf platforms/ios/CordovaLib
 "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
 
