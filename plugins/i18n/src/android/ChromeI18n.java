@@ -1,3 +1,7 @@
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 package org.apache.cordova;
 
 import java.io.BufferedReader;
@@ -21,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.text.TextUtils;
@@ -74,7 +79,7 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
         try {
             JSONArray ret = new JSONArray();
             Locale locale = Locale.getDefault();
-            String localString = locale.toString().replace('_', '-'); 
+            String localString = locale.toString().replace('_', '-');
             ret.put(localString);
             callbackContext.success(ret);
         } catch (Exception e) {
@@ -141,27 +146,44 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
             return constructedLine.toString();
         } catch (Exception e) {
             Log.e(LOG_TAG, "An error occurred during the i18n of line : " + line, e);
-            // Return the line itself as it is a more graceful fallback than return nothing 
+            // Return the line itself as it is a more graceful fallback than return nothing
             return line;
         }
     }
 
+    @SuppressLint("NewApi")
+    private static boolean isRtlLocale(Locale l) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return View.LAYOUT_DIRECTION_RTL == TextUtils.getLayoutDirectionFromLocale(l);
+        }
+        String lang = l.getLanguage().toLowerCase(Locale.ENGLISH);
+        return (lang.equals("ar") ||
+                lang.equals("fa") ||
+                lang.equals("ur") ||
+                lang.equals("ps") ||
+                lang.equals("syr") ||
+                lang.equals("dv") ||
+                lang.equals("he") ||
+                lang.equals("yi"));
+    }
+
     private String getReplacement(String match) {
         // get the message from __MSG_messagename__
-        String messageName = match.substring(6, match.length() - 2).toLowerCase();
+        String messageName = match.substring(6, match.length() - 2).toLowerCase(Locale.ENGLISH);
         if(messageName.startsWith("@@")){
+            Locale locale = Locale.getDefault();
             if("@@extension_id".equals(messageName)) {
                 return "{appId}";
             } else if("@@ui_locale".equals(messageName)) {
-                return Locale.getDefault().toString();
+                return locale.toString();
             } else if("@@bidi_dir".equals(messageName)) {
-                return (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL)? "rtl" : "ltr";
+                return isRtlLocale(locale) ? "rtl" : "ltr";
             } else if("@@bidi_reversed_dir".equals(messageName)) {
-                return (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL)? "ltr" : "rtl";
+                return isRtlLocale(locale) ? "ltr" : "rtl";
             } else if("@@bidi_start_edge".equals(messageName)) {
-                return (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL)? "right" : "left";
+                return isRtlLocale(locale) ? "right" : "left";
             } else if("@@bidi_end_edge".equals(messageName)) {
-                return (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL)? "left" : "right";
+                return isRtlLocale(locale) ? "left" : "right";
             }
         }
 
