@@ -58,7 +58,7 @@ static NSString* pathPrefix;
 - (void)startLoading
 {
     NSURL *url = [[self request] URL];
-    NSString *pathString = [url resourceSpecifier];
+    NSString *pathString = [url relativePath];
     NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
 
     FILE *fp = fopen([path UTF8String], "r");
