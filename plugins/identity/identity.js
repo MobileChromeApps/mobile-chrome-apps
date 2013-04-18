@@ -163,7 +163,7 @@ function _launchInAppBrowserForOauth1and2(authURL, callback) {
     var listener = function(event) {
         var newLoc = event.url;
         var paramsAfterQuestion = _getAllParametersFromUrl(newLoc, "?", "#");
-        var paramsAfterPound = _getAllParametersFromUrl(newLoc, "#", "?");
+        var paramsAfterPound = _getAllParametersFromUrl(newLoc, "#");
 
         for(var i = 0; i < breakParams.length; i++) {
             if(paramsAfterQuestion.hasOwnProperty(breakParams[i]) || paramsAfterPound.hasOwnProperty(breakParams[i])) {
