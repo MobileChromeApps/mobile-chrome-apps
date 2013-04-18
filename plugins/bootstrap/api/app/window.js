@@ -101,6 +101,7 @@ function rewritePage(pageContent, filePath) {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
     evalScripts(fgHead, function() {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+      cordova.exec(null,null,'ChromeExtensionURLs','release',[])
       evalScripts(fgBody, function() {
         cordova.fireWindowEvent('DOMContentReady');
         cordova.fireWindowEvent('load');
