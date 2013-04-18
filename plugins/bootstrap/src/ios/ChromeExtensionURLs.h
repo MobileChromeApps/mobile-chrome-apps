@@ -8,4 +8,7 @@
 NSString* const kChromeExtensionURLScheme = @"chrome-extension";
 
 @interface ChromeExtensionURLs : CDVPlugin {}
+
+- (void)release:(CDVInvokedUrlCommand*)command;
+
 @end

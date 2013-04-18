@@ -14,6 +14,8 @@
 @interface ChromeURLProtocol : NSURLProtocol
 @end
 
+static ChromeURLProtocol *outstandingDelayRequest;
+
 static NSString* pathPrefix;
 
 #pragma mark ChromeExtensionURLs
@@ -31,6 +33,24 @@ static NSString* pathPrefix;
         pathPrefix = [[pathPrefix substringToIndex:NSMaxRange(range)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     }
     return self;
+}
+
+// On a "release" command, trigger the chrome-content-loaded url to finish loading immediately.
+- (void)release:(CDVInvokedUrlCommand*)command
+{
+    CDVPluginResult *pluginResult = nil;
+
+    if (outstandingDelayRequest != nil) {
+        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:[[NSURL alloc] initWithString:@"chrome-extension://null/chrome-content-loaded"] statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
+        [[outstandingDelayRequest client] URLProtocol:outstandingDelayRequest didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+
+        [[outstandingDelayRequest client] URLProtocolDidFinishLoading:outstandingDelayRequest];
+        outstandingDelayRequest = nil;
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    } else {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No outstanding chrome-content-loaded requests"];
+    }
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 @end
@@ -59,25 +79,31 @@ static NSString* pathPrefix;
 {
     NSURL *url = [[self request] URL];
     NSString *pathString = [url relativePath];
-    NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
-
-    FILE *fp = fopen([path UTF8String], "r");
-    if (fp) {
-        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
-        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
-
-        char buf[32768];
-        size_t len;
-        while ((len = fread(buf,1,sizeof(buf),fp))) {
-            [[self client] URLProtocol:self didLoadData:[NSData dataWithBytes:buf length:len]];
-        }
-        fclose(fp);
-
-        [[self client] URLProtocolDidFinishLoading:self];
+    if ([pathString isEqualToString:@"/chrome-content-loaded"]) {
+        // If the request is for the special URL "chrome-extension://<any host>/chrome-content-loaded",
+        // then do not return anything yet. Save this URLProtocol instance for future processing.
+        outstandingDelayRequest = self;
     } else {
-        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:404 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
-        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
-        [[self client] URLProtocolDidFinishLoading:self];
+        NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
+        FILE *fp = fopen([path UTF8String], "r");
+        if (fp) {
+            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
+            [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+
+            char buf[32768];
+            size_t len;
+            while ((len = fread(buf,1,sizeof(buf),fp))) {
+                [[self client] URLProtocol:self didLoadData:[NSData dataWithBytes:buf length:len]];
+            }
+            fclose(fp);
+
+            [[self client] URLProtocolDidFinishLoading:self];
+
+        } else {
+            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:404 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
+            [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+            [[self client] URLProtocolDidFinishLoading:self];
+        }
     }
 }
 
