@@ -22,7 +22,7 @@ function AddPlugin {
 
 ################################################################################
 # Set default paths
-# Scripts expects to be run from a subdirectory of a mobile_chrome_apps, and expects structure to be as such:
+# This script expects to be run from any subdirectory of `mobile_chrome_apps` folder, and expects your local directory structure to be as such:
 #
 # - (any dir)
 #  - cordova
