@@ -63,7 +63,7 @@ static NSString* pathPrefix;
 
     FILE *fp = fopen([path UTF8String], "r");
     if (fp) {
-        NSURLResponse *response = [[NSURLResponse alloc] initWithURL:url MIMEType:nil expectedContentLength:-1 textEncodingName:nil];
+        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
         [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 
         char buf[32768];
@@ -75,8 +75,7 @@ static NSString* pathPrefix;
 
         [[self client] URLProtocolDidFinishLoading:self];
     } else {
-//        [[self client] URLProtocol:self didFailWithError:nil];
-        NSURLResponse *response = [[NSURLResponse alloc] initWithURL:url MIMEType:nil expectedContentLength:-1 textEncodingName:nil];
+        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:404 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
         [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
         [[self client] URLProtocolDidFinishLoading:self];
     }
