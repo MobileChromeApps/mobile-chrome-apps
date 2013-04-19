@@ -7,9 +7,6 @@ APIs, integration shim, and tests for running Chrome Packaged Apps V2 on mobile 
 ## Components
 
 * APIs live under `plugins/`.
-    * Some APIs (socket, storage, etc.) have standalone plugins and are optional. They can be used with just `plugins/common`, `plugins/bootstrap` is not necessary if the app is not a Chrome app.
-    * `plugins/common` contains generic things like `chrome.Event` that are used everywhere.
-    * `plugins/bootstrap` contains the main Chrome `runtime` and `window` APIs, and the HTML wrapper `chromeapp.html` used to bootstrap a Chrome app on Cordova.
 * Chrome-spec test suite is in `spec/`.
 * Example Chrome app files like `manifest.json` are in `templates/`.
 
@@ -119,3 +116,12 @@ For Either, you can use the cordova command line tools:
     cordova build android
     cordova emulate ios
     cordova emulate android
+
+## Plugin Details
+
+* `plugins/common` is needed by most plugins.
+  * Contains generic things like `chrome.Event`.
+* `plugins/bootstrap` is needed to run mobile chrome apps.
+  * Contains the main Chrome `runtime` and `window` APIs, as well as the HTML wrapper `chromeapp.html` used to bootstrap.
+* Some APIs (`socket`, `storage`, etc.) are standalone plugins and are optional.
+  * They can be used in an ordinary cordova app (they don't depend on `bootstrap`).
