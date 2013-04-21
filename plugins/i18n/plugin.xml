@@ -19,7 +19,7 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="ChromeI18n.java" target-dir="src/org/apache/cordova" />
+    <source-file src="src/android/ChromeI18n.java" target-dir="src/org/apache/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
       <plugin name="ChromeI18n" value="org.apache.cordova.ChromeI18n" onload="true" />
