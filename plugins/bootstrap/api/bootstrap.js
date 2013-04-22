@@ -6,7 +6,7 @@
 // Adds a deviceready listener that initializes the Chrome wrapper.
 
 console.log('adding event');
-document.addEventListener('deviceready', function() {
+require('cordova/channel').onPluginsReady.subscribe(function() {
   console.log('deviceready caught');
   require('chrome.mobile.impl').init();
 });
