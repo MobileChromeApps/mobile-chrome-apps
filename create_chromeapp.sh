@@ -42,11 +42,13 @@ ROOT_PATH="${ROOT_PATH%/}"
 CORDOVA_PATH="${CORDOVA_PATH:-$ROOT_PATH/$CORDOVA_DIR_NAME}"
 MCA_PATH="${MCA_PATH:-$ROOT_PATH/$MCA_DIR_NAME}"
 
-echo Expecting path to exist: $CORDOVA_PATH
-echo Expecting path to exist: $MCA_PATH
-
+echo -n "Expecting path to exist: $CORDOVA_PATH..."
 [ -d "$CORDOVA_PATH" ] || exit
+echo "ok"
+
+echo -n "Expecting path to exist: $MCA_PATH..."
 [ -d "$MCA_PATH" ] || exit
+echo "ok"
 
 if [ -n "$1" ]; then
   TARGET="$1"
