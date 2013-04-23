@@ -145,12 +145,31 @@
     [_executor addOperation:operation];
 }
 
+// NSNull isn't supported by NSPropertyListSerialization so replace nulls with NSNumber, which should have same size
+- (NSDictionary*)_stripNulls:(NSDictionary *)dictionary {
+    NSMutableDictionary* ret = [dictionary mutableCopy];
+
+    [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        if (obj == [NSNull null]) {
+            [ret setValue:@0 forKey:key];
+        } else if ([obj isKindOfClass:[NSDictionary class]]) {
+            [ret setValue:[self _stripNulls:obj] forKey:key];
+        }
+    }];
+
+    return ret;
+}
+
 - (void)_getBytesInUse:(CDVInvokedUrlCommand *)command
 {
     CDVPluginResult* pluginResult = nil;
+    // TODO: if keys argument is null, we want the size of the whole file.. perhaps just use
+    // UInt32 fileSize = [[[NSFileManager defaultManager] attributesOfItemAtPath:PATH error:nil] fileSize];
     NSDictionary* storage = [self getStoredValuesForKeys:[command arguments] UsingDefaultValues:false];
     NSString* errorString;
     NSUInteger size;
+
+    storage = [self _stripNulls:storage];
 
     NSData *dataRep = [NSPropertyListSerialization dataFromPropertyList:storage format:NSPropertyListBinaryFormat_v1_0 errorDescription:&errorString];
 
