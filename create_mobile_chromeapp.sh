@@ -20,6 +20,13 @@ function AddPlugin {
   fi
 }
 
+function FailIfNotExists {
+  if [[ ! -d "$1" ]]; then
+    echo -n "Expected path does not exist: $1"
+    exit 1
+  fi
+}
+
 ################################################################################
 # Set default paths
 # This script expects to be run from any subdirectory of `mobile_chrome_apps` folder, and expects your local directory structure to be as such:
@@ -42,13 +49,10 @@ ROOT_PATH="${ROOT_PATH%/}"
 CORDOVA_PATH="${CORDOVA_PATH:-$ROOT_PATH/$CORDOVA_DIR_NAME}"
 MCA_PATH="${MCA_PATH:-$ROOT_PATH/$MCA_DIR_NAME}"
 
-echo -n "Expecting path to exist: $CORDOVA_PATH..."
-[ -d "$CORDOVA_PATH" ] || exit
-echo "ok"
-
-echo -n "Expecting path to exist: $MCA_PATH..."
-[ -d "$MCA_PATH" ] || exit
-echo "ok"
+for x in cordova-js cordova-ios cordova-android cordova-cli cordova-plugman; do
+  FailIfNotExists "$CORDOVA_PATH/$x"
+done
+FailIfNotExists "$MCA_PATH/chrome-cordova"
 
 if [ -n "$1" ]; then
   TARGET="$1"
