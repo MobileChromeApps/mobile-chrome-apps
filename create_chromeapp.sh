@@ -72,7 +72,7 @@ echo
 ################################################################################
 # Create the project
 #
-set -vx # Echo all commands
+set -x # Echo all commands
 
 cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
@@ -80,7 +80,7 @@ cd "$TARGET"
 cordova platform add android
 cordova platform add ios
 
-set +vx # No more echo
+set +x # No more echo
 
 ################################################################################
 # Install plugins
@@ -107,14 +107,14 @@ fi
 ################################################################################
 # Massage the workspace
 #
-set -vx # Echo all commands
+set -x # Echo all commands
 
 cordova prepare
 rm -rf app/www/spec app/www/spec.html app/www/js app/www/index.html app/www/css app/www/img
 rm -rf platforms/ios/CordovaLib
 "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
 
-set +vx # No more echo
+set +x # No more echo
 
 ################################################################################
 # Report results
