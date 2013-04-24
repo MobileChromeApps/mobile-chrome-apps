@@ -19,10 +19,10 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/ChromeStorage.java" target-dir="src/org/apache/cordova" />
+    <source-file src="src/android/ChromeStorage.java" target-dir="src/com/google/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeStorage" value="org.apache.cordova.ChromeStorage" />
+      <plugin name="ChromeStorage" value="com.google.cordova.ChromeStorage" />
     </config-file>
   </platform>
 

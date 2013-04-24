@@ -19,10 +19,10 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/ChromeSocket.java" target-dir="src/org/apache/cordova" />
+    <source-file src="src/android/ChromeSocket.java" target-dir="src/com/google/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeSocket" value="org.apache.cordova.ChromeSocket" />
+      <plugin name="ChromeSocket" value="com.google.cordova.ChromeSocket" />
     </config-file>
   </platform>
 
