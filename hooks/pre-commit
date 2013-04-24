@@ -18,32 +18,8 @@ missing_license=0
 IFS='
 '
 for FILE in $(git diff --cached --name-only $against); do
-  # Ignore deleted files.
-  [[ -e "$FILE" ]] || continue;
-  # Ignore binary files.
-  ( file --mime "$FILE" | grep charset=binary >/dev/null ) && continue
-  # Ignore third_party.
-  [[ "$FILE" = *third_party* ]] && continue
-  # Ignore markdown
-  [[ "$FILE" = *.md ]] && continue
-
-  # Find files with trailing whitespace
-  if grep -E '\s+$' "$FILE"; then
-    echo -n "Fixing whitespace in $FILE"
-  fi
-  # Fix up trailing white-space & extra lines at EOF.
-  sed -i '' 's/[  ]*$//' "$FILE" && \
-      sed -i '' -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' "$FILE" && \
-      git add "$FILE"
-
-  # Ignore assets for license header.
-  [[ "$FILE" = *assets/* ]] && continue
-  # Check for missing license header.
-  [[ "$FILE" = *third_party* ]] && continue
-  echo checking $FILE
-  if ! head "$FILE" | grep 'The Chromium Authors' > /dev/null; then
+  if ! hooks/check_file.sh "$FILE" yes; then
     missing_license=1
-    echo "Missing license header: $FILE"
   fi
 done
 
