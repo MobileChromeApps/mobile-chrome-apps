@@ -6,6 +6,7 @@ package com.google.cordova;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.util.NavigableSet;
 import java.util.TreeMap;
 
@@ -68,11 +69,16 @@ public class ChromeExtensionURLs extends CordovaPlugin {
         }
 
         InputStream is = null;
-        try {
-            String path = Uri.parse(url).getPath();
-            is = this.cordova.getActivity().getAssets().open("www" + path);
-        } catch (IOException ioe) {
-            return null;
+        String filePath = Uri.parse(url).getPath();
+
+        if ("/chrome-content-loaded".equals(filePath)) {
+            is = new ByteArrayInputStream("Object.defineProperty(document, 'readyState', {get: function() { return 'loading'}, configurable: true });".getBytes());
+        } else {
+            try {
+                is = this.cordova.getActivity().getAssets().open("www" + filePath);
+            } catch (IOException ioe) {
+                return null;
+            }
         }
 
         for(Integer pluginPriority : pluginPrioritySet) {

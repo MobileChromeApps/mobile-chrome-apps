@@ -4,6 +4,7 @@
 
 var Event = require('chrome.common.events');
 var mobile = require('chrome.mobile.impl');
+var ChromeExtensionURLs = require('chrome.helpers.ChromeExtensionURLs');
 
 // The AppWindow created by chrome.app.window.create.
 var createdAppWindow = null;
@@ -101,7 +102,7 @@ function rewritePage(pageContent, filePath) {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
     evalScripts(fgHead, function() {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      cordova.exec(null,null,'ChromeExtensionURLs','release',[])
+      ChromeExtensionURLs.releaseReadyWait();
       evalScripts(fgBody, function() {
         cordova.fireWindowEvent('DOMContentReady');
         cordova.fireWindowEvent('load');

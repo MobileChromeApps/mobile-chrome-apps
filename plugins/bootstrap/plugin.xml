@@ -46,6 +46,7 @@
   <!-- Convert 'chrome-extension://' urls -->
   <platform name="android">
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/com/google/cordova" />
+    <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
     <config-file target="res/xml/config.xml" parent="/cordova/plugins">
       <plugin name="ChromeExtensionURLs" value="com.google.cordova.ChromeExtensionURLs">
         <url-filter value="chrome-extension://" />
@@ -59,6 +60,8 @@
   <platform name="ios">
     <source-file src="src/ios/ChromeExtensionURLs.m" />
     <header-file src="src/ios/ChromeExtensionURLs.h" />
+
+    <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="config.xml" parent="/widget/plugins">
       <plugin name="ChromeExtensionURLs" value="ChromeExtensionURLs" onload="true" />
