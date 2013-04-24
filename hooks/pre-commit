@@ -18,6 +18,8 @@ missing_license=0
 IFS='
 '
 for FILE in $(git diff --cached --name-only $against); do
+  # Ignore deleted files.
+  [[ -e "$FILE" ]] || continue;
   # Ignore binary files.
   ( file --mime "$FILE" | grep charset=binary >/dev/null ) && continue
   # Ignore third_party.

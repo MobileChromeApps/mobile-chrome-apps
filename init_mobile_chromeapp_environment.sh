@@ -3,12 +3,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Running this script should create a working chrome-spec project.
+set -e # Fail on errors
+
 echo "You are setting up Mobile Chrome Apps."
 echo "We will need your sudo password, so prompting for it now."
 sudo true
 
-set -e # Fail on errors
 set -x # Echo all commands
 
 # create the right directory structure
