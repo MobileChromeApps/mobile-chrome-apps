@@ -48,10 +48,14 @@ ROOT_PATH="${ROOT_PATH%/}"
 CORDOVA_PATH="${CORDOVA_PATH:-$ROOT_PATH/$CORDOVA_DIR_NAME}"
 MCA_PATH="${MCA_PATH:-$ROOT_PATH/$MCA_DIR_NAME}"
 
-for x in cordova-js cordova-ios cordova-android cordova-cli cordova-plugman; do
+for x in cordova-js cordova-ios cordova-android; do
   FailIfNotExists "$CORDOVA_PATH/$x"
 done
 FailIfNotExists "$MCA_PATH/chrome-cordova"
+
+# Fail if these aren't installed
+type plugman >/dev/null 2>&1
+type cordova >/dev/null 2>&1
 
 if [ -n "$1" ]; then
   TARGET="$1"
@@ -62,7 +66,6 @@ fi
 ################################################################################
 # Script inputs
 #
-echo
 read -n 1 -p "Install all plugins without prompt? [y/n] " SHOULD_NOT_PROMPT
 echo
 read -n 1 -p "Symlink all your plugins? [y/n] " SHOULD_LINK
