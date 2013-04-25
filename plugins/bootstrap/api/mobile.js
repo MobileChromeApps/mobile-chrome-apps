@@ -39,6 +39,10 @@ exports.bgInit = function(bgWnd) {
   bgWnd.cordova = cordova;
   exports.fgWindow.opener = exports.bgWindow;
 
+   modulemapper = require('cordova/modulemapper');
+   modulemapper.loadMatchingModules(/cordova.*\/symbols$/);
+   modulemapper.mapModules(bgWnd.window);
+
   function onLoad() {
     bgWnd.removeEventListener('load', onLoad, false);
     setTimeout(function() {
