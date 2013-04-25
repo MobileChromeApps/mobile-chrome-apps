@@ -50,6 +50,7 @@ cd ../..
 
 # link files
 cd cordova/cordova-cli
+git checkout -b future_plus_symlinks # This is just so that our edits are easy to track
 rm -rf lib/cordova-*
 ln -s $PWD/../cordova-ios lib/
 ln -s $PWD/../cordova-android lib/

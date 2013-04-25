@@ -10,75 +10,26 @@ APIs, integration shim, and tests for running Chrome Packaged Apps V2 on mobile 
 * Chrome-spec test suite is in `spec/`.
 * Example Chrome app files like `manifest.json` are in `templates/`.
 
-## Step 0: Prerequisites
+## Step 0: iOS and Android Development Prerequisites
 
-You will only need to run these steps once.  These instructions are prepared for OSX only.
+(You will only need to run this step once.)
 
-First, set yourself up for mobile app development:
+Set yourself up for mobile app development:
 
 * [iOS](http://docs.phonegap.com/en/edge/guide_getting-started_ios_index.md.html#Getting%20Started%20with%20iOS)
 * [Android](http://docs.phonegap.com/en/edge/guide_getting-started_android_index.md.html#Getting%20Started%20with%20Android)
 
-Now, to set up your local development you will need to:
+## Step 1: Install Mobile Chrome Apps environment using the `init_mobile_chromeapp_environment.sh` script.
 
-1. Clone the relevant cordova git repositories, as well as this one
-2. Build cordova-js
-3. Install the latest `cordova` command line tool
-4. Symlink some files around
+(You will only need to run this steps once.)
 
-Use the following script to guide you:
+Just run the `init_mobile_chromeapp_environment.sh` script from the local directory of your chosing.  It will:
 
-    # create the right directory structure
-    mkdir cordova
-    mkdir mobile_chrome_apps
-    
-    # clone cordova projects
-    cd cordova
-    git clone https://git-wip-us.apache.org/repos/asf/cordova-ios.git
-    git clone https://git-wip-us.apache.org/repos/asf/cordova-android.git
-    git clone https://git-wip-us.apache.org/repos/asf/cordova-js.git
-    git clone https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
-    git clone https://git-wip-us.apache.org/repos/asf/cordova-cli.git
-    cd ..
-    
-    # clone cordova projects
-    cd mobile_chrome_apps
-    git clone https://github.com/MobileChromeApps/chrome-cordova.git
-    cd ..
-    
-    # build cordova-js
-    cd cordova/cordova-js
-    jake
-    cd ../..
-    
-    # install cordova-plugman
-    cd cordova/cordova-plugman
-    git checkout future
-    npm install
-    sudo npm link
-    cd ../..
-    
-    # install cordova-cli
-    cd cordova/cordova-cli
-    git checkout future
-    npm install
-    sudo npm link
-    npm link plugman
-    cd ../..
-    
-    # link files
-    cd cordova/cordova-cli
-    rm -rf lib/cordova-*
-    ln -s $PWD/../cordova-ios lib/
-    ln -s $PWD/../cordova-android lib/
-    rm lib/cordova-ios/CordovaLib/cordova.ios.js
-    ln -s $PWD/../cordova-js/pkg/cordova.ios.js lib/cordova-ios/CordovaLib/
-    rm lib/cordova-android/framework/assets/js/cordova.android.js
-    ln -s $PWD/../cordova-js/pkg/cordova.android.js lib/cordova-android/framework/assets/js/
-    cd ../..
-    
-    # rejoice
-    echo 'Huzzah!'
+1. Set up the right directory structure
+2. Clone the relevant cordova/mobile_chrome_apps repositories
+3. Build `cordova-js`
+4. Install the latest `cordova` command line tool
+5. Massage aka symlink files around for you
 
 ## Creating projects using the `create_chromeapp.sh` script.
 
@@ -103,6 +54,10 @@ Finally, put your chrome app directly inside your newly created `app/www/` direc
 
 ## Building and running
 
+First step, and the step to do after any modification to your app, is to run:
+
+    cordova prepare
+
 For iOS, you can open the project in xcode using:
 
     open platforms/ios/*.xcodeproj/
@@ -111,7 +66,6 @@ For Android, you will need to create a new Android project, using the import exi
 
 For Either, you can use the cordova command line tools:
 
-    cordova prepare # sadly, required after each modification to your app
     cordova build ios
     cordova build android
     cordova emulate ios
