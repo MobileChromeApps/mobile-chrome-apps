@@ -10,4 +10,5 @@ fi
 
 APPID=$1
 
-wget "https://clients2.google.com/service/update2/crx?response=redirect&x=id%3D${APPID}%26uc" -O "${APPID}.crx"
+#wget "https://clients2.google.com/service/update2/crx?response=redirect&x=id%3D${APPID}%26uc" -O "${APPID}.crx"
+curl -L "https://clients2.google.com/service/update2/crx?response=redirect&x=id%3D${APPID}%26uc" -o "${APPID}.crx"
