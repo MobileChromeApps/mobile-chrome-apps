@@ -5,6 +5,18 @@
 
 set -e # Fail on errors
 
+################################################################################
+# Helpers
+#
+function GitCloneIfNotExists {
+  if [[ ! -d "$1" ]]; then
+    git clone "$1"
+  fi
+}
+
+################################################################################
+# Script
+#
 echo "You are setting up Mobile Chrome Apps."
 echo "We will need your sudo password, so prompting for it now."
 sudo true
@@ -17,16 +29,16 @@ mkdir -p mobile_chrome_apps
 
 # clone cordova projects
 cd cordova
-git clone https://git-wip-us.apache.org/repos/asf/cordova-ios.git
-git clone https://git-wip-us.apache.org/repos/asf/cordova-android.git
-git clone https://git-wip-us.apache.org/repos/asf/cordova-js.git
-git clone https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
-git clone https://git-wip-us.apache.org/repos/asf/cordova-cli.git
+GitCloneIfNotExists https://git-wip-us.apache.org/repos/asf/cordova-ios.git
+GitCloneIfNotExists https://git-wip-us.apache.org/repos/asf/cordova-android.git
+GitCloneIfNotExists https://git-wip-us.apache.org/repos/asf/cordova-js.git
+GitCloneIfNotExists https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
+GitCloneIfNotExists https://git-wip-us.apache.org/repos/asf/cordova-cli.git
 cd ..
 
 # clone cordova projects
 cd mobile_chrome_apps
-git clone https://github.com/MobileChromeApps/chrome-cordova.git
+GitCloneIfNotExists https://github.com/MobileChromeApps/chrome-cordova.git
 cd ..
 
 # build cordova-js
@@ -34,35 +46,32 @@ cd cordova/cordova-js
 jake
 cd ../..
 
-# install cordova-plugman
-cd cordova/cordova-plugman
-npm install
-sudo npm link
-cd ../..
+# install cordova-plugman, if it isn't already installed
+type plugman >/dev/null 2>&1 || {
+  cd cordova/cordova-plugman
+  npm install
+  sudo npm link
+  cd ../..
+}
 
-# install cordova-cli
-cd cordova/cordova-cli
-git checkout future # TODO: remove once we merge back future branch
-npm install
-sudo npm link
-npm link plugman
-cd ../..
+# install cordova-cli, if it isn't already installed
+type cordova >/dev/null 2>&1 || {
+  cd cordova/cordova-cli
+  git checkout future # TODO: remove once we merge back future branch
+  npm install
+  sudo npm link
+  npm link plugman
 
-# link files
-cd cordova/cordova-cli
-git checkout -b future_plus_symlinks # This is just so that our edits are easy to track
-rm -rf lib/cordova-*
-ln -s $PWD/../cordova-ios lib/
-ln -s $PWD/../cordova-android lib/
-rm lib/cordova-ios/CordovaLib/cordova.ios.js
-ln -s $PWD/../cordova-js/pkg/cordova.ios.js lib/cordova-ios/CordovaLib/
-rm lib/cordova-android/framework/assets/js/cordova.android.js
-ln -s $PWD/../cordova-js/pkg/cordova.android.js lib/cordova-android/framework/assets/js/
-cd ../..
+  git checkout -b future_plus_symlinks # This is just so that our edits are easy to track
+  rm -rf lib/cordova-*
+  ln -s $PWD/../cordova-ios lib/
+  ln -s $PWD/../cordova-android lib/
+  cd ../..
+}
 
 # quick test
-which cordova
-which plugman
+type plugman
+type cordova
 
 set +x # No more echo
 
