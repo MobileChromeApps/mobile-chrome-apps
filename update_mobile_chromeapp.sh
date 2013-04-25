@@ -47,8 +47,20 @@ type plugman >/dev/null 2>&1
 type cordova >/dev/null 2>&1
 
 ################################################################################
+# Script
+#
+set -x # Echo all commands
 
 cordova prepare
 
-#ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.ios.js lib/cordova-ios/CordovaLib/
-#ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.android.js lib/cordova-android/framework/assets/js/
+ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.ios.js platforms/ios/www/cordova.js
+ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.android.js platforms/android/assets/www/cordova.js
+
+function AddAccessTag {
+    sed -i '' '
+/access/ a\
+\ \ \ \ <access src="chrome-extension://*" />
+' "$1"
+}
+
+AddAccessTag platforms/ios/*/config.xml
