@@ -102,11 +102,7 @@ function rewritePage(pageContent, filePath) {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
     evalScripts(fgHead, function() {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      ChromeExtensionURLs.releaseReadyWait();
-      evalScripts(fgBody, function() {
-        cordova.fireWindowEvent('DOMContentReady');
-        cordova.fireWindowEvent('load');
-      })
+      evalScripts(fgBody, ChromeExtensionURLs.releaseReadyWait);
     });
   }
   // Put everything before the body tag in the head.

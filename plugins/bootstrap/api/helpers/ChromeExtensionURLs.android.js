@@ -4,5 +4,6 @@
 
 exports.releaseReadyWait = function() {
   Object.defineProperty(document, 'readyState', {get: function() { return 'complete'}, configurable: true });
+  cordova.fireWindowEvent('DOMContentReady');
+  cordova.fireWindowEvent('load');
 };
-

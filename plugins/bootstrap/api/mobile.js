@@ -22,13 +22,15 @@ function createBgChrome() {
 }
 
 exports.init = function() {
-  // Self-destruct so that code in here can be GC'ed.
-  exports.init = null;
   var iframe = document.createElement('iframe');
   iframe.src = 'chromebgpage.html';
   iframe.style.display = 'none';
   exports.eventIframe = iframe;
   document.body.appendChild(iframe);
+  // Remove the script chrome-content-loaded script tag so that it
+  // is not re-injected when re-writing the page.
+  var scriptTag = document.body.querySelector('script');
+  scriptTag.parentNode.removeChild(scriptTag);
 };
 
 exports.bgInit = function(bgWnd) {
