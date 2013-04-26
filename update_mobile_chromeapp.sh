@@ -15,6 +15,13 @@ function FailIfNotExists {
   fi
 }
 
+function AddAccessTag {
+    sed -i '' '
+/access/ a\
+\ \ \ \ <access origin="chrome-extension://*" />
+' "$1"
+}
+
 ################################################################################
 # Set default paths
 # This script expects to be run from any subdirectory of `mobile_chrome_apps` folder, and expects your local directory structure to be as such:
@@ -55,12 +62,5 @@ cordova prepare
 
 ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.ios.js platforms/ios/www/cordova.js
 ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.android.js platforms/android/assets/www/cordova.js
-
-function AddAccessTag {
-    sed -i '' '
-/access/ a\
-\ \ \ \ <access src="chrome-extension://*" />
-' "$1"
-}
 
 AddAccessTag platforms/ios/*/config.xml
