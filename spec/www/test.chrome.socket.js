@@ -38,15 +38,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
         chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
           expect(listenResult).toEqual(0);
           chrome.socket.destroy(createInfo.socketId);
-        });
-      });
-    });
-
-    itWaitsForDone('port is available (sanity test)', function(done) {
-      chrome.socket.create('tcp', function(createInfo) {
-        chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
-          expect(listenResult).toEqual(0);
-          chrome.socket.destroy(createInfo.socketId);
+          done();
         });
       });
     });
