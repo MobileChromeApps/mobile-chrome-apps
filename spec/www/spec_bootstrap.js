@@ -15,15 +15,24 @@ window.runningInBg = true;
 
 (function() {
   var jasmineLoaded = false;
+  var bufferedLogs = [];
 
   function log(text) {
-    if (chromespec.fgDoc) {
-      var logElem = chromespec.fgDoc.querySelector('#logs');
-      if (logElem) {
-        var newPre = chromespec.fgDoc.createElement('pre');
-        newPre.textContent = text;
-        logElem.appendChild(newPre);
+    var logElem = chromespec.fgDoc && chromespec.fgDoc.querySelector('#logs');
+    if (logElem) {
+      // Empty out buffered logs.
+      if (bufferedLogs) {
+        var logs = bufferedLogs;
+        bufferedLogs = null;
+        for (var i = 0; i < logs.length; ++i) {
+          log(logs[i]);
+        }
       }
+      var newPre = chromespec.fgDoc.createElement('pre');
+      newPre.textContent = text;
+      logElem.appendChild(newPre);
+    } else {
+      bufferedLogs.push(text);
     }
     console.log(text);
   }
@@ -187,7 +196,7 @@ window.runningInBg = true;
     }
   }
 
-  log('App started.');
+  log('App started. ID = ' + chrome.runtime.id);
   chrome.app.runtime.onLaunched.addListener(startUpLogic);
 
   chromespec.changePage = changePage;

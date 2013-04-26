@@ -37,6 +37,7 @@ h2 {
 
 #logs {
   word-break: break-word;
+  -webkit-user-select: initial;
 }
 
 .btn {
