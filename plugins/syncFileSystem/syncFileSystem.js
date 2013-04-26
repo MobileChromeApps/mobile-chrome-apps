@@ -140,8 +140,34 @@ function syncFile(fileEntry, callback) {
 
 // This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
 function getSyncableParentDirectoryId(callback) {
-    // TODO(maxw): Implement this!
-    callback('0B6db2ygaaDzgRWtFVTEwSi1GYnM');
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Create a query that locates the desired directory.
+        var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem"';
+
+        // Send a request to upload the file.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log('Successfully got directories.');
+
+                    callback(JSON.parse(xhr.responseText).items[0].id);
+                } else {
+                    console.log('Failed to get directories with status ' + xhr.status + '.');
+                }
+            }
+        };
+
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send();
+    };
+
+    getTokenString(onGetTokenStringSuccess);
 }
 
 //----------
@@ -150,8 +176,14 @@ function getSyncableParentDirectoryId(callback) {
 
 // This function initiates a web auth flow, eventually getting a token string and passing it to the given callback.
 function getTokenString(callback) {
+	// TODO(maxw): Handle this correctly.  Tokens expire!
+	if (_tokenString) {
+		callback(_tokenString);
+		return;
+	}
+
     // First, initiate the web auth flow.
-    var webAuthDetails = new chrome.identity.WebAuthFlowDetails('https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file');
+    var webAuthDetails = new chrome.identity.WebAuthFlowDetails('https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive');
     chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
         if (typeof url === 'undefined' || url === '') {
             console.log('Failed to complete web auth flow.');
