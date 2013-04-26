@@ -5,8 +5,6 @@
 // Initialization code for the Chrome plugins API.
 // Adds a deviceready listener that initializes the Chrome wrapper.
 
-console.log('adding event');
 require('cordova/channel').onCordovaReady.subscribe(function() {
-  console.log('deviceready caught');
   require('chrome.mobile.impl').init();
 });
