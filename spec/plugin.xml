@@ -33,6 +33,7 @@
   <asset src="www/page.jasmine.js" target="page.jasmine.js" />
   <asset src="www/page.runtime.js" target="page.runtime.js" />
   <asset src="www/page.socket.js" target="page.socket.js" />
+  <asset src="www/page.syncFileSystem.js" target="page.syncFileSystem.js" />
   <asset src="www/polyfills/function_bind.js" target="polyfills/function_bind.js" />
   <asset src="www/spec_bootstrap.js" target="spec_bootstrap.js" />
   <asset src="www/spec_styles.css" target="spec_styles.css" />

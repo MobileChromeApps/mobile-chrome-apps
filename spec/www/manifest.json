@@ -19,6 +19,7 @@
         "page.identity.js",
         "page.runtime.js",
         "page.socket.js",
+        "page.syncFileSystem.js",
         "background.js"
       ]
     }

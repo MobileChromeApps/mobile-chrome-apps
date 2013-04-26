@@ -9,4 +9,5 @@ chromespec.registerJasmineTest('chrome.i18n');
 chromespec.registerJasmineTest('chrome.runtime');
 chromespec.registerJasmineTest('chrome.storage');
 chromespec.registerJasmineTest('chrome.socket');
+chromespec.registerJasmineTest('chrome.syncFileSystem');
 chromespec.registerJasmineTest('pageload');
