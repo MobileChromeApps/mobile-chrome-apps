@@ -9,7 +9,7 @@ set -e # Fail on errors
 # Helpers
 #
 function GitCloneIfNotExists {
-  if [[ ! -d "$1" ]]; then
+  if [[ ! -d "$(basename $1 .git)" ]]; then
     git clone "$1"
   fi
 }
