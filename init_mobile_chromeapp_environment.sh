@@ -18,8 +18,6 @@ function GitCloneIfNotExists {
 # Script
 #
 echo "You are setting up Mobile Chrome Apps."
-echo "We will need your sudo password, so prompting for it now."
-sudo true
 
 set -x # Echo all commands
 
