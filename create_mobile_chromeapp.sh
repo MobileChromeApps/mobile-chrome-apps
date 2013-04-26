@@ -54,8 +54,14 @@ done
 FailIfNotExists "$MCA_PATH/chrome-cordova"
 
 # Fail if these aren't installed
-type plugman >/dev/null 2>&1
-type cordova >/dev/null 2>&1
+if ! type plugman >/dev/null 2>&1; then
+  echo "Plugman not installed."
+  exit 1
+fi
+if ! type cordova >/dev/null 2>&1; then
+  echo "Cordova-cli not installed."
+  exit 1
+fi
 
 if [ -n "$1" ]; then
   TARGET="$1"

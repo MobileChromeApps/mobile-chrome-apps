@@ -73,8 +73,14 @@ fi
 cd ../..
 
 # quick test
-type plugman
-type cordova
+if ! type plugman >/dev/null 2>&1; then
+  echo "Plugman not installed."
+  exit 1
+fi
+if ! type cordova >/dev/null 2>&1; then
+  echo "Cordova-cli not installed."
+  exit 1
+fi
 
 set +x # No more echo
 
