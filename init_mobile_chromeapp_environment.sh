@@ -59,13 +59,18 @@ type cordova >/dev/null 2>&1 || {
   npm install
   sudo npm link
   npm link plugman
+  cd ../..
+}
 
+# make sure we are symlinking libs in cordova-cli
+cd cordova/cordova-cli
+if [ ! -h "lib/cordova-ios" -o ! -h "lib/cordova-android" ]; then
   git checkout -b future_plus_symlinks # This is just so that our edits are easy to track
   rm -rf lib/cordova-*
   ln -s $PWD/../cordova-ios lib/
   ln -s $PWD/../cordova-android lib/
-  cd ../..
-}
+fi
+cd ../..
 
 # quick test
 type plugman
