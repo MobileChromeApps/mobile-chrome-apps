@@ -142,7 +142,7 @@ window.runningInBg = true;
   }
 
   function onUiWindowLoad() {
-    injectStyle('jasmine-1.2.0/jasmine.css');
+    injectStyle('third_party/jasmine-1.2.0/jasmine.css');
     injectStyle('spec_styles.css');
     // Inject jasmine.js again so that it will register it's global helper functions (e.g. it, describe).
     var scripts = [
