@@ -37,13 +37,11 @@ exports.bgInit = function(bgWnd) {
   // Self-destruct so that code in here can be GC'ed.
   exports.bgInit = null;
   exports.bgWindow = bgWnd;
-  bgWnd.chrome = createBgChrome();
-  bgWnd.cordova = cordova;
-  exports.fgWindow.opener = exports.bgWindow;
 
-   modulemapper = require('cordova/modulemapper');
-   modulemapper.loadMatchingModules(/cordova.*\/symbols$/);
-   modulemapper.mapModules(bgWnd.window);
+  require('cordova/modulemapper').mapModules(bgWnd.window);
+
+  bgWnd.chrome = createBgChrome();
+  exports.fgWindow.opener = exports.bgWindow;
 
   function onLoad() {
     bgWnd.removeEventListener('load', onLoad, false);
