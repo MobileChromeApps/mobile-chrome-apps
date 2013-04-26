@@ -11,10 +11,10 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
   addButton('requestFileSystem', function() {
     var requestFileSystemCallback = function(fileSystem) {
       var onGetFileSuccess = function(fileEntry) {
-
+        chromespec.log("File created!");
       };
       var onGetFileError = function(e) {
-      	console.log('error: ' + e.code);
+        chromespec.log('Error: ' + e.code);
       };
       
       fileSystem.root.getFile("newFile.txt", { create: true }, onGetFileSuccess, onGetFileError);

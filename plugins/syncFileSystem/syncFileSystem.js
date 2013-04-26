@@ -20,7 +20,6 @@ function enableSyncabilityForFileEntry(fileEntry) {
 
 // This function overrides the necessary functions on a given DirectoryEntry to enable syncability.
 function enableSyncabilityForDirectoryEntry(directoryEntry) {
-    directoryEntry.stdGetFile = directoryEntry.getFile;
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time!
@@ -34,8 +33,8 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
             syncFile(fileEntry, onSyncFileSuccess);
         };
 
-        directoryEntry.stdGetFile(path, options, augmentedSuccessCallback, errorCallback);
-        // TODO(maxw): Get rid of the stdGetFile you've just added to directoryEntry.  Find, perhaps, a better way to do this.
+		// Call the original function.  The augmented success callback will take care of the syncability addition work.
+        DirectoryEntry.prototype.getFile.call(directoryEntry, path, options, augmentedSuccessCallback, errorCallback);
     };
 }
 
