@@ -40,13 +40,10 @@ function FailIfNotExists {
 #    - experimental
 #    - ...
 #
-CORDOVA_DIR_NAME="cordova"
 MCA_DIR_NAME="mobile_chrome_apps"
 
-ROOT_PATH="${PWD%$MCA_DIR_NAME/*}"
-ROOT_PATH="${ROOT_PATH%/}"
-CORDOVA_PATH="${CORDOVA_PATH:-$ROOT_PATH/$CORDOVA_DIR_NAME}"
-MCA_PATH="${MCA_PATH:-$ROOT_PATH/$MCA_DIR_NAME}"
+MCA_PATH="${MCA_PATH:-$PWD/$(dirname $0)/..}"
+CORDOVA_PATH="${CORDOVA_PATH:-$MCA_PATH/../cordova}"
 
 for x in cordova-js cordova-ios cordova-android; do
   FailIfNotExists "$CORDOVA_PATH/$x"
@@ -98,6 +95,10 @@ set +x # No more echo
 # Install plugins
 #
 for PLUGIN_PATH in "$MCA_PATH/chrome-cordova/plugins/"*; do
+  if [[ ! -d "$PLUGIN_PATH" ]]; then
+    echo "Invalid plugin path: $PLUGIN_PATH"
+    exit 1
+  fi
   if [ "$SHOULD_NOT_PROMPT" != "y" ]; then
     read -n 1 -p "shall I add plugin: '$(basename $PLUGIN_PATH)'? [y/n] " SHOULD_INSTALL
     echo
