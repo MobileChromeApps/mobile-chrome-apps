@@ -9,15 +9,27 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
   }
 
   addButton('requestFileSystem', function() {
+    // Request the file system, create a file, and write to it.
     var requestFileSystemCallback = function(fileSystem) {
+      var onCreateWriterSuccess = function(fileWriter) {
+        fileWriter.onwrite = function(evt) {
+          chromespec.log('Wrote to file!');
+        };
+        fileWriter.write('Mobile text!');
+      };
+      var onCreateWriterError = function(e) {
+        chromespec.log('Error creating writer: ' + e.code);
+      };
+
       var onGetFileSuccess = function(fileEntry) {
         chromespec.log("File created!");
+        fileEntry.createWriter(onCreateWriterSuccess, onCreateWriterError);
       };
       var onGetFileError = function(e) {
-        chromespec.log('Error: ' + e.code);
+        chromespec.log('Error getting file: ' + e.code);
       };
       
-      fileSystem.root.getFile("newFile.txt", { create: true }, onGetFileSuccess, onGetFileError);
+      fileSystem.root.getFile("mobileFoo.txt", { create: true }, onGetFileSuccess, onGetFileError);
     };
 
     chrome.syncFileSystem.requestFileSystem(requestFileSystemCallback);
