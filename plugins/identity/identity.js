@@ -31,19 +31,16 @@ exports.getAuthToken = function(details, callback) {
         // Not calling callback as it wasnt provided
         return;
     }
-    var win = function(token) {
-        callback(token);
-    };
     var fail = function() {
         callback();
     };
 
     if (platformId == 'android') {
         // Use native implementation for logging into google accounts
-        cordova.exec(win, fail, 'ChromeIdentity', 'getAuthToken', [details]);
+        cordova.exec(callback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
     } else {
         // Use web app oauth flow
-        _getAuthTokenJS(win, fail, details);
+        _getAuthTokenJS(callback, fail, details);
     }
 };
 
@@ -92,9 +89,10 @@ function _getAuthTokenJS(win, fail , details) {
         failMessage = 'scopes missing from manifest.json';
     }
 
-    if(failed === true) {
+    if (failed) {
         chrome.runtime.lastError = { 'message' : failMessage };
         fail();
+        return;
     }
 
     var authURLBase = 'https://accounts.google.com/o/oauth2/auth?response_type=token';
@@ -157,7 +155,8 @@ function _launchInAppBrowser(authURL, redirectedURL, callback) {
 }
 
 function _launchInAppBrowserForOauth1and2(authURL, callback) {
-    var breakParams = [ "access_token", "oauth_verifier"];
+    // TODO: see what the termination conditions are for desktop's implementation.
+    var breakParams = [ 'access_token', 'oauth_verifier', 'token'];
     var oAuthBrowser = window.open(authURL, '_blank', 'location=yes');
 
     var listener = function(event) {
@@ -175,6 +174,5 @@ function _launchInAppBrowserForOauth1and2(authURL, callback) {
         }
     };
 
-    oAuthBrowser.addEventListener('loadstart', listener);
+    oAuthBrowser.addEventListener('loadstart', function(e) {setTimeout(function(){listener(e)}, 0)});
 }
-
