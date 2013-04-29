@@ -60,7 +60,7 @@ set -x # Echo all commands
 
 cordova prepare
 
-ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.ios.js platforms/ios/www/cordova.js
-ln -fs $CORDOVA_PATH/cordova-js/pkg/cordova.android.js platforms/android/assets/www/cordova.js
+cp -f $CORDOVA_PATH/cordova-js/pkg/cordova.ios.js platforms/ios/www/cordova.js
+cp -f $CORDOVA_PATH/cordova-js/pkg/cordova.android.js platforms/android/assets/www/cordova.js
 
 AddAccessTag platforms/ios/*/config.xml
