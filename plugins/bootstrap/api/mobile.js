@@ -22,20 +22,15 @@ function createBgChrome() {
 }
 
 exports.init = function() {
-  var iframe = document.createElement('iframe');
-  iframe.src = 'chromebgpage.html';
-  iframe.style.display = 'none';
-  exports.eventIframe = iframe;
-  document.body.appendChild(iframe);
-  // Remove the script chrome-content-loaded script tag so that it
-  // is not re-injected when re-writing the page.
-  var scriptTag = document.body.querySelector('script');
-  scriptTag.parentNode.removeChild(scriptTag);
+  // Assigning innerHTML here has the side-effect of removing the
+  // chrome-content-loaded script tag. Removing it is required so that the
+  // page re-writting logic does not try and re-evaluate it.
+  document.body.innerHTML = '<iframe src="chromebgpage.html" style="display:none">';
+
+  exports.eventIframe = document.body.firstChild;
 };
 
 exports.bgInit = function(bgWnd) {
-  // Self-destruct so that code in here can be GC'ed.
-  exports.bgInit = null;
   exports.bgWindow = bgWnd;
 
   require('cordova/modulemapper').mapModules(bgWnd.window);
