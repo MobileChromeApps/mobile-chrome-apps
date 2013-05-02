@@ -15,11 +15,55 @@ var _tokenString;
 // When we create or get the app's syncable Drive directory, we store its id here.
 var _syncableDirectoryId;
 
+// Error codes.
+var FILE_NOT_FOUND_ERROR = 1;
+var MULTIPLE_FILES_FOUND_ERROR = 2;
+var REQUEST_FAILED_ERROR = 3;
+
+// This function gets the Drive file id using the given query.
+function getDriveFileId(query, successCallback, errorCallback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Send a request to locate the directory.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log('Successfully searched for file using query: ' + query + '.');
+                    var items = JSON.parse(xhr.responseText).items;
+                    if (items.length == 0) {
+                        console.log('  File not found.');
+                        errorCallback(FILE_NOT_FOUND_ERROR);
+                    } else if (items.length == 1) {
+                        console.log('  File found with id: ' + items[0].id + '.');
+                        successCallback(items[0].id);
+                    } else {
+                        console.log('  Multiple (' + items.length + ') copies found.');
+                        errorCallback(MULTIPLE_FILES_FOUND_ERROR);
+                    }
+                } else {
+                    console.log('  Search failed with status ' + xhr.status + '.');
+                    errorCallback(REQUEST_FAILED_ERROR);
+                }
+            }
+        };
+
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send();
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
 // This function overrides the necessary functions on a given DirectoryEntry to enable syncability.
 function enableSyncabilityForDirectoryEntry(directoryEntry) {
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
-        // TODO(maxw): Only sync if you need to, not every time!
+        // TODO(maxw): Only sync if you need to, not every time (namely, when a file is created rather than merely retrieved).
         var onSyncFileSuccess = function(fileEntry) {
             if (successCallback) {
                 successCallback(fileEntry);
@@ -162,77 +206,36 @@ function syncFile(fileEntry, callback) {
 
 // This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
 function getSyncableParentDirectoryId(callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Create a query that locates the desired directory.
-        var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem"';
-
-        // Send a request to locate the directory.
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log('Successfully searched for Chrome Syncable FileSystem directory.');
-                    var items = JSON.parse(xhr.responseText).items;
-                    if (items.length == 0) {
-                        console.log('  Not found.');
-                    } else {
-                        console.log('  Directory found.');
-                        callback(items[0].id);
-                    }
-                } else {
-                    console.log('Failed to search for Chrome Syncable FileSystem directory with status ' + xhr.status + '.');
-                }
-            }
-        };
-
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send();
-    };
-
-    getTokenString(onGetTokenStringSuccess);
+    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem"';
+    getDriveFileId(query, callback);
 }
 
-// This function retrieves the Drive directory id of the app's syncable directory.
+// This function retrieves the Drive directory id of the app's syncable directory.  If one doesn't exist, it is created.
 function getSyncableAppDirectoryId(parentDirectoryId, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Create a query that locates the desired directory.
-        var query = 'mimeType = "application/vnd.google-apps.folder" and "' + parentDirectoryId + '" in parents and title = "' + _appId + '"';
-
-        // Send a request to locate the directory.
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log('Successfully searched for syncable app directory.');
-                    var items = JSON.parse(xhr.responseText).items;
-                    if (items.length == 0) {
-                        console.log('  Not found.');
-                        createSyncableAppDirectory(parentDirectoryId, callback);
-                    } else {
-                        console.log('  Directory found: ' + items[0].id);
-                        callback(items[0].id);
-                    }
-                } else {
-                    console.log('Failed to search for syncable app directory with status ' + xhr.status + '.');
-                }
+    if (parentDirectoryId) {
+        var errorCallback = function(e) {
+            // If the app's syncable directory doesn't exist, create it.
+            if (e === FILE_NOT_FOUND_ERROR) {
+                createSyncableAppDirectory(parentDirectoryId, callback);
             }
         };
 
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send();
+        var query = 'mimeType = "application/vnd.google-apps.folder" and "' + parentDirectoryId + '" in parents and title = "' + _appId + '"';
+        getDriveFileId(query, callback, errorCallback);
+    }
+}
+
+// This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
+function getFileId(fileEntry, callback) {
+    var errorCallback = function(e) {
+        // If the file doesn't exist, pass null to the callback.
+        if (e === FILE_NOT_FOUND_ERROR) {
+            callback(null);
+        }
     };
 
-    getTokenString(onGetTokenStringSuccess);
+    var query = 'title = "' + fileEntry.name + '" and "' + _syncableDirectoryId + '" in parents';
+    getDriveFileId(query, callback, errorCallback);
 }
 
 // This function creates the app's syncable directory on Drive.
@@ -263,44 +266,6 @@ function createSyncableAppDirectory(parentDirectoryId, callback) {
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send(JSON.stringify(data));
-    };
-
-    getTokenString(onGetTokenStringSuccess);
-}
-
-// This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
-function getFileId(fileEntry, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Create a query that locates the desired file.
-        var query = 'title = "' + fileEntry.name + '"';
-
-        // Send a request to locate the file.
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log('Successfully searched for file.');
-                    var items = JSON.parse(xhr.responseText).items;
-                    if (items.length == 0) {
-                        console.log('  No such file found.');
-                        callback(null);
-                    } else {
-                        console.log('  File found.');
-                        callback(items[0].id);
-                    }
-                } else {
-                    console.log('Failed to search for file with status ' + xhr.status + '.');
-                }
-            }
-        };
-
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send();
     };
 
     getTokenString(onGetTokenStringSuccess);
