@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//-------
+//=======
 // Drive
-//-------
+//=======
 
 // The app's id is stored here.  It's used for the Drive syncable directory name.
 var _appId = 'chrome-spec';
@@ -20,44 +20,9 @@ var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
 var REQUEST_FAILED_ERROR = 3;
 
-// This function gets the Drive file id using the given query.
-function getDriveFileId(query, successCallback, errorCallback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Send a request to locate the directory.
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log('Successfully searched for file using query: ' + query + '.');
-                    var items = JSON.parse(xhr.responseText).items;
-                    if (items.length == 0) {
-                        console.log('  File not found.');
-                        errorCallback(FILE_NOT_FOUND_ERROR);
-                    } else if (items.length == 1) {
-                        console.log('  File found with id: ' + items[0].id + '.');
-                        successCallback(items[0].id);
-                    } else {
-                        console.log('  Multiple (' + items.length + ') copies found.');
-                        errorCallback(MULTIPLE_FILES_FOUND_ERROR);
-                    }
-                } else {
-                    console.log('  Search failed with status ' + xhr.status + '.');
-                    errorCallback(REQUEST_FAILED_ERROR);
-                }
-            }
-        };
-
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send();
-    };
-
-    getTokenString(onGetTokenStringSuccess);
-}
+//----------------------------------
+// FileSystem function augmentation
+//----------------------------------
 
 // This function overrides the necessary functions on a given DirectoryEntry to enable syncability.
 function enableSyncabilityForDirectoryEntry(directoryEntry) {
@@ -114,6 +79,10 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
         FileWriter.prototype.write.call(fileWriter, data);
     };
 }
+
+//------------------
+// Syncing to Drive
+//------------------
 
 // This function creates a directory on the user's Drive.
 function syncDirectory(directoryEntry, callback) {
@@ -204,6 +173,82 @@ function syncFile(fileEntry, callback) {
     getTokenString(onGetTokenStringSuccess);
 }
 
+// This function creates the app's syncable directory on Drive.
+function createSyncableAppDirectory(parentDirectoryId, callback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Create the data to send.
+        var data = { title: _appId,
+                     parents: [{ id: parentDirectoryId }],
+                     mimeType: 'application/vnd.google-apps.folder' };
+
+        // Send a request to upload the file.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log('Directory created!');
+                    callback(JSON.parse(xhr.responseText).id);
+                } else {
+                    console.log('Failed to create directory with status ' + xhr.status + '.');
+                }
+            }
+        };
+
+        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send(JSON.stringify(data));
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
+//----------------------------
+// Retrieving data from Drive
+//----------------------------
+
+// This function gets the Drive file id using the given query.
+function getDriveFileId(query, successCallback, errorCallback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Send a request to locate the directory.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log('Successfully searched for file using query: ' + query + '.');
+                    var items = JSON.parse(xhr.responseText).items;
+                    if (items.length == 0) {
+                        console.log('  File not found.');
+                        errorCallback(FILE_NOT_FOUND_ERROR);
+                    } else if (items.length == 1) {
+                        console.log('  File found with id: ' + items[0].id + '.');
+                        successCallback(items[0].id);
+                    } else {
+                        console.log('  Multiple (' + items.length + ') copies found.');
+                        errorCallback(MULTIPLE_FILES_FOUND_ERROR);
+                    }
+                } else {
+                    console.log('  Search failed with status ' + xhr.status + '.');
+                    errorCallback(REQUEST_FAILED_ERROR);
+                }
+            }
+        };
+
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send();
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
 // This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
 function getSyncableParentDirectoryId(callback) {
     var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem"';
@@ -238,42 +283,9 @@ function getFileId(fileEntry, callback) {
     getDriveFileId(query, callback, errorCallback);
 }
 
-// This function creates the app's syncable directory on Drive.
-function createSyncableAppDirectory(parentDirectoryId, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Create the data to send.
-        var data = { title: _appId,
-                     parents: [{ id: parentDirectoryId }],
-                     mimeType: 'application/vnd.google-apps.folder' };
-
-        // Send a request to upload the file.
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    console.log('Directory created!');
-                    callback(JSON.parse(xhr.responseText).id);
-                } else {
-                    console.log('Failed to create directory with status ' + xhr.status + '.');
-                }
-            }
-        };
-
-        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send(JSON.stringify(data));
-    };
-
-    getTokenString(onGetTokenStringSuccess);
-}
-
-//----------
+//==========
 // Identity
-//----------
+//==========
 
 // This function initiates a web auth flow, eventually getting a token string and passing it to the given callback.
 function getTokenString(callback) {
@@ -307,9 +319,9 @@ function extractTokenString(url) {
     return remainder.substring(0, endIndex);
 }
 
-//-----------------------
+//=======================
 // chrome.syncFileSystem
-//-----------------------
+//=======================
 
 exports.requestFileSystem = function(callback) {
     var onRequestFileSystemSuccess = function(fileSystem) {
