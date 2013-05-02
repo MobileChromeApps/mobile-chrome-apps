@@ -4,6 +4,8 @@
 
 #import "ChromeExtensionURLs.h"
 
+#import <Cordova/CDVViewController.h>
+
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #import <AssetsLibrary/ALAssetsLibrary.h>
@@ -11,12 +13,58 @@
 
 #pragma mark declare
 
+
 @interface ChromeURLProtocol : NSURLProtocol
 @end
+
+@interface ChromeAppCORSURLProtocol : NSURLProtocol {
+    NSURLConnection *proxyConnection;
+}
+@end
+
+//static NSMutableDictionary *whitelists;
 
 static ChromeURLProtocol *outstandingDelayRequest;
 
 static NSString* pathPrefix;
+
+/* This is copied directly from CDVURLProtocol, where it is declared static,
+   for compatibility with Cordova 2.7. In 2.8, CDVViewControllerForRequest should
+   be a public API, and we will be able to remove this code.
+*/
+
+// Returns the registered view controller that sent the given request.
+// If the user-agent is not from a UIWebView, or if it's from an unregistered one,
+// then nil is returned.
+CDVViewController *_viewControllerForRequest(NSURLRequest* request)
+{
+    // The exec bridge explicitly sets the VC address in a header.
+    // This works around the User-Agent not being set for file: URLs.
+    NSString* addrString = [request valueForHTTPHeaderField:@"vc"];
+
+    if (addrString == nil) {
+        NSString* userAgent = [request valueForHTTPHeaderField:@"User-Agent"];
+        if (userAgent == nil) {
+            return nil;
+        }
+        NSUInteger bracketLocation = [userAgent rangeOfString:@"(" options:NSBackwardsSearch].location;
+        if (bracketLocation == NSNotFound) {
+            return nil;
+        }
+        addrString = [userAgent substringFromIndex:bracketLocation + 1];
+    }
+
+    long long viewControllerAddress = [addrString longLongValue];
+//    @synchronized(gRegisteredControllers) {
+//        if (![gRegisteredControllers containsObject:[NSNumber numberWithLongLong:viewControllerAddress]]) {
+//            return nil;
+//        }
+//    }
+
+    return (__bridge CDVViewController*)(void*)viewControllerAddress;
+}
+
+
 
 #pragma mark ChromeExtensionURLs
 
@@ -26,6 +74,7 @@ static NSString* pathPrefix;
 {
     self = [super initWithWebView:theWebView];
     if (self) {
+        [NSURLProtocol registerClass:[ChromeAppCORSURLProtocol class]];
         [NSURLProtocol registerClass:[ChromeURLProtocol class]];
 
         pathPrefix = [[NSBundle mainBundle] pathForResource:@"chromeapp.html" ofType:@"" inDirectory:@"www"];
@@ -110,6 +159,62 @@ static NSString* pathPrefix;
 - (void)stopLoading
 {
     // do any cleanup here
+}
+
+@end
+
+#pragma mark ChromeAppCORSURLProtocol
+
+@implementation ChromeAppCORSURLProtocol
+
++ (BOOL)canInitWithRequest:(NSURLRequest*)request
+{
+    NSURL* url = [request URL];
+    if ([[[url scheme] lowercaseString] isEqualToString:@"http"] || [[[url scheme] lowercaseString] isEqualToString:@"https"]) {
+        if ([[request valueForHTTPHeaderField:@"Origin"] length] > 0) {
+            CDVViewController *vc = _viewControllerForRequest(request);
+            return [vc.whitelist URLIsAllowed:url];
+        }
+    }
+    return NO;
+}
+
++ (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
+{
+    return request;
+}
+
+- (void)startLoading
+{
+    NSMutableURLRequest* newRequest = [[self request] mutableCopy];
+    [newRequest setValue:nil forHTTPHeaderField:@"Origin"];
+    proxyConnection = [[NSURLConnection alloc] initWithRequest:newRequest delegate:self];
+}
+
+- (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
+{
+    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        NSHTTPURLResponse *hresponse = (NSHTTPURLResponse *)response;
+        NSMutableDictionary *headers = [[hresponse allHeaderFields] mutableCopy];
+        [headers setValue:@"*" forKey:@"Access-Control-Allow-Origin"];
+        NSHTTPURLResponse *newResponse = [[NSHTTPURLResponse alloc]initWithURL:[hresponse URL] statusCode:[hresponse statusCode] HTTPVersion:@"HTTP/1.1" headerFields:headers];
+        [[self client] URLProtocol:self didReceiveResponse:newResponse cacheStoragePolicy:NSURLCacheStorageAllowed];
+    }
+}
+
+- (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
+{
+    [[self client] URLProtocol:self didLoadData:data];
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection*)connection
+{
+    [[self client] URLProtocolDidFinishLoading:self];
+}
+
+- (void)stopLoading
+{
+    proxyConnection = nil;
 }
 
 @end
