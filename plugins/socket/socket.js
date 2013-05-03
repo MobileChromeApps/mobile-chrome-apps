@@ -212,3 +212,23 @@ exports.getNetworkList = function(callback) {
     }
     exec(callback, null, 'ChromeSocket', 'getNetworkList', []);
 };
+
+exports.joinGroup = function(socketId, address, callback) {
+    console.warn('chrome.socket.joinGroup not implemented yet');
+}
+
+exports.leaveGroup = function(socketId, address, callback) {
+    console.warn('chrome.socket.leaveGroup not implemented yet');
+}
+
+exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
+    console.warn('chrome.socket.setMulticastTimeToLive not implemented yet');
+}
+
+exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
+    console.warn('chrome.socket.setMulticastLoopbackMode not implemented yet');
+}
+
+exports.getJoinedGroups = function(socketId, callback) {
+    console.warn('chrome.socket.getJoinedGroups not implemented yet');
+}

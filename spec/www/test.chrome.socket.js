@@ -21,9 +21,6 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     expect(chrome.socket.getNetworkList).toBeDefined();
   });
 
-  it('should have properties', function() {
-  });
-
   describe('TCP', function() {
     var addr = '127.0.0.1';
     var port = 1234;
@@ -32,69 +29,85 @@ chromeSpec('chrome.socket', function(runningInBackground) {
       arr[i] = i;
     }
     var data = arr.buffer;
+    var createInfo = null;
+
+
+    beforeEachWaitsForDone(function(done) {
+      chrome.socket.create('tcp', function(ci) {
+        createInfo = ci;
+
+        expect(createInfo).toBeTruthy();
+        expect(createInfo.socketId).toBeDefined();
+
+        done();
+      });
+    });
+
+    afterEach(function() {
+      if (createInfo == null) {
+        return;
+      }
+      chrome.socket.disconnect(createInfo.socketId);
+      chrome.socket.destroy(createInfo.socketId);
+      createInfo = null;
+    });
+
 
     itWaitsForDone('port is available (sanity test)', function(done) {
-      chrome.socket.create('tcp', function(createInfo) {
-        chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
-          chrome.socket.disconnect(createInfo.socketId);
-          chrome.socket.destroy(createInfo.socketId);
-          expect(listenResult).toEqual(0);
-          done();
-        });
+      expect(createInfo).not.toBeNull();
+
+      chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+        expect(listenResult).toEqual(0);
+        done();
       });
     });
 
     itWaitsForDone('accept connect read write', function(done) {
-      chrome.socket.create('tcp', {}, function(socketInfo) {
-        expect(socketInfo).toBeTruthy();
-        expect(socketInfo.socketId).toBeDefined();
+      expect(createInfo).not.toBeNull();
 
-        chrome.socket.listen(socketInfo.socketId, addr, port, function(listenResult) {
-          expect(listenResult).toEqual(0);
+      chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+        expect(listenResult).toEqual(0);
 
-          chrome.socket.accept(socketInfo.socketId, function(acceptInfo) {
-            expect(acceptInfo).toBeTruthy();
-            expect(acceptInfo.resultCode).toEqual(0);
-            expect(acceptInfo.socketId).toBeDefined();
+        chrome.socket.accept(createInfo.socketId, function(acceptInfo) {
+          expect(acceptInfo).toBeTruthy();
+          expect(acceptInfo.resultCode).toEqual(0);
+          expect(acceptInfo.socketId).toBeDefined();
 
-            chrome.socket.read(acceptInfo.socketId, function(readResult) {
-              expect(readResult).toBeTruthy();
-              expect(readResult.resultCode).toBeGreaterThan(0);
-              expect(readResult.data).toBeTruthy();
+          chrome.socket.read(acceptInfo.socketId, function(readResult) {
+            expect(readResult).toBeTruthy();
+            expect(readResult.resultCode).toBeGreaterThan(0);
+            expect(readResult.data).toBeTruthy();
 
-              expect(Object.prototype.toString.call(data).slice(8,-1)).toEqual('ArrayBuffer');
-              expect(Object.prototype.toString.call(readResult.data).slice(8,-1)).toEqual('ArrayBuffer');
+            expect(Object.prototype.toString.call(data).slice(8,-1)).toEqual('ArrayBuffer');
+            expect(Object.prototype.toString.call(readResult.data).slice(8,-1)).toEqual('ArrayBuffer');
 
-              var sent = new Uint8Array(data);
-              var recv = new Uint8Array(readResult.data);
+            var sent = new Uint8Array(data);
+            var recv = new Uint8Array(readResult.data);
 
-              expect(recv.length).toEqual(sent.length);
-              for (var i = 0; i < recv.length; i++) {
-                expect(recv[i]).toEqual(sent[i]);
-              }
+            expect(recv.length).toEqual(sent.length);
+            for (var i = 0; i < recv.length; i++) {
+              expect(recv[i]).toEqual(sent[i]);
+            }
 
-              chrome.socket.disconnect(acceptInfo.socketId);
-              chrome.socket.destroy(acceptInfo.socketId);
-              chrome.socket.disconnect(socketInfo.socketId);
-              chrome.socket.destroy(socketInfo.socketId);
+            chrome.socket.disconnect(acceptInfo.socketId);
+            chrome.socket.destroy(acceptInfo.socketId);
 
-              done();
-            });
+            done();
           });
+        });
 
-          chrome.socket.create('tcp', function(socketInfo) {
-            expect(socketInfo).toBeTruthy();
-            expect(socketInfo.socketId).toBeDefined();
+        chrome.socket.create('tcp', function(createInfo2) {
+          expect(createInfo2).toBeTruthy();
+          expect(createInfo2.socketId).toBeDefined();
 
-            chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
-              expect(connectResult).toEqual(0);
+          chrome.socket.connect(createInfo2.socketId, addr, port, function(connectResult) {
+            expect(connectResult).toEqual(0);
 
-              chrome.socket.write(socketInfo.socketId, data, function(writeResult) {
-                expect(writeResult.bytesWritten).toBeGreaterThan(0);
+            chrome.socket.write(createInfo2.socketId, data, function(writeResult) {
+              expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
-                chrome.socket.disconnect(socketInfo.socketId);
-                chrome.socket.destroy(socketInfo.socketId);
-              });
+              chrome.socket.disconnect(createInfo2.socketId);
+              chrome.socket.destroy(createInfo2.socketId);
             });
           });
         });
@@ -102,39 +115,34 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     });
 
     itWaitsForDone('connect before accept', function(done) {
-      chrome.socket.create('tcp', {}, function(socketInfo1) {
-        expect(socketInfo1).toBeTruthy();
-        expect(socketInfo1.socketId).toBeDefined();
+      expect(createInfo).not.toBeNull();
 
-        chrome.socket.listen(socketInfo1.socketId, addr, port, function(listenResult) {
-          expect(listenResult).toEqual(0);
+      chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+        expect(listenResult).toEqual(0);
 
-          chrome.socket.create('tcp', function(socketInfo2) {
-            expect(socketInfo2).toBeTruthy();
-            expect(socketInfo2.socketId).toBeDefined();
+        chrome.socket.create('tcp', function(createInfo2) {
+          expect(createInfo2).toBeTruthy();
+          expect(createInfo2.socketId).toBeDefined();
 
-            chrome.socket.connect(socketInfo2.socketId, addr, port, function(connectResult) {
-              expect(connectResult).toEqual(0);
+          chrome.socket.connect(createInfo2.socketId, addr, port, function(connectResult) {
+            expect(connectResult).toEqual(0);
 
-              chrome.socket.disconnect(socketInfo2.socketId);
-              chrome.socket.destroy(socketInfo2.socketId);
-            });
-
-            setTimeout(function() {
-              chrome.socket.accept(socketInfo1.socketId, function(acceptInfo) {
-                expect(acceptInfo).toBeTruthy();
-                expect(acceptInfo.resultCode).toEqual(0);
-                expect(acceptInfo.socketId).toBeDefined();
-
-                chrome.socket.disconnect(acceptInfo.socketId);
-                chrome.socket.destroy(acceptInfo.socketId);
-                chrome.socket.disconnect(socketInfo1.socketId);
-                chrome.socket.destroy(socketInfo1.socketId);
-
-                done();
-              });
-            }, 100);
+            chrome.socket.disconnect(createInfo2.socketId);
+            chrome.socket.destroy(createInfo2.socketId);
           });
+
+          setTimeout(function() {
+            chrome.socket.accept(createInfo.socketId, function(acceptInfo) {
+              expect(acceptInfo).toBeTruthy();
+              expect(acceptInfo.resultCode).toEqual(0);
+              expect(acceptInfo.socketId).toBeDefined();
+
+              chrome.socket.disconnect(acceptInfo.socketId);
+              chrome.socket.destroy(acceptInfo.socketId);
+
+              done();
+            });
+          }, 100);
         });
       });
     });
@@ -150,15 +158,68 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     }
     var data = arr.buffer;
 
-    itWaitsForDone('bind recvFrom sendTo', function(done) {
-      chrome.socket.create('udp', {}, function(socketInfo) {
-        expect(socketInfo).toBeTruthy();
-        expect(socketInfo.socketId).toBeDefined();
+    itWaitsForDone('port is available (sanity test)', function(done) {
+      chrome.socket.create('udp', function(createInfo) {
+        chrome.socket.bind(createInfo.socketId, addr, port, function(bindResult) {
+          chrome.socket.disconnect(createInfo.socketId);
+          chrome.socket.destroy(createInfo.socketId);
+          expect(bindResult).toEqual(0);
+          done();
+        });
+      });
+    });
 
-        chrome.socket.bind(socketInfo.socketId, addr, port, function(bindResult) {
+    itWaitsForDone('bind to port 0 works', function(done) {
+      chrome.socket.create('udp', {}, function(createInfo) {
+        chrome.socket.bind(createInfo.socketId, addr, 0, function(bindResult) {
+          expect(bindResult).toEqual(0);
+          chrome.socket.disconnect(createInfo.socketId);
+          chrome.socket.destroy(createInfo.socketId);
+          done();
+        });
+      });
+    });
+
+    itWaitsForDone('bind to addr 0.0.0.0 works', function(done) {
+      chrome.socket.create('udp', {}, function(createInfo) {
+        chrome.socket.bind(createInfo.socketId, '0.0.0.0', 0, function(bindResult) {
+          expect(bindResult).toEqual(0);
+          chrome.socket.disconnect(createInfo.socketId);
+          chrome.socket.destroy(createInfo.socketId);
+          done();
+        });
+      });
+    });
+
+    itWaitsForDone('getInfo works', function(done) {
+      chrome.socket.create('udp', {}, function(createInfo) {
+        chrome.socket.bind(createInfo.socketId, '0.0.0.0', 0, function(bindResult) {
+          expect(bindResult).toEqual(0);
+          chrome.socket.getInfo(createInfo.socketId, function(socketInfo) {
+            expect(socketInfo.socketType).toEqual('udp');
+            expect(socketInfo.connected).toBeFalsy();
+            expect(socketInfo.peerAddress).toBeFalsy();
+            expect(socketInfo.peerPort).toBeFalsy();
+            expect(socketInfo.localAddress).toBeTruthy();
+            expect(socketInfo.localPort).toBeTruthy();
+
+            chrome.socket.disconnect(createInfo.socketId);
+            chrome.socket.destroy(createInfo.socketId);
+            done();
+          });
+        });
+      });
+    });
+
+    itWaitsForDone('bind recvFrom sendTo', function(done) {
+      chrome.socket.create('udp', {}, function(createInfo) {
+        expect(createInfo).toBeTruthy();
+        expect(createInfo.socketId).toBeDefined();
+
+        chrome.socket.bind(createInfo.socketId, addr, port, function(bindResult) {
           expect(bindResult).toEqual(0);
 
-          chrome.socket.recvFrom(socketInfo.socketId, function(readResult) {
+          chrome.socket.recvFrom(createInfo.socketId, function(readResult) {
             expect(readResult).toBeTruthy();
             expect(readResult.resultCode).toBeGreaterThan(0);
             expect(readResult.data).toBeDefined();
@@ -176,23 +237,27 @@ chromeSpec('chrome.socket', function(runningInBackground) {
               expect(recv[i]).toEqual(sent[i]);
             }
 
-            chrome.socket.sendTo(socketInfo.socketId, data, readResult.address, readResult.port, function(writeResult) {
-              chrome.socket.destroy(socketInfo.socketId);
+            chrome.socket.sendTo(createInfo.socketId, data, readResult.address, readResult.port, function(writeResult) {
+              chrome.socket.destroy(createInfo.socketId);
             });
           });
 
-          chrome.socket.create('udp', function(socketInfo) {
-            expect(socketInfo).toBeTruthy();
-            expect(socketInfo.socketId).toBeDefined();
+          chrome.socket.create('udp', function(createInfo) {
+            expect(createInfo).toBeTruthy();
+            expect(createInfo.socketId).toBeDefined();
 
-            chrome.socket.sendTo(socketInfo.socketId, data, addr, port, function(writeResult) {
-              expect(writeResult).toBeTruthy();
-              expect(writeResult.bytesWritten).toBeGreaterThan(0);
+            chrome.socket.bind(createInfo.socketId,'0.0.0.0', 0, function(bindResult) {
+              expect(bindResult).toEqual(0);
 
-              chrome.socket.recvFrom(socketInfo.socketId, function(readResult) {
-                chrome.socket.destroy(socketInfo.socketId);
+              chrome.socket.sendTo(createInfo.socketId, data, addr, port, function(writeResult) {
+                expect(writeResult).toBeTruthy();
+                expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
-                done();
+                chrome.socket.recvFrom(createInfo.socketId, function(readResult) {
+                  chrome.socket.destroy(createInfo.socketId);
+
+                  done();
+                });
               });
             });
           });
@@ -202,27 +267,27 @@ chromeSpec('chrome.socket', function(runningInBackground) {
 
 
     itWaitsForDone('bind connect x2 read write', function(done) {
-      chrome.socket.create('udp', {}, function(socketInfo1) {
-        expect(socketInfo1).toBeTruthy();
-        expect(socketInfo1.socketId).toBeDefined();
+      chrome.socket.create('udp', {}, function(createInfo1) {
+        expect(createInfo1).toBeTruthy();
+        expect(createInfo1.socketId).toBeDefined();
 
-        chrome.socket.bind(socketInfo1.socketId, addr, port, function(bindResult1) {
+        chrome.socket.bind(createInfo1.socketId, addr, port, function(bindResult1) {
           expect(bindResult1).toEqual(0);
 
-          chrome.socket.create('udp', function(socketInfo2) {
-            expect(socketInfo2).toBeTruthy();
-            expect(socketInfo2.socketId).toBeDefined();
+          chrome.socket.create('udp', function(createInfo2) {
+            expect(createInfo2).toBeTruthy();
+            expect(createInfo2.socketId).toBeDefined();
 
-            chrome.socket.bind(socketInfo2.socketId, addr, port+1, function(bindResult2) {
+            chrome.socket.bind(createInfo2.socketId, addr, port+1, function(bindResult2) {
               expect(bindResult2).toEqual(0);
 
-              chrome.socket.connect(socketInfo1.socketId, addr, port+1, function(connectResult1) {
+              chrome.socket.connect(createInfo1.socketId, addr, port+1, function(connectResult1) {
                 expect(connectResult1).toEqual(0);
 
-                chrome.socket.connect(socketInfo2.socketId, addr, port, function(connectResult2) {
+                chrome.socket.connect(createInfo2.socketId, addr, port, function(connectResult2) {
                   expect(connectResult2).toEqual(0);
 
-                  chrome.socket.read(socketInfo1.socketId, function(readResult) {
+                  chrome.socket.read(createInfo1.socketId, function(readResult) {
                     expect(readResult).toBeTruthy();
                     expect(readResult.resultCode).toBeGreaterThan(0);
                     expect(readResult.data).toBeTruthy();
@@ -238,15 +303,15 @@ chromeSpec('chrome.socket', function(runningInBackground) {
                       expect(recv[i]).toEqual(sent[i]);
                     }
 
-                    chrome.socket.destroy(socketInfo1.socketId);
+                    chrome.socket.destroy(createInfo1.socketId);
 
                     done();
                   });
 
-                  chrome.socket.write(socketInfo2.socketId, data, function(writeResult) {
+                  chrome.socket.write(createInfo2.socketId, data, function(writeResult) {
                     expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
-                    chrome.socket.destroy(socketInfo2.socketId);
+                    chrome.socket.destroy(createInfo2.socketId);
                   });
 
                 });

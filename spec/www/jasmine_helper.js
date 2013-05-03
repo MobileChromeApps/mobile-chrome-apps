@@ -46,11 +46,35 @@ function itWaitsForDone(description, callback, opt_timeout) {
     done = true;
   };
   var isdone = function() {
-    return done;
+    if (!done) {
+      return false;
+    }
+    done = false;
+    return true;
   };
   var wrapped = function() {
     waitsFor(isdone, opt_timeout);
     return callback(ondone);
   };
   return it(description, wrapped);
+}
+
+function beforeEachWaitsForDone(callback, opt_timeout) {
+  var done = false;
+  var ondone = function() {
+    done = true;
+  };
+  var isdone = function() {
+    if (!done) {
+      return false;
+    }
+    done = false;
+    return true;
+  };
+  var wrapped = function() {
+    waitsFor(isdone, opt_timeout);
+    done = false;
+    return callback(ondone);
+  };
+  return beforeEach(wrapped);
 }
