@@ -30,10 +30,12 @@
     "128": "assets/icon-128x128.png"
   },
   "permissions": [
+    "fileSystem",
     "storage",
     {
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind" ]
-    }
+    },
+    "syncFileSystem"
   ],
   "default_locale": "fr",
   "oauth2": {
