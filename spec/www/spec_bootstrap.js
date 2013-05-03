@@ -94,8 +94,8 @@ window.runningInBg = true;
     if (!jasmineLoaded) {
       jasmineLoaded = true;
       var scripts = [
-          'third_party/jasmine-1.2.0/jasmine.js',
-          'third_party/jasmine-1.2.0/jasmine-html.js',
+          'third_party/jasmine-1.3.1/jasmine.js',
+          'third_party/jasmine-1.3.1/jasmine-html.js',
           'jasmine_helper.js'
           ];
       injectScripts(document, scripts, afterJasmineLoaded);
@@ -142,7 +142,7 @@ window.runningInBg = true;
   }
 
   function onUiWindowLoad() {
-    injectStyle('third_party/jasmine-1.2.0/jasmine.css');
+    injectStyle('third_party/jasmine-1.3.1/jasmine.css');
     injectStyle('spec_styles.css');
     // Inject jasmine.js again so that it will register it's global helper functions (e.g. it, describe).
     var scripts = [

@@ -354,12 +354,12 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     itWaitsForDone('bind connect x2 read write', function(done) {
       expect(createInfo).not.toBeNull();
 
-      chrome.socket.bind(createInfo.socketId, addr, port, function(bindResult1) {
-        expect(bindResult1).toEqual(0);
+      chrome.socket.create('udp', function(createInfo2) {
+        expect(createInfo2).toBeTruthy();
+        expect(createInfo2.socketId).toBeDefined();
 
-        chrome.socket.create('udp', function(createInfo2) {
-          expect(createInfo2).toBeTruthy();
-          expect(createInfo2.socketId).toBeDefined();
+        chrome.socket.bind(createInfo.socketId, addr, port, function(bindResult1) {
+          expect(bindResult1).toEqual(0);
 
           chrome.socket.bind(createInfo2.socketId, addr, port+1, function(bindResult2) {
             expect(bindResult2).toEqual(0);
@@ -393,6 +393,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
                   expect(writeResult).toBeTruthy();
                   expect(writeResult.bytesWritten).toBeGreaterThan(0);
 
+                  chrome.socket.disconnect(createInfo2.socketId);
                   chrome.socket.destroy(createInfo2.socketId);
                 });
 
