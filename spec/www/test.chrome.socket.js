@@ -147,6 +147,77 @@ chromeSpec('chrome.socket', function(runningInBackground) {
       });
     });
 
+    itWaitsForDone('getInfo works', function(done) {
+      expect(createInfo).not.toBeNull();
+
+      chrome.socket.getInfo(createInfo.socketId, function(socketInfo) {
+        expect(socketInfo.socketType).toEqual('tcp');
+        expect(socketInfo.connected).toBeFalsy();
+        expect(socketInfo.localAddress).toBeFalsy();
+        expect(socketInfo.localPort).toBeFalsy();
+        expect(socketInfo.peerAddress).toBeFalsy();
+        expect(socketInfo.peerPort).toBeFalsy();
+
+        chrome.socket.listen(createInfo.socketId, addr, port, function(listenResult) {
+          expect(listenResult).toEqual(0);
+
+          chrome.socket.getInfo(createInfo.socketId, function(socketInfo) {
+            expect(socketInfo.socketType).toEqual('tcp');
+            expect(socketInfo.connected).toBeFalsy();
+            expect(socketInfo.localAddress).toEqual(addr);
+            expect(socketInfo.localPort).toEqual(port);
+            expect(socketInfo.peerAddress).toBeFalsy();
+            expect(socketInfo.peerPort).toBeFalsy();
+
+            chrome.socket.accept(createInfo.socketId, function(acceptInfo) {
+              expect(acceptInfo).toBeTruthy();
+              expect(acceptInfo.resultCode).toEqual(0);
+              expect(acceptInfo.socketId).toBeDefined();
+
+              chrome.socket.getInfo(acceptInfo.socketId, function(socketInfo) {
+                expect(socketInfo.socketType).toEqual('tcp');
+                expect(socketInfo.connected).toBeTruthy();
+                expect(socketInfo.localAddress).toEqual(addr);
+                expect(socketInfo.localPort).toBeGreaterThan(0);
+                expect(socketInfo.peerAddress).toEqual(addr);
+                expect(socketInfo.peerPort).toBeGreaterThan(0);
+
+                chrome.socket.read(acceptInfo.socketId, function(readResult) {
+                  chrome.socket.disconnect(acceptInfo.socketId);
+                  chrome.socket.destroy(acceptInfo.socketId);
+
+                  done();
+                });
+              });
+            });
+
+            chrome.socket.create('tcp', function(createInfo2) {
+              expect(createInfo2).toBeTruthy();
+              expect(createInfo2.socketId).toBeDefined();
+
+              chrome.socket.connect(createInfo2.socketId, addr, port, function(connectResult) {
+                expect(connectResult).toEqual(0);
+
+                chrome.socket.getInfo(createInfo2.socketId, function(socketInfo) {
+                  expect(socketInfo.socketType).toEqual('tcp');
+                  expect(socketInfo.connected).toBeTruthy();
+                  expect(socketInfo.localAddress).toEqual(addr);
+                  expect(socketInfo.localPort).toBeGreaterThan(0);
+                  expect(socketInfo.peerAddress).toEqual(addr);
+                  expect(socketInfo.peerPort).toBeGreaterThan(0);
+
+                  chrome.socket.write(createInfo2.socketId, data, function(writeResult) {
+                    chrome.socket.disconnect(createInfo2.socketId);
+                    chrome.socket.destroy(createInfo2.socketId);
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
   });
 
   describe('UDP', function() {
