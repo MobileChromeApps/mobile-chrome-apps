@@ -13,7 +13,6 @@
 
 #pragma mark declare
 
-
 @interface ChromeURLProtocol : NSURLProtocol
 @end
 
@@ -22,53 +21,20 @@
 }
 @end
 
-//static NSMutableDictionary *whitelists;
+static NSMutableDictionary *whitelists;
 
 static ChromeURLProtocol *outstandingDelayRequest;
 
 static NSString* pathPrefix;
 
-/* This is copied directly from CDVURLProtocol, where it is declared static,
-   for compatibility with Cordova 2.7. In 2.8, CDVViewControllerForRequest should
-   be a public API, and we will be able to remove this code.
-*/
-
-// Returns the registered view controller that sent the given request.
-// If the user-agent is not from a UIWebView, or if it's from an unregistered one,
-// then nil is returned.
-CDVViewController *_viewControllerForRequest(NSURLRequest* request)
-{
-    // The exec bridge explicitly sets the VC address in a header.
-    // This works around the User-Agent not being set for file: URLs.
-    NSString* addrString = [request valueForHTTPHeaderField:@"vc"];
-
-    if (addrString == nil) {
-        NSString* userAgent = [request valueForHTTPHeaderField:@"User-Agent"];
-        if (userAgent == nil) {
-            return nil;
-        }
-        NSUInteger bracketLocation = [userAgent rangeOfString:@"(" options:NSBackwardsSearch].location;
-        if (bracketLocation == NSNotFound) {
-            return nil;
-        }
-        addrString = [userAgent substringFromIndex:bracketLocation + 1];
-    }
-
-    long long viewControllerAddress = [addrString longLongValue];
-//    @synchronized(gRegisteredControllers) {
-//        if (![gRegisteredControllers containsObject:[NSNumber numberWithLongLong:viewControllerAddress]]) {
-//            return nil;
-//        }
-//    }
-
-    return (__bridge CDVViewController*)(void*)viewControllerAddress;
-}
-
-
-
 #pragma mark ChromeExtensionURLs
 
 @implementation ChromeExtensionURLs
+
+__attribute__((constructor))
+static void initialize_whitlist_dict() {
+  whitelists = [[NSMutableDictionary alloc] init];
+}
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
 {
@@ -80,6 +46,9 @@ CDVViewController *_viewControllerForRequest(NSURLRequest* request)
         pathPrefix = [[NSBundle mainBundle] pathForResource:@"chromeapp.html" ofType:@"" inDirectory:@"www"];
         NSRange range = [pathPrefix rangeOfString:@"www"];
         pathPrefix = [[pathPrefix substringToIndex:NSMaxRange(range)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+
+        [whitelists setObject:self forKey:@"plugin"];
+
     }
     return self;
 }
@@ -172,8 +141,8 @@ CDVViewController *_viewControllerForRequest(NSURLRequest* request)
     NSURL* url = [request URL];
     if ([[[url scheme] lowercaseString] isEqualToString:@"http"] || [[[url scheme] lowercaseString] isEqualToString:@"https"]) {
         if ([[request valueForHTTPHeaderField:@"Origin"] length] > 0) {
-            CDVViewController *vc = _viewControllerForRequest(request);
-            return [vc.whitelist URLIsAllowed:url];
+            CDVPlugin *plugin = [whitelists valueForKey:@"plugin"];
+            return [plugin.commandDelegate URLIsWhitelisted:url];
         }
     }
     return NO;
