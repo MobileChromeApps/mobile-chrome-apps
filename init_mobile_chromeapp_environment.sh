@@ -56,6 +56,7 @@ type plugman >/dev/null 2>&1 || {
 type cordova >/dev/null 2>&1 || {
   cd cordova/cordova-cli
   git checkout future # TODO: remove once we merge back future branch
+  git checkout 9ff46bc411619e706a5b0029427f271780c16bd5 # TODO: Hack workaround while cordova prepare borked
   npm install
   sudo npm link
   npm link plugman
