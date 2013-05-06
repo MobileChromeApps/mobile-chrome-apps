@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="com.google.cordova.FileChooser"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=2.4.0" />
+  </engines>
+
+  <name>File Chooser</name>
+
+  <js-module src="file-chooser.js" name="File Chooser">
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/FileChooser.java" target-dir="src/com/google/cordova" />
+
+    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
+      <plugin name="FileChooser" value="com.google.cordova.FileChooser" />
+    </config-file>
+  </platform>
+</plugin>
