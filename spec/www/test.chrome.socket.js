@@ -21,6 +21,23 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     expect(chrome.socket.getNetworkList).toBeDefined();
   });
 
+  describe('System', function() {
+    itWaitsForDone('getNetworkList', function(done) {
+      chrome.socket.getNetworkList(function(result) {
+        expect(result).toBeTruthy();
+        expect(result.length).toBeGreaterThan(0);
+        var names = {};
+        result.forEach(function(networkInterface) {
+          expect(networkInterface.name).toBeTruthy();
+          expect(networkInterface.address).toBeTruthy();
+          expect(names).not.toContain(networkInterface.name);
+          names[networkInterface.name] = networkInterface.address;
+        });
+        done();
+      });
+    });
+  });
+
   describe('TCP', function() {
     var addr = '127.0.0.1';
     var port = 1234;
