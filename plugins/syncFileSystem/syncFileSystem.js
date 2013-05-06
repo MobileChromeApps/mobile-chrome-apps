@@ -98,8 +98,8 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
 // Syncing to Drive
 //------------------
 
-// This function creates a directory on the user's Drive.
-function syncDirectory(directoryEntry, callback) {
+// This function creates an app-specific directory on the user's Drive.
+function createAppDirectoryOnDrive(directoryEntry, callback) {
     var onGetSyncableAppDirectoryIdSuccess = function(appDirectoryId) {
         // Keep that directory id!  We'll need it.
         _syncableDirectoryId = appDirectoryId;
@@ -296,7 +296,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
 
 // This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
 function getSyncableParentDirectoryId(callback) {
-    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem"';
+    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem" and trashed = false';
     getDriveFileId(query, callback);
 }
 
@@ -310,7 +310,7 @@ function getSyncableAppDirectoryId(parentDirectoryId, callback) {
             }
         };
 
-        var query = 'mimeType = "application/vnd.google-apps.folder" and "' + parentDirectoryId + '" in parents and title = "' + _appId + '"';
+        var query = 'mimeType = "application/vnd.google-apps.folder" and "' + parentDirectoryId + '" in parents and title = "' + _appId + '" and trashed = false';
         getDriveFileId(query, callback, errorCallback);
     }
 }
@@ -324,7 +324,7 @@ function getFileId(fileEntry, callback) {
         }
     };
 
-    var query = 'title = "' + fileEntry.name + '" and "' + _syncableDirectoryId + '" in parents';
+    var query = 'title = "' + fileEntry.name + '" and "' + _syncableDirectoryId + '" in parents and trashed = false';
     getDriveFileId(query, callback, errorCallback);
 }
 
@@ -375,7 +375,7 @@ exports.requestFileSystem = function(callback) {
 
         // Create or get the subdirectory for this app.
         var getDirectoryFlags = { create: true, exclusive: false };
-        var onSyncDirectorySuccess = function(directoryEntry) {
+        var onCreateAppDirectoryOnDriveSuccess = function(directoryEntry) {
             // Set the root of the file system to the app subdirectory.
             fileSystem.root = directoryEntry;
 
@@ -386,7 +386,7 @@ exports.requestFileSystem = function(callback) {
             // We have to make some changes to this directory entry to enable syncability.
             // If a file is ever retrieved or created in this directory entry, we want to enable its syncability before passing it to a callback.
             enableSyncabilityForDirectoryEntry(directoryEntry);
-            syncDirectory(directoryEntry, onSyncDirectorySuccess);
+            createAppDirectoryOnDrive(directoryEntry, onCreateAppDirectoryOnDriveSuccess);
         };
         var onGetDirectoryFailure = function(e) {
             console.log('Failed to get directory.');
