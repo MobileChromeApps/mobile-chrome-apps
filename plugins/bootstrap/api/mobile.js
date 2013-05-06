@@ -35,6 +35,7 @@ exports.bgInit = function(bgWnd) {
 
   require('cordova/modulemapper').mapModules(bgWnd.window);
 
+  bgWnd.navigator = navigator;
   bgWnd.chrome = createBgChrome();
   exports.fgWindow.opener = exports.bgWindow;
 
