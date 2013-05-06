@@ -58,6 +58,20 @@ function enableSyncabilityForFileEntry(fileEntry) {
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
         FileEntry.prototype.createWriter.call(fileEntry, augmentedSuccessCallback, errorCallback);
     };
+
+    fileEntry.remove = function(successCallback, errorCallback) {
+        var onRemoveFileSuccess = function() {
+            if (successCallback) {
+                successCallback();
+            }
+        };
+        var augmentedSuccessCallback = function() {
+            removeFile(fileEntry, onRemoveFileSuccess);
+        };
+
+        // Call the original function.  The augmented success callback will take care of the syncability addition work.
+        FileEntry.prototype.remove.call(fileEntry, augmentedSuccessCallback, errorCallback);
+    };
 }
 
 // This function overrides the necessary functions on a given FileWriter to enable syncability.
@@ -161,6 +175,37 @@ function syncFile(fileEntry, callback) {
 
         // Get the file.
         fileEntry.file(onFileSuccess);
+    };
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Get the file id and pass it on.
+        getFileId(fileEntry, onGetFileIdSuccess);
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
+// This function removes a file from Drive.
+function removeFile(fileEntry, callback) {
+    var onGetFileIdSuccess = function(fileId) {
+        // Delete the file.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 204) {
+                    console.log('File removed!');
+                    callback();
+                } else {
+                    console.log('Failed to remove file with status ' + xhr.status + '.');
+                }
+            }
+        };
+
+        xhr.open('DELETE', 'https://www.googleapis.com/drive/v2/files/' + fileId, true);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send();
     };
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
@@ -377,3 +422,4 @@ exports.getFileStatus = function(fileEntry, callback) {
 exports.getFileStatuses = function(fileEntries, callback) {
     // TODO(maxw): Implement this!
 };
+
