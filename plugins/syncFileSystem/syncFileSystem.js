@@ -29,12 +29,12 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
-        var onSyncDirectorySuccess = function(directoryEntry) {
-            if (successCallback) {
-                successCallback(directoryEntry);
-            }
-        };
         var augmentedSuccessCallback = function(directoryEntry) {
+            var onSyncDirectorySuccess = function() {
+                if (successCallback) {
+                    successCallback(directoryEntry);
+                }
+            };
             enableSyncabilityForDirectoryEntry(directoryEntry);
             syncDirectory(directoryEntry, onSyncDirectorySuccess);
         };
@@ -46,12 +46,12 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a file is created rather than merely retrieved).
-        var onSyncFileSuccess = function(fileEntry) {
-            if (successCallback) {
-                successCallback(fileEntry);
-            }
-        };
         var augmentedSuccessCallback = function(fileEntry) {
+            var onSyncFileSuccess = function() {
+                if (successCallback) {
+                    successCallback(fileEntry);
+                }
+            };
             enableSyncabilityForFileEntry(fileEntry);
             syncFile(fileEntry, onSyncFileSuccess);
         };
@@ -156,14 +156,14 @@ function syncDirectory(directoryEntry, callback) {
 
         // Using the remainder of the path, start the recursive process of drilling down.
         pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
-        syncDirectoryAtPath(directoryEntry, _syncableAppDirectoryId, pathRemainder, callback);
+        syncDirectoryAtPath(_syncableAppDirectoryId, pathRemainder, callback);
     };
 
     getTokenString(onGetTokenStringSuccess);
 }
 
 // This function syncs a directory to Drive, given its path, creating it if necessary.
-function syncDirectoryAtPath(directoryEntry, currentDirectoryId, pathRemainder, callback) {
+function syncDirectoryAtPath(currentDirectoryId, pathRemainder, callback) {
     var slashIndex = pathRemainder.indexOf('/');
     var nextDirectoryName;
     var shouldCreateDirectory;
@@ -176,21 +176,65 @@ function syncDirectoryAtPath(directoryEntry, currentDirectoryId, pathRemainder, 
         nextDirectoryName = pathRemainder;
         shouldCreateDirectory = true;
         onGetDirectoryIdSuccess = function(directoryId) {
-            callback(directoryEntry);
+            callback();
         };
     } else {
         nextDirectoryName = pathRemainder.substring(0, slashIndex);
         shouldCreateDirectory = false;
         onGetDirectoryIdSuccess = function(directoryId) {
-            syncDirectoryAtPath(directoryEntry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
+            syncDirectoryAtPath(directoryId, pathRemainder.substring(slashIndex + 1), callback);
         };
     }
 
     getDirectoryId(nextDirectoryName, currentDirectoryId, shouldCreateDirectory, onGetDirectoryIdSuccess);
 }
 
-// This function uploads a file to Drive.
+// This function syncs a file to Drive, creating it if necessary.
 function syncFile(fileEntry, callback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Drive, unfortunately, does not allow searching by path.
+        // Begin the process of drilling down to find the correct file.  We can start with the app directory.
+        var pathRemainder = fileEntry.fullPath;
+        var appIdIndex = pathRemainder.indexOf(_appId);
+
+        // If the app id isn't in the path, we can't sync it.
+        if (appIdIndex < 0) {
+            console.log("File cannot be synced because it is not a descendant of the app directory.");
+            return;
+        }
+
+        // Using the remainder of the path, start the recursive process of drilling down.
+        pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
+        syncFileAtPath(fileEntry, _syncableAppDirectoryId, pathRemainder, callback);
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
+// This function syncs a file to Drive, given its path, creating it if necessary.
+function syncFileAtPath(fileEntry, currentDirectoryId, pathRemainder, callback) {
+    var slashIndex = pathRemainder.indexOf('/');
+
+    // The existence of a slash in the path determines our route.
+    // If there is no slash, we're ready to create or sync the file with that name.
+    // If there is still a slash, we dive one level deeper into the directory hierarchy.
+    if (slashIndex < 0) {
+        uploadFile(fileEntry, currentDirectoryId /* parentDirectoryId */, callback);
+    } else {
+        var nextDirectoryName = pathRemainder.substring(0, slashIndex);
+        var shouldCreateDirectory = false;
+        var onGetDirectoryIdSuccess = function(directoryId) {
+            syncFileAtPath(fileEntry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
+        };
+        getDirectoryId(nextDirectoryName, currentDirectoryId, shouldCreateDirectory, onGetDirectoryIdSuccess);
+    }
+}
+
+// This function uploads a file to Drive.
+function uploadFile(fileEntry, parentDirectoryId, callback) {
     var onGetFileIdSuccess = function(fileId) {
         var onFileSuccess = function(file) {
             // Read the file and send its contents.
@@ -198,7 +242,7 @@ function syncFile(fileEntry, callback) {
             fileReader.onloadend = function(evt) {
                 // Create the data to send.
                 var metadata = { title: fileEntry.name,
-                                 parents: [{ id: _syncableAppDirectoryId }] };
+                                 parents: [{ id: parentDirectoryId }] };
                 var boundary = '2718281828459045';
                 var body = [];
                 body.push('--' + boundary);
@@ -221,7 +265,7 @@ function syncFile(fileEntry, callback) {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
                             console.log('File synced!');
-                            callback(fileEntry);
+                            callback();
                         } else {
                             console.log('File failed to sync with status ' + xhr.status + '.');
                         }
@@ -250,13 +294,15 @@ function syncFile(fileEntry, callback) {
         _tokenString = tokenString;
 
         // Get the file id and pass it on.
-        getFileId(fileEntry, onGetFileIdSuccess);
+        getFileId(fileEntry.name, parentDirectoryId, onGetFileIdSuccess);
     };
 
     getTokenString(onGetTokenStringSuccess);
+
 }
 
 // This function removes a file from Drive.
+// TODO(maxw): Make this work with paths; right now, only files in the root directory can be removed.
 function removeFile(fileEntry, callback) {
     var onGetFileIdSuccess = function(fileId) {
         // Delete the file.
@@ -281,7 +327,7 @@ function removeFile(fileEntry, callback) {
         _tokenString = tokenString;
 
         // Get the file id and pass it on.
-        getFileId(fileEntry, onGetFileIdSuccess);
+        getFileId(fileEntry.name, _syncableAppDirectoryId, onGetFileIdSuccess);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -397,16 +443,18 @@ function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory,
 }
 
 // This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
-function getFileId(fileEntry, callback) {
+function getFileId(fileName, parentDirectoryId, successCallback) {
     var errorCallback = function(e) {
-        // If the file doesn't exist, pass null to the callback.
         if (e === FILE_NOT_FOUND_ERROR) {
-            callback(null);
+            successCallback(null);
+        } else {
+            // If it's a different error, log it.
+            console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
         }
     };
 
-    var query = 'title = "' + fileEntry.name + '" and "' + _syncableAppDirectoryId + '" in parents and trashed = false';
-    getDriveFileId(query, callback, errorCallback);
+    var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+    getDriveFileId(query, successCallback, errorCallback);
 }
 
 //==========

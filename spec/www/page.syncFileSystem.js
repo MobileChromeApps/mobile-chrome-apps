@@ -91,5 +91,33 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
   });
+
+  addButton('Create bar/baz/foo.txt', function() {
+    var onCreateWriterSuccess = function(fileWriter) {
+      chromespec.log('FileEntry.createWriter success!');
+      fileWriter.onwrite = function(evt) {
+        chromespec.log('FileWriter.write success!');
+      };
+      fileWriter.write('Hello from syncFileSystem!');
+    };
+    var onCreateWriterError = function(e) {
+      chromespec.log('FileEntry.createWriter error: ' + e.code);
+    };
+
+    var onGetFileSuccess = function(fileEntry) {
+      chromespec.log('FileSystem.getFile success!');
+      fileEntry.createWriter(onCreateWriterSuccess, onCreateWriterError);
+    };
+    var onGetFileError = function(e) {
+      chromespec.log('getFile error: ' + e.code);
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+      chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
+      fileSystem.root.getFile('bar/baz/foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
+    };
+
+    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+  });
 });
 
