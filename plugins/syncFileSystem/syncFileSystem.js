@@ -13,7 +13,7 @@ var _appId = 'chrome-spec';
 var _tokenString;
 
 // When we create or get the app's syncable Drive directory, we store its id here.
-var _syncableDirectoryId;
+var _syncableAppDirectoryId;
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -117,21 +117,21 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
 
 // This function creates an app-specific directory on the user's Drive.
 function createAppDirectoryOnDrive(directoryEntry, callback) {
-    var onGetSyncableAppDirectoryIdSuccess = function(appDirectoryId) {
+    var onGetSyncableAppDirectoryIdSuccess = function(syncableAppDirectoryId) {
         // Keep that directory id!  We'll need it.
-        _syncableDirectoryId = appDirectoryId;
+        _syncableAppDirectoryId = syncableAppDirectoryId;
         callback(directoryEntry);
     };
-    var onGetSyncableParentDirectoryIdSuccess = function(parentDirectoryId) {
+    var onGetSyncableRootDirectoryIdSuccess = function(syncableRootDirectoryId) {
         // Get the app directory id.
-        getSyncableAppDirectoryId(parentDirectoryId, onGetSyncableAppDirectoryIdSuccess);
+        getDirectoryId(_appId /* directoryName */, syncableRootDirectoryId /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableAppDirectoryIdSuccess);
     };
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
         _tokenString = tokenString;
 
         // Get the Drive "Chrome Syncable FileSystem" directory id.
-        getSyncableParentDirectoryId(onGetSyncableParentDirectoryIdSuccess);
+        getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, false /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -156,7 +156,7 @@ function syncDirectory(directoryEntry, callback) {
 
         // Using the remainder of the path, start the recursive process of drilling down.
         pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
-        syncDirectoryAtPath(directoryEntry, _syncableDirectoryId, pathRemainder, callback);
+        syncDirectoryAtPath(directoryEntry, _syncableAppDirectoryId, pathRemainder, callback);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -198,7 +198,7 @@ function syncFile(fileEntry, callback) {
             fileReader.onloadend = function(evt) {
                 // Create the data to send.
                 var metadata = { title: fileEntry.name,
-                                 parents: [{ id: _syncableDirectoryId }] };
+                                 parents: [{ id: _syncableAppDirectoryId }] };
                 var boundary = '2718281828459045';
                 var body = [];
                 body.push('--' + boundary);
@@ -371,7 +371,10 @@ function getDriveFileId(query, successCallback, errorCallback) {
 
 // This function gets the Drive file id for the directory with the given name and parent id.
 function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory, successCallback) {
-    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and trashed = false';
+    if (parentDirectoryId) {
+        query += ' and "' + parentDirectoryId + '" in parents';
+    }
     var errorCallback;
 
     if (shouldCreateDirectory) {
@@ -393,19 +396,6 @@ function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory,
     getDriveFileId(query, successCallback, errorCallback);
 }
 
-// This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
-function getSyncableParentDirectoryId(callback) {
-    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem" and trashed = false';
-    getDriveFileId(query, callback);
-}
-
-// This function retrieves the Drive directory id of the app's syncable directory.  If one doesn't exist, it is created.
-function getSyncableAppDirectoryId(parentDirectoryId, callback) {
-    if (parentDirectoryId) {
-        getDirectoryId(_appId, parentDirectoryId, true /* shouldCreateDirectory */, callback);
-    }
-}
-
 // This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
 function getFileId(fileEntry, callback) {
     var errorCallback = function(e) {
@@ -415,7 +405,7 @@ function getFileId(fileEntry, callback) {
         }
     };
 
-    var query = 'title = "' + fileEntry.name + '" and "' + _syncableDirectoryId + '" in parents and trashed = false';
+    var query = 'title = "' + fileEntry.name + '" and "' + _syncableAppDirectoryId + '" in parents and trashed = false';
     getDriveFileId(query, callback, errorCallback);
 }
 
