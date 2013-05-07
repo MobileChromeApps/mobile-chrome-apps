@@ -26,6 +26,23 @@ var REQUEST_FAILED_ERROR = 3;
 
 // This function overrides the necessary functions on a given DirectoryEntry to enable syncability.
 function enableSyncabilityForDirectoryEntry(directoryEntry) {
+    directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
+        // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
+        // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
+        var onSyncDirectorySuccess = function(directoryEntry) {
+            if (successCallback) {
+                successCallback(directoryEntry);
+            }
+        };
+        var augmentedSuccessCallback = function(directoryEntry) {
+            enableSyncabilityForDirectoryEntry(directoryEntry);
+            syncDirectory(directoryEntry, onSyncDirectorySuccess);
+        };
+
+        // Call the original function.  The augmented success callback will take care of the syncability addition work.
+        DirectoryEntry.prototype.getDirectory.call(directoryEntry, path, options, augmentedSuccessCallback, errorCallback);
+    };
+
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a file is created rather than merely retrieved).
@@ -118,6 +135,58 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
     };
 
     getTokenString(onGetTokenStringSuccess);
+}
+
+// This function syncs a directory to Drive, creating it if necessary.
+function syncDirectory(directoryEntry, callback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Drive, unfortunately, does not allow searching by path.
+        // Begin the process of drilling down to find the correct directory.  We can start with the app directory.
+        var pathRemainder = directoryEntry.fullPath;
+        var appIdIndex = pathRemainder.indexOf(_appId);
+
+        // If the app id isn't in the path, we can't sync it.
+        if (appIdIndex < 0) {
+            console.log("Directory cannot be synced because it is not a descendant of the app directory.");
+            return;
+        }
+
+        // Using the remainder of the path, start the recursive process of drilling down.
+        pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
+        syncDirectoryAtPath(directoryEntry, _syncableDirectoryId, pathRemainder, callback);
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
+// This function syncs a directory to Drive, given its path, creating it if necessary.
+function syncDirectoryAtPath(directoryEntry, currentDirectoryId, pathRemainder, callback) {
+    var slashIndex = pathRemainder.indexOf('/');
+    var nextDirectoryName;
+    var shouldCreateDirectory;
+    var onGetDirectorySuccess;
+
+    // The existence of a slash in the path determines our route.
+    // If there is no slash, we're ready to create or sync the directory with that name.
+    // If there is still a slash, we dive one level deeper into the directory hierarchy.
+    if (slashIndex < 0) {
+        nextDirectoryName = pathRemainder;
+        shouldCreateDirectory = true;
+        onGetDirectoryIdSuccess = function(directoryId) {
+            callback(directoryEntry);
+        };
+    } else {
+        nextDirectoryName = pathRemainder.substring(0, slashIndex);
+        shouldCreateDirectory = false;
+        onGetDirectoryIdSuccess = function(directoryId) {
+            syncDirectoryAtPath(directoryEntry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
+        };
+    }
+
+    getDirectoryId(nextDirectoryName, currentDirectoryId, shouldCreateDirectory, onGetDirectoryIdSuccess);
 }
 
 // This function uploads a file to Drive.
@@ -219,13 +288,13 @@ function removeFile(fileEntry, callback) {
 }
 
 // This function creates the app's syncable directory on Drive.
-function createSyncableAppDirectory(parentDirectoryId, callback) {
+function createDirectory(directoryName, parentDirectoryId, callback) {
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
         _tokenString = tokenString;
 
         // Create the data to send.
-        var data = { title: _appId,
+        var data = { title: directoryName,
                      parents: [{ id: parentDirectoryId }],
                      mimeType: 'application/vnd.google-apps.folder' };
 
@@ -257,6 +326,12 @@ function createSyncableAppDirectory(parentDirectoryId, callback) {
 
 // This function gets the Drive file id using the given query.
 function getDriveFileId(query, successCallback, errorCallback) {
+    // If there's no error callback provided, make one.
+    if (!errorCallback) {
+        errorCallback = function(e) {
+            console.log('Error: ' + e);
+        };
+    }
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
         _tokenString = tokenString;
@@ -294,6 +369,30 @@ function getDriveFileId(query, successCallback, errorCallback) {
     getTokenString(onGetTokenStringSuccess);
 }
 
+// This function gets the Drive file id for the directory with the given name and parent id.
+function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory, successCallback) {
+    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+    var errorCallback;
+
+    if (shouldCreateDirectory) {
+        errorCallback = function(e) {
+            if (e === FILE_NOT_FOUND_ERROR) {
+                // If the directory doesn't exist, create it.
+                createDirectory(directoryName, parentDirectoryId, successCallback);
+            } else {
+                // If it's a different error, log it.
+                console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
+            }
+        };
+    } else {
+        errorCallback = function(e) {
+            // Log an error.
+            console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
+        };
+    }
+    getDriveFileId(query, successCallback, errorCallback);
+}
+
 // This function retrieves the Drive directory id of the "Chrome Syncable FileSystem" directory.
 function getSyncableParentDirectoryId(callback) {
     var query = 'mimeType = "application/vnd.google-apps.folder" and title = "Chrome Syncable FileSystem" and trashed = false';
@@ -303,15 +402,7 @@ function getSyncableParentDirectoryId(callback) {
 // This function retrieves the Drive directory id of the app's syncable directory.  If one doesn't exist, it is created.
 function getSyncableAppDirectoryId(parentDirectoryId, callback) {
     if (parentDirectoryId) {
-        var errorCallback = function(e) {
-            // If the app's syncable directory doesn't exist, create it.
-            if (e === FILE_NOT_FOUND_ERROR) {
-                createSyncableAppDirectory(parentDirectoryId, callback);
-            }
-        };
-
-        var query = 'mimeType = "application/vnd.google-apps.folder" and "' + parentDirectoryId + '" in parents and title = "' + _appId + '" and trashed = false';
-        getDriveFileId(query, callback, errorCallback);
+        getDirectoryId(_appId, parentDirectoryId, true /* shouldCreateDirectory */, callback);
     }
 }
 
