@@ -119,5 +119,29 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
   });
+
+  addButton('Remove bar/baz/foo.txt', function() {
+    var onRemoveSuccess = function() {
+      chromespec.log('FileEntry.remove success!');
+    };
+    var onRemoveError = function(e) {
+      chromespec.log('FileEntry.remove error: ' + e.code);
+    };
+
+    var onGetFileSuccess = function(fileEntry) {
+      chromespec.log('FileSystem.getFile success!');
+      fileEntry.remove(onRemoveSuccess, onRemoveError);
+    };
+    var onGetFileError = function(e) {
+      chromespec.log('getFile error: ' + e.code);
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+      chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
+      fileSystem.root.getFile('bar/baz/foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
+    };
+
+    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+  });
 });
 

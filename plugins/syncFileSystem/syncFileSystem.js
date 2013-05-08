@@ -258,7 +258,6 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
 }
 
 // This function removes a file from Drive.
-// TODO(maxw): Make this work with paths; right now, only files in the root directory can be removed.
 function removeFile(fileEntry, callback) {
     var onGetFileIdSuccess = function(fileId) {
         // Delete the file.
@@ -283,7 +282,16 @@ function removeFile(fileEntry, callback) {
         _tokenString = tokenString;
 
         // Get the file id and pass it on.
-        getFileId(fileEntry.name, _syncableAppDirectoryId, onGetFileIdSuccess);
+        var appIdIndex = fileEntry.fullPath.indexOf(_appId);
+
+        // If the app id isn't in the path, we can't remove it.
+        if (appIdIndex < 0) {
+            console.log("Entry cannot be removed because it is not a descendant of the app directory.");
+            return;
+        }
+
+        var relativePath = fileEntry.fullPath.substring(appIdIndex + _appId.length + 1);
+        getFileId(relativePath, _syncableAppDirectoryId, onGetFileIdSuccess);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -400,17 +408,31 @@ function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory,
 
 // This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
 function getFileId(fileName, parentDirectoryId, successCallback) {
-    var errorCallback = function(e) {
-        if (e === FILE_NOT_FOUND_ERROR) {
-            successCallback(null);
-        } else {
-            // If it's a different error, log it.
-            console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
-        }
-    };
-
-    var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
-    getDriveFileId(query, successCallback, errorCallback);
+    // In order to support paths, we need to call this recursively.
+    var slashIndex = fileName.indexOf('/');
+    if (slashIndex < 0) {
+        var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+        var errorCallback = function(e) {
+            if (e === FILE_NOT_FOUND_ERROR) {
+                successCallback(null);
+            } else {
+                // If it's a different error, log it.
+                console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
+            }
+        };
+        getDriveFileId(query, successCallback, errorCallback);
+    } else {
+        var nextDirectory = fileName.substring(0, slashIndex);
+        var pathRemainder = fileName.substring(slashIndex + 1);
+        var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + nextDirectory + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+        var onGetDriveFileIdSuccess = function(fileId) {
+            getFileId(pathRemainder, fileId, successCallback);
+        };
+        var onGetDriveFileIdError = function(e) {
+            console.log('Retrieval of directory "' + nextDirectory + '" failed with error ' + e);
+        };
+        getDriveFileId(query, onGetDriveFileIdSuccess, onGetDriveFileIdError);
+    }
 }
 
 //==========
