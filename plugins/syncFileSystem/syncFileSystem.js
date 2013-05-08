@@ -30,13 +30,13 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
         var augmentedSuccessCallback = function(directoryEntry) {
-            var onSyncDirectorySuccess = function() {
+            var onSyncSuccess = function() {
                 if (successCallback) {
                     successCallback(directoryEntry);
                 }
             };
             enableSyncabilityForDirectoryEntry(directoryEntry);
-            syncDirectory(directoryEntry, onSyncDirectorySuccess);
+            sync(directoryEntry, onSyncSuccess);
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -47,13 +47,13 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a file is created rather than merely retrieved).
         var augmentedSuccessCallback = function(fileEntry) {
-            var onSyncFileSuccess = function() {
+            var onSyncSuccess = function() {
                 if (successCallback) {
                     successCallback(fileEntry);
                 }
             };
             enableSyncabilityForFileEntry(fileEntry);
-            syncFile(fileEntry, onSyncFileSuccess);
+            sync(fileEntry, onSyncSuccess);
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -99,10 +99,10 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
         if (fileWriter.onwrite) {
             var originalOnwrite = fileWriter.onwrite;
             fileWriter.onwrite = function(evt) {
-                var onSyncFileSuccess = function() {
+                var onSyncSuccess = function() {
                     originalOnwrite(evt);
                 };
-                syncFile(fileEntry, onSyncFileSuccess);
+                sync(fileEntry, onSyncSuccess);
             };
         }
 
@@ -137,99 +137,55 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
     getTokenString(onGetTokenStringSuccess);
 }
 
-// This function syncs a directory to Drive, creating it if necessary.
-function syncDirectory(directoryEntry, callback) {
+// This function syncs an entry to Drive, creating it if necessary.
+function sync(entry, callback) {
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
         _tokenString = tokenString;
 
         // Drive, unfortunately, does not allow searching by path.
-        // Begin the process of drilling down to find the correct directory.  We can start with the app directory.
-        var pathRemainder = directoryEntry.fullPath;
+        // Begin the process of drilling down to find the correct parent directory.  We can start with the app directory.
+        var pathRemainder = entry.fullPath;
         var appIdIndex = pathRemainder.indexOf(_appId);
 
         // If the app id isn't in the path, we can't sync it.
         if (appIdIndex < 0) {
-            console.log("Directory cannot be synced because it is not a descendant of the app directory.");
+            console.log("Entry cannot be synced because it is not a descendant of the app directory.");
             return;
         }
 
         // Using the remainder of the path, start the recursive process of drilling down.
         pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
-        syncDirectoryAtPath(_syncableAppDirectoryId, pathRemainder, callback);
+        syncAtPath(entry, _syncableAppDirectoryId, pathRemainder, callback);
     };
 
     getTokenString(onGetTokenStringSuccess);
 }
 
-// This function syncs a directory to Drive, given its path, creating it if necessary.
-function syncDirectoryAtPath(currentDirectoryId, pathRemainder, callback) {
+// This function syncs an entry to Drive, given its path, creating it if necessary.
+function syncAtPath(entry, currentDirectoryId, pathRemainder, callback) {
     var slashIndex = pathRemainder.indexOf('/');
-    var nextDirectoryName;
-    var shouldCreateDirectory;
-    var onGetDirectorySuccess;
 
-    // The existence of a slash in the path determines our route.
-    // If there is no slash, we're ready to create or sync the directory with that name.
-    // If there is still a slash, we dive one level deeper into the directory hierarchy.
     if (slashIndex < 0) {
-        nextDirectoryName = pathRemainder;
-        shouldCreateDirectory = true;
-        onGetDirectoryIdSuccess = function(directoryId) {
-            callback();
-        };
-    } else {
-        nextDirectoryName = pathRemainder.substring(0, slashIndex);
-        shouldCreateDirectory = false;
-        onGetDirectoryIdSuccess = function(directoryId) {
-            syncDirectoryAtPath(directoryId, pathRemainder.substring(slashIndex + 1), callback);
-        };
-    }
-
-    getDirectoryId(nextDirectoryName, currentDirectoryId, shouldCreateDirectory, onGetDirectoryIdSuccess);
-}
-
-// This function syncs a file to Drive, creating it if necessary.
-function syncFile(fileEntry, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
-        // Drive, unfortunately, does not allow searching by path.
-        // Begin the process of drilling down to find the correct file.  We can start with the app directory.
-        var pathRemainder = fileEntry.fullPath;
-        var appIdIndex = pathRemainder.indexOf(_appId);
-
-        // If the app id isn't in the path, we can't sync it.
-        if (appIdIndex < 0) {
-            console.log("File cannot be synced because it is not a descendant of the app directory.");
-            return;
+        // We're done diving and can sync the entry.
+        if (entry.isFile) {
+            uploadFile(entry, currentDirectoryId /* parentDirectoryId */, callback);
+        } else if (entry.isDirectory) {
+            var nextDirectoryName = pathRemainder;
+            onGetDirectoryIdSuccess = function(directoryId) {
+                callback();
+            };
+            getDirectoryId(nextDirectoryName, currentDirectoryId, true /* shouldCreateDirectory */, onGetDirectoryIdSuccess);
+        } else {
+            // Something's wrong!
+            console.log('Attempted to sync entry that is neither a file nor a directory.');
         }
-
-        // Using the remainder of the path, start the recursive process of drilling down.
-        pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
-        syncFileAtPath(fileEntry, _syncableAppDirectoryId, pathRemainder, callback);
-    };
-
-    getTokenString(onGetTokenStringSuccess);
-}
-
-// This function syncs a file to Drive, given its path, creating it if necessary.
-function syncFileAtPath(fileEntry, currentDirectoryId, pathRemainder, callback) {
-    var slashIndex = pathRemainder.indexOf('/');
-
-    // The existence of a slash in the path determines our route.
-    // If there is no slash, we're ready to create or sync the file with that name.
-    // If there is still a slash, we dive one level deeper into the directory hierarchy.
-    if (slashIndex < 0) {
-        uploadFile(fileEntry, currentDirectoryId /* parentDirectoryId */, callback);
     } else {
         var nextDirectoryName = pathRemainder.substring(0, slashIndex);
-        var shouldCreateDirectory = false;
         var onGetDirectoryIdSuccess = function(directoryId) {
-            syncFileAtPath(fileEntry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
+            syncAtPath(entry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
         };
-        getDirectoryId(nextDirectoryName, currentDirectoryId, shouldCreateDirectory, onGetDirectoryIdSuccess);
+        getDirectoryId(nextDirectoryName, currentDirectoryId, false /* shouldCreateDirectory */, onGetDirectoryIdSuccess);
     }
 }
 
