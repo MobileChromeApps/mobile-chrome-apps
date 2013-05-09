@@ -24,8 +24,28 @@ var REQUEST_FAILED_ERROR = 3;
 // FileSystem function augmentation
 //----------------------------------
 
+// This function overrides the necessary functions on a given Entry to enable syncability.
+function enableSyncabilityForEntry(entry) {
+    entry.remove = function(successCallback, errorCallback) {
+        var onRemoveSuccess = function() {
+            if (successCallback) {
+                successCallback();
+            }
+        };
+        var augmentedSuccessCallback = function() {
+            remove(entry, onRemoveSuccess);
+        };
+
+        // Call the original function.  The augmented success callback will take care of the syncability addition work.
+        Entry.prototype.remove.call(entry, augmentedSuccessCallback, errorCallback);
+    };
+}
+
 // This function overrides the necessary functions on a given DirectoryEntry to enable syncability.
 function enableSyncabilityForDirectoryEntry(directoryEntry) {
+    // First, enable syncability for Entry functions.
+    enableSyncabilityForEntry(directoryEntry);
+
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
@@ -64,6 +84,9 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
 // This function overrides the necessary functions on a given FileEntry to enable syncability.
 // It also uploads the associated file to Drive.
 function enableSyncabilityForFileEntry(fileEntry) {
+    // First, enable syncability for Entry functions.
+    enableSyncabilityForEntry(fileEntry);
+
     fileEntry.createWriter = function(successCallback, errorCallback) {
         var augmentedSuccessCallback = function(fileWriter) {
             enableSyncabilityForFileWriter(fileWriter, fileEntry);
@@ -74,20 +97,6 @@ function enableSyncabilityForFileEntry(fileEntry) {
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
         FileEntry.prototype.createWriter.call(fileEntry, augmentedSuccessCallback, errorCallback);
-    };
-
-    fileEntry.remove = function(successCallback, errorCallback) {
-        var onRemoveFileSuccess = function() {
-            if (successCallback) {
-                successCallback();
-            }
-        };
-        var augmentedSuccessCallback = function() {
-            removeFile(fileEntry, onRemoveFileSuccess);
-        };
-
-        // Call the original function.  The augmented success callback will take care of the syncability addition work.
-        FileEntry.prototype.remove.call(fileEntry, augmentedSuccessCallback, errorCallback);
     };
 }
 
@@ -257,10 +266,10 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
 
 }
 
-// This function removes a file from Drive.
-function removeFile(fileEntry, callback) {
-    var onGetFileIdSuccess = function(fileId) {
-        // Delete the file.
+// This function removes a file or directory from Drive.
+function remove(entry, callback) {
+    var onGetIdSuccess = function(fileId) {
+        // Delete the entry.
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
@@ -268,7 +277,7 @@ function removeFile(fileEntry, callback) {
                     console.log('File removed!');
                     callback();
                 } else {
-                    console.log('Failed to remove file with status ' + xhr.status + '.');
+                    console.log('Failed to remove entry with status ' + xhr.status + '.');
                 }
             }
         };
@@ -282,7 +291,7 @@ function removeFile(fileEntry, callback) {
         _tokenString = tokenString;
 
         // Get the file id and pass it on.
-        var appIdIndex = fileEntry.fullPath.indexOf(_appId);
+        var appIdIndex = entry.fullPath.indexOf(_appId);
 
         // If the app id isn't in the path, we can't remove it.
         if (appIdIndex < 0) {
@@ -290,8 +299,12 @@ function removeFile(fileEntry, callback) {
             return;
         }
 
-        var relativePath = fileEntry.fullPath.substring(appIdIndex + _appId.length + 1);
-        getFileId(relativePath, _syncableAppDirectoryId, onGetFileIdSuccess);
+        var relativePath = entry.fullPath.substring(appIdIndex + _appId.length + 1);
+        if (entry.isFile) {
+            getFileId(relativePath, _syncableAppDirectoryId, onGetIdSuccess);
+        } else {
+            getDirectoryId(relativePath, _syncableAppDirectoryId, false /* shouldCreateDirectory */, onGetIdSuccess);
+        }
     };
 
     getTokenString(onGetTokenStringSuccess);

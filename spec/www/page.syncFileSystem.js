@@ -76,9 +76,57 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
   });
 
+  addButton('Remove bar directory', function() {
+    var onRemoveSuccess = function() {
+      chromespec.log('DirectoryEntry.remove success!');
+    };
+    var onRemoveError = function(e) {
+      chromespec.log('DirectoryEntry.remove error: ' + e.code);
+    };
+
+    var onGetDirectorySuccess = function(directoryEntry) {
+      chromespec.log('FileSystem.getDirectory success!');
+      directoryEntry.remove(onRemoveSuccess, onRemoveError);
+    };
+    var onGetDirectoryError = function(e) {
+      chromespec.log('getDirectory error: ' + e.code);
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+      chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
+      fileSystem.root.getDirectory('bar', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
+    };
+
+    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+  });
+
   addButton('Create bar/baz directory', function() {
     var onGetDirectorySuccess = function(directoryEntry) {
       chromespec.log('FileSystem.getDirectory success!');
+    };
+    var onGetDirectoryError = function(e) {
+      chromespec.log('getDirectory error: ' + e.code);
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+      chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
+      fileSystem.root.getDirectory('bar/baz', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
+    };
+
+    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+  });
+
+  addButton('Remove bar/baz directory', function() {
+    var onRemoveSuccess = function() {
+      chromespec.log('DirectoryEntry.remove success!');
+    };
+    var onRemoveError = function(e) {
+      chromespec.log('DirectoryEntry.remove error: ' + e.code);
+    };
+
+    var onGetDirectorySuccess = function(directoryEntry) {
+      chromespec.log('FileSystem.getDirectory success!');
+      directoryEntry.remove(onRemoveSuccess, onRemoveError);
     };
     var onGetDirectoryError = function(e) {
       chromespec.log('getDirectory error: ' + e.code);
