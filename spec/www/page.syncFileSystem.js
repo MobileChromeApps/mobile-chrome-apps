@@ -54,7 +54,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     var onRequestFileSystemSuccess = function(fileSystem) {
       chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
-      fileSystem.root.getFile('foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
+      fileSystem.root.getFile('foo.txt', { create: false }, onGetFileSuccess, onGetFileError);
     };
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
@@ -94,7 +94,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     var onRequestFileSystemSuccess = function(fileSystem) {
       chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
-      fileSystem.root.getDirectory('bar', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
+      fileSystem.root.getDirectory('bar', { create: false }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
@@ -134,7 +134,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     var onRequestFileSystemSuccess = function(fileSystem) {
       chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
-      fileSystem.root.getDirectory('bar/baz', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
+      fileSystem.root.getDirectory('bar/baz', { create: false }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
@@ -186,7 +186,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     var onRequestFileSystemSuccess = function(fileSystem) {
       chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
-      fileSystem.root.getFile('bar/baz/foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
+      fileSystem.root.getFile('bar/baz/foo.txt', { create: false }, onGetFileSuccess, onGetFileError);
     };
 
     chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
