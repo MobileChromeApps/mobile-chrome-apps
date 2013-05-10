@@ -47,16 +47,17 @@
   <platform name="android">
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/com/google/cordova" />
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
+    <config-file target="res/xml/config.xml" parent="/widget/plugins">
       <plugin name="ChromeExtensionURLs" value="com.google.cordova.ChromeExtensionURLs">
         <url-filter value="chrome-extension://" />
       </plugin>
     </config-file>
 
-    <config-file target="res/xml/config.xml" parent="/cordova">
+    <config-file target="res/xml/config.xml" parent="/widget">
       <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
     </config-file>
   </platform>
+
   <platform name="ios">
     <source-file src="src/ios/ChromeExtensionURLs.m" />
     <header-file src="src/ios/ChromeExtensionURLs.h" />
@@ -68,8 +69,8 @@
     </config-file>
 
     <config-file target="config.xml" parent="/widget">
-      <access origin="chrome-extension://*" />
       <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
+      <access origin="chrome-extension://*" />
     </config-file>
 
   </platform>

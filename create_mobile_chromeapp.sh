@@ -42,7 +42,8 @@ function FailIfNotExists {
 #
 MCA_DIR_NAME="mobile_chrome_apps"
 
-MCA_PATH="${MCA_PATH:-$PWD/$(dirname $0)/..}"
+MCA_PATH_FROM_ARGS="$(cd $(dirname $0); cd ..; pwd)"
+MCA_PATH="${MCA_PATH:-$MCA_PATH_FROM_ARGS}"
 CORDOVA_PATH="${CORDOVA_PATH:-$MCA_PATH/../cordova}"
 
 for x in cordova-js cordova-ios cordova-android; do
