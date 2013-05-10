@@ -16,6 +16,8 @@ fi
 [[ "$FILE" = *third_party* ]] && exit 0
 # Ignore markdown
 [[ "$FILE" = *.md ]] && exit 0
+# Ignore .gitignore
+[[ "$FILE" = .gitignore ]] && exit 0
 
 # Find files with trailing whitespace
 if grep -E '\s+$' "$FILE"; then
