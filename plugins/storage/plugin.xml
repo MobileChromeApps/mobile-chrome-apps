@@ -34,7 +34,7 @@
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeStorage">
-        <param name="ios-package" value="com.google.cordova.ChromeStorage"/>
+        <param name="ios-package" value="ChromeStorage"/>
       </feature>
     </config-file>
   </platform>
