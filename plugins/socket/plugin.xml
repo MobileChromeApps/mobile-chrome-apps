@@ -21,8 +21,10 @@
   <platform name="android">
     <source-file src="src/android/ChromeSocket.java" target-dir="src/com/google/cordova" />
 
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeSocket" value="com.google.cordova.ChromeSocket" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSocket">
+        <param name="android-package" value="com.google.cordova.ChromeSocket"/>
+      </feature>
     </config-file>
   </platform>
 
@@ -36,8 +38,10 @@
     <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
     <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
 
-    <config-file target="config.xml" parent="/widget/plugins">
-      <plugin name="ChromeSocket" value="ChromeSocket" />
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSocket">
+        <param name="ios-package" value="ChromeSocket"/>
+      </feature>
     </config-file>
   </platform>
 </plugin>

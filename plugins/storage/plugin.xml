@@ -21,8 +21,10 @@
   <platform name="android">
     <source-file src="src/android/ChromeStorage.java" target-dir="src/com/google/cordova" />
 
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeStorage" value="com.google.cordova.ChromeStorage" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeStorage">
+        <param name="android-package" value="com.google.cordova.ChromeStorage"/>
+      </feature>
     </config-file>
   </platform>
 
@@ -30,8 +32,10 @@
     <source-file src="src/ios/ChromeStorage.m" />
     <header-file src="src/ios/ChromeStorage.h" />
 
-    <config-file target="config.xml" parent="/widget/plugins">
-      <plugin name="ChromeStorage" value="ChromeStorage" />
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeStorage">
+        <param name="ios-package" value="com.google.cordova.ChromeStorage"/>
+      </feature>
     </config-file>
   </platform>
 </plugin>

@@ -44,14 +44,9 @@ cd cordova/cordova-js
 jake
 cd ../..
 
-cd cordova/cordova-android
-git checkout 20caac1b6eafcd2ef3f27d26d42662b8ebd307a7 # TODO: Hack workaround for cordova-$VERSION create script
-cd ../..
-
 # install cordova-plugman, if it isn't already installed
 type plugman >/dev/null 2>&1 || {
   cd cordova/cordova-plugman
-  git checkout 9ff46bc411619e706a5b0029427f271780c16bd5 # TODO: Hack workaround while cordova prepare borked
   npm install
   sudo npm link
   cd ../..

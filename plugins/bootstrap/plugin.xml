@@ -46,14 +46,16 @@
   <!-- Convert 'chrome-extension://' urls -->
   <platform name="android">
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/com/google/cordova" />
+
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
-    <config-file target="res/xml/config.xml" parent="/widget/plugins">
-      <plugin name="ChromeExtensionURLs" value="com.google.cordova.ChromeExtensionURLs">
-        <url-filter value="chrome-extension://" />
-      </plugin>
-    </config-file>
 
     <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeExtensionURLs">
+        <param name="android-package" value="com.google.cordova.ChromeExtensionURLs"/>
+        <param name="onload" value="true"/>
+        <url-filter value="chrome-extension://" />
+      </feature>
+
       <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
     </config-file>
   </platform>
@@ -64,14 +66,14 @@
 
     <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
 
-    <config-file target="config.xml" parent="/widget/plugins">
-      <plugin name="ChromeExtensionURLs" value="ChromeExtensionURLs" onload="true" />
-    </config-file>
-
     <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeExtensionURLs">
+        <param name="ios-package" value="ChromeExtensionURLs"/>
+        <param name="onload" value="true"/>
+      </feature>
+
       <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
       <access origin="chrome-extension://*" />
     </config-file>
-
   </platform>
 </plugin>

@@ -21,8 +21,11 @@
   <platform name="android">
     <source-file src="src/android/ChromeI18n.java" target-dir="src/com/google/cordova" />
 
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeI18n" value="com.google.cordova.ChromeI18n" onload="true" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeI18n">
+        <param name="android-package" value="com.google.cordova.ChromeI18n"/>
+        <param name="onload" value="true"/>
+      </feature>
     </config-file>
   </platform>
 
@@ -30,8 +33,10 @@
     <source-file src="src/ios/ChromeI18n.m" />
     <header-file src="src/ios/ChromeI18n.h" />
 
-    <config-file target="config.xml" parent="/widget/plugins">
-      <plugin name="ChromeI18n" value="ChromeI18n" />
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeI18n">
+        <param name="ios-package" value="ChromeI18n"/>
+      </feature>
     </config-file>
   </platform>
 </plugin>
