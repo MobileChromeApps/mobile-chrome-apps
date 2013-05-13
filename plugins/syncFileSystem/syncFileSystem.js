@@ -15,6 +15,10 @@ var _tokenString;
 // When we create or get the app's syncable Drive directory, we store its id here.
 var _syncableAppDirectoryId;
 
+// This is the next Drive change id to be used to detect remote changes.
+// TODO(maxw): Save the highest change id to local storage.
+var nextChangeId = 1;
+
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
@@ -349,6 +353,111 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
     };
 
     getTokenString(onGetTokenStringSuccess);
+}
+
+//--------------------
+// Syncing from Drive
+//--------------------
+
+// This function checks for changes since the most recent change id.
+function getDriveChanges(callback) {
+    var onGetTokenStringSuccess = function(tokenString) {
+        // Save the token string for later use.
+        _tokenString = tokenString;
+
+        // Send a request to retrieve the changes.
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var responseJson = JSON.parse(xhr.responseText);
+                    var numChanges = responseJson.items.length;
+                    console.log('Successfully retrieved ' + numChanges + ' changes.');
+
+                    // Record the new change id, incrementing it to avoid retrieving a duplicate change later.
+                    nextChangeId = parseInt(responseJson.largestChangeId) + 1;
+
+                    // For each change received, check whether it's on a file in the syncable app folder.  If so, download it.
+                    for (var i = 0; i < numChanges; i++) {
+                        var numParents = responseJson.items[i].file.parents.length;
+                        for (var j = 0; j < numParents; j++) {
+                            if (responseJson.items[i].file.parents[j].id === _syncableAppDirectoryId) {
+                                console.log('Downloading ' + responseJson.items[i].file.title + '.');
+                                downloadFile(responseJson.items[i].file);
+                            }
+                        }
+                    }
+                } else {
+                    console.log('Change search failed with status ' + xhr.status + '.');
+                }
+            }
+        };
+
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000', true);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+        xhr.send();
+    };
+
+    getTokenString(onGetTokenStringSuccess);
+}
+
+// This function downloads the given Drive file.
+function downloadFile(file) {
+    // Send a request to retrieve the changes.
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                var onSaveDataSuccess = function() {
+                    console.log('Download of ' + file.title + ' complete!');
+                }
+                saveData(file.title, xhr.responseText, onSaveDataSuccess);
+            } else {
+                console.log('Download failed with status ' + xhr.status + '.');
+            }
+        }
+    };
+
+    xhr.open('GET', file.downloadUrl, true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+    xhr.send();
+}
+
+function saveData(fileName, data, callback) {
+    var onCreateWriterSuccess = function(fileWriter) {
+        fileWriter.write(data);
+        callback();
+    };
+    var onCreateWriterError = function(e) {
+        console.log('Failed to create writer.');
+    };
+
+    var onGetFileSuccess = function(fileEntry) {
+        fileEntry.createWriter(onCreateWriterSuccess, onCreateWriterError);
+    };
+    var onGetFileError = function(e) {
+        console.log('Failed to get file.');
+    };
+
+    var onGetDirectorySuccess = function(directoryEntry) {
+        var getFileFlags = { create: true, exclusive: false };
+        directoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
+    };
+    var onGetDirectoryError = function(e) {
+        console.log('Failed to get directory.');
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+        // TODO(maxw): Make the directory name app-specific.
+        var getDirectoryFlags = { create: false };
+        fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
+    };
+    var onRequestFileSystemFailure = function(e) {
+        console.log("Failed to get file system.");
+    };
+
+    // Request the file system.
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, onRequestFileSystemFailure);
 }
 
 //----------------------------
