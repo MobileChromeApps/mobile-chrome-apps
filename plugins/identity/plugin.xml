@@ -22,10 +22,13 @@
   <platform name="android">
     <source-file src="src/android/ChromeIdentity.java" target-dir="src/com/google/cordova" />
 
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="ChromeIdentity" value="com.google.cordova.ChromeIdentity" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeIdentity">
+        <param name="android-package" value="com.google.cordova.ChromeIdentity"/>
+      </feature>
     </config-file>
   </platform>
+
   <!-- this is a JS-only plugin for iOS -->
   <platform name="ios">
   </platform>

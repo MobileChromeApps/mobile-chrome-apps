@@ -20,8 +20,10 @@
   <platform name="android">
     <source-file src="src/android/FileChooser.java" target-dir="src/com/google/cordova" />
 
-    <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-      <plugin name="FileChooser" value="com.google.cordova.FileChooser" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="FileChooser">
+        <param name="android-package" value="com.google.cordova.FileChooser"/>
+      </feature>
     </config-file>
   </platform>
 </plugin>

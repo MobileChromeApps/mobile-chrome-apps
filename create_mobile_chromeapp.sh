@@ -87,7 +87,7 @@ set -x # Echo all commands
 cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
 
-#cordova platform add android
+cordova platform add android
 cordova platform add ios
 
 set +x # No more echo
