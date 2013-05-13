@@ -27,6 +27,10 @@ var REQUEST_FAILED_ERROR = 3;
 // This function overrides the necessary functions on a given Entry to enable syncability.
 function enableSyncabilityForEntry(entry) {
     entry.remove = function(successCallback, errorCallback) {
+        if (entry.isDirectory) {
+            errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+        }
+
         var onRemoveSuccess = function() {
             if (successCallback) {
                 successCallback();
@@ -47,6 +51,10 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
     enableSyncabilityForEntry(directoryEntry);
 
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
+        // This is disabled until efficient syncing is figured out.
+        errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+
+        /*
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
         // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
         var augmentedSuccessCallback = function(directoryEntry) {
@@ -61,6 +69,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
         DirectoryEntry.prototype.getDirectory.call(directoryEntry, path, options, augmentedSuccessCallback, errorCallback);
+        */
     };
 
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
@@ -263,7 +272,6 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
     };
 
     getTokenString(onGetTokenStringSuccess);
-
 }
 
 // This function removes a file or directory from Drive.
