@@ -15,6 +15,10 @@ var _tokenString;
 // When we create or get the app's syncable Drive directory, we store its id here.
 var _syncableAppDirectoryId;
 
+// This maps file names to Drive file ids.
+// TODO(maxw): Save this map to local storage.
+var driveFileIdMap = { };
+
 // This is the next Drive change id to be used to detect remote changes.
 // TODO(maxw): Save the highest change id to local storage.
 var nextChangeId = 1;
@@ -194,7 +198,7 @@ function syncAtPath(entry, currentDirectoryId, pathRemainder, callback) {
             uploadFile(entry, currentDirectoryId /* parentDirectoryId */, callback);
         } else if (entry.isDirectory) {
             var nextDirectoryName = pathRemainder;
-            onGetDirectoryIdSuccess = function(directoryId) {
+            var onGetDirectoryIdSuccess = function(directoryId) {
                 callback();
             };
             getDirectoryId(nextDirectoryName, currentDirectoryId, true /* shouldCreateDirectory */, onGetDirectoryIdSuccess);
@@ -511,12 +515,26 @@ function getDriveFileId(query, successCallback, errorCallback) {
 
 // This function gets the Drive file id for the directory with the given name and parent id.
 function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory, successCallback) {
+    if (driveFileIdMap[directoryName]) {
+        console.log('Drive file id for directory ' + directoryName + ' retrieved from cache.');
+        successCallback(driveFileIdMap[directoryName]);
+        return;
+    }
+
     var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and trashed = false';
     if (parentDirectoryId) {
         query += ' and "' + parentDirectoryId + '" in parents';
     }
     var errorCallback;
 
+    var augmentedSuccessCallback = function(fileId) {
+        // Cache the file id, then pass it on to the callback.
+        driveFileIdMap[directoryName] = fileId;
+        console.log('Drive file id for directory ' + directoryName + ' saved to cache.');
+        successCallback(fileId);
+    };
+
+    // Create the error callback based on whether we should create a directory if it doesn't exist.
     if (shouldCreateDirectory) {
         errorCallback = function(e) {
             if (e === FILE_NOT_FOUND_ERROR) {
@@ -533,15 +551,27 @@ function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory,
             console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
         };
     }
-    getDriveFileId(query, successCallback, errorCallback);
+    getDriveFileId(query, augmentedSuccessCallback, errorCallback);
 }
 
 // This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
 function getFileId(fileName, parentDirectoryId, successCallback) {
+    if (driveFileIdMap[fileName]) {
+        console.log('Drive file id for file ' + fileName + ' retrieved from cache.');
+        successCallback(driveFileIdMap[fileName]);
+        return;
+    }
+
     // In order to support paths, we need to call this recursively.
     var slashIndex = fileName.indexOf('/');
     if (slashIndex < 0) {
         var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+        var augmentedSuccessCallback = function(fileId) {
+            // Cache the file id, then pass it on to the callback.
+            driveFileIdMap[fileName] = fileId;
+            console.log('Drive file id for file ' + fileName + ' saved to cache.');
+            successCallback(fileId);
+        };
         var errorCallback = function(e) {
             if (e === FILE_NOT_FOUND_ERROR) {
                 successCallback(null);
@@ -550,7 +580,7 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
                 console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
             }
         };
-        getDriveFileId(query, successCallback, errorCallback);
+        getDriveFileId(query, augmentedSuccessCallback, errorCallback);
     } else {
         var nextDirectory = fileName.substring(0, slashIndex);
         var pathRemainder = fileName.substring(slashIndex + 1);
