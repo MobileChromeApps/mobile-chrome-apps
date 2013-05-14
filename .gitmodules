@@ -1,0 +1,18 @@
+[submodule "cordova-js"]
+	path = cordova-js
+	url = https://git-wip-us.apache.org/repos/asf/cordova-js.git
+[submodule "cordova-android"]
+	path = cordova-android
+	url = https://git-wip-us.apache.org/repos/asf/cordova-android.git
+[submodule "cordova-ios"]
+	path = cordova-ios
+	url = https://git-wip-us.apache.org/repos/asf/cordova-ios.git
+[submodule "cordova-plugman"]
+	path = cordova-plugman
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
+[submodule "cordova-cli"]
+	path = cordova-cli
+	url = https://git-wip-us.apache.org/repos/asf/cordova-cli.git
+[submodule "chrome-cordova"]
+	path = chrome-cordova
+	url = https://github.com/MobileChromeApps/chrome-cordova.git
