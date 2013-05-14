@@ -20,7 +20,7 @@
 if (typeof WScript != 'undefined') {
   var shell = WScript.CreateObject("WScript.Shell");
   try {
-    var ret = shell.Run('node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
+    var ret = shell.Run('cmd /c node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
   } catch (e) {
     shell.Popup('NodeJS is not installed. Please install it from http://nodejs.org');
     ret = 1;
@@ -167,7 +167,7 @@ function checkOutSelf(callback) {
     scriptDir = origDir;
     chdir('');
     recursiveDelete('mobile-chrome-apps');
-    exec('git clone --progress "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
+    exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
       scriptDir = path.join(origDir, 'mobile-chrome-apps');
       var scriptName = path.basename(process.argv[1]);
       // Copy the init script in to so that it will be used when hacking on it.
