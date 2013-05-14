@@ -26,6 +26,23 @@ function FailIfNotExists {
   fi
 }
 
+function FindCommandLineTool {
+  set +e
+  echo -n "Looking for $2... "
+  target=`which $2`
+  while [ -z "$target" -o ! -f "$target" ]; do
+    echo
+    read -p "Can't find $2. Enter the full pathname to continue: [ENTER to skip] " target
+    if [ -z "$target" ]; then
+      target=
+      break
+    fi
+  done
+  echo $target
+  eval $1=$target
+  set -e
+}
+
 ################################################################################
 # Set default paths
 # This script expects to be run from any subdirectory of `mobile_chrome_apps` folder, and expects your local directory structure to be as such:
@@ -45,6 +62,13 @@ MCA_DIR_NAME="mobile_chrome_apps"
 MCA_PATH_FROM_ARGS="$(cd $(dirname $0); cd ..; pwd)"
 MCA_PATH="${MCA_PATH:-$MCA_PATH_FROM_ARGS}"
 CORDOVA_PATH="${CORDOVA_PATH:-$MCA_PATH/../cordova}"
+
+set +e
+XCODE_BIN=$(which xcodebuild)
+HAS_XCODE=${XCODE_BIN:+Y}
+ANDROID_BIN=$(which android)
+HAS_ANDROID=${ANDROID_BIN:+Y}
+set -e
 
 for x in cordova-js cordova-ios cordova-android; do
   FailIfNotExists "$CORDOVA_PATH/$x"
@@ -87,8 +111,13 @@ set -x # Echo all commands
 cordova create "$TARGET" com.google.cordova."$TARGET" "$TARGET"
 cd "$TARGET"
 
-cordova platform add android
-cordova platform add ios
+if [ -n "$HAS_ANDROID" ]; then
+  cordova platform add android
+fi
+
+if [ -n "$HAS_XCODE" ]; then
+  cordova platform add ios
+fi
 
 set +x # No more echo
 
@@ -125,8 +154,10 @@ set -x # Echo all commands
 
 cordova prepare
 rm -rf app/www/spec app/www/spec.html app/www/js app/www/index.html app/www/css app/www/img
-rm -rf platforms/ios/CordovaLib
-"$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
+if [ -n "$HAS_XCODE" ]; then
+  rm -rf platforms/ios/CordovaLib
+  "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
+fi
 
 set +x # No more echo
 

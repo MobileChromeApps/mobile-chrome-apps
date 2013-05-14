@@ -14,10 +14,61 @@ function GitCloneIfNotExists {
   fi
 }
 
+function RequireCommandLineTool {
+  set +e
+  FORCE=
+  if [ $1 == '-f' ]; then
+    FORCE=Y
+    shift
+  fi
+  echo -n "Looking for $2... "
+  target=`which $2`
+  while [ -z "$target" -o ! -f "$target" ]; do
+    echo
+    read -p "Can't find $2. Enter the full pathname to continue: [ENTER to skip] " target
+    if [ -z "$target" ]; then
+      if [ "$FORCE" == "Y" ]; then
+        echo "Please install $3 before continuing."
+        exit 1
+      else
+        target=
+        break
+      fi
+    fi
+  done
+  echo $target
+  eval $1=$target
+  set -e
+}
+
 ################################################################################
 # Script
 #
 echo "You are setting up Mobile Chrome Apps."
+echo
+
+echo "Checking dependencies..."
+echo
+
+OS=$(uname -s)
+
+RequireCommandLineTool -f NPM_BIN npm "node.js"
+RequireCommandLineTool -f JAKE_BIN jake "jake"
+RequireCommandLineTool ANDROID_BIN android "the Android SDK"
+if [ "$OS" == "Darwin" ]; then
+  RequireCommandLineTool XCODE_BIN xcodebuild "XCode"
+fi
+
+if [ -z "$ANDROID_BIN" -a -z "$XCODE_BIN" ]; then
+  echo "Unable to find either Android or iOS build environments. Aborting."
+  exit 1
+fi
+
+read -p "Shall we continue? " -rn 1
+if [ "$REPLY" != "Y" -a "$REPLY" != "y" ]; then
+  echo
+  exit 0
+fi
 
 set -x # Echo all commands
 
@@ -41,14 +92,14 @@ cd ..
 
 # build cordova-js
 cd cordova/cordova-js
-jake
+$JAKE_BIN
 cd ../..
 
 # install cordova-plugman, if it isn't already installed
 type plugman >/dev/null 2>&1 || {
   cd cordova/cordova-plugman
-  npm install
-  sudo npm link
+  $NPM_BIN install
+  sudo $NPM_BIN link
   cd ../..
 }
 
@@ -56,8 +107,8 @@ type plugman >/dev/null 2>&1 || {
 type cordova >/dev/null 2>&1 || {
   cd cordova/cordova-cli
   git checkout future # TODO: remove once we merge back future branch
-  npm install
-  sudo npm link
+  $NPM_BIN install
+  sudo $NPM_BIN link
   npm link plugman
   cd ../..
 }
@@ -73,10 +124,12 @@ cd ../..
 
 # quick test
 if ! type plugman >/dev/null 2>&1; then
+  set +x
   echo "Plugman not installed."
   exit 1
 fi
 if ! type cordova >/dev/null 2>&1; then
+  set +x
   echo "Cordova-cli not installed."
   exit 1
 fi
