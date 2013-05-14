@@ -64,15 +64,20 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
 
         /*
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
-        // TODO(maxw): Only sync if you need to, not every time (namely, when a directory is created rather than merely retrieved).
+        // TODO(maxw): Handle syncing when a directory is dropped into the app directory; as of now, syncing only happens on creation and updating.
+        // TODO(maxw): If a directory is intended to be created, it is synced whether it's actually created or it already existed.  Change this to sync only when truly created.
         var augmentedSuccessCallback = function(directoryEntry) {
-            var onSyncSuccess = function() {
-                if (successCallback) {
-                    successCallback(directoryEntry);
-                }
-            };
             enableSyncabilityForDirectoryEntry(directoryEntry);
-            sync(directoryEntry, onSyncSuccess);
+
+            // Only sync if the directory is being created and not merely retrieved.
+            if (options.create) {
+                var onSyncSuccess = function() {
+                    if (successCallback) {
+                        successCallback(directoryEntry);
+                    }
+                };
+                sync(directoryEntry, onSyncSuccess);
+            }
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -82,15 +87,20 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
 
     directoryEntry.getFile = function(path, options, successCallback, errorCallback) {
         // When a file is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
-        // TODO(maxw): Only sync if you need to, not every time (namely, when a file is created rather than merely retrieved).
+        // TODO(maxw): Handle syncing when a file is dropped into the app directory; as of now, syncing only happens on creation and updating.
+        // TODO(maxw): If a file is intended to be created, it is synced whether it's actually created or it already existed.  Change this to sync only when truly created.
         var augmentedSuccessCallback = function(fileEntry) {
-            var onSyncSuccess = function() {
-                if (successCallback) {
-                    successCallback(fileEntry);
-                }
-            };
             enableSyncabilityForFileEntry(fileEntry);
-            sync(fileEntry, onSyncSuccess);
+
+            // Only sync if the file is being created and not merely retrieved.
+            if (options.create) {
+                var onSyncSuccess = function() {
+                    if (successCallback) {
+                        successCallback(fileEntry);
+                    }
+                };
+                sync(fileEntry, onSyncSuccess);
+            }
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
