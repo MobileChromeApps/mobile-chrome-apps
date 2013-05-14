@@ -34,11 +34,13 @@ process.on('uncaughtException', function(e) {
 
 var childProcess = require('child_process');
 var fs = require('fs');
+var os = require('os');
 var path = require('path');
 var isWindows = process.platform.slice(0, 3) == 'win';
 var scriptDir = path.dirname(process.argv[1]);
 
 function exit(code) {
+  eventQueue.length = 0;
   if (process.argv[2] == '--pause_on_exit') {
     waitForKey(function() {
       process.exit(code);
@@ -108,6 +110,14 @@ function recursiveDelete(dirPath) {
     }
     fs.rmdirSync(dirPath);
   }
+}
+
+function checkOs(callback) {
+  // Not supported due to lack of symlink support (npm link).
+  if (isWindows && os.release().slice(0, 1) < 6) {
+    fatal('Windows Vista or above is required.');
+  }
+  callback();
 }
 
 function checkGit(callback) {
@@ -250,6 +260,7 @@ function waitForKey(callback) {
 }
 
 var eventQueue = [];
+eventQueue.push(checkOs);
 eventQueue.push(checkGit);
 eventQueue.push(checkOutSelf);
 eventQueue.push(checkOutSubModules);
@@ -259,6 +270,8 @@ eventQueue.push(initCli);
 eventQueue.push(finished);
 
 function pump() {
-  eventQueue.shift()(pump);
+  if (eventQueue.length) {
+    eventQueue.shift()(pump);
+  }
 }
 pump();
