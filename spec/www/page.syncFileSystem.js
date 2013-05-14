@@ -8,6 +8,12 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
     rootEl.appendChild(button);
   }
 
+  // Register a file status listener.
+  var fileStatusListener = function(fileInfo) {
+    chromespec.log('UPDATE: ' + fileInfo.fileEntry.name + ', ' + fileInfo.status + ', ' + fileInfo.action + ', ' + fileInfo.direction);
+  };
+  chrome.syncFileSystem.onFileStatusChanged.addListener(fileStatusListener);
+
   addButton('Create foo.txt', function() {
     var onCreateWriterSuccess = function(fileWriter) {
       chromespec.log('FileEntry.createWriter success!');

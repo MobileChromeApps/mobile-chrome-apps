@@ -23,6 +23,24 @@ var driveFileIdMap = { };
 // TODO(maxw): Save the highest change id to local storage.
 var nextChangeId = 1;
 
+// These listeners are called when a file's status changes.
+var fileStatusListeners = [ ];
+
+//-----------
+// Constants
+//-----------
+
+var SYNC_ACTION_ADDED = 'added';
+var SYNC_ACTION_DELETED = 'deleted';
+var SYNC_ACTION_UPDATED = 'updated';
+
+var FILE_STATUS_CONFLICTING = 'conflicting';
+var FILE_STATUS_PENDING = 'pending';
+var FILE_STATUS_SYNCED = 'synced';
+
+var SYNC_DIRECTION_LOCAL_TO_REMOTE = 'local_to_remote';
+var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remove_to_local';
+
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
@@ -40,6 +58,14 @@ function enableSyncabilityForEntry(entry) {
         }
 
         var onRemoveSuccess = function() {
+            // If a file was removed, fire the file status listener.
+            if (entry.isFile) {
+                var fileInfo = { fileEntry: entry, status: FILE_STATUS_SYNCED, action: SYNC_ACTION_DELETED, direction: SYNC_DIRECTION_LOCAL_TO_REMOTE };
+                for (var i = 0; i < fileStatusListeners.length; i++) {
+                    fileStatusListeners[i](fileInfo);
+                }
+            }
+
             if (successCallback) {
                 successCallback();
             }
@@ -77,6 +103,10 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
                     }
                 };
                 sync(directoryEntry, onSyncSuccess);
+            } else {
+                if (successCallback) {
+                    successCallback(directoryEntry);
+                }
             }
         };
 
@@ -100,6 +130,10 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
                     }
                 };
                 sync(fileEntry, onSyncSuccess);
+            } else {
+                if (successCallback) {
+                    successCallback(fileEntry);
+                }
             }
         };
 
@@ -190,9 +224,21 @@ function sync(entry, callback) {
             return;
         }
 
+        // Augment the callback to fire the status listener, but only if we've synced a file, not a directory.
+        var augmentedCallback = function(fileAction) {
+            if (entry.isFile) {
+                var fileInfo = { fileEntry: entry, status: FILE_STATUS_SYNCED, action: fileAction, direction: SYNC_DIRECTION_LOCAL_TO_REMOTE };
+                for (var i = 0; i < fileStatusListeners.length; i++) {
+                    fileStatusListeners[i](fileInfo);
+                }
+            }
+
+            callback();
+        };
+
         // Using the remainder of the path, start the recursive process of drilling down.
         pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
-        syncAtPath(entry, _syncableAppDirectoryId, pathRemainder, callback);
+        syncAtPath(entry, _syncableAppDirectoryId, pathRemainder, augmentedCallback);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -232,6 +278,9 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
             // Read the file and send its contents.
             var fileReader = new FileReader();
             fileReader.onloadend = function(evt) {
+                // This is used to note whether a file was created or updated.
+                var fileAction;
+
                 // Create the data to send.
                 var metadata = { title: fileEntry.name,
                                  parents: [{ id: parentDirectoryId }] };
@@ -257,7 +306,7 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
                             console.log('File synced!');
-                            callback();
+                            callback(fileAction);
                         } else {
                             console.log('File failed to sync with status ' + xhr.status + '.');
                         }
@@ -266,8 +315,10 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
 
                 // If there's a file id, update the file.  Otherwise, upload it anew.
                 if (fileId) {
+                    fileAction = SYNC_ACTION_UPDATED;
                     xhr.open('PUT', 'https://www.googleapis.com/upload/drive/v2/files/' + fileId + '?uploadType=multipart', true);
                 } else {
+                    fileAction = SYNC_ACTION_ADDED;
                     xhr.open('POST', 'https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart', true);
                 }
                 xhr.setRequestHeader('Content-Type', 'multipart/related; boundary=' + boundary);
@@ -699,4 +750,14 @@ exports.getFileStatus = function(fileEntry, callback) {
 exports.getFileStatuses = function(fileEntries, callback) {
     // TODO(maxw): Implement this!
 };
+
+exports.onServiceStatusChanged = { };
+exports.onServiceStatusChanged.addListener = function(listener) {
+    // TODO(maxw): Implement this!
+}
+
+exports.onFileStatusChanged = { };
+exports.onFileStatusChanged.addListener = function(listener) {
+    fileStatusListeners.push(listener);
+}
 
