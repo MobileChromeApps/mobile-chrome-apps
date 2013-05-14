@@ -39,7 +39,7 @@ var FILE_STATUS_PENDING = 'pending';
 var FILE_STATUS_SYNCED = 'synced';
 
 var SYNC_DIRECTION_LOCAL_TO_REMOTE = 'local_to_remote';
-var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remove_to_local';
+var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remote_to_local';
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -443,12 +443,23 @@ function getDriveChanges(callback) {
                     nextChangeId = parseInt(responseJson.largestChangeId) + 1;
 
                     // For each change received, check whether it's on a file in the syncable app folder.  If so, download it.
+                    // TODO(maxw): Include deletions.
                     for (var i = 0; i < numChanges; i++) {
-                        var numParents = responseJson.items[i].file.parents.length;
+                        var change = responseJson.items[i];
+                        var changedFile = change.file;
+                        var numParents = changedFile.parents.length;
                         for (var j = 0; j < numParents; j++) {
-                            if (responseJson.items[i].file.parents[j].id === _syncableAppDirectoryId) {
-                                console.log('Downloading ' + responseJson.items[i].file.title + '.');
-                                downloadFile(responseJson.items[i].file);
+                            if (changedFile.parents[j].id === _syncableAppDirectoryId) {
+                                console.log('Downloading ' + changedFile.title + '.');
+                                var onDownloadFileSuccess = function(fileEntry) {
+                                    // TODO(maxw): Determine if the synced file has just been created.
+                                    var syncAction = change.deleted ? SYNC_ACTION_DELETED : SYNC_ACTION_UPDATED;
+                                    var fileInfo = { fileEntry: fileEntry, status: FILE_STATUS_SYNCED, action: syncAction, direction: SYNC_DIRECTION_REMOTE_TO_LOCAL };
+                                    for (var i = 0; i < fileStatusListeners.length; i++) {
+                                        fileStatusListeners[i](fileInfo);
+                                    }
+                                };
+                                downloadFile(changedFile, onDownloadFileSuccess);
                             }
                         }
                     }
@@ -458,6 +469,7 @@ function getDriveChanges(callback) {
             }
         };
 
+        // TODO(maxw): Use `nextLink` to get multiple pages of change results.
         xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000', true);
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
@@ -467,14 +479,15 @@ function getDriveChanges(callback) {
 }
 
 // This function downloads the given Drive file.
-function downloadFile(file) {
+function downloadFile(file, callback) {
     // Send a request to retrieve the changes.
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
-                var onSaveDataSuccess = function() {
+                var onSaveDataSuccess = function(fileEntry) {
                     console.log('Download of ' + file.title + ' complete!');
+                    callback(fileEntry);
                 }
                 saveData(file.title, xhr.responseText, onSaveDataSuccess);
             } else {
@@ -489,15 +502,14 @@ function downloadFile(file) {
 }
 
 function saveData(fileName, data, callback) {
-    var onCreateWriterSuccess = function(fileWriter) {
-        fileWriter.write(data);
-        callback();
-    };
-    var onCreateWriterError = function(e) {
-        console.log('Failed to create writer.');
-    };
-
     var onGetFileSuccess = function(fileEntry) {
+        var onCreateWriterSuccess = function(fileWriter) {
+            fileWriter.write(data);
+            callback(fileEntry);
+        };
+        var onCreateWriterError = function(e) {
+            console.log('Failed to create writer.');
+        };
         fileEntry.createWriter(onCreateWriterSuccess, onCreateWriterError);
     };
     var onGetFileError = function(e) {
@@ -600,7 +612,7 @@ function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory,
         errorCallback = function(e) {
             if (e === FILE_NOT_FOUND_ERROR) {
                 // If the directory doesn't exist, create it.
-                createDirectory(directoryName, parentDirectoryId, successCallback);
+                createDirectory(directoryName, parentDirectoryId, augmentedSuccessCallback);
             } else {
                 // If it's a different error, log it.
                 console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
