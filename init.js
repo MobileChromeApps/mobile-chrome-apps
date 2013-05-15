@@ -1,3 +1,4 @@
+//usr/bin/env node $0; exit $?
 /**
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -15,6 +16,11 @@
   KIND, either express or implied.  See the License for the
   specific language governing permissions and limitations
   under the License.
+ */
+
+/**
+  The top line of this file will allow this script to be run as
+  a UNIX shell script, as well as being a valid Node.js program.
  */
 
 if (typeof WScript != 'undefined') {
