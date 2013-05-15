@@ -9,6 +9,10 @@ run as native Android and iOS applications through [Apache Cordova](http://cordo
 
 Set yourself up for mobile app development on [iOS](http://docs.phonegap.com/en/edge/guide_getting-started_ios_index.md.html#Getting%20Started%20with%20iOS) or [Android](http://docs.phonegap.com/en/edge/guide_getting-started_android_index.md.html#Getting%20Started%20with%20Android).
 
+ * For iOS, you will need to have XCode 4 installed, with the iOS SDK.
+
+ * For Android, download and install the Android Development Kit. You will need to ensure that the 'android' and 'adb' commands are in your path. Download and install the Android 4.2.2 SDK, and the Google Play Services APIs.
+
 ### node.js
 
 Install a recent version of [node.js](http://nodejs.org) (Node 0.6.x, which ships with several Linux distributions, is too old for the current tooling)
