@@ -289,7 +289,7 @@ function createAppMain(appName) {
     fatal('App Name must follow the pattern: com.company.id');
   }
   function createApp(callback) {
-    console.log('## Creating You Application');
+    console.log('## Creating Your Application');
     chdir(origDir);
     var name = /\w+\.(\w+)$/.exec(appName)[1];
 
@@ -362,7 +362,7 @@ function updateMain() {
       var contents = fs.readFileSync(configFilePath);
       //contents = contents.replace();
   //\ \ \ \ <access origin="chrome-extension://*" />
-      fs.writeFileSync(configFilePath);
+      fs.writeFileSync(configFilePath, contents);
       callback();
     };
   };
