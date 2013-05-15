@@ -90,6 +90,8 @@ fi
 #
 read -n 1 -p "Install all plugins without prompt? [y/n] " SHOULD_NOT_PROMPT
 echo
+SHOULD_ADD_HELLO_WORLD=y
+
 echo "Starting..."
 echo
 
@@ -140,6 +142,10 @@ rm -rf app/www/spec app/www/spec.html app/www/js app/www/index.html app/www/css 
 if [ -n "$HAS_XCODE" ]; then
   rm -rf platforms/ios/CordovaLib
   "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
+fi
+
+if [ "$SHOULD_ADD_HELLO_WORLD" == "y" ]; then
+  cp -r $MCA_PATH/chrome-cordova/samples/helloworld/* app/www
 fi
 
 sed -i '' '/access/a\

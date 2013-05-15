@@ -1,0 +1,16 @@
+html {
+  height: 100%;
+}
+
+body {
+  box-shadow: 0 0 50px #ddd inset;
+  -webkit-box-shadow: 0 0 50px #ddd inset;
+  font-family: OpenSans, Helvetica, Arial, sans;
+  height: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+img {
+  margin: 50px auto;
+}
