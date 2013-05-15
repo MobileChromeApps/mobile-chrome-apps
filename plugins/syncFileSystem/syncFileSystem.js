@@ -272,6 +272,7 @@ function syncAtPath(entry, currentDirectoryId, pathRemainder, callback) {
 }
 
 // This function uploads a file to Drive.
+// TODO(maxw): Implement exponential backoff on 503 (and perhaps other?) responses.
 function uploadFile(fileEntry, parentDirectoryId, callback) {
     var onGetFileIdSuccess = function(fileId) {
         var onFileSuccess = function(file) {
@@ -442,6 +443,9 @@ function getDriveChanges(callback) {
                     // Record the new change id, incrementing it to avoid retrieving a duplicate change later.
                     nextChangeId = parseInt(responseJson.largestChangeId) + 1;
 
+                    // Track the number of relevant changes, to be sent to the callback.
+                    var numRelevantChanges = 0;
+
                     // For each change received, check whether it's on a file in the syncable app folder.  If so, download it.
                     // TODO(maxw): Include deletions.
                     for (var i = 0; i < numChanges; i++) {
@@ -451,6 +455,7 @@ function getDriveChanges(callback) {
                         for (var j = 0; j < numParents; j++) {
                             if (changedFile.parents[j].id === _syncableAppDirectoryId) {
                                 console.log('Downloading ' + changedFile.title + '.');
+                                numRelevantChanges++;
                                 var onDownloadFileSuccess = function(fileEntry) {
                                     // TODO(maxw): Determine if the synced file has just been created.
                                     var syncAction = change.deleted ? SYNC_ACTION_DELETED : SYNC_ACTION_UPDATED;
@@ -463,6 +468,7 @@ function getDriveChanges(callback) {
                             }
                         }
                     }
+                    callback(numRelevantChanges);
                 } else {
                     console.log('Change search failed with status ' + xhr.status + '.');
                 }
@@ -718,6 +724,25 @@ exports.requestFileSystem = function(callback) {
         var onCreateAppDirectoryOnDriveSuccess = function(directoryEntry) {
             // Set the root of the file system to the app subdirectory.
             fileSystem.root = directoryEntry;
+
+            // Set up regular remote-to-local checks.
+            var delay = 2000;
+            var onGetDriveChangesSuccess = function(numChanges) {
+                console.log('Relevant changes: ' + numChanges + '.');
+                if (numChanges === 0) {
+                    if (delay < 64000) {
+                        delay *= 2;
+                        console.log('  Delay doubled.');
+                    } else {
+                        console.log('  Delay capped at ' + delay + 'ms.');
+                    }
+                } else {
+                    delay = 2000;
+                    console.log('  Delay reset.');
+                }
+                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess);
+            };
+            window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess);
 
             // Pass on the file system!
             callback(fileSystem);
