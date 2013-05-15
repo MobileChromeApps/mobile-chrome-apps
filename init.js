@@ -233,7 +233,7 @@ function initRepoMain() {
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
     chdir(scriptDir);
-    exec('git pull', function() {
+    exec('git pull --rebase', function() {
       exec('git submodule init', function() {
         exec('git submodule update', function() {
           chdir(path.join(scriptDir, 'cordova-cli'));
