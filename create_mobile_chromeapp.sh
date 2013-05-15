@@ -11,12 +11,6 @@ set -e # Fail on errors
 function AddPlugin {
   echo cordova plugin add "$1"
   cordova plugin add "$1"
-
-  if [ "$SHOULD_LINK" = "y" ]; then
-    PLUGIN_TARGET_PATH="plugins/$(basename $1)"
-    rm -rf "$PLUGIN_TARGET_PATH"
-    ln -s "$1" "$PLUGIN_TARGET_PATH"
-  fi
 }
 
 function FailIfNotExists {
@@ -96,10 +90,6 @@ fi
 #
 read -n 1 -p "Install all plugins without prompt? [y/n] " SHOULD_NOT_PROMPT
 echo
-read -n 1 -p "Symlink all your plugins? [y/n] " SHOULD_LINK
-echo
-read -n 1 -p "Also add chrome spec? [y/n] " SHOULD_ADD_SPEC
-echo
 echo "Starting..."
 echo
 
@@ -139,13 +129,6 @@ for PLUGIN_PATH in "$MCA_PATH/chrome-cordova/plugins/"*; do
 
   AddPlugin "$PLUGIN_PATH"
 done
-
-################################################################################
-# Install chrome spec
-#
-if [ "$SHOULD_ADD_SPEC" == "y" ]; then
-  AddPlugin "$MCA_PATH/chrome-cordova/spec"
-fi
 
 ################################################################################
 # Massage the workspace
