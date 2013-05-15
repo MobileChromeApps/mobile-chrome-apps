@@ -56,6 +56,8 @@ var isWindows = process.platform.slice(0, 3) == 'win';
 var eventQueue = [];
 var scriptDir = path.dirname(process.argv[1]);
 var scriptName = path.basename(process.argv[1]);
+var hasAndroidSdk = false;
+var hasXcode = false;
 
 function exit(code) {
   if (eventQueue) {
@@ -294,9 +296,13 @@ function createAppMain(appName) {
     var name = /\w+\.(\w+)$/.exec(appName)[1];
 
     // TODO: add android.
-    var cmds = [
-        ['platform', 'add', 'ios'],
-    ];
+    var cmds = [];
+    if (hasXcode) {
+      cmds.push(['platform', 'add', 'ios']);
+    }
+    if (hasAndroidSdk) {
+      cmds.push(['platform', 'add', 'android']);
+    }
     ['bootstrap', 'common', 'file-chooser', 'fileSystem', 'i18n', 'identity', 'socket', 'storage'].forEach(function(pluginName) {
       cmds.push(['plugin', 'add', path.join(scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
     });
@@ -378,7 +384,47 @@ function updateMain() {
   }
 }
 
+function toolsCheckMain() {
+  function checkAndroid(callback) {
+    exec('android list targets', function() {
+      hasAndroidSdk = true;
+      console.log('Android SDK is installed.');
+      callback();
+      }, function() {
+        console.log('Android SDK is not installed.');
+        callback();
+      }, true);
+  }
+  function checkXcode(callback) {
+    if (process.platform == 'darwin') {
+      exec('which xcodebuild', function() {
+        hasXcode = true;
+        console.log('Xcode is installed.');
+        callback();
+      }, function() {
+        console.log('Xcode is not installed.');
+        callback();
+      }, true);
+    } else {
+      callback();
+    }
+  }
+  function checkAtLeastOneTool(callback) {
+    if (!hasAndroidSdk && !hasIos) {
+      if (process.platform == 'darwin') {
+        fatal('Neither android nor xcodebuild were found on your PATH. Please install at least one of them.');
+      } else {
+        fatal('Android SDK was not found on your PATH. Please ensure that the android tool is available.');
+      }
+    }
+    callback();
+  }
+  eventQueue.push(checkAndroid);
+  eventQueue.push(checkXcode);
+  eventQueue.push(checkAtLeastOneTool);
+}
 function main() {
+  toolsCheckMain();
   if (commandLineFlags['update_app']) {
     updateMain();
   } else {
