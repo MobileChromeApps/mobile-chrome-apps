@@ -148,7 +148,13 @@ if [ "$SHOULD_ADD_HELLO_WORLD" == "y" ]; then
   cp -r $MCA_PATH/chrome-cordova/samples/helloworld/* app/www
 fi
 
-sed -i '' '/access/a\
+if [ $(uname -s) == 'Darwin' ]; then
+SED_INPLACE="sed -i ''"
+else
+SED_INPLACE="sed -i''"
+fi
+
+$SED_INPLACE '/access/a\
    <access origin="chrome-extension://*" />\
 ' app/config.xml
 
