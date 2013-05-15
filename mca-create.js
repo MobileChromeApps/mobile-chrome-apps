@@ -274,8 +274,11 @@ function initRepoMain() {
       //console.log('cordova-cli already has its dependencies installed.');
       callback();
     } else {
-      chdir(path.join(scriptDir, 'cordova-cli'));
-      exec('npm install', callback);
+      process.chdir(path.join(scriptDir, 'cordova-cli'));
+      exec('npm install', function() {
+        process.chdir(origDir);
+        callback();
+      });
     }
   }
 
@@ -433,10 +436,10 @@ function toolsCheckMain() {
 }
 function main() {
   toolsCheckMain();
+  initRepoMain();
   if (commandLineFlags['update_app']) {
     updateMain();
   } else {
-    initRepoMain();
     var appName = commandLineArgs[0];
     if (appName) {
       createAppMain(appName);
