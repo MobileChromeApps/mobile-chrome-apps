@@ -19,13 +19,13 @@ Set yourself up for mobile app development:
 * [iOS](http://docs.phonegap.com/en/edge/guide_getting-started_ios_index.md.html#Getting%20Started%20with%20iOS)
 * [Android](http://docs.phonegap.com/en/edge/guide_getting-started_android_index.md.html#Getting%20Started%20with%20Android)
 
-## Step 1: Install environment using the `init_mobile_chromeapp_environment.sh` script.
+## Step 1: Install environment
 
 (You will only need to run this steps once.)
 
     init_mobile_chromeapp_environment.sh
 
-## Step 2: Create projects using the `create_chromeapp.sh` script.
+## Step 2: Create project
 
     cd mobile_chrome_apps
     mkdir -p sandbox
@@ -38,7 +38,7 @@ Optionally, import your Chrome Packaged App into the `app/www/` directory.
     rm -rf app/www
     ln -s PATH_TO_CHROME_APP app/www
 
-## Step 3: Prepare project using the `update_mobile_chromeapp.sh` script.
+## Step 3: Prepare project
 
 (You will need to run this step whenever you make changes, before building your app.)
 
