@@ -3,10 +3,15 @@
 This repo contains tools for creating [Chrome Packaged Apps](http://developer.chrome.com/apps) that
 run as native Android and iOS applications through [Apache Cordova](http://cordova.apache.org/).
 
-## Step 0: Install iOS and/or Android SDKs
+## Step 0: Install Dependencies
+
+### iOS and/or Android SDKs
 
 Set yourself up for mobile app development on [iOS](http://docs.phonegap.com/en/edge/guide_getting-started_ios_index.md.html#Getting%20Started%20with%20iOS) or [Android](http://docs.phonegap.com/en/edge/guide_getting-started_android_index.md.html#Getting%20Started%20with%20Android).
 
+### node.js
+
+Install a recent version of [node.js](http://nodejs.org) (Node 0.6.x, which ships with several Linux distributions, is too old for the current tooling)
 
 ## Step 1: Clone This Repository
 
