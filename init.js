@@ -26,6 +26,7 @@
 if (typeof WScript != 'undefined') {
   var shell = WScript.CreateObject("WScript.Shell");
   try {
+    // Don't worry about passing along arguments here. It's stricly a double-click convenience.
     var ret = shell.Run('cmd /c node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
   } catch (e) {
     shell.Popup('NodeJS is not installed. Please install it from http://nodejs.org');
@@ -216,12 +217,11 @@ function initRepoMain() {
       recursiveDelete('mobile-chrome-apps');
       exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
         scriptDir = path.join(origDir, 'mobile-chrome-apps');
-        // Copy the init script in to so that it will be used when hacking on it.
-        copyFile(process.argv[1], path.join(scriptDir, scriptName), function() {
-          chdir(scriptDir);
-          exec('"' + process.argv[0] + '" ' + scriptName, function() {
-            exit(0);
-          });
+        chdir(scriptDir);
+        console.log('Successfully cloned mobile-chrome-apps repo. Delegating to checked-out version of ' + scriptName);
+        // TODO: We should quote the args.
+        exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
+          exit(0);
         });
       });
     } else {
