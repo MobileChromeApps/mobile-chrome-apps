@@ -335,7 +335,24 @@ function createAppMain(appName) {
     }, undefined, true);
   }
 
+  function setAccessTag(callback) {
+    console.log('## Setting <access> tag');
+    var configFilePath = path.join('app', 'config.xml');
+    if (!fs.existsSync(configFilePath)) {
+      fatal('Expected file to exist: ' + configFilePath);
+    }
+
+    // Manipulating XML with Regex: See http://stackoverflow.com/a/1732454
+    var contents = fs.readFileSync(configFilePath, {encoding: 'utf8'});
+    contents = contents.replace(/(access.*)/,"$1\n    <access origin=\"chrome-extension://*\" />");
+    fs.writeFileSync(configFilePath, contents);
+
+    callback();
+  }
+
   eventQueue.push(createApp);
+  eventQueue.push(setAccessTag);
+  eventQueue.push(function(callback) { updateMain(); callback(); });
 }
 
 function updateMain() {
@@ -365,32 +382,12 @@ function updateMain() {
     };
   }
 
-  function createAddAccessTagStep(platform) {
-    return function(callback) {
-      console.log('## Setting <access> tag for ' + platform);
-      var appName = path.basename(origDir);
-      var configFilePath = platform == 'android' ?
-          path.join('platforms', 'android', 'res', 'xml', 'config.xml') :
-          path.join('platforms', 'ios', appName, 'config.xml');
-      if (!fs.existsSync(configFilePath)) {
-        fatal('Expected file to exist: ' + configFilePath);
-      }
-      var contents = fs.readFileSync(configFilePath);
-      //contents = contents.replace();
-  //\ \ \ \ <access origin="chrome-extension://*" />
-      fs.writeFileSync(configFilePath, contents);
-      callback();
-    };
-  };
-
   eventQueue.push(runPrepare);
   if (hasAndroid) {
     eventQueue.push(createAddJsStep('android'));
-    eventQueue.push(createAddAccessTagStep('android'));
   }
   if (hasIos) {
     eventQueue.push(createAddJsStep('ios'));
-    eventQueue.push(createAddAccessTagStep('ios'));
   }
 }
 
