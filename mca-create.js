@@ -315,10 +315,10 @@ function createAppMain(appName) {
       } else {
         // Create a script that runs update.js.
         if (isWindows) {
-          fs.writeFileSync('chrome_app_update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.writeFileSync('mca_update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
         } else {
-          fs.writeFileSync('chrome_app_update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
-          fs.chmodSync('chrome_app_update.sh', '777');
+          fs.writeFileSync('mca_update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.chmodSync('mca_update.sh', '777');
         }
         callback();
       }
