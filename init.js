@@ -36,11 +36,21 @@ var childProcess = require('child_process');
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
+
+var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
 var scriptDir = path.dirname(process.argv[1]);
+var appName = process.argv[2];
+var eventQueue = [];
+
+if (appName && !/\w+\.\w+\.\w+/.exec(appName)) {
+  fatal('App Name must follow the pattern: com.company.id');
+}
 
 function exit(code) {
-  eventQueue.length = 0;
+  if (eventQueue) {
+    eventQueue.length = 0;
+  }
   if (process.argv[2] == '--pause_on_exit') {
     waitForKey(function() {
       process.exit(code);
@@ -76,6 +86,10 @@ function sudo(cmd, onSuccess, opt_onError, silent) {
     cmd = 'sudo ' + cmd;
   }
   exec(cmd, onSuccess, opt_onError, silent);
+}
+
+function cordovaCmd(args) {
+  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
 }
 
 function copyFile(src, dst, callback) {
@@ -143,7 +157,7 @@ function computeGitVersion(callback) {
 }
 
 function chdir(d) {
-  d = path.join(scriptDir, d);
+  d = path.resolve(scriptDir, d);
   if (process.cwd() != d) {
     console.log('Changing directory to: ' + d);
     process.chdir(d);
@@ -152,7 +166,6 @@ function chdir(d) {
 
 function checkOutSelf(callback) {
   // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
-  var origDir = process.cwd();
   var requiresClone = true;
   // First - try the directory of the script.
   if (scriptDir.slice(0, 2) != '\\\\') {
@@ -194,7 +207,6 @@ function checkOutSelf(callback) {
 }
 
 function checkOutSubModules(callback) {
-  chdir('');
   exec('git pull', function() {
     exec('git submodule init', function() {
       exec('git submodule update --recursive', callback);
@@ -207,39 +219,32 @@ function buildCordovaJs(callback) {
   var needsBuildJs = true;
   computeGitVersion(function(version) {
     if (fs.existsSync('pkg/cordova.ios.js')) {
-      needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) != -1);
+      needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) == -1);
     }
     if (needsBuildJs) {
       console.log('CordovaJS needs to be built.');
       var packager = require('./cordova-js/build/packager');
-      packager.generate("ios", version);
-      packager.generate("android", version);
-      callback();
+      packager.generate('ios', version);
+      packager.generate('android', version);
     } else {
       console.log('CordovaJS is up-to-date.');
-      callback();
     }
-  });
-}
-
-function initPlugman(callback) {
-  chdir('cordova-plugman');
-  exec('npm install', function() {
-    sudo('npm link', callback);
+    callback();
   });
 }
 
 function initCli(callback) {
-  chdir('cordova-cli');
-  exec('npm install', function() {
-    sudo('npm link', function() {
-      exec('npm link plugman', callback);
+  // TODO: Figure out when this should be re-run (e.g. upon update).
+  if (fs.existsSync('cordova-cli/node_modules')) {
+    console.log('cordova-cli already has its dependencies installed.');
+    callback();
+  } else {
+    chdir('cordova-cli');
+    exec('npm install', function() {
+      //sudo('npm link', callback);
+      callback();
     });
-  });
-}
-
-function finished(callback) {
-  console.log('You\'ve successfully set up for Mobile Chrome Apps.');
+  }
 }
 
 function waitForKey(callback) {
@@ -257,18 +262,33 @@ function waitForKey(callback) {
   process.stdin.on('data', cont);
 }
 
-var eventQueue = [];
+function createApp(callback) {
+  chdir(origDir);
+  var name = /\w+\.(\w+)$/.exec(appName)[1];
+  exec(cordovaCmd(['create', name, appName, name]), function() {
+    chdir(path.join(origDir, name));
+    // TODO: add android.
+    exec(cordovaCmd(['platform', 'add', 'ios']), function() {
+      callback();
+    });
+  });
+}
+
+
 eventQueue.push(checkOs);
 eventQueue.push(checkGit);
 eventQueue.push(checkOutSelf);
 eventQueue.push(checkOutSubModules);
 eventQueue.push(buildCordovaJs);
-eventQueue.push(initPlugman);
 eventQueue.push(initCli);
-eventQueue.push(finished);
+
+if (appName) {
+  eventQueue.push(createApp);
+}
 
 function pump() {
   if (eventQueue.length) {
+    process.chdir(scriptDir);
     eventQueue.shift()(pump);
   }
 }
