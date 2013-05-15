@@ -190,6 +190,7 @@ function initRepoMain() {
   }
 
   function checkOutSelf(callback) {
+    console.log('## Checking Out mobile-chrome-apps');
     // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
     var requiresClone = true;
     // First - try the directory of the script.
@@ -230,14 +231,22 @@ function initRepoMain() {
   }
 
   function checkOutSubModules(callback) {
+    console.log('## Checking Out SubModules');
+    chdir(scriptDir);
     exec('git pull', function() {
       exec('git submodule init', function() {
-        exec('git submodule update --recursive', callback);
+        exec('git submodule update', function() {
+          chdir(path.join(scriptDir, 'cordova-cli'));
+          exec('git submodule init', function() {
+            exec('git submodule update', callback);
+          });
+        });
       });
     });
   }
 
   function buildCordovaJs(callback) {
+    console.log('## Building cordova-js');
     chdir(path.join(scriptDir, 'cordova-js'));
     var needsBuildJs = true;
     computeGitVersion(function(version) {
@@ -257,9 +266,10 @@ function initRepoMain() {
   }
 
   function initCli(callback) {
+    console.log('## Setting up cordova-cli');
     // TODO: Figure out when this should be re-run (e.g. upon update).
     if (fs.existsSync('cordova-cli/node_modules')) {
-      console.log('cordova-cli already has its dependencies installed.');
+      //console.log('cordova-cli already has its dependencies installed.');
       callback();
     } else {
       chdir(path.join(scriptDir, 'cordova-cli'));
@@ -279,6 +289,7 @@ function createAppMain(appName) {
     fatal('App Name must follow the pattern: com.company.id');
   }
   function createApp(callback) {
+    console.log('## Creating You Application');
     chdir(origDir);
     var name = /\w+\.(\w+)$/.exec(appName)[1];
 
@@ -293,7 +304,8 @@ function createAppMain(appName) {
     function runCmd() {
       var curCmd = cmds.shift();
       if (curCmd) {
-        exec(cordovaCmd(curCmd), runCmd);
+        console.log('cordova ' + curCmd.join(' '));
+        exec(cordovaCmd(curCmd), runCmd, undefined, true);
       } else {
         // Create a script that runs update.js.
         if (isWindows) {
@@ -324,20 +336,20 @@ function updateMain() {
   }
 
   function runPrepare(callback) {
-    console.log(process.cwd())
+    console.log('## Running prepare from ' + process.cwd())
     exec(cordovaCmd(['prepare']), callback);
   }
 
   function createAddJsStep(platform) {
     return function(callback) {
-      console.log('Updating cordova.js for ' + platform);
+      console.log('## Updating cordova.js for ' + platform);
       copyFile(path.join(scriptDir, 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join('platforms', platform, 'www', 'cordova.js'), callback);
     };
   }
 
   function createAddAccessTagStep(platform) {
     return function(callback) {
-      console.log('Setting <access> tag for ' + platform);
+      console.log('## Setting <access> tag for ' + platform);
       var appName = path.basename(origDir);
       var configFilePath = platform == 'android' ?
           path.join('platforms', 'android', 'res', 'xml', 'config.xml') :
