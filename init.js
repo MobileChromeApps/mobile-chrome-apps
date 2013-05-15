@@ -1,4 +1,4 @@
-//usr/bin/env node $0; exit $?
+//usr/bin/env node $0 $*; exit $?
 /**
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
