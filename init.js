@@ -28,169 +28,346 @@ if (typeof WScript != 'undefined') {
   WScript.Quit(ret);
 }
 
-var common = require('./common');
 process.on('uncaughtException', function(e) {
-  common.fatal('Uncaught exception: ' + e);
+  fatal('Uncaught exception: ' + e);
 });
 
+var childProcess = require('child_process');
 var fs = require('fs');
 var path = require('path');
 
+var commandLineFlags = {};
+var commandLineArgs = process.argv.slice(2).filter(function(arg) {
+  if (arg.slice(0, 2) == '--') {
+    commandLineFlags[arg.slice(2)] = true;
+  }
+  return arg.slice(0, 2) != '--';
+});
+
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
-var appName = process.argv[2];
+var eventQueue = [];
+var scriptDir = path.dirname(process.argv[1]);
+var scriptName = path.basename(process.argv[1]);
 
-if (appName && !/\w+\.\w+\.\w+/.exec(appName)) {
-  common.fatal('App Name must follow the pattern: com.company.id');
+function exit(code) {
+  if (eventQueue) {
+    eventQueue.length = 0;
+  }
+  if (commandLineFlags['pause_on_exit']) {
+    waitForKey(function() {
+      process.exit(code);
+    });
+  } else {
+    process.exit(code);
+  }
 }
 
+function fatal(msg) {
+  console.error(msg);
+  exit(1);
+}
 
-function checkGit(callback) {
-  var errMsg = 'git is not installed (or not available on your PATH). Please install it from http://git-scm.com';
-  common.exec('git --version', callback, function() {
-    if (isWindows) {
-      // See if it's at the default install path.
-      process.env['PATH'] += ';' + path.join(process.env['ProgramFiles'], 'Git', 'bin');
-      common.exec('git --version', callback, function() {
-        common.fatal(errMsg);
-      }, true);
+function exec(cmd, onSuccess, opt_onError, opt_silent) {
+  var onError = opt_onError || function(e) {
+    fatal('command failed: ' + cmd + '\n' + e);
+  };
+  if (!opt_silent) {
+    console.log('Running: ' + cmd);
+  }
+  childProcess.exec(cmd, function(error, stdout, stderr) {
+    if (error) {
+      onError(error);
     } else {
-      common.fatal(errMsg);
+      onSuccess(stdout.trim());
     }
-  }, true);
+  });
 }
 
-function computeGitVersion(callback) {
-  common.exec('git describe --tags --long', function(stdout) {
-    var version = stdout.replace(/^2.5.0-.*?-/, 'dev-');
-    callback(version);
-  }, null, true);
+function sudo(cmd, onSuccess, opt_onError, silent) {
+  if (!isWindows) {
+    cmd = 'sudo ' + cmd;
+  }
+  exec(cmd, onSuccess, opt_onError, silent);
 }
 
-function checkOutSelf(callback) {
-  // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
-  var requiresClone = true;
-  // First - try the directory of the script.
-  if (common.scriptDir.slice(0, 2) != '\\\\') {
-    process.chdir(common.scriptDir);
-    requiresClone = !fs.existsSync('.git');
+function cordovaCmd(args) {
+  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
+}
+
+function chdir(d) {
+  d = path.resolve(scriptDir, d);
+  if (process.cwd() != d) {
+    console.log('Changing directory to: ' + d);
+    process.chdir(d);
   }
-  // Next - try the CWD.
-  if (requiresClone) {
-    common.scriptDir = origDir;
-    process.chdir(common.scriptDir);
-    requiresClone = !fs.existsSync('.git');
+}
+
+function copyFile(src, dst, callback) {
+  var rd = fs.createReadStream(src);
+  var wr = fs.createWriteStream(dst);
+  wr.on('error', function(err) {
+    fatal('Copy file error: ' + err);
+  });
+  wr.on('close', callback);
+  rd.pipe(wr);
+}
+
+function recursiveDelete(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    console.log('Deleting: ' + dirPath);
+    helper(dirPath);
   }
-  // Next - see if it exists within the CWD.
-  if (requiresClone) {
-    if (fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
-      common.scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      process.chdir(common.scriptDir);
+  function helper(dirPath) {
+    try {
+       var files = fs.readdirSync(dirPath);
+    } catch(e) {
+      return;
+    }
+    for (var i = 0; i < files.length; i++) {
+      var filePath = path.join(dirPath, files[i]);
+      fs.chmodSync(filePath, '777');
+      if (fs.statSync(filePath).isFile()) {
+        fs.unlinkSync(filePath);
+      } else {
+        helper(filePath);
+      }
+    }
+    fs.rmdirSync(dirPath);
+  }
+}
+
+function waitForKey(callback) {
+  console.log('press a key');
+  function cont(key) {
+    if (key == '\u0003') {
+      process.exit(2);
+    }
+    process.stdin.removeListener('data', cont);
+    process.stdin.pause();
+    callback();
+  }
+  process.stdin.resume();
+  process.stdin.setRawMode(true);
+  process.stdin.on('data', cont);
+}
+
+function pump() {
+  if (eventQueue.length) {
+    eventQueue.shift()(pump);
+  }
+}
+
+////////////////////////// INIT LOGIC //////////////////////////
+function initRepoMain() {
+  function checkGit(callback) {
+    var errMsg = 'git is not installed (or not available on your PATH). Please install it from http://git-scm.com';
+    exec('git --version', callback, function() {
+      if (isWindows) {
+        // See if it's at the default install path.
+        process.env['PATH'] += ';' + path.join(process.env['ProgramFiles'], 'Git', 'bin');
+        exec('git --version', callback, function() {
+          fatal(errMsg);
+        }, true);
+      } else {
+        fatal(errMsg);
+      }
+    }, true);
+  }
+
+  function computeGitVersion(callback) {
+    exec('git describe --tags --long', function(stdout) {
+      var version = stdout.replace(/^2.5.0-.*?-/, 'dev-');
+      callback(version);
+    }, null, true);
+  }
+
+  function checkOutSelf(callback) {
+    // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
+    var requiresClone = true;
+    // First - try the directory of the script.
+    if (scriptDir.slice(0, 2) != '\\\\') {
+      process.chdir(scriptDir);
       requiresClone = !fs.existsSync('.git');
     }
-  }
-  if (requiresClone) {
-    common.scriptDir = origDir;
-    common.chdir(origDir);
-    common.recursiveDelete('mobile-chrome-apps');
-    common.exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
-      common.scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      var scriptName = path.basename(process.argv[1]);
-      // Copy the init script in to so that it will be used when hacking on it.
-      common.copyFile(process.argv[1], path.join(common.scriptDir, scriptName), function() {
-        common.chdir(exports.scriptDir);
-        common.exec('"' + process.argv[0] + '" ' + scriptName, function() {
-          common.exit(0);
+    // Next - try the CWD.
+    if (requiresClone) {
+      scriptDir = origDir;
+      process.chdir(scriptDir);
+      requiresClone = !fs.existsSync('.git');
+    }
+    // Next - see if it exists within the CWD.
+    if (requiresClone) {
+      if (fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
+        scriptDir = path.join(origDir, 'mobile-chrome-apps');
+        process.chdir(scriptDir);
+        requiresClone = !fs.existsSync('.git');
+      }
+    }
+    if (requiresClone) {
+      scriptDir = origDir;
+      chdir(origDir);
+      recursiveDelete('mobile-chrome-apps');
+      exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
+        scriptDir = path.join(origDir, 'mobile-chrome-apps');
+        // Copy the init script in to so that it will be used when hacking on it.
+        copyFile(process.argv[1], path.join(scriptDir, scriptName), function() {
+          chdir(scriptDir);
+          exec('"' + process.argv[0] + '" ' + scriptName, function() {
+            exit(0);
+          });
         });
       });
-    });
-  } else {
-    callback();
-  }
-}
-
-function checkOutSubModules(callback) {
-  common.exec('git pull', function() {
-    common.exec('git submodule init', function() {
-      common.exec('git submodule update --recursive', callback);
-    });
-  });
-}
-
-function buildCordovaJs(callback) {
-  common.chdir(path.join(exports.scriptDir, 'cordova-js'));
-  var needsBuildJs = true;
-  computeGitVersion(function(version) {
-    if (fs.existsSync('pkg/cordova.ios.js')) {
-      needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) == -1);
-    }
-    if (needsBuildJs) {
-      console.log('CordovaJS needs to be built.');
-      var packager = require('./cordova-js/build/packager');
-      packager.generate('ios', version);
-      packager.generate('android', version);
     } else {
-      console.log('CordovaJS is up-to-date.');
-    }
-    callback();
-  });
-}
-
-function initCli(callback) {
-  // TODO: Figure out when this should be re-run (e.g. upon update).
-  if (fs.existsSync('cordova-cli/node_modules')) {
-    console.log('cordova-cli already has its dependencies installed.');
-    callback();
-  } else {
-    common.chdir(path.join(exports.scriptDir, 'cordova-cli'));
-    common.exec('npm install', callback);
-  }
-}
-
-function createApp(callback) {
-  common.chdir(origDir);
-  var name = /\w+\.(\w+)$/.exec(appName)[1];
-
-  // TODO: add android.
-  var cmds = [
-      ['platform', 'add', 'ios'],
-  ];
-  ['bootstrap', 'common', 'file-chooser', 'fileSystem', 'i18n', 'identity', 'socket', 'storage'].forEach(function(pluginName) {
-    cmds.push(['plugin', 'add', path.join(common.scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
-  });
-
-  function runCmd() {
-    var curCmd = cmds.shift();
-    if (curCmd) {
-      common.exec(common.cordovaCmd(curCmd), runCmd);
-    } else {
-      // Create a script that runs update.js.
-      if (isWindows) {
-        fs.writeFileSync('chrome_app_update.bat', '"' + process.argv[0] + '" "' + path.join(common.scriptDir, 'update.js') + '"');
-      } else {
-        fs.writeFileSync('chrome_app_update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(common.scriptDir, 'update.js') + '"');
-        fs.chmodSync('chrome_app_update.sh', '777');
-      }
       callback();
     }
   }
 
-  common.exec(common.cordovaCmd(['create', name, appName, name]), function() {
-    common.chdir(path.join(origDir, name));
-    runCmd();
-  });
+  function checkOutSubModules(callback) {
+    exec('git pull', function() {
+      exec('git submodule init', function() {
+        exec('git submodule update --recursive', callback);
+      });
+    });
+  }
+
+  function buildCordovaJs(callback) {
+    chdir(path.join(scriptDir, 'cordova-js'));
+    var needsBuildJs = true;
+    computeGitVersion(function(version) {
+      if (fs.existsSync('pkg/cordova.ios.js')) {
+        needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) == -1);
+      }
+      if (needsBuildJs) {
+        console.log('CordovaJS needs to be built.');
+        var packager = require('./cordova-js/build/packager');
+        packager.generate('ios', version);
+        packager.generate('android', version);
+      } else {
+        console.log('CordovaJS is up-to-date.');
+      }
+      callback();
+    });
+  }
+
+  function initCli(callback) {
+    // TODO: Figure out when this should be re-run (e.g. upon update).
+    if (fs.existsSync('cordova-cli/node_modules')) {
+      console.log('cordova-cli already has its dependencies installed.');
+      callback();
+    } else {
+      chdir(path.join(scriptDir, 'cordova-cli'));
+      exec('npm install', callback);
+    }
+  }
+
+  eventQueue.push(checkGit);
+  eventQueue.push(checkOutSelf);
+  eventQueue.push(checkOutSubModules);
+  eventQueue.push(buildCordovaJs);
+  eventQueue.push(initCli);
 }
 
+function createAppMain(appName) {
+  if (!/\w+\.\w+\.\w+/.exec(appName)) {
+    fatal('App Name must follow the pattern: com.company.id');
+  }
+  function createApp(callback) {
+    chdir(origDir);
+    var name = /\w+\.(\w+)$/.exec(appName)[1];
 
-var eventQueue = common.eventQueue;
-eventQueue.push(checkGit);
-eventQueue.push(checkOutSelf);
-eventQueue.push(checkOutSubModules);
-eventQueue.push(buildCordovaJs);
-eventQueue.push(initCli);
+    // TODO: add android.
+    var cmds = [
+        ['platform', 'add', 'ios'],
+    ];
+    ['bootstrap', 'common', 'file-chooser', 'fileSystem', 'i18n', 'identity', 'socket', 'storage'].forEach(function(pluginName) {
+      cmds.push(['plugin', 'add', path.join(scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
+    });
 
-if (appName) {
+    function runCmd() {
+      var curCmd = cmds.shift();
+      if (curCmd) {
+        exec(cordovaCmd(curCmd), runCmd);
+      } else {
+        // Create a script that runs update.js.
+        if (isWindows) {
+          fs.writeFileSync('chrome_app_update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+        } else {
+          fs.writeFileSync('chrome_app_update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.chmodSync('chrome_app_update.sh', '777');
+        }
+        callback();
+      }
+    }
+
+    exec(cordovaCmd(['create', name, appName, name]), function() {
+      chdir(path.join(origDir, name));
+      runCmd();
+    });
+  }
+
   eventQueue.push(createApp);
 }
 
-common.pump();
+function updateMain() {
+  var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
+  var hasIos = fs.existsSync(path.join('platforms', 'ios'));
+
+  if (!fs.existsSync('platforms')) {
+    fatal('No platforms directory found. Please run script from the root of your project.');
+  }
+
+  function runPrepare(callback) {
+    console.log(process.cwd())
+    exec(cordovaCmd(['prepare']), callback);
+  }
+
+  function createAddJsStep(platform) {
+    return function(callback) {
+      console.log('Updating cordova.js for ' + platform);
+      copyFile(path.join(scriptDir, 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join('platforms', platform, 'www', 'cordova.js'), callback);
+    };
+  }
+
+  function createAddAccessTagStep(platform) {
+    return function(callback) {
+      console.log('Setting <access> tag for ' + platform);
+      var appName = path.basename(origDir);
+      var configFilePath = platform == 'android' ?
+          path.join('platforms', 'android', 'res', 'xml', 'config.xml') :
+          path.join('platforms', 'ios', appName, 'config.xml');
+      if (!fs.existsSync(configFilePath)) {
+        fatal('Expected file to exist: ' + configFilePath);
+      }
+      var contents = fs.readFileSync(configFilePath);
+      //contents = contents.replace();
+  //\ \ \ \ <access origin="chrome-extension://*" />
+      fs.writeFileSync(configFilePath);
+      callback();
+    };
+  };
+
+  eventQueue.push(runPrepare);
+  if (hasAndroid) {
+    eventQueue.push(createAddJsStep('android'));
+    eventQueue.push(createAddAccessTagStep('android'));
+  }
+  if (hasIos) {
+    eventQueue.push(createAddJsStep('ios'));
+    eventQueue.push(createAddAccessTagStep('ios'));
+  }
+}
+
+function main() {
+  if (commandLineFlags['update_app']) {
+    updateMain();
+  } else {
+    initRepoMain();
+    var appName = commandLineArgs[0];
+    if (appName) {
+      createAppMain(appName);
+    }
+  }
+  pump();
+}
+main();
