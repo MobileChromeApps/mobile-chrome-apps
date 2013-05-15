@@ -142,6 +142,12 @@ if [ -n "$HAS_XCODE" ]; then
   "$CORDOVA_PATH/cordova-ios/bin/update_cordova_subproject" "platforms/ios/${TARGET}.xcodeproj"
 fi
 
+sed -i '' '/access/a\
+   <access origin="chrome-extension://*" />\
+' app/config.xml
+
+cordova prepare
+
 set +x # No more echo
 
 ################################################################################
