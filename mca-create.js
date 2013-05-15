@@ -418,7 +418,7 @@ function toolsCheckMain() {
     }
   }
   function checkAtLeastOneTool(callback) {
-    if (!hasAndroidSdk && !hasIos) {
+    if (!hasAndroidSdk && !hasXcode) {
       if (process.platform == 'darwin') {
         fatal('Neither android nor xcodebuild were found on your PATH. Please install at least one of them.');
       } else {
