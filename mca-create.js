@@ -385,6 +385,7 @@ function updateMain() {
 }
 
 function toolsCheckMain() {
+  console.log('## Checking that tools are installed');
   function checkAndroid(callback) {
     exec('android list targets', function() {
       hasAndroidSdk = true;
