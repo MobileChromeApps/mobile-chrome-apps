@@ -304,7 +304,7 @@ function createAppMain(appName) {
     function runCmd() {
       var curCmd = cmds.shift();
       if (curCmd) {
-        console.log('cordova ' + curCmd.join(' '));
+        console.log(curCmd.join(' '));
         exec(cordovaCmd(curCmd), runCmd, undefined, true);
       } else {
         // Create a script that runs update.js.
@@ -318,10 +318,12 @@ function createAppMain(appName) {
       }
     }
 
-    exec(cordovaCmd(['create', name, appName, name]), function() {
+    var curCmd = ['create', name, appName, name];
+    console.log(curCmd.join(' '));
+    exec(cordovaCmd(curCmd), function() {
       chdir(path.join(origDir, name));
       runCmd();
-    });
+    }, undefined, true);
   }
 
   eventQueue.push(createApp);
@@ -336,8 +338,8 @@ function updateMain() {
   }
 
   function runPrepare(callback) {
-    console.log('## Running prepare from ' + process.cwd())
-    exec(cordovaCmd(['prepare']), callback);
+    console.log('## Preparing your project')
+    exec(cordovaCmd(['prepare']), callback, undefined, true);
   }
 
   function createAddJsStep(platform) {
