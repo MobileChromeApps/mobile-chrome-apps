@@ -348,10 +348,17 @@ function updateMain() {
     exec(cordovaCmd(['prepare']), callback, undefined, true);
   }
 
+  function assetDirForPlatform(platform) {
+    if (platform === 'android') {
+      return path.join('platforms', platform, 'assets','www');
+    }
+    return path.join('platforms', platform, 'www');
+  }
+
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
-      copyFile(path.join(scriptDir, 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join('platforms', platform, 'www', 'cordova.js'), callback);
+      copyFile(path.join(scriptDir, 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join(assetDirForPlatform(platform), 'cordova.js'), callback);
     };
   }
 
