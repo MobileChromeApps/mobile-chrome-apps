@@ -343,7 +343,7 @@ function createAppMain(appName) {
     }
 
     // Manipulating XML with Regex: See http://stackoverflow.com/a/1732454
-    var contents = fs.readFileSync(configFilePath, {encoding: 'utf8'});
+    var contents = fs.readFileSync(configFilePath, 'utf8');
     contents = contents.replace(/(access.*)/,"$1\n    <access origin=\"chrome-extension://*\" />");
     fs.writeFileSync(configFilePath, contents);
 
