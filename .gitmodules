@@ -4,3 +4,6 @@
 [submodule "chrome-cordova"]
 	path = chrome-cordova
 	url = https://github.com/MobileChromeApps/chrome-cordova.git
+[submodule "cordova-js"]
+	path = cordova-js
+	url = https://git-wip-us.apache.org/repos/asf/cordova-js.git

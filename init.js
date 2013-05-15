@@ -197,26 +197,24 @@ function checkOutSubModules(callback) {
   chdir('');
   exec('git pull', function() {
     exec('git submodule init', function() {
-      exec('git submodule update', callback);
+      exec('git submodule update --recursive', callback);
     });
   });
 }
 
 function buildCordovaJs(callback) {
   chdir('cordova-js');
-  var needsJake = true;
+  var needsBuildJs = true;
   computeGitVersion(function(version) {
     if (fs.existsSync('pkg/cordova.ios.js')) {
-      needsJake = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) != -1);
+      needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) != -1);
     }
-    if (needsJake) {
+    if (needsBuildJs) {
       console.log('CordovaJS needs to be built.');
-      exec('jake build', callback, function() {
-        console.log('Jake not installed. Installing.');
-        sudo('npm install -g jake', function() {
-          exec('jake build', callback);
-        });
-      });
+      var packager = require('./cordova-js/build/packager');
+      packager.generate("ios", version);
+      packager.generate("android", version);
+      callback();
     } else {
       console.log('CordovaJS is up-to-date.');
       callback();
