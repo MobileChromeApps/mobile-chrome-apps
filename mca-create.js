@@ -57,6 +57,7 @@ var eventQueue = [];
 var scriptDir = path.dirname(process.argv[1]);
 var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
+var hasAndroidPlatform = false;
 var hasXcode = false;
 
 function exit(code) {
@@ -391,17 +392,37 @@ function updateMain() {
   }
 }
 
+function parseTargetOutput(targetOutput) {
+  var targets = [];
+  var target;
+  var targetRe = /^id: (\d+) or "([^"]*)"/gm;
+  while (target = targetRe.exec(targetOutput)) {
+    targets.push(target[2]);
+  }
+  return targets;
+}
+
 function toolsCheckMain() {
   console.log('## Checking that tools are installed');
   function checkAndroid(callback) {
-    exec('android list targets', function() {
+    exec('android list targets', function(targetOutput) {
       hasAndroidSdk = true;
       console.log('Android SDK is installed.');
+      var targets = parseTargetOutput(targetOutput);
+      /* This is the android SDK version declared in cordova-android/framework/project.properties */
+      if (targets.length === 0) {
+          console.log('No Android Platforms are installed');
+      } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1) {
+          hasAndroidPlatform = true;
+          console.log('Android 4.2.2 (Google APIs) Platform is installed.');
+      } else {
+          console.log('Android 4.2.2 (Google APIs) Platform is not installed.');
+      }
       callback();
-      }, function() {
-        console.log('Android SDK is not installed.');
-        callback();
-      }, true);
+    }, function() {
+      console.log('Android SDK is not installed.');
+      callback();
+    }, true);
   }
   function checkXcode(callback) {
     if (process.platform == 'darwin') {
@@ -418,11 +439,11 @@ function toolsCheckMain() {
     }
   }
   function checkAtLeastOneTool(callback) {
-    if (!hasAndroidSdk && !hasXcode) {
+    if (!hasAndroidPlatform && !hasXcode) {
       if (process.platform == 'darwin') {
-        fatal('Neither android nor xcodebuild were found on your PATH. Please install at least one of them.');
+        fatal('No usable build environment could be found. Please install either XCode or the\nAndroid SDK (with the Android 4.2.2 platform and Google APIs) and try again.');
       } else {
-        fatal('Android SDK was not found on your PATH. Please ensure that the android tool is available.');
+        fatal('No usable build environment could be found. Please install the Android SDK (with\nthe Android 4.2.2 platform and Google APIs), make sure that android is on your\npath, and try again.');
       }
     }
     callback();
