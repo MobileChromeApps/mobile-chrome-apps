@@ -26,6 +26,9 @@ var nextChangeId = 1;
 // These listeners are called when a file's status changes.
 var fileStatusListeners = [ ];
 
+// The conflict resolution policy is used to determine how to handle file sync conflicts.
+var conflictResolutionPolicy;
+
 //-----------
 // Constants
 //-----------
@@ -40,6 +43,9 @@ var FILE_STATUS_SYNCED = 'synced';
 
 var SYNC_DIRECTION_LOCAL_TO_REMOTE = 'local_to_remote';
 var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remote_to_local';
+
+var CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN = 'last_write_win';
+var CONFLICT_RESOLUTION_POLICY_MANUAL = 'manual';
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -719,6 +725,9 @@ exports.requestFileSystem = function(callback) {
         // Change the name of the file system.  This is a syncable file system!
         fileSystem.name = "syncable";
 
+        // Set the default conflict resolution policy.
+        conflictResolutionPolicy = CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN;
+
         // Create or get the subdirectory for this app.
         var getDirectoryFlags = { create: true, exclusive: false };
         var onCreateAppDirectoryOnDriveSuccess = function(directoryEntry) {
@@ -769,11 +778,12 @@ exports.requestFileSystem = function(callback) {
 };
 
 exports.setConflictResolutionPolicy = function(policy, callback) {
-    // TODO(maxw): Implement this!
+    conflictResolutionPolicy = policy;
+    callback();
 };
 
 exports.getConflictResolutionPolicy = function(callback) {
-    // TODO(maxw): Implement this!
+    callback(conflictResolutionPolicy);
 };
 
 exports.getUsageAndQuota = function(fileSystem, callback) {
