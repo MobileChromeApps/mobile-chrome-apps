@@ -23,11 +23,15 @@
   a UNIX shell script, as well as being a valid Node.js program.
  */
 
+/******************************************************************************/
+/******************************************************************************/
+
 if (typeof WScript != 'undefined') {
   var shell = WScript.CreateObject("WScript.Shell");
+  var ret;
   try {
     // Don't worry about passing along arguments here. It's stricly a double-click convenience.
-    var ret = shell.Run('cmd /c node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
+    ret = shell.Run('cmd /c node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
   } catch (e) {
     shell.Popup('NodeJS is not installed. Please install it from http://nodejs.org');
     ret = 1;
@@ -38,6 +42,9 @@ if (typeof WScript != 'undefined') {
 process.on('uncaughtException', function(e) {
   fatal('Uncaught exception: ' + e);
 });
+
+/******************************************************************************/
+/******************************************************************************/
 
 var childProcess = require('child_process');
 var fs = require('fs');
@@ -60,6 +67,35 @@ var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
 
+/******************************************************************************/
+/******************************************************************************/
+
+function plugins() {
+  return [
+    'bootstrap',
+    'common',
+    'file-chooser',
+    'fileSystem',
+    'i18n',
+    'identity',
+    'socket',
+    'storage',
+  ];
+}
+
+function cordovaCmd(args) {
+  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+function pump() {
+  if (eventQueue.length) {
+    eventQueue.shift()(pump);
+  }
+}
+
 function exit(code) {
   if (eventQueue) {
     eventQueue.length = 0;
@@ -77,6 +113,9 @@ function fatal(msg) {
   console.error(msg);
   exit(1);
 }
+
+/******************************************************************************/
+/******************************************************************************/
 
 function exec(cmd, onSuccess, opt_onError, opt_silent) {
   var onError = opt_onError || function(e) {
@@ -99,10 +138,6 @@ function sudo(cmd, onSuccess, opt_onError, silent) {
     cmd = 'sudo ' + cmd;
   }
   exec(cmd, onSuccess, opt_onError, silent);
-}
-
-function cordovaCmd(args) {
-  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
 }
 
 function chdir(d) {
@@ -162,13 +197,10 @@ function waitForKey(callback) {
   process.stdin.on('data', cont);
 }
 
-function pump() {
-  if (eventQueue.length) {
-    eventQueue.shift()(pump);
-  }
-}
+/******************************************************************************/
+/******************************************************************************/
+// INIT LOGIC
 
-////////////////////////// INIT LOGIC //////////////////////////
 function initRepoMain() {
   function checkGit(callback) {
     var errMsg = 'git is not installed (or not available on your PATH). Please install it from http://git-scm.com';
@@ -307,7 +339,7 @@ function createAppMain(appName) {
     if (hasAndroidSdk) {
       cmds.push(['platform', 'add', 'android']);
     }
-    ['bootstrap', 'common', 'file-chooser', 'fileSystem', 'i18n', 'identity', 'socket', 'storage'].forEach(function(pluginName) {
+    plugins().forEach(function(pluginName) {
       cmds.push(['plugin', 'add', path.join(scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
     });
 
@@ -453,7 +485,10 @@ function toolsCheckMain() {
   eventQueue.push(checkAtLeastOneTool);
 }
 
-function main() {
+/******************************************************************************/
+/******************************************************************************/
+
+(function() {
   toolsCheckMain();
   initRepoMain();
   if (commandLineFlags['update_app']) {
@@ -465,6 +500,4 @@ function main() {
     }
   }
   pump();
-}
-
-main();
+}());
