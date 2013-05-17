@@ -319,10 +319,10 @@ function createAppMain(appName) {
       } else {
         // Create a script that runs update.js.
         if (isWindows) {
-          fs.writeFileSync('mca_update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.writeFileSync('mca-update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
         } else {
-          fs.writeFileSync('mca_update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
-          fs.chmodSync('mca_update.sh', '777');
+          fs.writeFileSync('mca-update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.chmodSync('mca-update.sh', '777');
         }
         callback();
       }
@@ -452,6 +452,7 @@ function toolsCheckMain() {
   eventQueue.push(checkXcode);
   eventQueue.push(checkAtLeastOneTool);
 }
+
 function main() {
   toolsCheckMain();
   initRepoMain();
@@ -465,4 +466,5 @@ function main() {
   }
   pump();
 }
+
 main();
