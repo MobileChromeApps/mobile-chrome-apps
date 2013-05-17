@@ -10,18 +10,19 @@ import java.io.ByteArrayInputStream;
 import java.util.NavigableSet;
 import java.util.TreeMap;
 
-import org.apache.cordova.FileHelper;
 import org.apache.cordova.api.CordovaPlugin;
+import org.apache.cordova.api.DataResource;
+import org.apache.cordova.api.DataResourceContext;
 
 import android.annotation.TargetApi;
 import android.net.Uri;
 import android.os.Build;
-import android.webkit.WebResourceResponse;
+import android.util.Log;
 
 public class ChromeExtensionURLs extends CordovaPlugin {
 
-    @SuppressWarnings("unused")
     private static final String LOG_TAG = "ChromeExtensionURLs";
+    private static final String CHROME_EXTENSION_SEEN = "ChromeExtensionParsed";
     // Plugins can register themselves to assist or modify the url decoding
     // We use a priority queue to enforce some order
     // Plugins are called in ascending order of priority to modify the url's and the response
@@ -53,41 +54,51 @@ public class ChromeExtensionURLs extends CordovaPlugin {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
-    public WebResourceResponse shouldInterceptRequest(String url) {
-        NavigableSet<Integer> pluginPrioritySet = registeredPlugins.navigableKeySet();
-        for(Integer pluginPriority : pluginPrioritySet) {
-            RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
-            if(plugin != null) {
-                url = plugin.modifyNewRequestUrl(url);
+    public DataResource handleDataResourceRequest(DataResource dataResource, DataResourceContext dataResourceContext) {
+        Uri uri = dataResource.getUri();
+        String url = uri.toString();
+        // Check the scheme to see if we need to handle.
+        // Also ensure we haven't intercepted it before
+        //  If this check wasn't present, the content-loaded section would go into an infinite loop of data retrieval attempts
+        if(uri.getScheme().equals("chrome-extension") && !dataResourceContext.getDataMap().containsKey(CHROME_EXTENSION_SEEN)){
+            dataResourceContext.getDataMap().put(CHROME_EXTENSION_SEEN, "");
+            NavigableSet<Integer> pluginPrioritySet = registeredPlugins.navigableKeySet();
+            for(Integer pluginPriority : pluginPrioritySet) {
+                RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
+                if(plugin != null) {
+                    url = plugin.modifyNewRequestUrl(url);
+                }
             }
-        }
 
-        String mimetype = FileHelper.getMimeType(url, this.cordova);
-        String encoding = null;
-        if (mimetype != null && mimetype.startsWith("text/")) {
-            encoding = "UTF-8";
-        }
+            InputStream is = null;
+            String filePath = uri.getPath();
 
-        InputStream is = null;
-        String filePath = Uri.parse(url).getPath();
+            if ("/chrome-content-loaded".equals(filePath)) {
+                is = new ByteArrayInputStream("Object.defineProperty(document, 'readyState', {get: function() { return 'loading'}, configurable: true });".getBytes());
+            } else {
+                url = "file:///android_asset/www" + filePath;
+                // We need the input stream below for the modifyResponseInputStream. So we load using a separate request.
+                dataResource = DataResource.initiateNewDataRequestForUri(url, this.webView.pluginManager, this.cordova, "ChromeExtensionUrls");
+                try {
+                    //update the two params we are interested in the url and the inputstream
+                    url = dataResource.getUri().toString();
+                    is = dataResource.getInputStream();
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Error occurred while trying to load asset", e);
+                    return null;
+                }
+            }
 
-        if ("/chrome-content-loaded".equals(filePath)) {
-            is = new ByteArrayInputStream("Object.defineProperty(document, 'readyState', {get: function() { return 'loading'}, configurable: true });".getBytes());
+            for(Integer pluginPriority : pluginPrioritySet) {
+                RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
+                if(plugin != null) {
+                    is = plugin.modifyResponseInputStream(url, is);
+                }
+            }
+            // Let the mimetype, os etc get resolved by the default loaders
+            return new DataResource(cordova, Uri.parse(url), is, null /* os */, null /* mimeType */, false /* writable */, null /* realFile */);
         } else {
-            try {
-                is = this.cordova.getActivity().getAssets().open("www" + filePath);
-            } catch (IOException ioe) {
-                return null;
-            }
+            return null;
         }
-
-        for(Integer pluginPriority : pluginPrioritySet) {
-            RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
-            if(plugin != null) {
-                is = plugin.modifyResponseInputStream(url, is);
-            }
-        }
-
-        return new WebResourceResponse(mimetype, encoding, is);
     }
 }
