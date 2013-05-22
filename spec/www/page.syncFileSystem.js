@@ -8,11 +8,26 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
     rootEl.appendChild(button);
   }
 
+  var syncFileSystem;
+
   // Register a file status listener.
   var fileStatusListener = function(fileInfo) {
     chromespec.log('UPDATE: ' + fileInfo.fileEntry.name + ', ' + fileInfo.status + ', ' + fileInfo.action + ', ' + fileInfo.direction);
   };
   chrome.syncFileSystem.onFileStatusChanged.addListener(fileStatusListener);
+
+  var requestFileSystem = function(callback) {
+    var augmentedCallback = function(fileSystem) {
+        syncFileSystem = fileSystem;
+        callback(fileSystem);
+    };
+
+    if (syncFileSystem) {
+      augmentedCallback(syncFileSystem);
+    } else {
+      chrome.syncFileSystem.requestFileSystem(augmentedCallback);
+    }
+  };
 
   addButton('Create foo.txt', function() {
     var onCreateWriterSuccess = function(fileWriter) {
@@ -35,11 +50,12 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
     };
 
     var onRequestFileSystemSuccess = function(fileSystem) {
+      _syncFileSystem = fileSystem;
       chromespec.log('chrome.syncFileSystem.requestFileSystem success!');
       fileSystem.root.getFile('foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Remove foo.txt', function() {
@@ -63,7 +79,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getFile('foo.txt', { create: false }, onGetFileSuccess, onGetFileError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Create bar directory', function() {
@@ -79,7 +95,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getDirectory('bar', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Remove bar directory', function() {
@@ -103,7 +119,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getDirectory('bar', { create: false }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Create bar/baz directory', function() {
@@ -119,7 +135,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getDirectory('bar/baz', { create: true }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Remove bar/baz directory', function() {
@@ -143,7 +159,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getDirectory('bar/baz', { create: false }, onGetDirectorySuccess, onGetDirectoryError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Create bar/baz/foo.txt', function() {
@@ -171,7 +187,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getFile('bar/baz/foo.txt', { create: true }, onGetFileSuccess, onGetFileError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 
   addButton('Remove bar/baz/foo.txt', function() {
@@ -195,7 +211,7 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
       fileSystem.root.getFile('bar/baz/foo.txt', { create: false }, onGetFileSuccess, onGetFileError);
     };
 
-    chrome.syncFileSystem.requestFileSystem(onRequestFileSystemSuccess);
+    requestFileSystem(onRequestFileSystemSuccess);
   });
 });
 

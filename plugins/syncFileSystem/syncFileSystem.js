@@ -432,7 +432,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
 //--------------------
 
 // This function checks for changes since the most recent change id.
-function getDriveChanges(callback) {
+function getDriveChanges(successCallback, errorCallback) {
     var onGetTokenStringSuccess = function(tokenString) {
         // Save the token string for later use.
         _tokenString = tokenString;
@@ -474,9 +474,10 @@ function getDriveChanges(callback) {
                             }
                         }
                     }
-                    callback(numRelevantChanges);
+                    successCallback(numRelevantChanges);
                 } else {
                     console.log('Change search failed with status ' + xhr.status + '.');
+                    errorCallback();
                 }
             }
         };
@@ -736,6 +737,10 @@ exports.requestFileSystem = function(callback) {
 
             // Set up regular remote-to-local checks.
             var delay = 2000;
+            var onGetDriveChangesError = function() {
+                // Use the same timeout.
+                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+            };
             var onGetDriveChangesSuccess = function(numChanges) {
                 console.log('Relevant changes: ' + numChanges + '.');
                 if (numChanges === 0) {
@@ -749,9 +754,9 @@ exports.requestFileSystem = function(callback) {
                     delay = 2000;
                     console.log('  Delay reset.');
                 }
-                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess);
+                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
-            window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess);
+            window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
 
             // Pass on the file system!
             callback(fileSystem);
