@@ -29,6 +29,9 @@ var fileStatusListeners = [ ];
 // The conflict resolution policy is used to determine how to handle file sync conflicts.
 var conflictResolutionPolicy;
 
+// This is used to schedule and batch local-to-remote file updates.
+var scheduledUpdates = { };
+
 //-----------
 // Constants
 //-----------
@@ -77,7 +80,7 @@ function enableSyncabilityForEntry(entry) {
             }
         };
         var augmentedSuccessCallback = function() {
-            remove(entry, onRemoveSuccess);
+            scheduleUpdate(entry, SYNC_ACTION_DELETED, onRemoveSuccess);
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -135,7 +138,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
                         successCallback(fileEntry);
                     }
                 };
-                sync(fileEntry, onSyncSuccess);
+                scheduleUpdate(fileEntry, SYNC_ACTION_ADDED, onSyncSuccess);
             } else {
                 if (successCallback) {
                     successCallback(fileEntry);
@@ -175,10 +178,8 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
         if (fileWriter.onwrite) {
             var originalOnwrite = fileWriter.onwrite;
             fileWriter.onwrite = function(evt) {
-                var onSyncSuccess = function() {
-                    originalOnwrite(evt);
-                };
-                sync(fileEntry, onSyncSuccess);
+                scheduleUpdate(fileEntry, SYNC_ACTION_UPDATED, onSyncSuccess);
+                originalOnwrite(evt);
             };
         }
 
@@ -190,6 +191,33 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
 //------------------
 // Syncing to Drive
 //------------------
+
+// This function schedules an update to Drive.
+function scheduleUpdate(entry, syncAction, callback) {
+    console.log('Scheduling ' + entry.name + ' for \'' + syncAction + '\' action.');
+    scheduledUpdates[entry.name] = { entry: entry, syncAction: syncAction, callback: callback };
+}
+
+// This function executes all scheduled updates to Drive.
+// TODO(maxw): Ensure individual update failures are handled properly.
+function executeScheduledUpdates(callback) {
+    console.log('Executing ' + Object.keys(scheduledUpdates).length + ' scheduled update(s).');
+    for (var fileName in scheduledUpdates) {
+        var scheduledUpdate = scheduledUpdates[fileName];
+        var syncAction = scheduledUpdate.syncAction;
+        if (syncAction === SYNC_ACTION_ADDED || syncAction === SYNC_ACTION_UPDATED) {
+            console.log('Syncing ' + fileName + '.');
+            sync(scheduledUpdate.entry, scheduledUpdate.callback);
+        } else if (syncAction === SYNC_ACTION_DELETED) {
+            console.log('Removing ' + fileName + '.');
+            remove(scheduledUpdate.entry, scheduledUpdate.callback);
+        } else {
+            console.log('Invalid scheduled sync action!');
+        }
+    }
+    scheduledUpdates = { };
+    callback();
+}
 
 // This function creates an app-specific directory on the user's Drive.
 function createAppDirectoryOnDrive(directoryEntry, callback) {
@@ -736,27 +764,34 @@ exports.requestFileSystem = function(callback) {
             fileSystem.root = directoryEntry;
 
             // Set up regular remote-to-local checks.
-            var delay = 2000;
+            var remoteToLocalDelay = 2000;
             var onGetDriveChangesError = function() {
                 // Use the same timeout.
-                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
             var onGetDriveChangesSuccess = function(numChanges) {
                 console.log('Relevant changes: ' + numChanges + '.');
                 if (numChanges === 0) {
-                    if (delay < 64000) {
-                        delay *= 2;
+                    if (remoteToLocalDelay < 64000) {
+                        remoteToLocalDelay *= 2;
                         console.log('  Delay doubled.');
                     } else {
-                        console.log('  Delay capped at ' + delay + 'ms.');
+                        console.log('  Delay capped at ' + remoteToLocalDelay + 'ms.');
                     }
                 } else {
-                    delay = 2000;
+                    remoteToLocalDelay = 2000;
                     console.log('  Delay reset.');
                 }
-                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
-            window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+            window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+
+            // Set up regular local-to-remote checks.
+            var localToRemoteDelay = 20000;
+            var executeScheduledUpdatesCallback = function() {
+                window.setTimeout(executeScheduledUpdates, localToRemoteDelay, executeScheduledUpdatesCallback);
+            };
+            window.setTimeout(executeScheduledUpdates, localToRemoteDelay, executeScheduledUpdatesCallback);
 
             // Pass on the file system!
             callback(fileSystem);
