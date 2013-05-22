@@ -2,12 +2,15 @@
 
 This is a collection of automatic and manual tests that exercise various `chrome.*` APIs from Chrome Apps v2.
 
-## Installation
+## As a Mobile Chrome App
 
-Designed to be used as a cordova-cli plugin:
+    ./mca-create.js com.google.ChromeSpec
+    cd ChromeSpec
+    rm -rf app
+    ln -s /path/to/spec app
 
-    cordova plugin add /path/to/this/directory
+## As a Desktop Chrome App
 
-Alternatively, point Chrome's "Load Unpacked Extension" at `www/` to load the tests in desktop Chrome.
-
-Note that there are some symlinks in here that need to be expanded. cordova-cli will do this, but Chrome does not.
+* goto `chrome://extensions`
+* click "Load Unpacked Extension"
+* select `/path/to/spec/www`
