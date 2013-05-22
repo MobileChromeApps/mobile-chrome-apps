@@ -233,19 +233,17 @@ function initRepoMain() {
       process.chdir(scriptDir);
       requiresClone = !fs.existsSync('.git');
     }
-    // Next - try the CWD.
-    if (requiresClone) {
+    // Next - try the CWD, if it is 
+    if (requiresClone && fs.basename(origDir) == 'mobile-chrome-apps') {
       scriptDir = origDir;
       process.chdir(scriptDir);
       requiresClone = !fs.existsSync('.git');
     }
     // Next - see if it exists within the CWD.
-    if (requiresClone) {
-      if (fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
-        scriptDir = path.join(origDir, 'mobile-chrome-apps');
-        process.chdir(scriptDir);
-        requiresClone = !fs.existsSync('.git');
-      }
+    if (requiresClone && fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
+      scriptDir = path.join(origDir, 'mobile-chrome-apps');
+      process.chdir(scriptDir);
+      requiresClone = !fs.existsSync('.git');
     }
     if (requiresClone) {
       scriptDir = origDir;
@@ -260,24 +258,15 @@ function initRepoMain() {
           exit(0);
         });
       });
-    } else {
-      callback();
     }
+    // Now that we are certainly cloned, update to latest version
+    exec('git pull --rebase', callback);
   }
 
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
     chdir(scriptDir);
-    exec('git pull --rebase', function() {
-      exec('git submodule init', function() {
-        exec('git submodule update', function() {
-          chdir(path.join(scriptDir, 'cordova-cli'));
-          exec('git submodule init', function() {
-            exec('git submodule update', callback);
-          });
-        });
-      });
-    });
+    exec('git submodule update --init --recursive --rebase', callback);
   }
 
   function buildCordovaJs(callback) {
