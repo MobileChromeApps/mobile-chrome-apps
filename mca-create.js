@@ -308,8 +308,8 @@ function initRepoMain() {
   function initCli(callback) {
     console.log('## Setting up cordova-cli');
     // TODO: Figure out when this should be re-run (e.g. upon update).
-    if (fs.existsSync('cordova-cli/node_modules')) {
-      //console.log('cordova-cli already has its dependencies installed.');
+    if (fs.existsSync(path.join(scriptDir, 'cordova-cli/node_modules'))) {
+      console.log('Already installed.');
       callback();
     } else {
       process.chdir(path.join(scriptDir, 'cordova-cli'));
