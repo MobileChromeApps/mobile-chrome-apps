@@ -114,9 +114,6 @@ function fatal(msg) {
   exit(1);
 }
 
-/******************************************************************************/
-/******************************************************************************/
-
 function exec(cmd, onSuccess, opt_onError, opt_silent) {
   var onError = opt_onError || function(e) {
     fatal('command failed: ' + cmd + '\n' + e);
@@ -199,7 +196,72 @@ function waitForKey(callback) {
 
 /******************************************************************************/
 /******************************************************************************/
-// INIT LOGIC
+// Tools Check
+
+function parseTargetOutput(targetOutput) {
+  var targets = [];
+  var target;
+  var targetRe = /^id: (\d+) or "([^"]*)"/gm;
+  while (target = targetRe.exec(targetOutput)) {
+    targets.push(target[2]);
+  }
+  return targets;
+}
+
+function toolsCheckMain() {
+  console.log('## Checking that tools are installed');
+  function checkAndroid(callback) {
+    exec('android list targets', function(targetOutput) {
+      hasAndroidSdk = true;
+      console.log('Android SDK is installed.');
+      var targets = parseTargetOutput(targetOutput);
+      /* This is the android SDK version declared in cordova-android/framework/project.properties */
+      if (targets.length === 0) {
+          console.log('No Android Platforms are installed');
+      } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1) {
+          hasAndroidPlatform = true;
+          console.log('Android 4.2.2 (Google APIs) Platform is installed.');
+      } else {
+          console.log('Android 4.2.2 (Google APIs) Platform is not installed.');
+      }
+      callback();
+    }, function() {
+      console.log('Android SDK is not installed.');
+      callback();
+    }, true);
+  }
+  function checkXcode(callback) {
+    if (process.platform == 'darwin') {
+      exec('which xcodebuild', function() {
+        hasXcode = true;
+        console.log('Xcode is installed.');
+        callback();
+      }, function() {
+        console.log('Xcode is not installed.');
+        callback();
+      }, true);
+    } else {
+      callback();
+    }
+  }
+  function checkAtLeastOneTool(callback) {
+    if (!hasAndroidPlatform && !hasXcode) {
+      if (process.platform == 'darwin') {
+        fatal('No usable build environment could be found. Please install either XCode or the\nAndroid SDK (with the Android 4.2.2 platform and Google APIs) and try again.');
+      } else {
+        fatal('No usable build environment could be found. Please install the Android SDK (with\nthe Android 4.2.2 platform and Google APIs), make sure that android is on your\npath, and try again.');
+      }
+    }
+    callback();
+  }
+  eventQueue.push(checkAndroid);
+  eventQueue.push(checkXcode);
+  eventQueue.push(checkAtLeastOneTool);
+}
+
+/******************************************************************************/
+/******************************************************************************/
+// Init
 
 function initRepoMain() {
   function checkGit(callback) {
@@ -325,6 +387,10 @@ function initRepoMain() {
   eventQueue.push(initCli);
 }
 
+/******************************************************************************/
+/******************************************************************************/
+// Create App
+
 function createAppMain(appName) {
   if (!/\w+\.\w+\.\w+/.exec(appName)) {
     fatal('App Name must follow the pattern: com.company.id');
@@ -391,6 +457,10 @@ function createAppMain(appName) {
   eventQueue.push(function(callback) { updateMain(); callback(); });
 }
 
+/******************************************************************************/
+/******************************************************************************/
+// Update Main
+
 function updateMain() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
@@ -427,66 +497,6 @@ function updateMain() {
   }
 }
 
-function parseTargetOutput(targetOutput) {
-  var targets = [];
-  var target;
-  var targetRe = /^id: (\d+) or "([^"]*)"/gm;
-  while (target = targetRe.exec(targetOutput)) {
-    targets.push(target[2]);
-  }
-  return targets;
-}
-
-function toolsCheckMain() {
-  console.log('## Checking that tools are installed');
-  function checkAndroid(callback) {
-    exec('android list targets', function(targetOutput) {
-      hasAndroidSdk = true;
-      console.log('Android SDK is installed.');
-      var targets = parseTargetOutput(targetOutput);
-      /* This is the android SDK version declared in cordova-android/framework/project.properties */
-      if (targets.length === 0) {
-          console.log('No Android Platforms are installed');
-      } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1) {
-          hasAndroidPlatform = true;
-          console.log('Android 4.2.2 (Google APIs) Platform is installed.');
-      } else {
-          console.log('Android 4.2.2 (Google APIs) Platform is not installed.');
-      }
-      callback();
-    }, function() {
-      console.log('Android SDK is not installed.');
-      callback();
-    }, true);
-  }
-  function checkXcode(callback) {
-    if (process.platform == 'darwin') {
-      exec('which xcodebuild', function() {
-        hasXcode = true;
-        console.log('Xcode is installed.');
-        callback();
-      }, function() {
-        console.log('Xcode is not installed.');
-        callback();
-      }, true);
-    } else {
-      callback();
-    }
-  }
-  function checkAtLeastOneTool(callback) {
-    if (!hasAndroidPlatform && !hasXcode) {
-      if (process.platform == 'darwin') {
-        fatal('No usable build environment could be found. Please install either XCode or the\nAndroid SDK (with the Android 4.2.2 platform and Google APIs) and try again.');
-      } else {
-        fatal('No usable build environment could be found. Please install the Android SDK (with\nthe Android 4.2.2 platform and Google APIs), make sure that android is on your\npath, and try again.');
-      }
-    }
-    callback();
-  }
-  eventQueue.push(checkAndroid);
-  eventQueue.push(checkXcode);
-  eventQueue.push(checkAtLeastOneTool);
-}
 
 /******************************************************************************/
 /******************************************************************************/
