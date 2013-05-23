@@ -324,6 +324,7 @@ function initRepoMain() {
         console.log('Successfully cloned mobile-chrome-apps repo');
         chdir(scriptDir);
         reRunThisScriptWithNewVersionThenExit();
+        return;
       });
     }
 
@@ -331,6 +332,7 @@ function initRepoMain() {
     exec('git pull --rebase --dry-run', function(stdout, stderr) {
       if (stdout.length || stderr.length) {
         exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
+        return;
       }
 
       // Okay, we're up to date, and all set!
