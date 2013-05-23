@@ -224,7 +224,7 @@ function initRepoMain() {
     }, null, true);
   }
 
-  function reRunThisScriptWithNewVersion() {
+  function reRunThisScriptWithNewVersionThenExit() {
     console.log(scriptName + ' version has been updated, restarting with new version.\n');
     // TODO: We should quote the args.
     exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
@@ -255,28 +255,26 @@ function initRepoMain() {
       requiresClone = !fs.existsSync('.git');
     }
     if (requiresClone) {
-      scriptDir = origDir;
+      scriptDir = path.join(origDir, 'mobile-chrome-apps');
       chdir(origDir);
       recursiveDelete('mobile-chrome-apps');
       exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
-        scriptDir = path.join(origDir, 'mobile-chrome-apps');
-        chdir(scriptDir);
         console.log('Successfully cloned mobile-chrome-apps repo');
-        return reRunThisScriptWithNewVersion();
+        chdir(scriptDir);
+        reRunThisScriptWithNewVersionThenExit();
       });
     }
 
     // Don't need a clone, but attempt Update to latest version
     exec('git pull --rebase --dry-run', function(stdout) {
       if (stdout.length) {
-        exec('git pull --rebase', callback);
-        return reRunThisScriptWithNewVersion();
+        exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
       }
-    }, null, true);
 
-    // Okay, we are all set!
-    console.log(scriptName + ' all set!');
-    callback();
+      // Okay, we're up to date, and all set!
+      console.log(scriptName + ' up to date, and all set!');
+      callback();
+    }, null, true);
   }
 
   function checkOutSubModules(callback) {
