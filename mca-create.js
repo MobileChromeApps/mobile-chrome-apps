@@ -380,11 +380,17 @@ function initRepoMain() {
     }
   }
 
+  function cleanup(callback) {
+    process.chdir(origDir);
+    callback();
+  }
+
   eventQueue.push(checkGit);
   eventQueue.push(checkOutSelf);
   eventQueue.push(checkOutSubModules);
   eventQueue.push(buildCordovaJs);
   eventQueue.push(initCli);
+  eventQueue.push(cleanup);
 }
 
 /******************************************************************************/
