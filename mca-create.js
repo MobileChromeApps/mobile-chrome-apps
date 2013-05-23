@@ -307,6 +307,7 @@ function initRepoMain() {
   function reRunThisScriptWithNewVersionThenExit() {
     console.log(scriptName + ' version has been updated, restarting with new version.\n');
     // TODO: We should quote the args.
+    // TODO: This doesn't print to console
     exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
       exit(0);
     });
