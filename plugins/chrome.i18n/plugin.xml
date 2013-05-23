@@ -6,35 +6,36 @@
 -->
 <plugin xmlns="http://phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="chrome.storage"
+    id="org.chromium.chrome.i18n"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=2.4.0" />
   </engines>
 
-  <name>Chrome Apps Storage API</name>
+  <name>Chrome Apps I18n API</name>
 
-  <js-module src="storage.js" name="Storage">
-    <clobbers target="chrome.storage" />
+  <js-module src="i18n.js" name="I18n">
+    <clobbers target="chrome.i18n" />
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/ChromeStorage.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeI18n.java" target-dir="src/com/google/cordova" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
-      <feature name="ChromeStorage">
-        <param name="android-package" value="com.google.cordova.ChromeStorage"/>
+      <feature name="ChromeI18n">
+        <param name="android-package" value="com.google.cordova.ChromeI18n"/>
+        <param name="onload" value="true"/>
       </feature>
     </config-file>
   </platform>
 
   <platform name="ios">
-    <source-file src="src/ios/ChromeStorage.m" />
-    <header-file src="src/ios/ChromeStorage.h" />
+    <source-file src="src/ios/ChromeI18n.m" />
+    <header-file src="src/ios/ChromeI18n.h" />
 
     <config-file target="config.xml" parent="/widget">
-      <feature name="ChromeStorage">
-        <param name="ios-package" value="ChromeStorage"/>
+      <feature name="ChromeI18n">
+        <param name="ios-package" value="ChromeI18n"/>
       </feature>
     </config-file>
   </platform>

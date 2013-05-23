@@ -6,15 +6,20 @@
 -->
 <plugin xmlns="http://phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="chrome.common"
+    id="org.chromium.chrome.syncFileSystem"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=2.4.0" />
   </engines>
 
-  <name>Chrome Apps Common Utils</name>
+  <name>Chrome Apps SyncFileSystem API</name>
 
-  <js-module src="events.js" name="events">
-    <clobbers target="chrome.Event" />
+  <js-module src="syncFileSystem.js" name="SyncFileSystem">
+    <clobbers target="chrome.syncFileSystem" />
   </js-module>
+
+  <!-- Empty platforms; this is a JS-only plugin. -->
+  <platform name="android"></platform>
+  <platform name="ios"></platform>
+  <platform name="bb"></platform>
 </plugin>

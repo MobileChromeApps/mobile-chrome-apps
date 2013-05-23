@@ -6,16 +6,16 @@
 -->
 <plugin xmlns="http://phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="chrome.syncFileSystem"
+    id="org.chromium.chrome.fileSystem"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=2.4.0" />
   </engines>
 
-  <name>Chrome Apps SyncFileSystem API</name>
+  <name>Chrome Apps FileSystem API</name>
 
-  <js-module src="syncFileSystem.js" name="SyncFileSystem">
-    <clobbers target="chrome.syncFileSystem" />
+  <js-module src="fileSystem.js" name="FileSystem">
+    <clobbers target="chrome.fileSystem" />
   </js-module>
 
   <!-- Empty platforms; this is a JS-only plugin. -->

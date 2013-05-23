@@ -5,4 +5,3 @@
 exports.releaseReadyWait = function() {
   cordova.exec(null,null,'ChromeExtensionURLs','release',[])
 };
-

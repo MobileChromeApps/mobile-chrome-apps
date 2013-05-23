@@ -847,4 +847,3 @@ exports.onFileStatusChanged = { };
 exports.onFileStatusChanged.addListener = function(listener) {
     fileStatusListeners.push(listener);
 }
-
