@@ -224,8 +224,17 @@ function initRepoMain() {
     }, null, true);
   }
 
+  function reRunThisScriptWithNewVersion() {
+    console.log(scriptName + ' version has been updated, restarting with new version.\n');
+    // TODO: We should quote the args.
+    exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
+      exit(0);
+    });
+  }
+
   function checkOutSelf(callback) {
     console.log('## Checking Out mobile-chrome-apps');
+
     // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
     var requiresClone = true;
     // First - try the directory of the script.
@@ -252,26 +261,33 @@ function initRepoMain() {
       exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
         scriptDir = path.join(origDir, 'mobile-chrome-apps');
         chdir(scriptDir);
-        console.log('Successfully cloned mobile-chrome-apps repo. Delegating to checked-out version of ' + scriptName);
-        // TODO: We should quote the args.
-        exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
-          exit(0);
-        });
+        console.log('Successfully cloned mobile-chrome-apps repo');
+        return reRunThisScriptWithNewVersion();
       });
     }
-    // Now that we are certainly cloned, update to latest version
-    exec('git pull --rebase', callback);
+
+    // Don't need a clone, but attempt Update to latest version
+    exec('git pull --rebase --dry-run', function(stdout) {
+      if (stdout.length) {
+        exec('git pull --rebase', callback);
+        return reRunThisScriptWithNewVersion();
+      }
+    }, null, true);
+
+    // Okay, we are all set!
+    console.log(scriptName + ' all set!');
+    callback();
   }
 
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
-    chdir(scriptDir);
+    process.chdir(scriptDir);
     exec('git submodule update --init --recursive --rebase', callback);
   }
 
   function buildCordovaJs(callback) {
     console.log('## Building cordova-js');
-    chdir(path.join(scriptDir, 'cordova-js'));
+    process.chdir(path.join(scriptDir, 'cordova-js'));
     var needsBuildJs = true;
     computeGitVersion(function(version) {
       if (fs.existsSync('pkg/cordova.ios.js')) {
