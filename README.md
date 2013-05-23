@@ -19,20 +19,15 @@ Install a recent version of [node.js](http://nodejs.org) (Node 0.6.x, which ship
 
 ## Step 1: Clone This Repository
 
-There is a script that will do this for you!
-
-Download the [mca-create.js](https://raw.github.com/MobileChromeApps/mobile-chrome-apps/master/mca-create.js) script and run it:
-
-    node mca-create.js
-
-(Alternately, if you clone this repository with `git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git`, you can run the `mca-create.js` script from within it, and it will download the rest of the repositories that you will need.
+    git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
+    cd mobile-chrome-apps
+    ./mca-create.js
 
 ## Step 2: Create a Project
 
-Now that you've cloned the repository, navigate to it and use the following command to generate a project:
+    path/to/mca-create.js com.yourcompanyname.YourAppName
 
-    node mca-create.js com.company.MyAppName
-
+Note: `mobile-chrome-apps` directory is a self-updating git repository, so its easier not to create your projects inside that directory
 
 ## Step 3: Open the Project
 
