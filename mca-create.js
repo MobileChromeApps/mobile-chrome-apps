@@ -125,7 +125,7 @@ function exec(cmd, onSuccess, opt_onError, opt_silent) {
     if (error) {
       onError(error);
     } else {
-      onSuccess(stdout.trim());
+      onSuccess(stdout.trim(), stderr.trim());
     }
   });
 }
@@ -328,8 +328,8 @@ function initRepoMain() {
     }
 
     // Don't need a clone, but attempt Update to latest version
-    exec('git pull --rebase --dry-run', function(stdout) {
-      if (stdout.length) {
+    exec('git pull --rebase --dry-run', function(stdout, stderr) {
+      if (stdout.length || stderr.length) {
         exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
       }
 
