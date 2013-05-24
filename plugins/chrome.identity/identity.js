@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 var platformId = cordova.require('cordova/platform').id;
-var runtime = require('chrome.runtime');
+var runtime = require('org.chromium.chrome-app-bootstrap.runtime');
 
 exports.TokenDetails = function(interactive) {
     this.interactive = interactive || false;

@@ -182,7 +182,7 @@ StorageArea.prototype.clear = function(callback) {
 };
 
 // TODO(braden): How do we want to handle this event when we're not in a Chrome app?
-var Event = require('chrome.common.events');
+var Event = require('org.chromium.chrome-common.events');
 if (Event) {
   exports.onChanged = new Event('onChanged');
 }

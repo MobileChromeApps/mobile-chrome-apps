@@ -6,5 +6,5 @@
 // Adds a deviceready listener that initializes the Chrome wrapper.
 
 require('cordova/channel').onCordovaReady.subscribe(function() {
-  require('chrome.mobile.impl').init();
+  require('org.chromium.chrome-app-bootstrap.mobile.impl').init();
 });

@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 var argscheck = cordova.require('cordova/argscheck');
-var Event = require('chrome.common.events');
-var stubs = require('chrome.helpers.stubs');
-var mobile = require('chrome.mobile.impl');
+var Event = require('org.chromium.chrome-common.events');
+var stubs = require('org.chromium.chrome-app-bootstrap.helpers.stubs');
+var mobile = require('org.chromium.chrome-app-bootstrap.mobile.impl');
 var manifestJson = null;
 
 exports.onSuspend = new Event('onSuspend');

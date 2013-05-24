@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var Event = require('chrome.common.events');
-var mobile = require('chrome.mobile.impl');
-var ChromeExtensionURLs = require('chrome.helpers.ChromeExtensionURLs');
+var Event = require('org.chromium.chrome-common.events');
+var mobile = require('org.chromium.chrome-app-bootstrap.mobile.impl');
+var ChromeExtensionURLs = require('org.chromium.chrome-app-bootstrap.helpers.ChromeExtensionURLs');
 
 // The AppWindow created by chrome.app.window.create.
 var createdAppWindow = null;
