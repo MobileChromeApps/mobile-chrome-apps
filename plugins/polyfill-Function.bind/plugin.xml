@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://phonegap.com/ns/plugins/1.0"
+    id="org.chromium.polyfill.Function_bind"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=2.4.0" />
+  </engines>
+
+  <name>Function.bind for iOS 5</name>
+
+  <platform name="ios">
+    <js-module src="function_bind.js">
+      <runs />
+    </js-module>
+  </platform>
+</plugin>
