@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.alarms', function(runningInBackground) {
-  var alarmEarlyTolerance = 5;
-  var alarmLateTolerance = 100;
+  var alarmEarlyTolerance = 30;
+  var alarmLateTolerance = 800;
   var scheduledEarlyTolerance = 5;
-  var scheduledLateTolerance = 50;
+  var scheduledLateTolerance = 100;
+  var testTimeout = 3000;
 
   it('should contain definitions', function() {
     expect(chrome.alarms).toBeDefined();
@@ -49,6 +50,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
 
     describe('testing create', function() {
       beforeEach(function() {
+        chrome.alarms.clearAll();
         chrome.alarms.getAll(function(alarms) {
           expect(alarms.length).toBe(0);
         });
@@ -69,7 +71,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           done();
         });
         chrome.alarms.create('myalarm', { when:expectedFireTime });
-      });
+      }, testTimeout);
 
       itWaitsForDone('delayInMinutes set only', function(done) {
         var expectedFireTime = Date.now() + 15;
@@ -80,11 +82,16 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, scheduledEarlyTolerance, scheduledLateTolerance);
           expect(alarm.periodInMinutes).not.toBeDefined();
           chrome.alarms.onAlarm.removeListener(alarmHandler);
-          done();
+          setTimeout(function() {
+            chrome.alarms.getAll(function(alarms) {
+              expect(alarms.length).toBe(0);
+              done();
+            });
+          }, 0);
         });
 
         chrome.alarms.create('myalarm', { delayInMinutes:0.00025 });
-      });
+      }, testTimeout);
 
       itWaitsForDone('periodInMinutes set only', function(done) {
         var expectedFireTime = Date.now() + 15;
@@ -105,7 +112,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         });
 
         chrome.alarms.create('myalarm', { periodInMinutes:0.00025 });
-      });
+      }, testTimeout);
 
       itWaitsForDone('periodInMinutes and delayInMinutes set', function(done) {
         var callNumber = 0;
@@ -126,7 +133,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         });
 
         chrome.alarms.create('myalarm', { delayInMinutes:0.0005, periodInMinutes:0.00025 });
-      });
+      }, testTimeout);
 
       itWaitsForDone('multiple alarms', function(done) {
         var expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:Date.now() + 10 },
@@ -147,7 +154,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         for (var name in expectedAlarms) {
           chrome.alarms.create(name, { when:expectedAlarms[name].scheduledTime });
         }
-      });
+      }, testTimeout);
     });
 
     describe('testing get', function() {
@@ -155,16 +162,17 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       var inputAlarmInfo = { alarm1:{ when:future }, alarm2:{ delayInMinutes:2 }, alarm3:{ periodInMinutes:3 } };
       var expectedAlarms;
       beforeEach(function() {
+        chrome.alarms.clearAll();
         chrome.alarms.getAll(function(alarms) {
           expect(alarms.length).toBe(0);
         });
-        for (var name in inputAlarmInfo) {
-          chrome.alarms.create(name, inputAlarmInfo[name]);
-        }
         expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:future },
                            alarm2:{ name:'alarm2', scheduledTime:Date.now() + 120000 },
                            alarm3:{ name:'alarm3', scheduledTime:Date.now() + 180000,
                                     periodInMinutes:3 } };
+        for (var name in inputAlarmInfo) {
+          chrome.alarms.create(name, inputAlarmInfo[name]);
+        }
       });
       afterEach(function() {
         chrome.alarms.clearAll();
@@ -182,7 +190,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         for (var name in inputAlarmInfo) {
           chrome.alarms.get(name, verifyAlarm);
         }
-      });
+      }, testTimeout);
 
       itWaitsForDone('get all', function(done) {
         chrome.alarms.getAll(function(alarms) {
@@ -191,15 +199,17 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           }
           done();
         });
-      });
+      }, testTimeout);
     });
 
     describe('testing clear', function() {
       var alarmHandler;
+      var createAlarms;
 
       beforeEach(function() {
-        var inputAlarmInfo = { alarm1:{ when:Date.now() + 10 }, alarm2:{ delayInMinutes:0.0001 },
-                               alarm3:{ periodInMinutes:0.0002 } };
+        var inputAlarmInfo = { alarm1:{ when:Date.now() + 100 }, alarm2:{ delayInMinutes:0.001 },
+                               alarm3:{ periodInMinutes:0.002 } };
+        chrome.alarms.clearAll();
         chrome.alarms.getAll(function(alarms) {
           expect(alarms.length).toBe(0);
         });
@@ -207,8 +217,10 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           nameSpy(alarm.name);
         });
-        for (var name in inputAlarmInfo) {
-          chrome.alarms.create(name, inputAlarmInfo[name]);
+        createAlarms = function() {
+          for (var name in inputAlarmInfo) {
+            chrome.alarms.create(name, inputAlarmInfo[name]);
+          }
         }
       });
       afterEach(function() {
@@ -217,22 +229,37 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       });
 
       itWaitsForDone('clear one', function(done) {
+        // Create alarms here rather than in beforeEach to be extra sure that no alarm fires
+        // before clearing it within the actual test.
+        createAlarms();
         chrome.alarms.clear('alarm3');
         setTimeout(function() {
           expect(nameSpy).toHaveBeenCalledWith('alarm1');
           expect(nameSpy).toHaveBeenCalledWith('alarm2');
           expect(nameSpy).not.toHaveBeenCalledWith('alarm3');
           done();
-        }, 12 + alarmLateTolerance);
-      });
+        }, 200);
+      }, testTimeout);
 
       itWaitsForDone('clear all', function(done) {
+        createAlarms();
         chrome.alarms.clearAll();
         setTimeout(function() {
           expect(nameSpy).not.toHaveBeenCalled();
           done();
-        }, 12 + alarmLateTolerance);
-      });
+        }, 200 );
+      }, testTimeout);
+      
+      itWaitsForDone('clear unknown name', function(done) {
+        createAlarms();
+        chrome.alarms.clear('unknownName');
+        setTimeout(function() {
+          expect(nameSpy).toHaveBeenCalledWith('alarm1');
+          expect(nameSpy).toHaveBeenCalledWith('alarm2');
+          expect(nameSpy).toHaveBeenCalledWith('alarm3');
+          done();
+        }, 200);
+      }, testTimeout);
     });
   });
 });
