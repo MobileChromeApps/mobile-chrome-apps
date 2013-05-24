@@ -283,7 +283,8 @@ function initRepoMain() {
   }
 
   function pendingChangesExist(callback) {
-    exec('git status --porcelain', function(stdout) {
+    exec('git status --porcelain --ignore-submodules', function(stdout) {
+      console.log(stdout);
       callback(!!stdout.trim());
     }, null, true);
   }
@@ -296,7 +297,7 @@ function initRepoMain() {
   }
 
   function gitStash(callback) {
-      exec('git stash save --all --quiet "coho stash"', callback);
+      exec('git stash save --all --quiet "mca-create stash"', callback);
   }
 
   function gitStashPop(callback) {
@@ -345,11 +346,11 @@ function initRepoMain() {
       });
     }
 
-    exec('git fetch origin', function(stdout) {
+    exec('git fetch origin', function() {
       exec('git rev-parse origin/master', function(newHash) {
-        exec('git rev-parse master', function(curHash) {
-          // Requires an update.
-          if (newHash != curHash) {
+        exec('git log ' + newHash + '..master', function(stdout, stderr) {
+          // Requires an update if the remote hash is not in our history.
+          if (stderr) {
             pendingChangesExist(function(hasPending) {
               if (hasPending) {
                 gitStash(afterStash);
