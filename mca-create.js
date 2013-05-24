@@ -70,18 +70,20 @@ var hasXcode = false;
 /******************************************************************************/
 /******************************************************************************/
 
-function plugins() {
-  return [
-    'bootstrap',
-    'common',
+var ACTIVE_PLUGINS = [
+    'chrome-bootstrap',
+    'chrome-common',
+    'chrome.fileSystem',
+    'chrome.i18n',
+    'chrome.identity',
+    'chrome.socket',
+    'chrome.storage',
+    'chrome.syncFileSystem',
     'file-chooser',
-    'fileSystem',
-    'i18n',
-    'identity',
-    'socket',
-    'storage',
-  ];
-}
+    'polyfill-CustomEvent',
+    'polyfill-Function.bind',
+    'polyfill-xhr-blob'
+];
 
 function cordovaCmd(args) {
   return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
@@ -280,11 +282,25 @@ function initRepoMain() {
     }, true);
   }
 
+  function pendingChangesExist(callback) {
+    exec('git status --porcelain', function(stdout) {
+      callback(!!stdout.trim());
+    }, null, true);
+  }
+
   function computeGitVersion(callback) {
     exec('git describe --tags --long', function(stdout) {
       var version = stdout.replace(/^2.5.0-.*?-/, 'dev-');
       callback(version);
     }, null, true);
+  }
+
+  function gitStash(callback) {
+      exec('git stash save --all --quiet "coho stash"', callback);
+  }
+
+  function gitStashPop(callback) {
+      exec('git stash pop', callback);
   }
 
   function reRunThisScriptWithNewVersionThenExit() {
@@ -329,17 +345,35 @@ function initRepoMain() {
       });
     }
 
-    // Don't need a clone, but attempt Update to latest version
-    exec('git pull --rebase --dry-run', function(stdout, stderr) {
-      if (stdout.length || stderr.length) {
-        exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
-        return;
-      }
-
-      // Okay, we're up to date, and all set!
-      console.log(scriptName + ' up to date, and all set!');
-      callback();
-    }, null, true);
+    exec('git fetch origin', function(stdout) {
+      exec('git rev-parse origin/master', function(newHash) {
+        exec('git rev-parse master', function(curHash) {
+          // Requires an update.
+          if (newHash != curHash) {
+            pendingChangesExist(function(hasPending) {
+              if (hasPending) {
+                gitStash(afterStash);
+              } else {
+                afterStash();
+              }
+              function afterStash() {
+                exec('git rebase origin/master', function() {
+                  if (hasPending) {
+                    gitStashPop(reRunThisScriptWithNewVersionThenExit);
+                  } else {
+                    reRunThisScriptWithNewVersionThenExit();
+                  }
+                });
+              }
+            });
+          } else {
+            // Okay, we're up to date, and all set!
+            console.log(scriptName + ' is already up-to-date.');
+            callback();
+          }
+        }, null, true);
+      }, null, true);
+    });
   }
 
   function checkOutSubModules(callback) {
@@ -417,7 +451,7 @@ function createAppMain(appName) {
     if (hasAndroidSdk) {
       cmds.push(['platform', 'add', 'android']);
     }
-    plugins().forEach(function(pluginName) {
+    ACTIVE_PLUGINS.forEach(function(pluginName) {
       cmds.push(['plugin', 'add', path.join(scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
     });
 
