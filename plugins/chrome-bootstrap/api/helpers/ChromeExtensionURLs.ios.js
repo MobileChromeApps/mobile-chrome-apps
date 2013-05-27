@@ -6,5 +6,5 @@ var exports = module.exports;
 var exec = cordova.require('cordova/exec');
 
 exports.releaseReadyWait = function() {
-  cordova.exec(null,null,'ChromeExtensionURLs','release',[])
+  exec(null,null,'ChromeExtensionURLs','release',[])
 };
