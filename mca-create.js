@@ -282,26 +282,11 @@ function initRepoMain() {
     }, true);
   }
 
-  function pendingChangesExist(callback) {
-    exec('git status --porcelain --ignore-submodules', function(stdout) {
-      console.log(stdout);
-      callback(!!stdout.trim());
-    }, null, true);
-  }
-
   function computeGitVersion(callback) {
     exec('git describe --tags --long', function(stdout) {
       var version = stdout.replace(/^2.5.0-.*?-/, 'dev-');
       callback(version);
     }, null, true);
-  }
-
-  function gitStash(callback) {
-      exec('git stash save --all --quiet "mca-create stash"', callback);
-  }
-
-  function gitStashPop(callback) {
-      exec('git stash pop', callback);
   }
 
   function reRunThisScriptWithNewVersionThenExit() {
@@ -347,35 +332,17 @@ function initRepoMain() {
       });
     }
 
-    exec('git fetch origin', function() {
-      exec('git rev-parse origin/master', function(newHash) {
-        exec('git log ' + newHash + '..master', function(stdout, stderr) {
-          // Requires an update if the remote hash is not in our history.
-          if (stderr) {
-            pendingChangesExist(function(hasPending) {
-              if (hasPending) {
-                gitStash(afterStash);
-              } else {
-                afterStash();
-              }
-              function afterStash() {
-                exec('git rebase origin/master', function() {
-                  if (hasPending) {
-                    gitStashPop(reRunThisScriptWithNewVersionThenExit);
-                  } else {
-                    reRunThisScriptWithNewVersionThenExit();
-                  }
-                });
-              }
-            });
-          } else {
-            // Okay, we're up to date, and all set!
-            console.log(scriptName + ' is already up-to-date.');
-            callback();
-          }
-        }, null, true);
-      }, null, true);
-    });
+    // Don't need a clone, but attempt Update to latest version
+    exec('git pull --rebase --dry-run', function(stdout, stderr) {
+      if (!!stdout|| !!stderr) {
+        exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
+        return;
+      }
+
+      // Okay, we're up to date, and all set!
+      console.log(scriptName + ' up to date, and all set!');
+      callback();
+    }, null, true);
   }
 
   function checkOutSubModules(callback) {
