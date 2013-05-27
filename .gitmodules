@@ -9,4 +9,4 @@
 	url = https://git-wip-us.apache.org/repos/asf/cordova-js.git
 [submodule "mobile-chrome-app-samples"]
 	path = mobile-chrome-app-samples
-	url = git@github.com:MobileChromeApps/mobile-chrome-app-samples.git
+	url = https://github.com/MobileChromeApps/mobile-chrome-app-samples.git
