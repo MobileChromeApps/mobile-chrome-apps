@@ -66,6 +66,15 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
+var updateStrategy = (function() {
+  if ('always-update-repo' in commandLineFlags) {
+    return 'always';
+  }
+  if ('never-update-repo' in commandLineFlags) {
+    return 'never';
+  }
+  return 'prompt';
+}());
 
 /******************************************************************************/
 /******************************************************************************/
@@ -182,15 +191,19 @@ function recursiveDelete(dirPath) {
   }
 }
 
-function waitForKey(callback) {
-  console.log('press a key');
+function waitForKey(opt_prompt, callback) {
+  if (typeof opt_prompt == 'function') {
+    callback = opt_prompt;
+    opt_prompt = 'press a key';
+  }
+  console.log(opt_prompt);
   function cont(key) {
     if (key == '\u0003') {
       process.exit(2);
     }
     process.stdin.removeListener('data', cont);
     process.stdin.pause();
-    callback();
+    callback(key);
   }
   process.stdin.resume();
   process.stdin.setRawMode(true);
@@ -211,7 +224,7 @@ function parseTargetOutput(targetOutput) {
   return targets;
 }
 
-function toolsCheckMain() {
+function toolsCheck() {
   console.log('## Checking that tools are installed');
   function checkAndroid(callback) {
     exec('android list targets', function(targetOutput) {
@@ -266,7 +279,11 @@ function toolsCheckMain() {
 /******************************************************************************/
 // Init
 
-function initRepoMain() {
+function initRepo() {
+  if (updateStrategy == 'never') {
+    return;
+  }
+
   function checkGit(callback) {
     var errMsg = 'git is not installed (or not available on your PATH). Please install it from http://git-scm.com';
     exec('git --version', callback, function() {
@@ -289,17 +306,17 @@ function initRepoMain() {
     }, null, true);
   }
 
-  function reRunThisScriptWithNewVersionThenExit() {
-    console.log(scriptName + ' version has been updated, restarting with new version.\n');
-    // TODO: We should quote the args.
-    // TODO: This doesn't print to console
-    exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
-      exit(0);
-    });
-  }
-
   function checkOutSelf(callback) {
     console.log('## Checking Out mobile-chrome-apps');
+
+    function reRunThisScriptWithNewVersionThenExit() {
+      console.log(scriptName + ' version has been updated, restarting with new version.\n');
+      // TODO: We should quote the args.
+      // TODO: This doesn't print to console
+      exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
+        exit(0);
+      });
+    }
 
     // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
     var requiresClone = true;
@@ -332,21 +349,41 @@ function initRepoMain() {
       });
     }
 
-    // Don't need a clone, but attempt Update to latest version
-    exec('git pull --rebase --dry-run', function(stdout, stderr) {
-      if (!!stdout|| !!stderr) {
-        exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
-        return;
-      }
-
-      // Okay, we're up to date, and all set!
+    function finish() {
       console.log(scriptName + ' up to date, and all set!');
       callback();
-    }, null, true);
+    }
+    if (updateStrategy == 'never') {
+      finish();
+    } else {
+      exec('git pull --rebase --dry-run', function(stdout, stderr) {
+        var needsUpdate = (!!stdout || !!stderr);
+        if (!needsUpdate) {
+          finish();
+        } else if (updateStrategy == 'always') {
+          updateAndRerun();
+        } else if (updateStrategy == 'prompt') {
+          promptForUpdate();
+        }
+        function updateAndRerun() {
+          exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
+        }
+        function promptForUpdate() {
+          waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
+            if (key.toLowerCase() == 'y') {
+              updateAndRerun();
+            } else {
+              finish();
+            }
+          });
+        }
+      }, null, true);
+    }
   }
 
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
+    // TODO: prompt for submodule update
     process.chdir(scriptDir);
     exec('git submodule update --init --recursive --rebase', callback);
   }
@@ -403,7 +440,7 @@ function initRepoMain() {
 /******************************************************************************/
 // Create App
 
-function createAppMain(appName) {
+function createApp(appName) {
   if (!/\w+\.\w+\.\w+/.exec(appName)) {
     fatal('App Name must follow the pattern: com.company.id');
   }
@@ -412,7 +449,6 @@ function createAppMain(appName) {
     chdir(origDir);
     var name = /\w+\.(\w+)$/.exec(appName)[1];
 
-    // TODO: add android.
     var cmds = [];
     if (hasXcode) {
       cmds.push(['platform', 'add', 'ios']);
@@ -434,7 +470,7 @@ function createAppMain(appName) {
         if (isWindows) {
           fs.writeFileSync('mca-update.bat', '"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
         } else {
-          fs.writeFileSync('mca-update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app');
+          fs.writeFileSync('mca-update.sh', '#!/bin/sh\ncd "`dirname "$0"`"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" --update_app "$@"');
           fs.chmodSync('mca-update.sh', '777');
         }
         callback();
@@ -466,14 +502,14 @@ function createAppMain(appName) {
 
   eventQueue.push(createApp);
   eventQueue.push(setAccessTag);
-  eventQueue.push(function(callback) { updateMain(); callback(); });
+  eventQueue.push(function(callback) { updateApp(); callback(); });
 }
 
 /******************************************************************************/
 /******************************************************************************/
-// Update Main
+// Update App
 
-function updateMain() {
+function updateApp() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
@@ -514,14 +550,14 @@ function updateMain() {
 /******************************************************************************/
 
 (function() {
-  toolsCheckMain();
-  initRepoMain();
+  toolsCheck();
+  initRepo();
   if (commandLineFlags['update_app']) {
-    updateMain();
+    updateApp();
   } else {
     var appName = commandLineArgs[0];
     if (appName) {
-      createAppMain(appName);
+      createApp(appName);
     }
   }
   pump();
