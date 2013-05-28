@@ -167,6 +167,11 @@ function copyFile(src, dst, callback) {
   rd.pipe(wr);
 }
 
+function copyDirectory(src, dst, callback) {
+  fatal('copyDirectory not implemented');
+  // TODO: Requires ncp module
+}
+
 function recursiveDelete(dirPath) {
   if (fs.existsSync(dirPath)) {
     console.log('Deleting: ' + dirPath);
@@ -500,8 +505,30 @@ function createApp(appName) {
     callback();
   }
 
+  function createDefaultApp(callback) {
+    console.log('## Creating Default Chrome App');
+    var wwwDir = path.join('app', 'www');
+    if (fs.existsSync(wwwDir)) {
+      recursiveDelete(wwwDir);
+    }
+    var sampleAppDir = path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld');
+    fs.mkdirSync(wwwDir);
+    function createCopyFileCallback(fileName, callback) {
+      return function() {
+        copyFile(path.join(sampleAppDir, fileName), path.join(wwwDir, fileName), callback);
+      };
+    }
+    var copyFiles = createCopyFileCallback(
+        'background.js', createCopyFileCallback(
+          'index.css', createCopyFileCallback(
+            'index.html', createCopyFileCallback(
+              'manifest.json', callback))));
+    copyFiles();
+  }
+
   eventQueue.push(createApp);
   eventQueue.push(setAccessTag);
+  eventQueue.push(createDefaultApp);
   eventQueue.push(function(callback) { updateApp(); callback(); });
 }
 
