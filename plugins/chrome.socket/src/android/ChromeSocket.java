@@ -436,7 +436,10 @@ public class ChromeSocket extends CordovaPlugin {
         public void disconnect() {
             try {
                 if (isServer) {
-                    acceptQueue.put(new AcceptData(true));
+                    // acceptQueue is null when listen has been called but not accept().
+                    if (acceptQueue != null) {
+                        acceptQueue.put(new AcceptData(true));
+                    }
                     serverSocket.close();
                 // readQueue == null means that connect() failed.
                 } else if (readQueue != null) {
