@@ -395,7 +395,12 @@ function initRepo() {
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
     process.chdir(scriptDir);
-    exec('git submodule update --init --recursive --rebase', callback);
+    exec('git submodule update --init --recursive --rebase', callback, function(error) {
+      console.log("Could not update submodules:");
+      console.error(error.toString());
+      console.log("Continuing without update.");
+      callback();
+    });
   }
 
   function buildCordovaJs(callback) {
