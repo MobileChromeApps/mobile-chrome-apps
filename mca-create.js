@@ -255,9 +255,14 @@ function toolsCheck() {
   function checkXcode(callback) {
     if (process.platform == 'darwin') {
       exec('which xcodebuild', function() {
-        hasXcode = true;
-        console.log('Xcode is installed.');
-        callback();
+        exec('xcodebuild -version', function() {
+          hasXcode = true;
+          console.log('Xcode is installed.');
+          callback();
+        }, function() {
+          console.log('Xcode appears to be installed, but no version is selected.');
+          callback();
+        }, true);
       }, function() {
         console.log('Xcode is not installed.');
         callback();
