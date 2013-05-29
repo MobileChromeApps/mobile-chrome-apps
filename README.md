@@ -3,7 +3,8 @@
 This repo contains tools for creating [Chrome Packaged Apps](http://developer.chrome.com/apps) that
 run as native Android and iOS applications through [Apache Cordova](http://cordova.apache.org/).
 
-Check out the documentation in the `docs/` directory. You'll probably want to start with the Installation guide.
+Check out the documentation in the [`docs/`](docs/) directory. You'll probably want to start with the [Installation guide](docs/Installation.md).
+
 
 ## Mailing Lists
 

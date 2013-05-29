@@ -41,7 +41,7 @@ Try to change some of the markup in `app/www/index.html`, run `mca-update`, and 
 
 The complete reference guide for building Chrome Packaged Apps can be found online at http://developer.chrome.com/apps/about_apps.html
 
-See our `Status` document, however, for a list of APIs that are currently supported on mobile, and for any differences between the mobile and desktop behaviours.
+See our [API Status document](APIStatus.md), however, for a list of APIs that are currently supported on mobile, and for any differences between the mobile and desktop behaviours.
 
 ## 5. Platform Differences (merges)
 

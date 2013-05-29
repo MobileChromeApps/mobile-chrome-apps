@@ -24,4 +24,4 @@ Check out the repository from github, and run the script once to pull in all of 
     ./mca-create.js
 
 
-Now see the Getting Started guide
+Now see the [Getting Started guide](GettingStarted.md).
