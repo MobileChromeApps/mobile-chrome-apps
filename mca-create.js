@@ -82,6 +82,7 @@ var updateStrategy = (function() {
 var ACTIVE_PLUGINS = [
     'chrome-bootstrap',
     'chrome-common',
+    'chrome.alarms',
     'chrome.fileSystem',
     'chrome.i18n',
     'chrome.identity',
