@@ -356,9 +356,21 @@ function initRepo() {
     }
 
     function finish() {
-      console.log(scriptName + ' up to date, and all set!');
       callback();
     }
+    function updateAndRerun() {
+      exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
+    }
+    function promptForUpdate() {
+      waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
+        if (key.toLowerCase() == 'y') {
+          updateAndRerun();
+        } else {
+          finish();
+        }
+      });
+    }
+
     if (updateStrategy == 'never') {
       finish();
     } else {
@@ -371,25 +383,17 @@ function initRepo() {
         } else if (updateStrategy == 'prompt') {
           promptForUpdate();
         }
-        function updateAndRerun() {
-          exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
-        }
-        function promptForUpdate() {
-          waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
-            if (key.toLowerCase() == 'y') {
-              updateAndRerun();
-            } else {
-              finish();
-            }
-          });
-        }
-      }, null, true);
+      }, function(error) {
+        console.log("Could not update repo:");
+        console.error(error.toString());
+        console.log("Continuing without update.");
+        finish();
+      }, true);
     }
   }
 
   function checkOutSubModules(callback) {
     console.log('## Checking Out SubModules');
-    // TODO: prompt for submodule update
     process.chdir(scriptDir);
     exec('git submodule update --init --recursive --rebase', callback);
   }
