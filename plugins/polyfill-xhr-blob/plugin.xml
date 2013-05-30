@@ -5,10 +5,12 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://phonegap.com/ns/plugins/1.0"
+-- REVIEW: ununsed namespace --
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.chromium.polyfill.xhr_blob"
     version="1.0.0">
   <engines>
+<!--REVIEW: cargo cult? Why 2.4? -->
     <engine name="cordova" version=">=2.4.0" />
   </engines>
 
