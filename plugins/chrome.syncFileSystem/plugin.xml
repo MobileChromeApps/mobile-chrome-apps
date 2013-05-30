@@ -5,10 +5,12 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+-- REVIEW: ununsed namespace --
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.chromium.chrome.syncFileSystem"
     version="1.0.0">
   <engines>
+<!--REVIEW: cargo cult? Why 2.4? -->
     <engine name="cordova" version=">=2.4.0" />
   </engines>
 
@@ -18,6 +20,7 @@
     <clobbers target="chrome.syncFileSystem" />
   </js-module>
 
+<!--REVIEW: Are these required? How many more platforms might we need? -->
   <!-- Empty platforms; this is a JS-only plugin. -->
   <platform name="android"></platform>
   <platform name="ios"></platform>
