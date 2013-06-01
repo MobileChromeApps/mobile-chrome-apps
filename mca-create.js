@@ -53,7 +53,14 @@ var path = require('path');
 var commandLineFlags = {};
 var commandLineArgs = process.argv.slice(2).filter(function(arg) {
   if (arg.slice(0, 2) == '--') {
-    commandLineFlags[arg.slice(2)] = true;
+    var eq = arg.indexOf('=');
+    var name = arg.slice(2);
+    var value = true;
+    if (eq > 2) {
+        name = arg.slice(2,eq);
+        value = arg.slice(eq+1);
+    }
+    commandLineFlags[name] = value;
   }
   return arg.slice(0, 2) != '--';
 });
