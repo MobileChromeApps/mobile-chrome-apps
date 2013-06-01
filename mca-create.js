@@ -49,6 +49,7 @@ process.on('uncaughtException', function(e) {
 var childProcess = require('child_process');
 var fs = require('fs');
 var path = require('path');
+var ncp = require('ncp').ncp;
 
 var commandLineFlags = {};
 var commandLineArgs = process.argv.slice(2).filter(function(arg) {
@@ -176,8 +177,13 @@ function copyFile(src, dst, callback) {
 }
 
 function copyDirectory(src, dst, callback) {
-  fatal('copyDirectory not implemented');
-  // TODO: Requires ncp module
+  ncp(src, dst, function(err) {
+    if (err) {
+      fatal('Copy file error: ' + err);
+    } else {
+      callback();
+    }
+  });
 }
 
 function recursiveDelete(dirPath) {
@@ -536,17 +542,7 @@ function createApp(appName) {
     }
     var sampleAppDir = path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld');
     fs.mkdirSync(wwwDir);
-    function createCopyFileCallback(fileName, callback) {
-      return function() {
-        copyFile(path.join(sampleAppDir, fileName), path.join(wwwDir, fileName), callback);
-      };
-    }
-    var copyFiles = createCopyFileCallback(
-        'background.js', createCopyFileCallback(
-          'index.css', createCopyFileCallback(
-            'index.html', createCopyFileCallback(
-              'manifest.json', callback))));
-    copyFiles();
+    copyDirectory(sampleAppDir, wwwDir, callback);
   }
 
   eventQueue.push(createApp);
