@@ -537,12 +537,22 @@ function createApp(appName) {
   function createDefaultApp(callback) {
     console.log('## Creating Default Chrome App');
     var wwwDir = path.join('app', 'www');
-    if (fs.existsSync(wwwDir)) {
-      recursiveDelete(wwwDir);
+    var dirsToTry = [
+      commandLineFlags.source && path.resolve(commandLineFlags.source),
+      commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source),
+      path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld')
+    ];
+    for (var i=0; i < dirsToTry.length; i++) {
+      var sampleAppDir = dirsToTry[i];
+      if (sampleAppDir && fs.existsSync(sampleAppDir)) {
+        if (fs.existsSync(wwwDir)) {
+          recursiveDelete(wwwDir);
+        }
+        fs.mkdirSync(wwwDir);
+        copyDirectory(sampleAppDir, wwwDir, callback);
+        break;
+      }
     }
-    var sampleAppDir = path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld');
-    fs.mkdirSync(wwwDir);
-    copyDirectory(sampleAppDir, wwwDir, callback);
   }
 
   eventQueue.push(createApp);
