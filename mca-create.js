@@ -50,7 +50,9 @@ var childProcess = require('child_process');
 var fs = require('fs');
 var path = require('path');
 
-var commandLineFlags = {};
+var commandLineFlags = {
+  'update-repo': 'prompt',
+};
 var commandLineArgs = process.argv.slice(2).filter(function(arg) {
   if (arg.slice(0, 2) == '--') {
     var eq = arg.indexOf('=');
@@ -73,15 +75,6 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
-var updateStrategy = (function() {
-  if ('always-update-repo' in commandLineFlags) {
-    return 'always';
-  }
-  if ('never-update-repo' in commandLineFlags) {
-    return 'never';
-  }
-  return 'prompt';
-}());
 
 /******************************************************************************/
 /******************************************************************************/
@@ -304,7 +297,7 @@ function toolsCheck() {
 // Init
 
 function initRepo() {
-  if (updateStrategy == 'never') {
+  if (commandLineFlags['update-repo'] == 'never') {
     return;
   }
 
@@ -395,16 +388,16 @@ function initRepo() {
       });
     }
 
-    if (updateStrategy == 'never') {
+    if (commandLineFlags['update-repo'] == 'never') {
       finish();
     } else {
       exec('git pull --rebase --dry-run', function(stdout, stderr) {
         var needsUpdate = (!!stdout || !!stderr);
         if (!needsUpdate) {
           finish();
-        } else if (updateStrategy == 'always') {
+        } else if (commandLineFlags['update-repo'] == 'always') {
           updateAndRerun();
-        } else if (updateStrategy == 'prompt') {
+        } else if (commandLineFlags['update-repo'] == 'prompt') {
           promptForUpdate();
         }
       }, function(error) {
