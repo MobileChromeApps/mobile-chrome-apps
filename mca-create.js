@@ -334,8 +334,12 @@ function initRepo() {
   function checkOutSelf(callback) {
     console.log('## Checking Out mobile-chrome-apps');
 
+    function installNodeModules(callback) {
+      exec('npm install', callback);
+    }
+
     function reRunThisScriptWithNewVersionThenExit() {
-      console.log(scriptName + ' version has been updated, restarting with new version.\n');
+      console.log(scriptName + ' has been updated.  Restarting with new version.');
       // TODO: We should quote the args.
       // TODO: This doesn't print to console
       exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
@@ -369,7 +373,7 @@ function initRepo() {
       exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
         console.log('Successfully cloned mobile-chrome-apps repo');
         chdir(scriptDir);
-        reRunThisScriptWithNewVersionThenExit();
+        installNodeModules(reRunThisScriptWithNewVersionThenExit);
         return;
       });
     }
@@ -378,7 +382,9 @@ function initRepo() {
       callback();
     }
     function updateAndRerun() {
-      exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
+      exec('git pull --rebase', function() {
+        installNodeModules(reRunThisScriptWithNewVersionThenExit);
+      });
     }
     function promptForUpdate() {
       waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {

@@ -1,0 +1,10 @@
+{
+  "name": "mca-create",
+  "author": "Mobile Chrome Apps (Cordova) Team at Google",
+  "version": "0.1.0",
+  "description": "Mobile Chrome Apps command line tool",
+  "dependencies": {
+    "ncp":">=0.4"
+  },
+  "license": "Apache version 2.0"
+}
