@@ -371,7 +371,11 @@ function initRepo() {
     }
 
     function finish() {
-      callback();
+      if (fs.existsSync(path.join(scriptDir, 'node_modules'))) {
+        callback();
+      } else {
+        installNodeModules(reRunThisScriptWithNewVersionThenExit);
+      }
     }
     function updateAndRerun() {
       exec('git pull --rebase', function() {
