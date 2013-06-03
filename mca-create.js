@@ -49,7 +49,6 @@ process.on('uncaughtException', function(e) {
 var childProcess = require('child_process');
 var fs = require('fs');
 var path = require('path');
-var ncp = require('ncp').ncp;
 
 var commandLineFlags = {};
 var commandLineArgs = process.argv.slice(2).filter(function(arg) {
@@ -177,7 +176,7 @@ function copyFile(src, dst, callback) {
 }
 
 function copyDirectory(src, dst, callback) {
-  ncp(src, dst, function(err) {
+  require('ncp').ncp(src, dst, function(err) {
     if (err) {
       fatal('Copy file error: ' + err);
     } else {
