@@ -143,6 +143,25 @@ function exec(cmd, onSuccess, opt_onError, opt_silent) {
   });
 }
 
+function spawn(cmd, args, onSuccess, opt_onError, opt_silent) {
+  var onError = opt_onError || function(e) {
+    fatal('command failed: ' + cmd + '\n' + e);
+  };
+  if (!opt_silent) {
+    console.log('Spawning: ' + cmd + ' ' + args.join(' '));
+  }
+  var p = childProcess.spawn(cmd, args);
+  p.stdout.on('data', function (data) {
+    process.stdout.write(data);
+  });
+  p.stderr.on('data', function (data) {
+    process.stderr.write(data);
+  });
+  p.on('close', function (code) {
+    onSuccess();
+  });
+}
+
 function sudo(cmd, onSuccess, opt_onError, silent) {
   if (!isWindows) {
     cmd = 'sudo ' + cmd;
@@ -332,9 +351,11 @@ function initRepo() {
 
     function reRunThisScriptWithNewVersionThenExit() {
       console.log(scriptName + ' has been updated.  Restarting with new version.');
+      console.log(new Array(80).join('*'));
+      console.log(new Array(80).join('*'));
       // TODO: We should quote the args.
       // TODO: This doesn't print to console
-      exec('"' + process.argv[0] + '" ' + scriptName + ' ' + process.argv.slice(2).join(' '), function() {
+      spawn(process.argv[0], [scriptName].concat(process.argv.slice(2)), function() {
         exit(0);
       });
     }
