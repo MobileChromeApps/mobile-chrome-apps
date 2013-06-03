@@ -151,15 +151,30 @@ function spawn(cmd, args, onSuccess, opt_onError, opt_silent) {
     console.log('Spawning: ' + cmd + ' ' + args.join(' '));
   }
   var p = childProcess.spawn(cmd, args);
+
   p.stdout.on('data', function (data) {
     process.stdout.write(data);
   });
   p.stderr.on('data', function (data) {
     process.stderr.write(data);
   });
+
+  process.stdin.resume();
+  try {
+    // This fails if the process is a spawned child (likely a node bug);
+    process.stdin.setRawMode(true);
+  } catch (e) {
+  }
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', forward);
   p.on('close', function (code) {
+    process.stdin.removeListener('data', forward);
+    process.stdin.pause();
     onSuccess();
   });
+  function forward(data) {
+    p.stdin.write(data);
+  }
 }
 
 function sudo(cmd, onSuccess, opt_onError, silent) {
@@ -236,7 +251,11 @@ function waitForKey(opt_prompt, callback) {
     callback(key);
   }
   process.stdin.resume();
-  process.stdin.setRawMode(true);
+  try {
+    // This fails if the process is a spawned child (likely a node bug);
+    process.stdin.setRawMode(true);
+  } catch (e) {
+  }
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', cont);
 }
