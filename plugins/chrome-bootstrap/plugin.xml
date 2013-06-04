@@ -14,6 +14,8 @@
 
   <name>Chrome Apps Core</name>
 
+  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
   <js-module src="api/bootstrap.js" name="bootstrap">
     <runs />

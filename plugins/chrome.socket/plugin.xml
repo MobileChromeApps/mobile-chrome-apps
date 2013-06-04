@@ -14,6 +14,8 @@
 
   <name>Chrome Apps Socket API</name>
 
+  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+
   <js-module src="socket.js" name="Socket">
     <clobbers target="chrome.socket" />
   </js-module>
