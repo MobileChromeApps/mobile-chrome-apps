@@ -13,6 +13,7 @@
       "scripts": [
         "spec_bootstrap.js",
         "page.chromespec.js",
+        "page.directoryFinder.js",
         "page.jasmine.js",
         "page.fileSystem.js",
         "page.identity.js",
