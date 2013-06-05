@@ -51,6 +51,26 @@ window.runningInBg = true;
     return newButton;
   }
 
+  function createDropdown(name, values) {
+    var container = chromespec.fgDoc.createElement('div');
+
+    // Create the title label.
+    container.appendChild(document.createTextNode(name + ': '));
+
+    // Create the dropdown.
+    var dropdown = chromespec.fgDoc.createElement('select');
+    dropdown.id = name + '-dropdown';
+    for (var value in values) {
+      var option = chromespec.fgDoc.createElement('option');
+      option.value = values[value];
+      option.textContent = value;
+      dropdown.appendChild(option);
+    }
+    container.appendChild(dropdown);
+
+    return container;
+  }
+
   function injectScript(doc, src, callback) {
     log('injecting script into ' + (doc == chromespec.fgDoc ? 'fg' : 'bg') + ': ' + src);
     var n = doc.createElement('script');
@@ -201,6 +221,7 @@ window.runningInBg = true;
 
   chromespec.changePage = changePage;
   chromespec.createButton = createButton;
+  chromespec.createDropdown = createDropdown;
   chromespec.createUiWindow = createUiWindow;
   chromespec.log = log;
   chromespec.initJasmine = initJasmine;
@@ -211,3 +232,4 @@ window.runningInBg = true;
   chromespec.registerJasmineTestInstance = registerJasmineTestInstance;
   chromespec.registerSubPage = registerSubPage;
 })();
+
