@@ -467,19 +467,10 @@ function initRepo() {
   function buildCordovaJs(callback) {
     console.log('## Building cordova-js');
     process.chdir(path.join(scriptDir, 'cordova-js'));
-    var needsBuildJs = true;
     computeGitVersion(function(version) {
-      if (fs.existsSync('pkg/cordova.ios.js')) {
-        needsBuildJs = (fs.readFileSync('pkg/cordova.ios.js').toString().indexOf(version) == -1);
-      }
-      if (needsBuildJs) {
-        console.log('CordovaJS needs to be built.');
-        var packager = require('./cordova-js/build/packager');
-        packager.generate('ios', version);
-        packager.generate('android', version);
-      } else {
-        console.log('CordovaJS is up-to-date.');
-      }
+      var packager = require('./cordova-js/build/packager');
+      packager.generate('ios', version);
+      packager.generate('android', version);
       callback();
     });
   }
