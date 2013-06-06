@@ -5,6 +5,9 @@
 // Initialization code for the Chrome plugins API.
 // Adds a deviceready listener that initializes the Chrome wrapper.
 
+var Event = require('org.chromium.chrome-common.events');
+exports.onBackgroundPageLoaded = new Event('onBackgroundPageLoaded');
+
 require('cordova/channel').onCordovaReady.subscribe(function() {
   require('org.chromium.chrome-app-bootstrap.mobile.impl').init();
 });

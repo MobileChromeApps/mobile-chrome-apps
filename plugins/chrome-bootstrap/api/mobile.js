@@ -21,6 +21,13 @@ function createBgChrome() {
   };
 }
 
+var bootstrap = require("org.chromium.chrome-app-bootstrap.bootstrap");
+
+//TODO: This is conditional on the app launching with the intention of bringing up the UI
+bootstrap.onBackgroundPageLoaded.addListener(function() {
+  chrome.app.runtime.onLaunched.fire();
+});
+
 exports.init = function() {
   // Assigning innerHTML here has the side-effect of removing the
   // chrome-content-loaded script tag. Removing it is required so that the
@@ -42,7 +49,7 @@ exports.bgInit = function(bgWnd) {
   function onLoad() {
     bgWnd.removeEventListener('load', onLoad, false);
     setTimeout(function() {
-      chrome.app.runtime.onLaunched.fire();
+      bootstrap.onBackgroundPageLoaded.fire();
     }, 0);
   }
   bgWnd.addEventListener('load', onLoad, false);
