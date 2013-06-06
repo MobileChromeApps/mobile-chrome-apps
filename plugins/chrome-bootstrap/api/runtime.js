@@ -13,14 +13,31 @@ exports.onInstalled = new Event('onInstalled');
 exports.onStartup = new Event('onStartup');
 exports.onSuspendCanceled = new Event('onSuspendCanceled');
 exports.onUpdateAvailable = new Event('onUpdateAvailable');
+//exports.onBrowserUpdateAvailable = new Event('onBrowserUpdateAvailable');
+//exports.onConnect = new Event('onConnect');
+//exports.onConnectExternal = new Event('onConnectExternal');
+//exports.onMessage = new Event('onMessage');
+//exports.onMessageExternal = new Event('onMessageExternal');
 
-var original_addListener = exports.onSuspend.addListener;
 
 // Uses a trampoline to bind the Cordova pause event on the first call.
+var original_onSuspend_addListener = exports.onSuspend.addListener;
 exports.onSuspend.addListener = function(f) {
-  window.document.addEventListener('pause', exports.onSuspend.fire, false);
-  exports.onSuspend.addListener = original_addListener;
+  window.document.addEventListener('pause', function() {
+    return exports.onSuspend.fire.apply(exports.onSuspend, arguments) },
+  false);
+  exports.onSuspend.addListener = original_onSuspend_addListener;
   exports.onSuspend.addListener(f);
+};
+
+// Uses a trampoline to bind the Cordova resume event on the first call.
+var original_onSuspendCanceled_addListener = exports.onSuspendCanceled.addListener;
+exports.onSuspendCanceled.addListener = function(f) {
+  window.document.addEventListener('resume', function() {
+    return exports.onSuspendCanceled.fire.apply(exports.onSuspendCanceled, arguments) },
+  false);
+  exports.onSuspendCanceled.addListener = original_onSuspendCanceled_addListener;
+  exports.onSuspendCanceled.addListener(f);
 };
 
 exports.getManifest = function() {
