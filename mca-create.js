@@ -89,7 +89,7 @@ var ACTIVE_PLUGINS = [
     'chrome.socket',
     'chrome.storage',
     'chrome.syncFileSystem',
-    'file-chooser',
+    'fileChooser',
     'polyfill-CustomEvent',
     'polyfill-Function.bind',
     'polyfill-xhr-blob'
