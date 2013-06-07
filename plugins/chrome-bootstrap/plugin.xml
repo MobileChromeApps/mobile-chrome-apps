@@ -47,11 +47,16 @@
 
   <!-- Convert 'chrome-extension://' urls -->
   <platform name="android">
+    <source-file src="src/android/ChromeBootstrap.java" target-dir="src/com/google/cordova" />
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/com/google/cordova" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBootstrap">
+        <param name="android-package" value="com.google.cordova.ChromeBootstrap"/>
+        <param name="onload" value="true"/>
+      </feature>
       <feature name="ChromeExtensionURLs">
         <param name="android-package" value="com.google.cordova.ChromeExtensionURLs"/>
         <param name="onload" value="true"/>
