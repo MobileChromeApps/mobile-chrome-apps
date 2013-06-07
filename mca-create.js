@@ -374,7 +374,7 @@ function initRepo() {
       console.log(new Array(80).join('*'));
       process.chdir(origDir);
       // TODO: We should quote the args.
-      spawn(process.argv[0], [scriptName].concat(process.argv.slice(2)), function() {
+      spawn(process.argv[0], process.argv.slice(1), function() {
         exit(0);
       });
     }
