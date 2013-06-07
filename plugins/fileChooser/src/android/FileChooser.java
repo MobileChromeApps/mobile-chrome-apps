@@ -4,19 +4,18 @@
 
 package com.google.cordova;
 
+import android.content.Intent;
+
+import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Intent;
-import android.net.Uri;
 
 public class FileChooser extends CordovaPlugin {
-	private CallbackContext callbackContext;
+    private CallbackContext callbackContext;
 
-	/**
+    /**
      * Executes the request and returns PluginResult.
      *
      * @param action            The action to execute.
@@ -24,11 +23,11 @@ public class FileChooser extends CordovaPlugin {
      * @param callbackContext   The callback context used when calling back into JavaScript.
      * @return                  True when the action was valid, false otherwise.
      */
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-    	this.callbackContext = callbackContext;
+    public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+        this.callbackContext = callbackContext;
 
         if (action.equals("chooseFile")) {
-        	this.chooseFile(args.getJSONArray(0));
+            this.chooseFile(args.getJSONArray(0));
             return true;
         }
 
@@ -52,8 +51,7 @@ public class FileChooser extends CordovaPlugin {
         intent.setType(getIntentType(mimeTypes));
 
         if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(intent,
-                    "Get File"), 0);
+            this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(intent, "Get File"), 0);
         }
     }
 

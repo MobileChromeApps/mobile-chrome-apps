@@ -14,7 +14,7 @@
 
   <name>File Chooser</name>
 
-  <js-module src="file-chooser.js" name="FileChooser">
+  <js-module src="fileChooser.js" name="FileChooser">
   </js-module>
 
   <platform name="android">

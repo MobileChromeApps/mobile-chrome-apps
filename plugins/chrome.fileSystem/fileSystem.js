@@ -66,7 +66,7 @@ function getFileAndroid(options, onFileReceivedCallback) {
   var mimeTypes = determineMimeTypes(options.accepts, options.acceptsAllTypes);
 
   // Use the file chooser to get a file.
-  AndroidFileChooser.chooseFile(onFileReceivedCallback, null, mimeTypes);
+  AndroidFileChooser.chooseFile(onFileReceivedCallback, null, [ mimeTypes ]);
 }
 
 function determineMediaType(acceptOptions, acceptsAllTypes) {
