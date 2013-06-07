@@ -21,7 +21,7 @@
 
 - (void)doesNeedLaunch:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:!self.needsLaunch];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:self.needsLaunch];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
