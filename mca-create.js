@@ -372,8 +372,8 @@ function initRepo() {
       console.log(scriptName + ' has been updated.  Restarting with new version.');
       console.log(new Array(80).join('*'));
       console.log(new Array(80).join('*'));
+      process.chdir(origDir);
       // TODO: We should quote the args.
-      // TODO: This doesn't print to console
       spawn(process.argv[0], [scriptName].concat(process.argv.slice(2)), function() {
         exit(0);
       });
@@ -552,9 +552,41 @@ function createApp(appName) {
     }, undefined, true);
   }
 
+  function createDefaultApp(callback) {
+    console.log('## Creating Default Chrome App');
+    // TODO: add merges dir
+    var wwwDir = 'www';
+    if (!fs.existsSync(wwwDir)) {
+      return;
+    }
+    copyFile(path.join(wwwDir, 'config.xml'), 'config.xml', function() {
+      recursiveDelete(wwwDir);
+      var dirsToTry = [
+        // TODO: resolve leading ~ to $HOME
+        commandLineFlags.source && path.resolve(commandLineFlags.source),
+        commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source),
+        path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld')
+      ];
+      for (var i=0; i < dirsToTry.length; i++) {
+        var appDir = dirsToTry[i];
+        console.log('attempting: ' + appDir);
+        if (appDir && fs.existsSync(appDir)) {
+          fs.mkdirSync(wwwDir);
+          copyDirectory(path.join(appDir, 'www'), wwwDir, function() {
+            copyFile('config.xml', path.join(wwwDir, 'config.xml'), function() {
+              fs.unlinkSync('config.xml');
+              callback();
+            });
+          });
+          break;
+        }
+      }
+    });
+  }
+
   function setAccessTag(callback) {
     console.log('## Setting <access> tag');
-    var configFilePath = path.join('app', 'config.xml');
+    var configFilePath = path.join('www', 'config.xml');
     if (!fs.existsSync(configFilePath)) {
       fatal('Expected file to exist: ' + configFilePath);
     }
@@ -567,30 +599,9 @@ function createApp(appName) {
     callback();
   }
 
-  function createDefaultApp(callback) {
-    console.log('## Creating Default Chrome App');
-    var wwwDir = path.join('app', 'www');
-    var dirsToTry = [
-      commandLineFlags.source && path.resolve(commandLineFlags.source),
-      commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source),
-      path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld')
-    ];
-    for (var i=0; i < dirsToTry.length; i++) {
-      var sampleAppDir = dirsToTry[i];
-      if (sampleAppDir && fs.existsSync(sampleAppDir)) {
-        if (fs.existsSync(wwwDir)) {
-          recursiveDelete(wwwDir);
-        }
-        fs.mkdirSync(wwwDir);
-        copyDirectory(sampleAppDir, wwwDir, callback);
-        break;
-      }
-    }
-  }
-
   eventQueue.push(createApp);
-  eventQueue.push(setAccessTag);
   eventQueue.push(createDefaultApp);
+  eventQueue.push(setAccessTag);
   eventQueue.push(function(callback) { updateApp(); callback(); });
 }
 
