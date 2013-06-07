@@ -4,14 +4,14 @@
 
 package com.google.cordova;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.util.NavigableSet;
-import java.util.TreeMap;
-
 import org.apache.cordova.api.CordovaPlugin;
+import org.apache.cordova.CordovaArgs;
+import org.apache.cordova.api.CallbackContext;
+import org.apache.cordova.api.PluginResult;
+
 import android.util.Log;
+
+import org.json.JSONException;
 
 public class ChromeBootstrap extends CordovaPlugin {
 
@@ -19,7 +19,7 @@ public class ChromeBootstrap extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        if ("doesNeedLoad".equals(action)) {
+        if ("doesNeedLaunch".equals(action)) {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
             return true;
         }
