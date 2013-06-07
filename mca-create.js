@@ -372,8 +372,8 @@ function initRepo() {
       console.log(scriptName + ' has been updated.  Restarting with new version.');
       console.log(new Array(80).join('*'));
       console.log(new Array(80).join('*'));
+      process.chdir(origDir);
       // TODO: We should quote the args.
-      // TODO: This doesn't print to console
       spawn(process.argv[0], [scriptName].concat(process.argv.slice(2)), function() {
         exit(0);
       });
