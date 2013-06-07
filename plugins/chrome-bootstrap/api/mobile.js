@@ -22,10 +22,15 @@ function createBgChrome() {
 }
 
 var bootstrap = require("org.chromium.chrome-app-bootstrap.bootstrap");
+var exec = require("cordova/exec");
 
-//TODO: This is conditional on the app launching with the intention of bringing up the UI
+// If launching for UI, fire onLaunched event
 bootstrap.onBackgroundPageLoaded.addListener(function() {
-  chrome.app.runtime.onLaunched.fire();
+  exec(function(data) {
+    if (data) {
+      chrome.app.runtime.onLaunched.fire();
+    }
+  }, null, "ChromeBootstrap", "doesNeedLaunch", []);
 });
 
 exports.init = function() {
