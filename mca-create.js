@@ -89,6 +89,7 @@ var ACTIVE_PLUGINS = [
     'chrome.socket',
     'chrome.storage',
     'chrome.syncFileSystem',
+    'directoryFinder',
     'fileChooser',
     'polyfill-CustomEvent',
     'polyfill-Function.bind',
