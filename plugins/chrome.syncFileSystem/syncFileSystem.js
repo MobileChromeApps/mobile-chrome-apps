@@ -810,6 +810,10 @@ exports.onServiceStatusChanged.addListener = function(listener) {
 
 exports.onFileStatusChanged = { };
 exports.onFileStatusChanged.addListener = function(listener) {
-    fileStatusListeners.push(listener);
+    if (typeof(listener) == 'function') {
+        fileStatusListeners.push(listener);
+    } else {
+        console.log('Attempted to add a non-function listener.');
+    }
 }
 
