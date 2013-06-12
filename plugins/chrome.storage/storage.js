@@ -57,13 +57,13 @@ function _convertToObject(obj) {
     return ret;
 }
 
-function StorageArea(syncStorage, changedEvent) {
-    this._sync = syncStorage;
+function StorageArea(namespace, changedEvent) {
+    this._namespace = namespace;
     this._changedEvent = changedEvent;
 }
 
 StorageArea.prototype._getAreaName = function() {
-    return (this._sync? 'sync' : 'local');
+    return this._namespace;
 };
 
 StorageArea.prototype.get = function(keys, callback) {
@@ -80,7 +80,7 @@ StorageArea.prototype.get = function(keys, callback) {
         callback();
     };
     var param = _scrubValues(keys);
-    exec(win, fail, 'ChromeStorage', 'get', [this._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'get', [this._namespace, param]);
 };
 
 StorageArea.prototype.getBytesInUse = function(keys, callback) {
@@ -97,7 +97,7 @@ StorageArea.prototype.getBytesInUse = function(keys, callback) {
         callback(-1);
     };
     var param = _scrubValues(keys);
-    exec(win, fail, 'ChromeStorage', 'getBytesInUse', [this._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'getBytesInUse', [this._namespace, param]);
 };
 
 StorageArea.prototype.set = function(keyVals, callback) {
@@ -125,7 +125,7 @@ StorageArea.prototype.set = function(keyVals, callback) {
             callback(0);
         };
     }
-    exec(win, fail, 'ChromeStorage', 'set', [self._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'set', [self._namespace, param]);
 };
 
 StorageArea.prototype.remove = function(keys, callback) {
@@ -155,7 +155,7 @@ StorageArea.prototype.remove = function(keys, callback) {
             callback(0);
         };
     }
-    exec(win, fail, 'ChromeStorage', 'remove', [self._sync, param]);
+    exec(win, fail, 'ChromeStorage', 'remove', [self._namespace, param]);
 };
 
 StorageArea.prototype.clear = function(callback) {
@@ -178,23 +178,23 @@ StorageArea.prototype.clear = function(callback) {
             callback(0);
         };
     }
-    exec(win, fail, 'ChromeStorage', 'clear', [self._sync]);
+    exec(win, fail, 'ChromeStorage', 'clear', [self._namespace]);
 };
 
-// TODO(braden): How do we want to handle this event when we're not in a Chrome app?
 var Event = require('org.chromium.chrome-common.events');
-if (Event) {
-  exports.onChanged = new Event('onChanged');
-}
+exports.onChanged = new Event('onChanged');
 
-var local = new StorageArea(false, exports.onChanged);
+var local = new StorageArea('local', exports.onChanged);
 local.QUOTA_BYTES = 5242880;
-var sync = new StorageArea(true, exports.onChanged);
+exports.local = local;
+
+var sync = new StorageArea('sync', exports.onChanged);
 sync.MAX_ITEMS = 512;
 sync.MAX_WRITE_OPERATIONS_PER_HOUR = 1000;
 sync.QUOTA_BYTES_PER_ITEM = 4096;
 sync.MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 10;
 sync.QUOTA_BYTES = 102400;
-
-exports.local = local;
 exports.sync = sync;
+
+var internal = new StorageArea('internal', exports.onChanged);
+exports.internal = internal;
