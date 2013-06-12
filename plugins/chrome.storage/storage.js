@@ -111,7 +111,7 @@ StorageArea.prototype.set = function(keyVals, callback) {
         callback(-1);
     };
     var win;
-    if(self._changedEvent.hasListeners()) {
+    if(self._changedEvent && self._changedEvent.hasListeners()) {
         win = function(oldKeyVals) {
             if(callback) {
                 callback(0);
@@ -141,7 +141,7 @@ StorageArea.prototype.remove = function(keys, callback) {
         callback(-1);
     };
     var win;
-    if(self._changedEvent.hasListeners()) {
+    if(self._changedEvent && self._changedEvent.hasListeners()) {
         win = function(oldKeyVals) {
             if(callback) {
                 callback(0);
@@ -164,7 +164,7 @@ StorageArea.prototype.clear = function(callback) {
         callback(-1);
     };
     var win;
-    if(self._changedEvent.hasListeners()) {
+    if(self._changedEvent && self._changedEvent.hasListeners()) {
        win = function(oldKeyVals) {
            if(callback) {
                callback(0);
@@ -196,5 +196,5 @@ sync.MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE = 10;
 sync.QUOTA_BYTES = 102400;
 exports.sync = sync;
 
-var internal = new StorageArea('internal', exports.onChanged);
+var internal = new StorageArea('internal', null);
 exports.internal = internal;
