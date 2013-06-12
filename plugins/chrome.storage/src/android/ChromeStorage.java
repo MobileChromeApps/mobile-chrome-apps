@@ -57,13 +57,13 @@ public class ChromeStorage extends CordovaPlugin {
         return false;
     }
 
-    private static String getStorageFile(boolean sync) {
-        return sync? "__chromestorage_sync" : "__chromestorage";
+    private static String getStorageFile(String namespace) {
+        return "__chromestorage_" + namespace;
     }
 
-    private JSONObject getStorage(boolean sync) throws StreamCorruptedException, IOException, ClassNotFoundException, JSONException {
+    private JSONObject getStorage(String namespace) throws StreamCorruptedException, IOException, ClassNotFoundException, JSONException {
         Context context = this.cordova.getActivity();
-        File file = new File(context.getFilesDir(), getStorageFile(sync));
+        File file = new File(context.getFilesDir(), getStorageFile(namespace));
         JSONObject oldMap = new JSONObject();
 
         if(file.exists()) {
@@ -85,9 +85,9 @@ public class ChromeStorage extends CordovaPlugin {
         return oldMap;
     }
 
-    private void setStorage(boolean sync, JSONObject map) throws IOException {
+    private void setStorage(String namespace, JSONObject map) throws IOException {
         Context context = this.cordova.getActivity();
-        FileOutputStream fos = context.openFileOutput(getStorageFile(sync), Context.MODE_PRIVATE);
+        FileOutputStream fos = context.openFileOutput(getStorageFile(namespace), Context.MODE_PRIVATE);
         fos.write(map.toString().getBytes());
         fos.close();
     }
@@ -95,7 +95,7 @@ public class ChromeStorage extends CordovaPlugin {
     private JSONObject getStoredValuesForKeys(CordovaArgs args, boolean useDefaultValues) {
         JSONObject ret = new JSONObject();
         try {
-            boolean sync = args.getBoolean(0);
+            String namespace = args.getString(0);
             JSONObject jsonObject = (JSONObject) args.optJSONObject(1);
             JSONArray jsonArray = args.optJSONArray(1);
             boolean isNull = args.isNull(1);
@@ -116,7 +116,7 @@ public class ChromeStorage extends CordovaPlugin {
             if (keys != null && keys.isEmpty()) {
                 ret = new JSONObject();
             } else {
-                JSONObject storage = getStorage(sync);
+                JSONObject storage = getStorage(namespace);
 
                 if (keys == null) {
                     // return the whole storage if the key given is null
@@ -175,14 +175,14 @@ public class ChromeStorage extends CordovaPlugin {
             @Override
             public void run() {
                 try {
-                    boolean sync = args.getBoolean(0);
+                    String namespace = args.getString(0);
                     JSONObject jsonObject = (JSONObject) args.getJSONObject(1);
                     JSONArray keyArray = jsonObject.names();
                     JSONObject oldValues = new JSONObject();
 
                     if (keyArray != null) {
                         List<String> keys = JSONUtils.toStringList(keyArray);
-                        JSONObject storage = getStorage(sync);
+                        JSONObject storage = getStorage(namespace);
                         for (String key : keys) {
                             Object oldValue = storage.opt(key);
                             if(oldValue != null) {
@@ -190,7 +190,7 @@ public class ChromeStorage extends CordovaPlugin {
                             }
                             storage.put(key, jsonObject.get(key));
                         }
-                        setStorage(sync, storage);
+                        setStorage(namespace, storage);
                     }
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
@@ -206,7 +206,7 @@ public class ChromeStorage extends CordovaPlugin {
             @Override
             public void run() {
                 try {
-                    boolean sync = args.getBoolean(0);
+                    String namespace = args.getString(0);
                     JSONObject jsonObject = (JSONObject) args.optJSONObject(1);
                     JSONArray jsonArray = args.optJSONArray(1);
                     boolean isNull = args.isNull(1);
@@ -222,7 +222,7 @@ public class ChromeStorage extends CordovaPlugin {
                     }
 
                     if (keys != null && !keys.isEmpty()) {
-                        JSONObject storage = getStorage(sync);
+                        JSONObject storage = getStorage(namespace);
                         for(String key : keys) {
                             Object oldValue = storage.opt(key);
                             if(oldValue != null) {
@@ -230,7 +230,7 @@ public class ChromeStorage extends CordovaPlugin {
                             }
                             storage.remove(key);
                         }
-                        setStorage(sync, storage);
+                        setStorage(namespace, storage);
                     }
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
@@ -246,9 +246,9 @@ public class ChromeStorage extends CordovaPlugin {
             @Override
             public void run() {
                 try {
-                    boolean sync = args.getBoolean(0);
-                    JSONObject oldValues = getStorage(sync);
-                    setStorage(sync, new JSONObject());
+                    String namespace = args.getString(0);
+                    JSONObject oldValues = getStorage(namespace);
+                    setStorage(namespace, new JSONObject());
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not clear storage", e);
