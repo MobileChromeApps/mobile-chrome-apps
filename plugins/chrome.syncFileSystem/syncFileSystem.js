@@ -52,6 +52,10 @@ var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
 var REQUEST_FAILED_ERROR = 3;
 
+// Numerical constants.
+var INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = 2000;
+var MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = 64000;
+
 //----------------------------------
 // FileSystem function augmentation
 //----------------------------------
@@ -723,27 +727,27 @@ exports.requestFileSystem = function(callback) {
             fileSystem.root = directoryEntry;
 
             // Set up regular remote-to-local checks.
-            var delay = 2000;
+            var remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
             var onGetDriveChangesError = function() {
                 // Use the same timeout.
-                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
             var onGetDriveChangesSuccess = function(numChanges) {
                 console.log('Relevant changes: ' + numChanges + '.');
                 if (numChanges === 0) {
-                    if (delay < 64000) {
-                        delay *= 2;
-                        console.log('  Delay doubled.');
+                    if (remoteToLocalSyncDelay < MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY) {
+                        remoteToLocalSyncDelay *= 2;
+                        console.log('  Remote-to-local sync delay doubled.');
                     } else {
-                        console.log('  Delay capped at ' + delay + 'ms.');
+                        console.log('  Remote-to-local sync delay capped at ' + remoteToLocalSyncDelay + 'ms.');
                     }
                 } else {
-                    delay = 2000;
-                    console.log('  Delay reset.');
+                    remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
+                    console.log('  Remote-to-local sync delay reset.');
                 }
-                window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
-            window.setTimeout(getDriveChanges, delay, onGetDriveChangesSuccess, onGetDriveChangesError);
+            window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
 
             // Pass on the file system!
             callback(fileSystem);
