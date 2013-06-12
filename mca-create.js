@@ -585,24 +585,8 @@ function createApp(appName) {
     });
   }
 
-  function setAccessTag(callback) {
-    console.log('## Setting <access> tag');
-    var configFilePath = path.join('www', 'config.xml');
-    if (!fs.existsSync(configFilePath)) {
-      fatal('Expected file to exist: ' + configFilePath);
-    }
-
-    // Manipulating XML with Regex: See http://stackoverflow.com/a/1732454
-    var contents = fs.readFileSync(configFilePath, 'utf8');
-    contents = contents.replace(/(access.*)/,"$1\n    <access origin=\"chrome-extension://*\" />");
-    fs.writeFileSync(configFilePath, contents);
-
-    callback();
-  }
-
   eventQueue.push(createApp);
   eventQueue.push(createDefaultApp);
-  eventQueue.push(setAccessTag);
   eventQueue.push(function(callback) { updateApp(); callback(); });
 }
 
