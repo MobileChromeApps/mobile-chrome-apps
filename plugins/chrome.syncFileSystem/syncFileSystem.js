@@ -207,10 +207,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
         // Get the app directory id.
         getDirectoryId(_appId /* directoryName */, syncableRootDirectoryId /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableAppDirectoryIdSuccess);
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the Drive "Chrome Syncable FileSystem" directory id.
         getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, false /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
     };
@@ -220,10 +217,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
 
 // This function syncs an entry to Drive, creating it if necessary.
 function sync(entry, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Drive, unfortunately, does not allow searching by path.
         // Begin the process of drilling down to find the correct parent directory.  We can start with the app directory.
         var pathRemainder = entry.fullPath;
@@ -346,10 +340,7 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
         // Get the file.
         fileEntry.file(onFileSuccess);
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the file id and pass it on.
         getFileId(fileEntry.name, parentDirectoryId, onGetFileIdSuccess);
     };
@@ -377,10 +368,7 @@ function remove(entry, callback) {
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the file id and pass it on.
         var appIdIndex = entry.fullPath.indexOf(_appId);
 
@@ -403,10 +391,7 @@ function remove(entry, callback) {
 
 // This function creates the app's syncable directory on Drive.
 function createDirectory(directoryName, parentDirectoryId, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Create the data to send.
         var data = { title: directoryName,
                      parents: [{ id: parentDirectoryId }],
@@ -440,10 +425,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
 
 // This function checks for changes since the most recent change id.
 function getDriveChanges(successCallback, errorCallback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Send a request to retrieve the changes.
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -569,10 +551,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
             console.log('Error: ' + e);
         };
     }
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Send a request to locate the directory.
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -696,7 +675,7 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
 function getTokenString(callback) {
     // TODO(maxw): Handle this correctly.  Tokens expire!
     if (_tokenString) {
-        callback(_tokenString);
+        callback();
         return;
     }
 
@@ -707,8 +686,9 @@ function getTokenString(callback) {
             console.log('Failed to complete web auth flow.');
             return;
         } else {
-            // Extract the token string from the resulting URL.
-            callback(extractTokenString(url));
+            // Extract the token string and save it for later use.
+            _tokenString = extractTokenString(url);
+            callback();
         }
     });
 }
