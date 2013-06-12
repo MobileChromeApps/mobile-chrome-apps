@@ -59,6 +59,7 @@ var REQUEST_FAILED_ERROR = 3;
 // This function overrides the necessary functions on a given Entry to enable syncability.
 function enableSyncabilityForEntry(entry) {
     entry.remove = function(successCallback, errorCallback) {
+        // For now, directories cannot be added or created using syncFileSystem.
         if (entry.isDirectory) {
             errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
         }
@@ -91,7 +92,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
     enableSyncabilityForEntry(directoryEntry);
 
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
-        // This is disabled until efficient syncing is figured out.
+        // For now, directories cannot be added or created using syncFileSystem.
         errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
 
         /*
@@ -180,6 +181,10 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
                 };
                 sync(fileEntry, onSyncSuccess);
             };
+        } else {
+            fileWriter.onwrite = function(evt) {
+                sync(fileEntry, null);
+            }
         }
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -239,7 +244,9 @@ function sync(entry, callback) {
                 }
             }
 
-            callback();
+            if (callback) {
+                callback();
+            }
         };
 
         // Using the remainder of the path, start the recursive process of drilling down.
@@ -284,7 +291,7 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
         var onFileSuccess = function(file) {
             // Read the file and send its contents.
             var fileReader = new FileReader();
-            fileReader.onloadend = function(evt) {
+            fileReader.onload = function(evt) {
                 // This is used to note whether a file was created or updated.
                 var fileAction;
 
@@ -323,10 +330,10 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
                 // If there's a file id, update the file.  Otherwise, upload it anew.
                 if (fileId) {
                     fileAction = SYNC_ACTION_UPDATED;
-                    xhr.open('PUT', 'https://www.googleapis.com/upload/drive/v2/files/' + fileId + '?uploadType=multipart', true);
+                    xhr.open('PUT', 'https://www.googleapis.com/upload/drive/v2/files/' + fileId + '?uploadType=multipart');
                 } else {
                     fileAction = SYNC_ACTION_ADDED;
-                    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart', true);
+                    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart');
                 }
                 xhr.setRequestHeader('Content-Type', 'multipart/related; boundary=' + boundary);
                 xhr.setRequestHeader('Content-Length', bodyString.length);
@@ -366,7 +373,7 @@ function remove(entry, callback) {
             }
         };
 
-        xhr.open('DELETE', 'https://www.googleapis.com/drive/v2/files/' + fileId, true);
+        xhr.open('DELETE', 'https://www.googleapis.com/drive/v2/files/' + fileId);
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
@@ -418,7 +425,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
             }
         };
 
-        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files', true);
+        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files');
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send(JSON.stringify(data));
@@ -483,7 +490,7 @@ function getDriveChanges(successCallback, errorCallback) {
         };
 
         // TODO(maxw): Use `nextLink` to get multiple pages of change results.
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000', true);
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
@@ -509,7 +516,7 @@ function downloadFile(file, callback) {
         }
     };
 
-    xhr.open('GET', file.downloadUrl, true);
+    xhr.open('GET', file.downloadUrl);
     xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
     xhr.send();
 }
@@ -590,7 +597,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
             }
         };
 
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
