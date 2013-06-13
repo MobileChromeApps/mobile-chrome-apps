@@ -21,18 +21,6 @@ function createBgChrome() {
   };
 }
 
-var bootstrap = require("org.chromium.chrome-app-bootstrap.bootstrap");
-var exec = require("cordova/exec");
-
-// If launching for UI, fire onLaunched event
-bootstrap.onBackgroundPageLoaded.addListener(function() {
-  exec(function(data) {
-    if (data) {
-      chrome.app.runtime.onLaunched.fire();
-    }
-  }, null, "ChromeBootstrap", "doesNeedLaunch", []);
-});
-
 exports.init = function() {
   // Assigning innerHTML here has the side-effect of removing the
   // chrome-content-loaded script tag. Removing it is required so that the
@@ -43,6 +31,9 @@ exports.init = function() {
 };
 
 exports.bgInit = function(bgWnd) {
+  var bootstrap = require("org.chromium.chrome-app-bootstrap.bootstrap");
+  var exec = require("cordova/exec");
+
   exports.bgWindow = bgWnd;
 
   require('cordova/modulemapper').mapModules(bgWnd.window);
@@ -60,6 +51,53 @@ exports.bgInit = function(bgWnd) {
   bgWnd.addEventListener('load', onLoad, false);
 
   var manifestJson = chrome.runtime.getManifest();
+  var version = manifestJson.version;
+
+  chrome.storage.internal.get(['version', 'shutdownClean'], function(data) {
+    var installDetails;
+    if (data.version != version) {
+      if(data.version) {
+        installDetails = {
+          reason: "update",
+          previousVersion: data.version
+        };
+      } else {
+        installDetails = {
+          reason: "install"
+        };
+      }
+    }
+    // If it was not cleanly shut down, and it was not just installed, then
+    // this is a restart.
+    var restart = !data.shutdownClean && data.version;
+
+    // Clear the clean shutdown flag on startup
+    chrome.storage.internal.set({'version': version, 'shutdownClean': false}, function() {
+      // Add some additional startup events if the app was not shut down properly
+      // last time, or if it has been upgraded, or if it has just been intstalled.
+      if (restart) {
+        bootstrap.onBackgroundPageLoaded.addListener(function() {
+          chrome.app.runtime.onRestarted.fire();
+        });
+      }
+      if (installDetails) {
+        bootstrap.onBackgroundPageLoaded.addListener(function() {
+          chrome.runtime.onInstalled.fire(installDetails);
+        });
+      }
+
+      // If launching for UI, fire onLaunched event
+      bootstrap.onBackgroundPageLoaded.addListener(function() {
+        exec(function(data) {
+          if (data) {
+            chrome.app.runtime.onLaunched.fire();
+          }
+        }, null, "ChromeBootstrap", "doesNeedLaunch", []);
+      });
+
+    });
+  });
+
   var scripts = manifestJson.app.background.scripts;
   var toWrite = '';
   for (var i = 0, src; src = scripts[i]; ++i) {
