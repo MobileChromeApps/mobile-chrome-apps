@@ -195,7 +195,8 @@ window.runningInBg = true;
     chrome.storage.local.get('chromespec-page', function(values) {
       changePage(values && values['chromespec-page'] || 0);
     });
-    ensureCordovaInitializes();
+    if (typeof cordova !== 'undefined')
+      ensureCordovaInitializes();
   }
 
   function changePage(pageIndex) {

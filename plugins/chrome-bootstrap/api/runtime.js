@@ -24,8 +24,10 @@ exports.onUpdateAvailable = new Event('onUpdateAvailable');
 var original_onSuspend_addListener = exports.onSuspend.addListener;
 exports.onSuspend.addListener = function(f) {
   window.document.addEventListener('pause', function() {
-    return exports.onSuspend.fire.apply(exports.onSuspend, arguments) },
-  false);
+    retval = exports.onSuspend.fire.apply(exports.onSuspend, arguments);
+    chrome.storage.internal.set({"shutdownClean":true});
+    return retval;
+  }, false);
   exports.onSuspend.addListener = original_onSuspend_addListener;
   exports.onSuspend.addListener(f);
 };
@@ -34,8 +36,9 @@ exports.onSuspend.addListener = function(f) {
 var original_onSuspendCanceled_addListener = exports.onSuspendCanceled.addListener;
 exports.onSuspendCanceled.addListener = function(f) {
   window.document.addEventListener('resume', function() {
-    return exports.onSuspendCanceled.fire.apply(exports.onSuspendCanceled, arguments) },
-  false);
+    chrome.storage.internal.remove("shutdownClean");
+    return exports.onSuspendCanceled.fire.apply(exports.onSuspendCanceled, arguments);
+  }, false);
   exports.onSuspendCanceled.addListener = original_onSuspendCanceled_addListener;
   exports.onSuspendCanceled.addListener(f);
 };

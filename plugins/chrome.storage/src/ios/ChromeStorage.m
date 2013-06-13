@@ -18,9 +18,10 @@
 - (void)_set:(CDVInvokedUrlCommand*)command;
 - (void)_remove:(CDVInvokedUrlCommand*)command;
 - (void)_clear:(CDVInvokedUrlCommand*)command;
-- (NSString*) getStorageFile:(BOOL) sync;
-- (NSDictionary*) getStorageWithSync:(BOOL) sync;
-- (void) setStorage:(NSDictionary*) map withSync:(BOOL) sync;
+
+- (NSString*) getStorageFileForNamespace:(NSString*)namespace;
+- (NSDictionary*) getStorageForNamespace:(NSString*)namespace;
+- (void) setStorage:(NSDictionary*)values forNamespace:(NSString*)namespace;
 - (NSDictionary*) getStoredValuesForKeys:(NSArray*)arguments UsingDefaultValues:(BOOL)useDefaultValues;
 @end
 
@@ -36,16 +37,16 @@
     return self;
 }
 
-- (NSString*) getStorageFile:(BOOL) sync
+- (NSString*) getStorageFileForNamespace:(NSString*)namespace
 {
-    return sync? @"__chromestorage_sync" : @"__chromestorage";
+    return [NSString stringWithFormat:@"__chromestorage_%@",namespace];
 }
 
-- (NSDictionary*) getStorageWithSync:(BOOL) sync
+- (NSDictionary*) getStorageForNamespace:(NSString*)namespace
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFile:sync]];
+    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
     NSDictionary* storage = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
 
@@ -57,11 +58,11 @@
     return storage;
 }
 
-- (void) setStorage:(NSMutableDictionary*) storage withSync:(BOOL) sync
+- (void) setStorage:(NSMutableDictionary*)storage forNamespace:(NSString*)namespace
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFile:sync]];
+    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
 
     if(![NSKeyedArchiver archiveRootObject:storage toFile:filePath]) {
         @throw [NSException exceptionWithName: @"Writing to file failed" reason:@"Unknown" userInfo:nil];
@@ -72,7 +73,7 @@
 {
     NSDictionary* ret = [NSDictionary dictionary];
     @try {
-        BOOL sync = [[arguments objectAtIndex:0] boolValue];
+        NSString* namespace = [arguments objectAtIndex:0];
         id argumentAtIndexOne = [arguments objectAtIndex:1];
         NSArray* keys = [NSArray array];
 
@@ -95,7 +96,7 @@
         }
 
         if (keys == nil || [keys count]) {
-            NSDictionary* storage = [self getStorageWithSync:sync];
+            NSDictionary* storage = [self getStorageForNamespace:namespace];
 
             if (keys == nil) {
                 ret = storage;
@@ -199,13 +200,13 @@
     CDVPluginResult* pluginResult = nil;
 
     @try {
-        BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
+        NSString* namespace = [command.arguments objectAtIndex:0];
         NSDictionary* jsonObject = [command.arguments objectAtIndex:1];
         NSArray* keys = [jsonObject allKeys];
         NSMutableDictionary* oldValues = [NSMutableDictionary dictionary];
 
         if(keys != nil && [keys count]) {
-            NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageWithSync:sync]];
+            NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageForNamespace:namespace]];
             for (NSString* key in keys) {
                 id oldValue = [storage objectForKey:key];
                 if (oldValue != nil) {
@@ -214,7 +215,7 @@
                 NSObject* value = [jsonObject objectForKey:key];
                 [storage setValue:value forKey:key];
             }
-            [self setStorage:storage withSync:sync];
+            [self setStorage:storage forNamespace:namespace];
         }
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException *exception) {
@@ -236,7 +237,7 @@
     CDVPluginResult* pluginResult = nil;
 
     @try {
-        BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
+        NSString* namespace = [command.arguments objectAtIndex:0];
         id argumentAtIndexOne = [command.arguments objectAtIndex:1];
         NSArray* keys = [NSArray array];
 
@@ -255,7 +256,7 @@
         }
 
         if (keys == nil || [keys count]) {
-            NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageWithSync:sync]];
+            NSMutableDictionary* storage = [NSMutableDictionary dictionaryWithDictionary: [self getStorageForNamespace:namespace]];
             for (NSString* key in keys) {
                 id oldValue = [storage objectForKey:key];
                 if (oldValue != nil) {
@@ -263,7 +264,7 @@
                 }
                 [storage removeObjectForKey:key];
             }
-            [self setStorage:storage withSync:sync];
+            [self setStorage:storage forNamespace:namespace];
         }
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException* exception) {
@@ -285,10 +286,10 @@
     CDVPluginResult* pluginResult = nil;
 
     @try {
-        BOOL sync = [[command.arguments objectAtIndex:0] boolValue];
-        NSDictionary* oldValues = [self getStorageWithSync:sync];
+        NSString* namespace = [command.arguments objectAtIndex:0];
+        NSDictionary* oldValues = [self getStorageForNamespace:namespace];
         NSMutableDictionary* storage = [NSMutableDictionary dictionary];
-        [self setStorage:storage withSync:sync];
+        [self setStorage:storage forNamespace:namespace];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:oldValues];
     } @catch (NSException* exception) {
         VERBOSE_LOG(@"%@ - %@", @"Could not clear storage", [exception debugDescription]);

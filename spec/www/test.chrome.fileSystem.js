@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.fileSystem', function(runningInBackground) {
-  describe('chrome.fileSystem', function() {
+  describeCordovaOnly('chrome.fileSystem', function() {
     // Create a file entry for testing.
     var FileEntry = cordova.require('cordova/plugin/FileEntry');
     var fileEntry = new FileEntry('filename', 'fullpath');
@@ -41,5 +41,8 @@ chromeSpec('chrome.fileSystem', function(runningInBackground) {
         chrome.fileSystem.isWritableEntry(fileEntry, isWritableEntryCallback);
       });
     });
+  });
+
+  describeChromeRuntimeOnly('chrome.fileSystem', function() {
   });
 });

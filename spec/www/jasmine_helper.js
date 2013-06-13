@@ -18,63 +18,53 @@ function itShouldHaveAPropertyOfType(obj, propName, typeName) {
   });
 }
 
+function createWaitsForDoneWrapper(callback, opt_timeout) {
+  var done;
+  return function() {
+    done = false;
+    waitsFor(function() { return done; }, opt_timeout);
+    return callback(function() { done = true });
+  };
+}
+
 function waitUntilCalled(callback, opt_timeout) {
-  var done = false;
-  var ondone = function() {
-    done = true;
-  };
-  var isdone = function() {
-    return done;
-  };
+  var done = createWaitsForDoneWrapper(function(done) { return done; })();
   var wrapped = function() {
-    ondone();
-    return callback.apply(this, arguments);
+    done();
+    return callback.apply(null, arguments);
   };
-  waitsFor(isdone, opt_timeout);
   return wrapped;
 }
 
-function waitUntilCalledAndThenRun(callback, andthen) {
-  var ret = waitUntilCalled(callback);
-  runs(andthen);
-  return ret;
-}
-
 function itWaitsForDone(description, callback, opt_timeout) {
-  var done = false;
-  var ondone = function() {
-    done = true;
-  };
-  var isdone = function() {
-    if (!done) {
-      return false;
-    }
-    done = false;
-    return true;
-  };
-  var wrapped = function() {
-    waitsFor(isdone, opt_timeout);
-    return callback(ondone);
-  };
+  var wrapped = createWaitsForDoneWrapper(callback, opt_timeout);
   return it(description, wrapped);
 }
 
 function beforeEachWaitsForDone(callback, opt_timeout) {
-  var done = false;
-  var ondone = function() {
-    done = true;
-  };
-  var isdone = function() {
-    if (!done) {
-      return false;
-    }
-    done = false;
-    return true;
-  };
-  var wrapped = function() {
-    waitsFor(isdone, opt_timeout);
-    done = false;
-    return callback(ondone);
-  };
+  var wrapped = createWaitsForDoneWrapper(callback, opt_timeout);
   return beforeEach(wrapped);
+}
+
+function afterEachWaitsForDone(callback, opt_timeout) {
+  var wrapped = createWaitsForDoneWrapper(callback, opt_timeout);
+  return afterEach(wrapped);
+}
+
+function isOnCordova() {
+  return typeof cordova !== 'undefined';
+}
+
+function isOnChromeRuntime() {
+  return !isOnCordova();
+}
+
+function describeCordovaOnly() {
+  if (!isOnCordova()) return;
+  describe.apply(null, arguments);
+}
+
+function describeChromeRuntimeOnly() {
+  if (!isOnChromeRuntime()) return;
+  describe.apply(null, arguments);
 }

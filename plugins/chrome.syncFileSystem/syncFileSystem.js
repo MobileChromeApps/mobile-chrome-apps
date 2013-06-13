@@ -24,14 +24,10 @@ var driveFileIdMap = { };
 var nextChangeId = 1;
 
 // These listeners are called when a file's status changes.
-//REVIEW: Should we check somewhere to ensure that anything in this array is a callable function, so someone cant kill their entire app with an addListener(42);
 var fileStatusListeners = [ ];
 
 // The conflict resolution policy is used to determine how to handle file sync conflicts.
 var conflictResolutionPolicy;
-
-// This is used to schedule and batch local-to-remote file updates.
-var scheduledUpdates = { };
 
 //-----------
 // Constants
@@ -48,7 +44,6 @@ var FILE_STATUS_SYNCED = 'synced';
 var SYNC_DIRECTION_LOCAL_TO_REMOTE = 'local_to_remote';
 var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remote_to_local';
 
-/* REVIEW: Unused? */
 var CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN = 'last_write_win';
 var CONFLICT_RESOLUTION_POLICY_MANUAL = 'manual';
 
@@ -57,6 +52,10 @@ var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
 var REQUEST_FAILED_ERROR = 3;
 
+// Numerical constants.
+var INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = 2000;
+var MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = 64000;
+
 //----------------------------------
 // FileSystem function augmentation
 //----------------------------------
@@ -64,7 +63,7 @@ var REQUEST_FAILED_ERROR = 3;
 // This function overrides the necessary functions on a given Entry to enable syncability.
 function enableSyncabilityForEntry(entry) {
     entry.remove = function(successCallback, errorCallback) {
-//REVIEW: Add comment about valid parameters (ie, if no directories, then why not?) What's the actual error condition here?
+        // For now, directories cannot be added or created using syncFileSystem.
         if (entry.isDirectory) {
             errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
         }
@@ -78,13 +77,12 @@ function enableSyncabilityForEntry(entry) {
                 }
             }
 
-//REVIEW: Should there be a standard idiom here? ie. "successCallback && successCallback();"
             if (successCallback) {
                 successCallback();
             }
         };
         var augmentedSuccessCallback = function() {
-            scheduleUpdate(entry, SYNC_ACTION_DELETED, onRemoveSuccess);
+            remove(entry, onRemoveSuccess);
         };
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -98,7 +96,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
     enableSyncabilityForEntry(directoryEntry);
 
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
-        // This is disabled until efficient syncing is figured out.
+        // For now, directories cannot be added or created using syncFileSystem.
         errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
 
         /*
@@ -142,7 +140,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
                         successCallback(fileEntry);
                     }
                 };
-                scheduleUpdate(fileEntry, SYNC_ACTION_ADDED, onSyncSuccess);
+                sync(fileEntry, onSyncSuccess);
             } else {
                 if (successCallback) {
                     successCallback(fileEntry);
@@ -179,14 +177,18 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
     fileWriter.write = function(data) {
         // We want to augment the `onwrite` and `onwriteend` listeners to add syncing.
         // TODO(maxw): Augment onwriteend.
-//REVIEW: We should probably run scheduleUpdate even if there was no original onwrite handler
-//REVIEW2: Even better would be to wrap the fileWriter object in a proxy, and call the user's events at the appropriate times.
         if (fileWriter.onwrite) {
             var originalOnwrite = fileWriter.onwrite;
             fileWriter.onwrite = function(evt) {
-                scheduleUpdate(fileEntry, SYNC_ACTION_UPDATED, onSyncSuccess);
-                originalOnwrite(evt);
+                var onSyncSuccess = function() {
+                    originalOnwrite(evt);
+                };
+                sync(fileEntry, onSyncSuccess);
             };
+        } else {
+            fileWriter.onwrite = function(evt) {
+                sync(fileEntry, null);
+            }
         }
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -197,34 +199,6 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
 //------------------
 // Syncing to Drive
 //------------------
-
-// This function schedules an update to Drive.
-function scheduleUpdate(entry, syncAction, callback) {
-    console.log('Scheduling ' + entry.name + ' for \'' + syncAction + '\' action.');
-    scheduledUpdates[entry.name] = { entry: entry, syncAction: syncAction, callback: callback };
-}
-
-// This function executes all scheduled updates to Drive.
-// TODO(maxw): Ensure individual update failures are handled properly.
-function executeScheduledUpdates(callback) {
-    console.log('Executing ' + Object.keys(scheduledUpdates).length + ' scheduled update(s).');
-    for (var fileName in scheduledUpdates) {
-//REVIEW: Needs hasOwnProperty test, or iterate over Object.keys(scheduledUpdates)
-        var scheduledUpdate = scheduledUpdates[fileName];
-        var syncAction = scheduledUpdate.syncAction;
-        if (syncAction === SYNC_ACTION_ADDED || syncAction === SYNC_ACTION_UPDATED) {
-            console.log('Syncing ' + fileName + '.');
-            sync(scheduledUpdate.entry, scheduledUpdate.callback);
-        } else if (syncAction === SYNC_ACTION_DELETED) {
-            console.log('Removing ' + fileName + '.');
-            remove(scheduledUpdate.entry, scheduledUpdate.callback);
-        } else {
-            console.log('Invalid scheduled sync action!');
-        }
-    }
-    scheduledUpdates = { };
-    callback();
-}
 
 // This function creates an app-specific directory on the user's Drive.
 function createAppDirectoryOnDrive(directoryEntry, callback) {
@@ -237,10 +211,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
         // Get the app directory id.
         getDirectoryId(_appId /* directoryName */, syncableRootDirectoryId /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableAppDirectoryIdSuccess);
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the Drive "Chrome Syncable FileSystem" directory id.
         getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, false /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
     };
@@ -250,10 +221,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
 
 // This function syncs an entry to Drive, creating it if necessary.
 function sync(entry, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Drive, unfortunately, does not allow searching by path.
         // Begin the process of drilling down to find the correct parent directory.  We can start with the app directory.
         var pathRemainder = entry.fullPath;
@@ -274,7 +242,9 @@ function sync(entry, callback) {
                 }
             }
 
-            callback();
+            if (callback) {
+                callback();
+            }
         };
 
         // Using the remainder of the path, start the recursive process of drilling down.
@@ -319,8 +289,7 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
         var onFileSuccess = function(file) {
             // Read the file and send its contents.
             var fileReader = new FileReader();
-//REVIEW: onloadend fires on success or failure; onload might be more appropriate
-            fileReader.onloadend = function(evt) {
+            fileReader.onload = function(evt) {
                 // This is used to note whether a file was created or updated.
                 var fileAction;
 
@@ -359,11 +328,10 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
                 // If there's a file id, update the file.  Otherwise, upload it anew.
                 if (fileId) {
                     fileAction = SYNC_ACTION_UPDATED;
-//REVIEW: Why hard-code the async default 'true' here?
-                    xhr.open('PUT', 'https://www.googleapis.com/upload/drive/v2/files/' + fileId + '?uploadType=multipart', true);
+                    xhr.open('PUT', 'https://www.googleapis.com/upload/drive/v2/files/' + fileId + '?uploadType=multipart');
                 } else {
                     fileAction = SYNC_ACTION_ADDED;
-                    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart', true);
+                    xhr.open('POST', 'https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart');
                 }
                 xhr.setRequestHeader('Content-Type', 'multipart/related; boundary=' + boundary);
                 xhr.setRequestHeader('Content-Length', bodyString.length);
@@ -376,10 +344,7 @@ function uploadFile(fileEntry, parentDirectoryId, callback) {
         // Get the file.
         fileEntry.file(onFileSuccess);
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the file id and pass it on.
         getFileId(fileEntry.name, parentDirectoryId, onGetFileIdSuccess);
     };
@@ -403,14 +368,11 @@ function remove(entry, callback) {
             }
         };
 
-        xhr.open('DELETE', 'https://www.googleapis.com/drive/v2/files/' + fileId, true);
+        xhr.open('DELETE', 'https://www.googleapis.com/drive/v2/files/' + fileId);
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Get the file id and pass it on.
         var appIdIndex = entry.fullPath.indexOf(_appId);
 
@@ -433,10 +395,7 @@ function remove(entry, callback) {
 
 // This function creates the app's syncable directory on Drive.
 function createDirectory(directoryName, parentDirectoryId, callback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Create the data to send.
         var data = { title: directoryName,
                      parents: [{ id: parentDirectoryId }],
@@ -455,7 +414,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
             }
         };
 
-        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files', true);
+        xhr.open('POST', 'https://www.googleapis.com/drive/v2/files');
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send(JSON.stringify(data));
@@ -470,25 +429,17 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
 
 // This function checks for changes since the most recent change id.
 function getDriveChanges(successCallback, errorCallback) {
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Send a request to retrieve the changes.
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-//REVIEW: For robustness, there should probably be a lot more error checking here.
-// JSON.parse could fail
-// items, largestChangeId (int or string?) may not be present
-// Is there a "successful request" key?
                     var responseJson = JSON.parse(xhr.responseText);
                     var numChanges = responseJson.items.length;
                     console.log('Successfully retrieved ' + numChanges + ' changes.');
 
                     // Record the new change id, incrementing it to avoid retrieving a duplicate change later.
-//REVIEW: minor nit, but I always look for an explicit base in parseInt
                     nextChangeId = parseInt(responseJson.largestChangeId) + 1;
 
                     // Track the number of relevant changes, to be sent to the callback.
@@ -525,7 +476,7 @@ function getDriveChanges(successCallback, errorCallback) {
         };
 
         // TODO(maxw): Use `nextLink` to get multiple pages of change results.
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000', true);
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
@@ -551,7 +502,7 @@ function downloadFile(file, callback) {
         }
     };
 
-    xhr.open('GET', file.downloadUrl, true);
+    xhr.open('GET', file.downloadUrl);
     xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
     xhr.send();
 }
@@ -604,10 +555,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
             console.log('Error: ' + e);
         };
     }
-    var onGetTokenStringSuccess = function(tokenString) {
-        // Save the token string for later use.
-        _tokenString = tokenString;
-
+    var onGetTokenStringSuccess = function() {
         // Send a request to locate the directory.
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -632,7 +580,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
             }
         };
 
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query, true);
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files?q=' + query);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
@@ -642,7 +590,6 @@ function getDriveFileId(query, successCallback, errorCallback) {
 }
 
 // This function gets the Drive file id for the directory with the given name and parent id.
-//REVIEW: These arguments are annotated every time this function is called. Should they be in an options object instead?
 function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory, successCallback) {
     if (driveFileIdMap[directoryName]) {
         console.log('Drive file id for directory ' + directoryName + ' retrieved from cache.');
@@ -732,7 +679,7 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
 function getTokenString(callback) {
     // TODO(maxw): Handle this correctly.  Tokens expire!
     if (_tokenString) {
-        callback(_tokenString);
+        callback();
         return;
     }
 
@@ -743,9 +690,9 @@ function getTokenString(callback) {
             console.log('Failed to complete web auth flow.');
             return;
         } else {
-//REVIEW: Save _tokenString here, rather than in every callback function
-            // Extract the token string from the resulting URL.
-            callback(extractTokenString(url));
+            // Extract the token string and save it for later use.
+            _tokenString = extractTokenString(url);
+            callback();
         }
     });
 }
@@ -780,35 +727,27 @@ exports.requestFileSystem = function(callback) {
             fileSystem.root = directoryEntry;
 
             // Set up regular remote-to-local checks.
-//REVIEW: Should these: 2000, 64000, 20000, etc be constants somewhere? Do they come from an API spec somewhere, or are they just heuristically set?
-            var remoteToLocalDelay = 2000;
+            var remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
             var onGetDriveChangesError = function() {
                 // Use the same timeout.
-                window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
             var onGetDriveChangesSuccess = function(numChanges) {
                 console.log('Relevant changes: ' + numChanges + '.');
                 if (numChanges === 0) {
-                    if (remoteToLocalDelay < 64000) {
-                        remoteToLocalDelay *= 2;
-                        console.log('  Delay doubled.');
+                    if (remoteToLocalSyncDelay < MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY) {
+                        remoteToLocalSyncDelay *= 2;
+                        console.log('  Remote-to-local sync delay doubled.');
                     } else {
-                        console.log('  Delay capped at ' + remoteToLocalDelay + 'ms.');
+                        console.log('  Remote-to-local sync delay capped at ' + remoteToLocalSyncDelay + 'ms.');
                     }
                 } else {
-                    remoteToLocalDelay = 2000;
-                    console.log('  Delay reset.');
+                    remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
+                    console.log('  Remote-to-local sync delay reset.');
                 }
-                window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
-            window.setTimeout(getDriveChanges, remoteToLocalDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
-
-            // Set up regular local-to-remote checks.
-            var localToRemoteDelay = 20000;
-            var executeScheduledUpdatesCallback = function() {
-                window.setTimeout(executeScheduledUpdates, localToRemoteDelay, executeScheduledUpdatesCallback);
-            };
-            window.setTimeout(executeScheduledUpdates, localToRemoteDelay, executeScheduledUpdatesCallback);
+            window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
 
             // Pass on the file system!
             callback(fileSystem);
@@ -819,7 +758,6 @@ exports.requestFileSystem = function(callback) {
             enableSyncabilityForDirectoryEntry(directoryEntry);
             createAppDirectoryOnDrive(directoryEntry, onCreateAppDirectoryOnDriveSuccess);
         };
-//REVIEW: I think we should be setting chrome.runtime.lastError here to signal that something bad happened. Check with sync team?
         var onGetDirectoryFailure = function(e) {
             console.log('Failed to get directory.');
         };
@@ -827,7 +765,6 @@ exports.requestFileSystem = function(callback) {
         // TODO(maxw): Make the directory name app-specific.
         fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryFailure);
     };
-//REVIEW: I think we should be setting chrome.runtime.lastError here to signal that something bad happened.
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
     };
@@ -845,7 +782,6 @@ exports.getConflictResolutionPolicy = function(callback) {
     callback(conflictResolutionPolicy);
 };
 
-//REVIEW: Should we at least log something in case these are actually called?
 exports.getUsageAndQuota = function(fileSystem, callback) {
     // TODO(maxw): Implement this!
 };
@@ -865,5 +801,10 @@ exports.onServiceStatusChanged.addListener = function(listener) {
 
 exports.onFileStatusChanged = { };
 exports.onFileStatusChanged.addListener = function(listener) {
-    fileStatusListeners.push(listener);
+    if (typeof(listener) == 'function') {
+        fileStatusListeners.push(listener);
+    } else {
+        console.log('Attempted to add a non-function listener.');
+    }
 }
+

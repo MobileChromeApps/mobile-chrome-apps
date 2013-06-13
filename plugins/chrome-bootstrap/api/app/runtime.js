@@ -4,3 +4,4 @@
 
 var Event = require('org.chromium.chrome-common.events');
 exports.onLaunched = new Event('onLaunched');
+exports.onRestarted = new Event('onRestarted');
