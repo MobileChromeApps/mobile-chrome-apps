@@ -76,18 +76,18 @@ exports.bgInit = function(bgWnd) {
       // Add some additional startup events if the app was not shut down properly
       // last time, or if it has been upgraded, or if it has just been intstalled.
       if (restart) {
-        bootstrap.onBackgroundPageLoaded.addListener(function() {
+        bootstrap.onBackgroundPageLoaded.subscribe(function() {
           chrome.app.runtime.onRestarted.fire();
         });
       }
       if (installDetails) {
-        bootstrap.onBackgroundPageLoaded.addListener(function() {
+        bootstrap.onBackgroundPageLoaded.subscribe(function() {
           chrome.runtime.onInstalled.fire(installDetails);
         });
       }
 
       // If launching for UI, fire onLaunched event
-      bootstrap.onBackgroundPageLoaded.addListener(function() {
+      bootstrap.onBackgroundPageLoaded.subscribe(function() {
         exec(function(data) {
           if (data) {
             chrome.app.runtime.onLaunched.fire();

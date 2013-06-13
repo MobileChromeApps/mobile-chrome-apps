@@ -3,11 +3,14 @@
 // found in the LICENSE file.
 
 // Initialization code for the Chrome plugins API.
-// Adds a deviceready listener that initializes the Chrome wrapper.
 
-var Event = require('org.chromium.chrome-common.events');
-exports.onBackgroundPageLoaded = new Event('onBackgroundPageLoaded');
+var channel = require('cordova/channel')
 
-require('cordova/channel').onCordovaReady.subscribe(function() {
+// Add a sticky Cordova event to indicate that the background page has
+// loaded, and the JS has executed.
+exports.onBackgroundPageLoaded = channel.createSticky('onBackgroundPageLoaded');
+
+// Add a deviceready listener that initializes the Chrome wrapper.
+channel.onCordovaReady.subscribe(function() {
   require('org.chromium.chrome-app-bootstrap.mobile.impl').init();
 });
