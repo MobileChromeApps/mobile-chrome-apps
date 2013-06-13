@@ -565,15 +565,15 @@ function createApp(appName) {
       var dirsToTry = [
         // TODO: resolve leading ~ to $HOME
         commandLineFlags.source && path.resolve(commandLineFlags.source),
-        commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source),
-        path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld')
+        commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source, 'www'),
+        path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www')
       ];
       for (var i=0; i < dirsToTry.length; i++) {
         var appDir = dirsToTry[i];
         console.log('attempting: ' + appDir);
         if (appDir && fs.existsSync(appDir)) {
           fs.mkdirSync(wwwDir);
-          copyDirectory(path.join(appDir, 'www'), wwwDir, function() {
+          copyDirectory(appDir, wwwDir, function() {
             copyFile('config.xml', path.join(wwwDir, 'config.xml'), function() {
               fs.unlinkSync('config.xml');
               callback();
