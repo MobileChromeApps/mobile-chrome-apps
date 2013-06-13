@@ -18,7 +18,6 @@
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
   <js-module src="api/bootstrap.js" name="bootstrap">
-    <runs />
   </js-module>
 
   <js-module src="api/app/runtime.js" name="app.runtime">
