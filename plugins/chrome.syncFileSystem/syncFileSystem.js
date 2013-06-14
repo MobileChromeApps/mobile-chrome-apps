@@ -447,25 +447,55 @@ function getDriveChanges(successCallback, errorCallback) {
                     // Track the number of relevant changes, to be sent to the callback.
                     var numRelevantChanges = 0;
 
-                    // For each change received, check whether it's on a file in the syncable app folder.  If so, download it.
-                    // TODO(maxw): Include deletions.
+                    // For each change received, check whether it's on a file in the syncable app folder.  If so, sync the change locally.
                     for (var i = 0; i < numChanges; i++) {
                         var change = responseJson.items[i];
-                        var changedFile = change.file;
-                        var numParents = changedFile.parents.length;
-                        for (var j = 0; j < numParents; j++) {
-                            if (changedFile.parents[j].id === _syncableAppDirectoryId) {
-                                console.log('Downloading ' + changedFile.title + '.');
-                                numRelevantChanges++;
-                                var onDownloadFileSuccess = function(fileEntry) {
-                                    // TODO(maxw): Determine if the synced file has just been created.
-                                    var syncAction = change.deleted ? SYNC_ACTION_DELETED : SYNC_ACTION_UPDATED;
-                                    var fileInfo = { fileEntry: fileEntry, status: FILE_STATUS_SYNCED, action: syncAction, direction: SYNC_DIRECTION_REMOTE_TO_LOCAL };
-                                    for (var i = 0; i < fileStatusListeners.length; i++) {
-                                        fileStatusListeners[i](fileInfo);
-                                    }
-                                };
-                                downloadFile(changedFile, onDownloadFileSuccess);
+                        if (change.deleted) {
+                            var onGetFileNameForFileIdSuccess = function(fileName) {
+                                if (fileName) {
+                                    numRelevantChanges++;
+                                    console.log('Deleting ' + fileName + '.');
+                                    var onDeleteFileSuccess = function(fileEntry) {
+                                        // Inform the listeners.
+                                        var fileInfo = { fileEntry: fileEntry, status: FILE_STATUS_SYNCED, action: SYNC_ACTION_DELETED, direction: SYNC_DIRECTION_REMOTE_TO_LOCAL };
+                                        for (var i = 0; i < fileStatusListeners.length; i++) {
+                                            fileStatusListeners[i](fileInfo);
+                                        }
+
+                                        // Remove the file id from the cache.
+                                        removeDriveIdFromCache(fileName, null);
+                                    };
+                                    deleteFile(fileName, onDeleteFileSuccess);
+                                }
+                            };
+                            getFileNameForFileId(change.fileId, onGetFileNameForFileIdSuccess);
+                        } else {
+                            var changedFile = change.file;
+                            var numParents = changedFile.parents.length;
+                            for (var j = 0; j < numParents; j++) {
+                                if (changedFile.parents[j].id === _syncableAppDirectoryId) {
+                                    // TODO(maxw): Determine if the file has actually been changed, rather than, for example, moved.
+                                    numRelevantChanges++;
+                                    console.log('Downloading ' + changedFile.title + '.');
+                                    var onDownloadFileSuccess = function(fileEntry) {
+                                        // TODO(maxw): Determine if the synced file has been created rather than updated.
+                                        // Inform the listeners.
+                                        var fileInfo = { fileEntry: fileEntry, status: FILE_STATUS_SYNCED, action: SYNC_ACTION_UPDATED, direction: SYNC_DIRECTION_REMOTE_TO_LOCAL };
+                                        for (var i = 0; i < fileStatusListeners.length; i++) {
+                                            fileStatusListeners[i](fileInfo);
+                                        }
+
+                                        // Ensure the file id is cached.
+                                        var fileIdObject = { };
+                                        var key = constructFileIdKey(fileEntry.name);
+                                        fileIdObject[key] = change.fileId;
+                                        var setCallback = function() {
+                                            console.log('Drive file id for directory ' + fileEntry.name + ' saved to cache.');
+                                        };
+                                        chrome.storage.internal.set(fileIdObject, setCallback);
+                                    };
+                                    downloadFile(changedFile, onDownloadFileSuccess);
+                                }
                             }
                         }
                     }
@@ -478,12 +508,65 @@ function getDriveChanges(successCallback, errorCallback) {
         };
 
         // TODO(maxw): Use `nextLink` to get multiple pages of change results.
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=false&includeSubscribed=true&maxResults=1000');
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=true&includeSubscribed=true&maxResults=1000');
         xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
         xhr.send();
     };
 
     getTokenString(onGetTokenStringSuccess);
+}
+
+// This function retrieves the file name for the given file id from local storage.
+function getFileNameForFileId(fileId, callback) {
+    var getCallback = function(items) {
+        for (var item in items) {
+            if (items.hasOwnProperty(item)) {
+                if (items[item] === fileId) {
+                    callback(extractFileName(item));
+                    return;
+                }
+            }
+        }
+        callback(null);
+    };
+    chrome.storage.internal.get(null, getCallback);
+}
+
+// This function deletes a file locally.
+function deleteFile(fileName, callback) {
+    var onGetFileSuccess = function(fileEntry) {
+        var onRemoveSuccess = function() {
+            console.log('Successfully removed file ' + fileName + '.');
+            callback(fileEntry);
+        };
+        var onRemoveError = function(e) {
+            console.log('Failed to remove file ' + fileName + '.');
+        };
+        fileEntry.remove(onRemoveSuccess, onRemoveError);
+    };
+    var onGetFileError = function(e) {
+        console.log('Failed to get file.');
+    };
+
+    var onGetDirectorySuccess = function(directoryEntry) {
+        var getFileFlags = { create: true, exclusive: false };
+        directoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
+    };
+    var onGetDirectoryError = function(e) {
+        console.log('Failed to get directory.');
+    };
+
+    var onRequestFileSystemSuccess = function(fileSystem) {
+        // TODO(maxw): Make the directory name app-specific.
+        var getDirectoryFlags = { create: false };
+        fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
+    };
+    var onRequestFileSystemFailure = function(e) {
+        console.log("Failed to get file system.");
+    };
+
+    // Request the file system.
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, onRequestFileSystemFailure);
 }
 
 // This function downloads the given Drive file.
@@ -509,6 +592,7 @@ function downloadFile(file, callback) {
     xhr.send();
 }
 
+// This function saves the supplied data to a file at the given file name.
 function saveData(fileName, data, callback) {
     var onGetFileSuccess = function(fileEntry) {
         var onCreateWriterSuccess = function(fileWriter) {
@@ -695,7 +779,14 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
     chrome.storage.internal.get(fileIdKey, getCallback);
 }
 
+// This function returns a key to use for file id caching.
 function constructFileIdKey(entryName) {
+    return 'sfs' + '-' + _appId + '-' + entryName;
+}
+
+// This function returns the file name associated with the given cached file id key.
+function extractFileName(key) {
+    return key.substring(key.indexOf(_appId) + _appId.length + 1);
     return 'sfs' + '-' + _appId + '-' + entryName;
 }
 
