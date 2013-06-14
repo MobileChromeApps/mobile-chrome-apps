@@ -15,10 +15,6 @@ var _tokenString;
 // When we create or get the app's syncable Drive directory, we store its id here.
 var _syncableAppDirectoryId;
 
-// This is the next Drive change id to be used to detect remote changes.
-// TODO(maxw): Save the highest change id to local storage.
-var nextChangeId = 1;
-
 // These listeners are called when a file's status changes.
 var fileStatusListeners = [ ];
 
@@ -42,6 +38,9 @@ var SYNC_DIRECTION_REMOTE_TO_LOCAL = 'remote_to_local';
 
 var CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN = 'last_write_win';
 var CONFLICT_RESOLUTION_POLICY_MANUAL = 'manual';
+
+var SYNC_FILE_SYSTEM_PREFIX = 'sfs';
+var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-next_change_id';
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -440,7 +439,10 @@ function getDriveChanges(successCallback, errorCallback) {
                     console.log('Successfully retrieved ' + numChanges + ' changes.');
 
                     // Record the new change id, incrementing it to avoid retrieving a duplicate change later.
-                    nextChangeId = parseInt(responseJson.largestChangeId) + 1;
+                    var nextChangeId = parseInt(responseJson.largestChangeId) + 1;
+                    var nextChangeIdObject = { };
+                    nextChangeIdObject[NEXT_CHANGE_ID_KEY] = nextChangeId;
+                    chrome.storage.internal.set(nextChangeIdObject);
 
                     // Track the number of relevant changes, to be sent to the callback.
                     var numRelevantChanges = 0;
@@ -498,10 +500,19 @@ function getDriveChanges(successCallback, errorCallback) {
             }
         };
 
-        // TODO(maxw): Use `nextLink` to get multiple pages of change results.
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=true&includeSubscribed=true&maxResults=1000');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
-        xhr.send();
+        // Retrieve the next change id to use as a starting point.
+        var getCallback = function(items) {
+            var nextChangeId = 1;
+            if (items[NEXT_CHANGE_ID_KEY]) {
+                nextChangeId = items[NEXT_CHANGE_ID_KEY];
+            }
+
+            // TODO(maxw): Use `nextLink` to get multiple pages of change results.
+            xhr.open('GET', 'https://www.googleapis.com/drive/v2/changes?startChangeId=' + nextChangeId + '&includeDeleted=true&includeSubscribed=true&maxResults=1000');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + _tokenString);
+            xhr.send();
+        };
+        chrome.storage.internal.get(NEXT_CHANGE_ID_KEY, getCallback);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -762,13 +773,13 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
 
 // This function returns a key to use for file id caching.
 function constructFileIdKey(entryName) {
-    return 'sfs' + '-' + _appId + '-' + entryName;
+    return SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-' + entryName;
 }
 
 // This function returns the file name associated with the given cached file id key.
 function extractFileName(key) {
     return key.substring(key.indexOf(_appId) + _appId.length + 1);
-    return 'sfs' + '-' + _appId + '-' + entryName;
+    return SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-' + entryName;
 }
 
 // This function caches the given Drive id.
