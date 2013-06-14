@@ -576,9 +576,12 @@ function createApp(appName) {
         commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source, 'www'),
         path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www')
       ];
+      if (commandLineFlags.source === "spec") {
+        dirsToTry.unshift(path.join(scriptDir, 'chrome-cordova', 'spec', 'www'));
+      }
       for (var i=0; i < dirsToTry.length; i++) {
         var appDir = dirsToTry[i];
-        console.log('attempting: ' + appDir);
+        if (appDir) console.log('Searching for Chrome app source in ' + appDir);
         if (appDir && fs.existsSync(appDir)) {
           fs.mkdirSync(wwwDir);
           copyDirectory(appDir, wwwDir, function() {
