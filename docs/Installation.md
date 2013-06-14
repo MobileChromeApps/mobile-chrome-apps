@@ -18,8 +18,7 @@ iOS and Android are both optional, but you need at least one of them.
 * Run the `android` tool, and use it to install the Android 4.2.2 SDK, and the Google Play Services APIs.
 * Update Google Play Services with this command:
 
-    android update lib-project --target "android-17" --path path/to/android/sdk/extras/google/google_play_services/libproject/google-play-services_lib
-
+        android update lib-project --target "android-17" --path path/to/android/sdk/extras/google/google_play_services/libproject/google-play-services_lib
 
 ### node.js
 
@@ -29,8 +28,8 @@ iOS and Android are both optional, but you need at least one of them.
 
 * Clone this repository.  Then run `mca-create.js` to have it auto-install its dependencies.
 
-    git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
-    mobile-chrome-apps/mca-create.js
+        git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
+        mobile-chrome-apps/mca-create.js
 
 ## Experiencing Hiccups?
 
