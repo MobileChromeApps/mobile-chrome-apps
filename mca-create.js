@@ -39,10 +39,6 @@ if (typeof WScript != 'undefined') {
   WScript.Quit(ret);
 }
 
-process.on('uncaughtException', function(e) {
-  fatal('Uncaught exception: ' + e);
-});
-
 /******************************************************************************/
 /******************************************************************************/
 
@@ -479,16 +475,11 @@ function initRepo() {
   function initCli(callback) {
     console.log('## Setting up cordova-cli');
     // TODO: Figure out when this should be re-run (e.g. upon update).
-    if (fs.existsSync(path.join(scriptDir, 'cordova-cli/node_modules'))) {
-      console.log('Already installed.');
+    process.chdir(path.join(scriptDir, 'cordova-cli'));
+    exec('npm install', function() {
+      process.chdir(origDir);
       callback();
-    } else {
-      process.chdir(path.join(scriptDir, 'cordova-cli'));
-      exec('npm install', function() {
-        process.chdir(origDir);
-        callback();
-      });
-    }
+    });
   }
 
   function cleanup(callback) {
@@ -512,6 +503,7 @@ function createApp(appName) {
   if (!/\w+\.\w+\.\w+/.exec(appName)) {
     fatal('App Name must follow the pattern: com.company.id');
   }
+
   function createApp(callback) {
     console.log('## Creating Your Application');
     chdir(origDir);
@@ -549,6 +541,22 @@ function createApp(appName) {
     console.log(curCmd.join(' '));
     exec(cordovaCmd(curCmd), function() {
       chdir(path.join(origDir, name));
+      /*
+      var cordova = require(path.join(scriptDir, 'cordova-cli', 'cordova'));
+      cordova.config(path.join('.'), {
+        lib: {
+          android: {
+            uri: path.join(scriptDir, 'cordova-cli', 'mca-lib', 'cordova-android'),
+            version: "master",
+            id: "cordova-master",
+          },
+          ios: {
+            uri: path.join(scriptDir, 'cordova-cli', 'mca-lib', 'cordova-ios'),
+            version: "master",
+            id: "cordova-master",
+          },
+        },
+      });*/
       runCmd();
     }, undefined, true);
   }
@@ -634,7 +642,11 @@ function updateApp() {
 /******************************************************************************/
 /******************************************************************************/
 
-(function() {
+module.exports = {
+  // TODO: turn this into a proper node app
+};
+
+function main() {
   toolsCheck();
   initRepo();
   if (commandLineFlags['update_app']) {
@@ -646,4 +658,8 @@ function updateApp() {
     }
   }
   pump();
-}());
+}
+
+if (require.main === module) {
+    main();
+}
