@@ -1,6 +1,10 @@
 # Mobile Chrome Packaged App API Implementation Status
 
-Current as of June 2013.
+See the [reference guide for building Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html) on Desktop.
+
+This list tracks API support on mobile.
+
+_Current as of June 2013_.
 
 ## Well supported APIs
 

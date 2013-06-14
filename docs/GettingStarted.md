@@ -59,8 +59,11 @@ Your HTML, CSS and JS files live within the `www` directory.
 _Every time_ you change them, you _must_ run the `./mca-update.js` script located in the root of your project.  Otherwise, those changes will not be reflected.
 
 
-## Mobile Chrome App API Status
+## Experiencing Hiccups?
 
-See the [reference guide for building Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html) on Desktop.
+Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
 
-However, see our [API Status document](APIStatus.md) API support on mobile, as well as for a sample list of differences between the mobile and desktop behaviours.
+
+## Completed Successfully?
+
+Now read the [API Status document](APIStatus.md).
