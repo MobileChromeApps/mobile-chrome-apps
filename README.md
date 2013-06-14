@@ -1,12 +1,27 @@
-# Chrome Packaged Apps for Mobile
+# [Mobile Chrome Apps](//github.com/MobileChromeApps/mobile-chrome-apps)
 
-This repo contains tools for creating [Chrome Packaged Apps](http://developer.chrome.com/apps) that
-run as native Android and iOS applications through [Apache Cordova](http://cordova.apache.org/).
+Mobile Chrome Apps is a toolkit for porting [Chrome Packaged Apps](http://developer.chrome.com/apps) to Android and iOS hybrid web applications, through [Apache Cordova](http://cordova.apache.org/).
 
-Check out the documentation in the [`docs/`](docs/) directory. You'll probably want to start with the [Installation guide](docs/Installation.md).
+## 30 Second Summary
+
+* You're writing a Chrome Packaged App that runs on Windows, OSX, Linux, and ChromeOS.  Sweet.
+* You use this toolkit to create an Android and/or iOS app template, with our chrome runtime and chrome API polyfills.
+* You import your app, modify it for mobile friendly design, work around limitations, and test.
+* ????
+* Publish to the iOS App and/or Android Play store.
+* Profit!
+
+## Documentation
+
+You'll probably want to start with the [Installation Guide](docs/Installation.md).
+
+Follow that up with the [Getting Started Guide](docs/GettingStarted.md).
+
+See our somewhat up to date [API Status Page](docs/APIStatus.md).
+
+Find all our documentation in the [`docs/`](docs/) directory.
 
 
-## Mailing Lists
+## Discussion
 
-There is a public mailing list for discussion of Mobile Chrome Apps, at mobile-chrome-apps@googlegroups.com
-
+There is a [public mailing list](mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussing Mobile Chrome Apps.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).
