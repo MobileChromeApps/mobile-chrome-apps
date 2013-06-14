@@ -213,5 +213,12 @@ chromespec.registerSubPage('chrome.syncFileSystem', function(rootEl) {
 
     requestFileSystem(onRequestFileSystemSuccess);
   });
+
+  addButton('Clear chrome.storage', function() {
+    var clearCallback = function() {
+      chromespec.log('chrome.storage cleared.');
+    };
+    chrome.storage.internal.clear(clearCallback);
+  });
 });
 
