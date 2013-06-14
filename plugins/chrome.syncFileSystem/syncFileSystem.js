@@ -15,10 +15,6 @@ var _tokenString;
 // When we create or get the app's syncable Drive directory, we store its id here.
 var _syncableAppDirectoryId;
 
-// This maps file names to Drive file ids.
-// TODO(maxw): Save this map to local storage.
-var driveFileIdMap = { };
-
 // This is the next Drive change id to be used to detect remote changes.
 // TODO(maxw): Save the highest change id to local storage.
 var nextChangeId = 1;
@@ -69,17 +65,23 @@ function enableSyncabilityForEntry(entry) {
         }
 
         var onRemoveSuccess = function() {
-            // If a file was removed, fire the file status listener.
-            if (entry.isFile) {
-                var fileInfo = { fileEntry: entry, status: FILE_STATUS_SYNCED, action: SYNC_ACTION_DELETED, direction: SYNC_DIRECTION_LOCAL_TO_REMOTE };
-                for (var i = 0; i < fileStatusListeners.length; i++) {
-                    fileStatusListeners[i](fileInfo);
+            // Remove the file id from the cache.
+            var removeCallback = function() {
+                console.log('Drive file id for ' + entry.name + ' removed from cache.');
+
+                // If a file was removed, fire the file status listener.
+                if (entry.isFile) {
+                    var fileInfo = { fileEntry: entry, status: FILE_STATUS_SYNCED, action: SYNC_ACTION_DELETED, direction: SYNC_DIRECTION_LOCAL_TO_REMOTE };
+                    for (var i = 0; i < fileStatusListeners.length; i++) {
+                        fileStatusListeners[i](fileInfo);
+                    }
+                }
+
+                if (successCallback) {
+                    successCallback();
                 }
             }
-
-            if (successCallback) {
-                successCallback();
-            }
+            chrome.storage.internal.remove(constructFileIdKey(entry.name), removeCallback);
         };
         var augmentedSuccessCallback = function() {
             remove(entry, onRemoveSuccess);
@@ -591,84 +593,110 @@ function getDriveFileId(query, successCallback, errorCallback) {
 
 // This function gets the Drive file id for the directory with the given name and parent id.
 function getDirectoryId(directoryName, parentDirectoryId, shouldCreateDirectory, successCallback) {
-    if (driveFileIdMap[directoryName]) {
-        console.log('Drive file id for directory ' + directoryName + ' retrieved from cache.');
-        successCallback(driveFileIdMap[directoryName]);
-        return;
-    }
+    var fileIdKey = constructFileIdKey(directoryName);
+    var getCallback = function(items) {
+        if (items[fileIdKey]) {
+            // If the file id has been cached, use it.
+            console.log('Drive file id for directory ' + directoryName + ' retrieved from cache.');
+            successCallback(items[fileIdKey]);
+        } else {
+            // If the file id has not been cached, query for it, cache it, and pass it on.
+            var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and trashed = false';
+            if (parentDirectoryId) {
+                query += ' and "' + parentDirectoryId + '" in parents';
+            }
+            var errorCallback;
 
-    var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + directoryName + '" and trashed = false';
-    if (parentDirectoryId) {
-        query += ' and "' + parentDirectoryId + '" in parents';
-    }
-    var errorCallback;
+            var augmentedSuccessCallback = function(fileId) {
+                // Cache the file id, then pass it on to the callback.
+                var fileIdObject = { };
+                var key = constructFileIdKey(directoryName);
+                fileIdObject[key] = fileId;
+                var setCallback = function() {
+                    console.log('Drive file id for directory ' + directoryName + ' saved to cache.');
+                    successCallback(fileId);
+                };
+                chrome.storage.internal.set(fileIdObject, setCallback);
+            };
 
-    var augmentedSuccessCallback = function(fileId) {
-        // Cache the file id, then pass it on to the callback.
-        driveFileIdMap[directoryName] = fileId;
-        console.log('Drive file id for directory ' + directoryName + ' saved to cache.');
-        successCallback(fileId);
+            // Create the error callback based on whether we should create a directory if it doesn't exist.
+            if (shouldCreateDirectory) {
+                errorCallback = function(e) {
+                    if (e === FILE_NOT_FOUND_ERROR) {
+                        // If the directory doesn't exist, create it.
+                        createDirectory(directoryName, parentDirectoryId, augmentedSuccessCallback);
+                    } else {
+                        // If it's a different error, log it.
+                        console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
+                    }
+                };
+            } else {
+                errorCallback = function(e) {
+                    // Log an error.
+                    console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
+                };
+            }
+            getDriveFileId(query, augmentedSuccessCallback, errorCallback);
+        }
     };
 
-    // Create the error callback based on whether we should create a directory if it doesn't exist.
-    if (shouldCreateDirectory) {
-        errorCallback = function(e) {
-            if (e === FILE_NOT_FOUND_ERROR) {
-                // If the directory doesn't exist, create it.
-                createDirectory(directoryName, parentDirectoryId, augmentedSuccessCallback);
-            } else {
-                // If it's a different error, log it.
-                console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
-            }
-        };
-    } else {
-        errorCallback = function(e) {
-            // Log an error.
-            console.log('Retrieval of directory "' + directoryName + '" failed with error ' + e);
-        };
-    }
-    getDriveFileId(query, augmentedSuccessCallback, errorCallback);
+    chrome.storage.internal.get(fileIdKey, getCallback);
 }
 
 // This function retrieves the Drive file id of the given file, if it exists.  Otherwise, it yields null.
 function getFileId(fileName, parentDirectoryId, successCallback) {
-    if (driveFileIdMap[fileName]) {
-        console.log('Drive file id for file ' + fileName + ' retrieved from cache.');
-        successCallback(driveFileIdMap[fileName]);
-        return;
-    }
-
-    // In order to support paths, we need to call this recursively.
-    var slashIndex = fileName.indexOf('/');
-    if (slashIndex < 0) {
-        var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
-        var augmentedSuccessCallback = function(fileId) {
-            // Cache the file id, then pass it on to the callback.
-            driveFileIdMap[fileName] = fileId;
-            console.log('Drive file id for file ' + fileName + ' saved to cache.');
-            successCallback(fileId);
-        };
-        var errorCallback = function(e) {
-            if (e === FILE_NOT_FOUND_ERROR) {
-                successCallback(null);
+    var fileIdKey = constructFileIdKey(fileName);
+    var getCallback = function(items) {
+        if (items[fileIdKey]) {
+            // If the file id has been cached, use it.
+            console.log('Drive file id for file ' + fileName + ' retrieved from cache.');
+            successCallback(items[fileIdKey]);
+        } else {
+            // If the file id has not been cached, query for it, cache it, and pass it on.
+            // In order to support paths, we need to call this function recursively.
+            var slashIndex = fileName.indexOf('/');
+            if (slashIndex < 0) {
+                var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+                var augmentedSuccessCallback = function(fileId) {
+                    // Cache the file id, then pass it on to the callback.
+                    var fileIdObject = { };
+                    var key = constructFileIdKey(fileName);
+                    fileIdObject[key] = fileId;
+                    var setCallback = function() {
+                        console.log('Drive file id for file ' + fileName + ' saved to cache.');
+                        successCallback(fileId);
+                    };
+                    chrome.storage.internal.set(fileIdObject, setCallback);
+                };
+                var errorCallback = function(e) {
+                    if (e === FILE_NOT_FOUND_ERROR) {
+                        successCallback(null);
+                    } else {
+                        // If it's a different error, log it.
+                        console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
+                    }
+                };
+                getDriveFileId(query, augmentedSuccessCallback, errorCallback);
             } else {
-                // If it's a different error, log it.
-                console.log('Retrieval of file "' + fileName + '" failed with error ' + e);
+                var nextDirectory = fileName.substring(0, slashIndex);
+                var pathRemainder = fileName.substring(slashIndex + 1);
+                var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + nextDirectory + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+                var onGetDriveFileIdSuccess = function(fileId) {
+                    getFileId(pathRemainder, fileId, successCallback);
+                };
+                var onGetDriveFileIdError = function(e) {
+                    console.log('Retrieval of directory "' + nextDirectory + '" failed with error ' + e);
+                };
+                getDriveFileId(query, onGetDriveFileIdSuccess, onGetDriveFileIdError);
             }
-        };
-        getDriveFileId(query, augmentedSuccessCallback, errorCallback);
-    } else {
-        var nextDirectory = fileName.substring(0, slashIndex);
-        var pathRemainder = fileName.substring(slashIndex + 1);
-        var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + nextDirectory + '" and "' + parentDirectoryId + '" in parents and trashed = false';
-        var onGetDriveFileIdSuccess = function(fileId) {
-            getFileId(pathRemainder, fileId, successCallback);
-        };
-        var onGetDriveFileIdError = function(e) {
-            console.log('Retrieval of directory "' + nextDirectory + '" failed with error ' + e);
-        };
-        getDriveFileId(query, onGetDriveFileIdSuccess, onGetDriveFileIdError);
-    }
+        }
+    };
+
+    chrome.storage.internal.get(fileIdKey, getCallback);
+}
+
+function constructFileIdKey(entryName) {
+    return 'sfs' + '-' + _appId + '-' + entryName;
 }
 
 //==========
