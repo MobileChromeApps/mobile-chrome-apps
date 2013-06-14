@@ -1,60 +1,66 @@
 # Getting Started with Mobile Chrome Apps
 
-Note: If you haven't read through the installation guide, go do that now. There are some dependencies, such as a native development environment and node.js, which you will need to satisfy before you can build mobile Chrome apps.
+Please read the [Installation Guide](InstallationGuide.md) first.
 
-# Developer Guide
-
-## 1. Creating your first Mobile Chrome App
+## The initial import of your Chrome Packaged App
 
 Now that you have installed the Mobile Chrome Apps framework, lets use it to create your first App.
 
 ### Step 1: Create a Project
 
-    path/to/mca-create.js com.yourcompanyname.YourAppName
+    path/to/mca-create.js com.companyname.YourApp --source=path/to/ChromeApp
 
-Note: `mobile-chrome-apps` directory is a self-updating git repository, so its easier not to create your projects inside that directory
+* Don't create projects inside the `mobile-chrome-apps` directory.
+* `--source` flag is optional, if you leave it out, you will start with a HelloWorld template.
+* Currently, `--source` will create a _copy_ of your chrome app, so any changes will need to be synchronized manually.  (We do plan to support symlinks eventually.)
 
-### Step 2: Open the Project
+### Step 2: Open the Native App Template
 
-The easiest way to run the project is through an IDE.
+The easiest way to build your app is through an IDE.
 
-* On iOS:
-    * Open the project file, which is located at `MyAppName/platforms/ios/MyAppName.xcodeproj`.
-* On Android, there are a couple more (straight-forward) steps:
-    * First, import the project into Eclipse by selecting `Import` from the Package Explorer context menu.
-    * In the resulting dialog, choose `Android` -> `Existing Android Code Into Workspace` and click `Next >`.
-    * Click `Browse...`, navigate to `MyAppName/platforms/android`, click `Open`, and then `Finish`.
-    * Finally, add the Google Play Services library as outlined [here](http://developer.android.com/google/play-services/setup.html).
+#### iOS
+
+* Open xcode:
+
+        cd YourApp
+        open platforms/ios/*.xcodeproj
+
+#### Android
+
+* open Eclipse
+* From the menu, `File` -> `Import`
+* Chose `Android` > `Existing Android Code Into Workspace`.
+* Import `path/to/YourApp/platforms/android`.
+* Add the Google Play Services library [as outlined here](http://developer.android.com/google/play-services/setup.html).
 
 ### Step 3: Build and run
 
-Right away, you should be able to build your new app, and run it in the iOS simulator or on an Android emulator
+You should be all set to build and run, but there are a few things to watch for.
 
-## 2. Making Changes
+#### iOS
 
-Your HTML, CSS and JS files live within the `app/www` directory. Every time you change them, you must run the `mca-update` script located in the root of your project. This will copy your application files into the various platform directories, where they can be built by XCode or Eclipse.
+* Make sure you are building the right target.
+  * In the top left (beside Run&Stop buttons) there is a dropdown to select target project and device.  Ensure that `YourApp` is selected and _not_ `CordovaLib`.
 
+#### Android
 
-Try to change some of the markup in `app/www/index.html`, run `mca-update`, and rebuild the application.
+* You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time.
+* You will need to manage your devices/emulators the first time as well.
 
-## 4. Chrome Apps APIs
-
-The complete reference guide for building Chrome Packaged Apps can be found online at http://developer.chrome.com/apps/about_apps.html
-
-See our [API Status document](APIStatus.md), however, for a list of APIs that are currently supported on mobile, and for any differences between the mobile and desktop behaviours.
-
-## 5. Platform Differences (merges)
+### Step 4: Icons, splash screen, settings, etc
 
 [Coming soon]
 
-## 6. Polish
 
-[Coming soon]
+## Important!: Making Changes to your App
 
-### 6.1 Icons
+Your HTML, CSS and JS files live within the `www` directory.
 
-[Coming soon]
+_Every time_ you change them, you _must_ run the `./mca-update.js` script located in the root of your project.  Otherwise, those changes will not be reflected.
 
-### 6.2 Application Name
 
-[Coming soon]
+## Mobile Chrome App API Status
+
+See the [reference guide for building Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html) on Desktop.
+
+However, see our [API Status document](APIStatus.md) API support on mobile, as well as for a sample list of differences between the mobile and desktop behaviours.

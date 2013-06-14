@@ -1,27 +1,33 @@
-# Project Status
+# Mobile Chrome Packaged App API Implementation Status
 
-Current as of May 2013
+Current as of June 2013.
 
-## Supported Chrome App APIs
+## Well supported APIs
 
 * app.runtime
 * app.window
 * events
 * fileSystem
-* i18n
 * experimental.identity
-* storage
-
-## Almost-supported APIs
-
+* storage.local
 * socket
     * Multicast sockets are not supported
 * syncFileSystem
     * Remote deletions may not be noticed by the local device
 
-## Not-yet supported APIs
+## Somewhat supported APIs
 
 * alarms
+  * Only work while app is actively running.
+* storage.sync
+  * works like storage.local (ie, storage works, but no sync)
+* i18n
+* runtime
+  * App lifetimes differ on mobile, events map as well as possible
+  * Anything related to app store or IPC not supported
+ 
+## Not yet supported APIs
+
 * bluetooth
 * commands
 * contextMenus
@@ -31,7 +37,6 @@ Current as of May 2013
 * permissions
 * power
 * pushMessaging
-* runtime
 * serial
 * tts
 * types
@@ -43,3 +48,4 @@ Current as of May 2013
 * experimental.systemInfo.display
 * experimental.systemInfo.memory
 * experimental.systemInfo.storage
+* webview
