@@ -1,6 +1,6 @@
 # Getting Started with Mobile Chrome Apps
 
-Please read the [Installation Guide](InstallationGuide.md) first.
+Please read the [Installation Guide](Installation.md) first.
 
 ## The initial import of your Chrome Packaged App
 
