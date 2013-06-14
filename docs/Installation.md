@@ -33,7 +33,7 @@ iOS and Android are both optional, but you need at least one of them.
 
 ## Experiencing Hiccups?
 
-Please [reach out to us](mobile-chrome-apps@googlegroups.com).
+Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
 
 ## Completed Successfully?
 

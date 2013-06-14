@@ -24,4 +24,4 @@ Find all our documentation in the [`docs/`](docs/) directory.
 
 ## Discussion
 
-There is a [public mailing list](mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussing Mobile Chrome Apps.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).
+There is a [public mailing list](mailto:mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussing Mobile Chrome Apps.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).
