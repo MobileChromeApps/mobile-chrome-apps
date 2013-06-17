@@ -16,19 +16,22 @@ _Current as of June 2013_.
 * storage.local
 * socket
     * Multicast sockets are not supported
-* syncFileSystem
-    * Remote deletions may not be noticed by the local device
 
 ## Somewhat supported APIs
 
 * alarms
-  * Only work while app is actively running.
+    * Only work while app is actively running.
 * storage.sync
-  * works like storage.local (ie, storage works, but no sync)
+    * works like storage.local (ie, storage works, but no sync)
 * i18n
 * runtime
-  * App lifetimes differ on mobile, events map as well as possible
-  * Anything related to app store or IPC not supported
+    * App lifetimes differ on mobile, events map as well as possible
+    * Anything related to app store or IPC not supported
+* syncFileSystem
+    * Only the last_write_win conflict resolution policy is supported
+    * getUsageAndQuota not supported
+    * getFileStatus/getFileStatuses not supported
+    * service status listeners not supported
  
 ## Not yet supported APIs
 
