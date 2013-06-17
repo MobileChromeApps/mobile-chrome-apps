@@ -282,7 +282,8 @@ function toolsCheck() {
       /* This is the android SDK version declared in cordova-android/framework/project.properties */
       if (targets.length === 0) {
           console.log('No Android Platforms are installed');
-      } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1) {
+      } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1 ||
+                 targets.indexOf('android-17') > -1) {
           hasAndroidPlatform = true;
           console.log('Android 4.2.2 (Google APIs) Platform is installed.');
       } else {
