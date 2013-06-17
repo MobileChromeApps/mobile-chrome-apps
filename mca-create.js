@@ -369,10 +369,6 @@ function initRepo() {
   function checkOutSelf(callback) {
     console.log('## Checking Out mobile-chrome-apps');
 
-    function installNodeModules(callback) {
-      exec('npm install', callback);
-    }
-
     function reRunThisScriptWithNewVersionThenExit() {
       console.log(scriptName + ' has been updated.  Restarting with new version.');
       console.log(new Array(80).join('*'));
@@ -410,41 +406,31 @@ function initRepo() {
       exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
         console.log('Successfully cloned mobile-chrome-apps repo');
         chdir(scriptDir);
-        installNodeModules(reRunThisScriptWithNewVersionThenExit);
         return;
       });
       return;
     }
 
-    function finish() {
-      if (fs.existsSync(path.join(scriptDir, 'node_modules'))) {
-        callback();
-      } else {
-        installNodeModules(reRunThisScriptWithNewVersionThenExit);
-      }
-    }
     function updateAndRerun() {
-      exec('git pull --rebase', function() {
-        installNodeModules(reRunThisScriptWithNewVersionThenExit);
-      });
+      exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
     }
     function promptForUpdate() {
       waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
         if (key.toLowerCase() == 'y') {
           updateAndRerun();
         } else {
-          finish();
+          callback();
         }
       });
     }
 
     if (commandLineFlags['update-repo'] == 'never') {
-      finish();
+      callback();
     } else {
       exec('git pull --rebase --dry-run', function(stdout, stderr) {
         var needsUpdate = (!!stdout || !!stderr);
         if (!needsUpdate) {
-          finish();
+          callback();
         } else if (commandLineFlags['update-repo'] == 'always') {
           updateAndRerun();
         } else if (commandLineFlags['update-repo'] == 'prompt') {
@@ -454,7 +440,7 @@ function initRepo() {
         console.log("Could not update repo:");
         console.error(error.toString());
         console.log("Continuing without update.");
-        finish();
+        callback();
       }, true);
     }
   }
