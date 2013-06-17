@@ -44,6 +44,7 @@ if (typeof WScript != 'undefined') {
 
 var childProcess = require('child_process');
 var fs = require('fs');
+var os = require('os');
 var path = require('path');
 
 var commandLineFlags = {
@@ -322,6 +323,13 @@ function toolsCheck() {
     }
     callback();
   }
+  function checkNodeVersion(callback) {
+    if (!os.tmpdir) {
+      fatal('Your version of node (' + process.version + ') is too old. Please update your version of node.');
+    }
+    callback();
+  }
+  eventQueue.push(checkNodeVersion);
   eventQueue.push(checkAndroid);
   eventQueue.push(checkXcode);
   eventQueue.push(checkAtLeastOneTool);
