@@ -467,16 +467,6 @@ function initRepo() {
     });
   }
 
-  function initCli(callback) {
-    console.log('## Setting up cordova-cli');
-    // TODO: Figure out when this should be re-run (e.g. upon update).
-    process.chdir(path.join(scriptDir, 'cordova-cli'));
-    exec('npm install', function() {
-      process.chdir(origDir);
-      callback();
-    });
-  }
-
   function cleanup(callback) {
     process.chdir(origDir);
     callback();
@@ -486,7 +476,6 @@ function initRepo() {
   eventQueue.push(checkOutSelf);
   eventQueue.push(checkOutSubModules);
   eventQueue.push(buildCordovaJs);
-  eventQueue.push(initCli);
   eventQueue.push(cleanup);
 }
 
