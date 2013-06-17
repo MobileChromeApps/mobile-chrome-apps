@@ -383,8 +383,8 @@ function initRepo() {
       process.chdir(scriptDir);
       requiresClone = !fs.existsSync('.git');
     }
-    // Next - try the CWD, if it is 
-    if (requiresClone && fs.basename(origDir) == 'mobile-chrome-apps') {
+    // Next - try the CWD, if it is
+    if (requiresClone && path.basename(origDir) == 'mobile-chrome-apps') {
       scriptDir = origDir;
       process.chdir(scriptDir);
       requiresClone = !fs.existsSync('.git');
@@ -405,6 +405,7 @@ function initRepo() {
         installNodeModules(reRunThisScriptWithNewVersionThenExit);
         return;
       });
+      return;
     }
 
     function finish() {
@@ -465,7 +466,7 @@ function initRepo() {
     console.log('## Building cordova-js');
     process.chdir(path.join(scriptDir, 'cordova-js'));
     computeGitVersion(function(version) {
-      var packager = require('./cordova-js/build/packager');
+      var packager = require(path.join(scriptDir, 'cordova-js', 'build', 'packager'));
       packager.generate('ios', version);
       packager.generate('android', version);
       callback();
