@@ -635,11 +635,11 @@ module.exports = {
 };
 
 function main() {
-  toolsCheck();
-  initRepo();
   if (commandLineFlags['update_app']) {
     updateApp();
   } else {
+    toolsCheck();
+    initRepo();
     var appName = commandLineArgs[0];
     if (appName) {
       createApp(appName);
