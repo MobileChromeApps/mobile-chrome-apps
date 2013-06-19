@@ -610,6 +610,14 @@ function updateApp() {
     return path.join('platforms', platform, 'www');
   }
 
+  function removeVestigalConfigFile(platform) {
+    return function(callback) {
+      console.log('## Removing unnecessary files for ' + platform);
+      fs.unlinkSync(path.join(assetDirForPlatform(platform), 'config.xml'));
+      callback();
+    };
+  }
+
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -619,9 +627,11 @@ function updateApp() {
 
   eventQueue.push(runPrepare);
   if (hasAndroid) {
+    eventQueue.push(removeVestigalConfigFile('android'));
     eventQueue.push(createAddJsStep('android'));
   }
   if (hasIos) {
+    eventQueue.push(removeVestigalConfigFile('ios'));
     eventQueue.push(createAddJsStep('ios'));
   }
 }
