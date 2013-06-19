@@ -119,6 +119,8 @@ static NSString* stringFromData(NSData* data) {
     _connectCallback = nil;
 }
 
+
+
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didConnectToAddress:(NSData *)address
 {
     VERBOSE_LOG(@"udpSocket:didConnectToAddress socketId: %u", _socketId);
@@ -162,6 +164,15 @@ static NSString* stringFromData(NSData* data) {
 - (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError *)error
 {
     VERBOSE_LOG(@"socketDidDisconnect socketId: %u", _socketId);
+    
+    void (^ callback)(BOOL) = _connectCallback;
+    
+    if(callback == nil)
+        return;
+    
+    callback(NO);
+    
+    _connectCallback = nil;
 }
 
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
@@ -484,8 +495,9 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"tcp"]);
 
-    BOOL success = [socket->_socket acceptOnInterface:address port:port error:nil];
-    VERBOSE_LOG(@"NTFY %@.%@ Listen on port %d", socketId, command.callbackId, port);
+    NSError* error = nil;
+    BOOL success = [socket->_socket acceptOnInterface:address port:port error:&error];
+    VERBOSE_LOG(@"NTFY %@.%@ Listen on addr: %@ and port: %d -- %@", socketId, command.callbackId, address, port, error);
 
     if (success) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
