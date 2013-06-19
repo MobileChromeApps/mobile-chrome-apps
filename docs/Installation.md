@@ -7,8 +7,9 @@ iOS and Android are both optional, but you need at least one of them.
 
 ### iOS
 
-* Note: iOS development can only be done on OSX.
+Note: iOS development can only be done on OSX.
 * Install [XCode 4](https://developer.apple.com/xcode/), with the iOS SDK.
+* Install xcode command line tools.
 * You must register as an iOS developer for testing on real devices and for submitting to the app store.  You can skip this if you only plan to use the iPhone/iPad simulators.
 
 ### Android
