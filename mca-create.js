@@ -485,14 +485,15 @@ function initRepo() {
 // Create App
 
 function createApp(appName) {
-  if (!/\w+\.\w+\.\w+/.exec(appName)) {
+  var regExpNameSuffix = /\w+\.\w+\.(\w+)$/; // Selects WORD from match of "...word.word.WORD"
+  if (!regExpNameSuffix.exec(appName)) {
     fatal('App Name must follow the pattern: com.company.id');
   }
 
   function createApp(callback) {
     console.log('## Creating Your Application');
     chdir(origDir);
-    var name = /\w+\.(\w+)$/.exec(appName)[1];
+    var name = regExpNameSuffix.exec(appName)[1];
 
     var cmds = [];
     if (hasXcode) {
