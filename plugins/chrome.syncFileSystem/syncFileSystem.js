@@ -212,7 +212,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
     };
     var onGetTokenStringSuccess = function() {
         // Get the Drive "Chrome Syncable FileSystem" directory id.
-        getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, false /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
+        getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
     };
 
     getTokenString(onGetTokenStringSuccess);
@@ -397,8 +397,10 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
     var onGetTokenStringSuccess = function() {
         // Create the data to send.
         var data = { title: directoryName,
-                     parents: [{ id: parentDirectoryId }],
                      mimeType: 'application/vnd.google-apps.folder' };
+        if (parentDirectoryId) {
+            data['parents'] = [{ id: parentDirectoryId }];
+        }
 
         // Send a request to upload the file.
         var xhr = new XMLHttpRequest();
@@ -911,11 +913,15 @@ exports.requestFileSystem = function(callback) {
 
 exports.setConflictResolutionPolicy = function(policy, callback) {
     conflictResolutionPolicy = policy;
-    callback();
+    if (callback) {
+        callback();
+    }
 };
 
 exports.getConflictResolutionPolicy = function(callback) {
-    callback(conflictResolutionPolicy);
+    if (callback) {
+        callback(conflictResolutionPolicy);
+    }
 };
 
 exports.getUsageAndQuota = function(fileSystem, callback) {
