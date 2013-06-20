@@ -1,4 +1,4 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,11 +9,14 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,6 +25,7 @@ import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
 import org.apache.cordova.api.PluginResult;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,39 +42,34 @@ public class ChromeSocket extends CordovaPlugin {
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("create".equals(action)) {
             create(args, callbackContext);
-            return true;
         } else if ("connect".equals(action)) {
             connect(args, callbackContext);
-            return true;
         } else if ("bind".equals(action)) {
             bind(args, callbackContext);
-            return true;
         } else if ("write".equals(action)) {
             write(args, callbackContext);
-            return true;
         } else if ("read".equals(action)) {
             read(args, callbackContext);
-            return true;
         } else if ("sendTo".equals(action)) {
             sendTo(args, callbackContext);
-            return true;
         } else if ("recvFrom".equals(action)) {
             recvFrom(args, callbackContext);
-            return true;
         } else if ("disconnect".equals(action)) {
             disconnect(args, callbackContext);
-            return true;
         } else if ("destroy".equals(action)) {
             destroy(args, callbackContext);
-            return true;
         } else if ("listen".equals(action)) {
             listen(args, callbackContext);
-            return true;
         } else if ("accept".equals(action)) {
             accept(args, callbackContext);
-            return true;
+        } else if ("getInfo".equals(action)) {
+            getInfo(args, callbackContext);
+        } else if ("getNetworkList".equals(action)) {
+            getNetworkList(args, callbackContext);
+        } else {
+            return false;
         }
-        return false;
+        return true;
     }
 
 
@@ -245,6 +244,44 @@ public class ChromeSocket extends CordovaPlugin {
         sd.accept(callbackContext);
     }
 
+    private void getInfo(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        JSONObject info = sd.getInfo();
+        callbackContext.success(info);
+    }
+
+    private void getNetworkList(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        try {
+            JSONArray list = new JSONArray();
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            NetworkInterface iface;
+            // Enumerations are a crappy legacy API, can't use the for (foo : bar) syntax.
+            while(interfaces.hasMoreElements()) {
+                iface = interfaces.nextElement();
+                JSONObject data = new JSONObject();
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+
+                String address = addresses.hasMoreElements() ? addresses.nextElement().getHostAddress() : null;
+                data.put("name", iface.getDisplayName());
+                if (address != null) {
+                  data.put("address", address);
+                }
+                list.put(data);
+            }
+
+            callbackContext.success(list);
+        } catch (SocketException se) {
+            callbackContext.error("SocketException: " + se);
+        }
+    }
+
 
     private static class SocketData {
         Socket tcpSocket;
@@ -279,10 +316,38 @@ public class ChromeSocket extends CordovaPlugin {
             init();
         }
 
+        public JSONObject getInfo() throws JSONException {
+            JSONObject info = new JSONObject();
+            info.put("socketType", type == Type.TCP ? "tcp" : "udp");
+
+            // According to the chrome.socket docs, this is always true for TCP sockets post-connect calls,
+            // and for UDP it's true iff the connect() call has been used to set default remotes.
+            // That's exactly what the boolean connected tracks.
+            info.put("connected", connected);
+
+            if (connected) {
+                info.put("peerAddress", address.getHostAddress());
+                info.put("peerPort", port);
+
+                if (type == Type.TCP) {
+                    info.put("localAddress", tcpSocket.getLocalAddress().getHostAddress());
+                    info.put("localPort", tcpSocket.getLocalPort());
+                } else {
+                    info.put("localAddress", udpSocket.getLocalAddress().getHostAddress());
+                    info.put("localAddress", udpSocket.getLocalPort());
+                }
+            }
+
+            return info;
+        }
+
         public boolean connect(String address, int port) {
             if (isServer) return false;
             try {
                 if (type == Type.TCP) {
+                    connected = true;
+                    this.address = InetAddress.getByName(address);
+                    this.port = port;
                     tcpSocket = new Socket(address, port);
                 } else {
                     if (udpSocket == null) {

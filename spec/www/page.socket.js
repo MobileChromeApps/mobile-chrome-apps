@@ -101,6 +101,55 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
     });
   }
 
+  function acceptConnectReadWriteGetInfo(data) {
+    chrome.socket.create('tcp', {}, function(socketInfo) {
+      chrome.socket.listen(socketInfo.socketId, addr, port, function(listenResult) {
+
+        chrome.socket.accept(socketInfo.socketId, function(acceptInfo) {
+          chrome.socket.read(acceptInfo.socketId, function(readResult) {
+            var sent = new Uint8Array(data);
+            var recv = new Uint8Array(readResult.data);
+
+            chrome.socket.disconnect(acceptInfo.socketId);
+            chrome.socket.destroy(acceptInfo.socketId);
+            chrome.socket.disconnect(socketInfo.socketId);
+            chrome.socket.destroy(socketInfo.socketId);
+
+            if (recv.length != sent.length) {
+              return;
+            }
+
+            for (var i = 0; i < recv.length; i++) {
+              if (recv[i] != sent[i]) {
+                return;
+              }
+            }
+
+            log('acceptConnectReadWrite: success');
+          });
+        });
+
+        chrome.socket.create('tcp', {}, function(socketInfo) {
+          chrome.socket.connect(socketInfo.socketId, addr, port, function(connectResult) {
+            var connected = (connectResult === 0);
+            if (connected) {
+              chrome.socket.getInfo(socketInfo.socketId, function(info) {
+                if (info) {
+                  log(info.socketType + ': connected(' + info.connected + ') ' + (info.connected ? info.peerAddress + ':' + info.peerPort + ' -> ' + info.localAddress + ':' + info.localPort : ''));
+                }
+
+                chrome.socket.write(socketInfo.socketId, data, function(writeResult) {
+                  chrome.socket.disconnect(socketInfo.socketId);
+                  chrome.socket.destroy(socketInfo.socketId);
+                });
+              });
+            }
+          });
+        });
+      });
+    });
+  }
+
   function sendTo(data) {
     chrome.socket.create('udp', {}, function(socketInfo) {
       chrome.socket.sendTo(socketInfo.socketId, data, addr, port, function(result) {
@@ -193,6 +242,15 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
     });
   }
 
+  function getNetworkList() {
+    chrome.socket.getNetworkList(function(info) {
+      if (!info) return;
+      for (var i = 0; i < info.length; i++) {
+        log(info[i].name + ': ' + info[i].address);
+      }
+    });
+  }
+
   function addButton(name, func) {
     var button = chromespec.createButton(name, func);
     rootEl.appendChild(button);
@@ -225,6 +283,10 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
       acceptConnectReadWrite(arr.buffer);
     });
 
+    addButton('TCP: all-in-one with getInfo', function() {
+      acceptConnectReadWriteGetInfo(arr.buffer);
+    });
+
 
     addButton('UDP: connect & write', function() {
       connectAndWrite('udp', arr.buffer);
@@ -248,6 +310,10 @@ chromespec.registerSubPage('chrome.socket', function(rootEl) {
 
     addButton('UDP: all-in-one w/ connections', function() {
       bindConnectReadWrite(arr.buffer);
+    });
+
+    addButton('getNetworkList', function() {
+      getNetworkList();
     });
   }
 
