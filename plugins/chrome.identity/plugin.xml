@@ -14,6 +14,8 @@
 
   <name>Chrome Apps Identity API</name>
 
+  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />
     <clobbers target="chrome.experimental.identity" />
