@@ -42,28 +42,17 @@ if (typeof WScript != 'undefined') {
 /******************************************************************************/
 /******************************************************************************/
 
+// System modules.
 var childProcess = require('child_process');
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
 
-var commandLineFlags = {
-  'update-repo': 'prompt',
-};
-var commandLineArgs = process.argv.slice(2).filter(function(arg) {
-  if (arg.slice(0, 2) == '--') {
-    var eq = arg.indexOf('=');
-    var name = arg.slice(2);
-    var value = true;
-    if (eq > 2) {
-        name = arg.slice(2,eq);
-        value = arg.slice(eq+1);
-    }
-    commandLineFlags[name] = value;
-  }
-  return arg.slice(0, 2) != '--';
-});
+// Third-party modules.
+var ncp = require('ncp');
+var optimist = require('optimist');
 
+var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
 var eventQueue = [];
@@ -201,7 +190,7 @@ function copyFile(src, dst, callback) {
 }
 
 function copyDirectory(src, dst, callback) {
-  require('ncp').ncp(src, dst, function(err) {
+  ncp.ncp(src, dst, function(err) {
     if (err) {
       fatal('Copy file error: ' + err);
     } else {
@@ -484,15 +473,16 @@ function initRepo() {
 /******************************************************************************/
 // Create App
 
-function createApp(appName) {
-  if (!/\w+\.\w+\.\w+/.exec(appName)) {
+function createApp(appId) {
+  var match = /[a-z]+\.[a-z][a-z0-9]*\.([a-z][a-z0-9]*)/i.exec(appId);
+  if (!match) {
     fatal('App Name must follow the pattern: com.company.id');
   }
+  var appName = match[1];
 
   function createApp(callback) {
     console.log('## Creating Your Application');
     chdir(origDir);
-    var name = /\w+\.(\w+)$/.exec(appName)[1];
 
     var cmds = [];
     if (hasXcode) {
@@ -522,10 +512,10 @@ function createApp(appName) {
       }
     }
 
-    var curCmd = ['create', name, appName, name];
+    var curCmd = ['create', appName, appId, appName];
     console.log(curCmd.join(' '));
     exec(cordovaCmd(curCmd), function() {
-      chdir(path.join(origDir, name));
+      chdir(path.join(origDir, appName));
       /*
       var cordova = require(path.join(scriptDir, 'cordova-cli', 'cordova'));
       cordova.config(path.join('.'), {
@@ -557,11 +547,11 @@ function createApp(appName) {
       recursiveDelete(wwwDir);
       var dirsToTry = [
         // TODO: resolve leading ~ to $HOME
-        commandLineFlags.source && path.resolve(commandLineFlags.source),
+        commandLineFlags.source && path.resolve(origDir, commandLineFlags.source),
         commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source, 'www'),
         path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www')
       ];
-      if (commandLineFlags.source === "spec") {
+      if (commandLineFlags.source === 'spec') {
         dirsToTry.unshift(path.join(scriptDir, 'chrome-cordova', 'spec', 'www'));
       }
       for (var i=0; i < dirsToTry.length; i++) {
@@ -639,20 +629,45 @@ function updateApp() {
 
 /******************************************************************************/
 /******************************************************************************/
+function parseCommandLine() {
+  var argv = optimist
+      .usage('Usage: $0 [appId] [options]\n' +
+             '\n' +
+             'To ensure environment is set up correctly:\n' +
+             '    mca-create.js\n' +
+             'To create a new project using the default template:\n' +
+             '    mca-create.js com.mycompany.AppName\n' +
+             'To create a new project based off of an existing Chrome App:\n' +
+             '    mca-create.js com.mycompany.AppName --source path/to/chrome/app'
+      ).options('h', {
+          alias: 'help',
+          desc: 'Show usage message.'
+      }).options('update-repo', {
+          type: 'string',
+          desc: 'Whether to update the mobile-chrome-apps git repository.\nValue values: always, never, prompt',
+          default: 'prompt'
+      }).argv;
+  if (argv.h) {
+    optimist.showHelp();
+    process.exit(1);
+  }
+  return argv;
+}
 
 module.exports = {
   // TODO: turn this into a proper node app
 };
 
 function main() {
+  commandLineFlags = parseCommandLine();
   if (commandLineFlags['update_app']) {
     updateApp();
   } else {
     toolsCheck();
     initRepo();
-    var appName = commandLineArgs[0];
-    if (appName) {
-      createApp(appName);
+    var appId = commandLineFlags._[0];
+    if (appId) {
+      createApp(appId);
     }
   }
   pump();
