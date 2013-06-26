@@ -343,6 +343,9 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"udp"]);
 
+    if ([address isEqualToString:@"0.0.0.0"])
+        address = nil;
+
     BOOL success = [socket->_socket bindToPort:port interface:address error:nil];
     VERBOSE_LOG(@"NTFY %@.%@ Bind: %d", socketId, command.callbackId, success);
     if (success) {

@@ -20,7 +20,7 @@ function forEachWaitForDoneAndThen(arr, handler, andthen) {
 
 chromeSpec('chrome.socket', function(runningInBackground) {
   // constants
-  var bindAddr = isOnCordova() ? '127.0.0.1' : '0.0.0.0'; // TODO: issues on iOS with listening on 0.0.0.0
+  var bindAddr = '0.0.0.0';
   var connectAddr = '127.0.0.1';
   var multicastAddr = '224.0.1.' + Math.floor(Math.random()*256); // 224.0.1.0 to 239.255.255.255
   var port = Math.floor(Math.random() * (65535-1024)) + 1024; // random in 1024 -> 65535
