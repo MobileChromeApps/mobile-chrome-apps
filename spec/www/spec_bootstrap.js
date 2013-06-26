@@ -23,7 +23,7 @@ window.runningInBg = true;
       // Empty out buffered logs.
       if (bufferedLogs) {
         var logs = bufferedLogs;
-        bufferedLogs = null;
+        bufferedLogs = [];
         for (var i = 0; i < logs.length; ++i) {
           log(logs[i]);
         }
