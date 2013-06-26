@@ -34,7 +34,7 @@
     "fileSystem",
     "storage",
     {
-      "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind" ]
+      "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
     },
     "syncFileSystem"
   ],

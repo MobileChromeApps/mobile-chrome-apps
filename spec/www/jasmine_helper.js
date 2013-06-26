@@ -41,6 +41,8 @@ function itWaitsForDone(description, callback, opt_timeout) {
   return it(description, wrapped);
 }
 
+function xitWaitsForDone() {}
+
 function beforeEachWaitsForDone(callback, opt_timeout) {
   var wrapped = createWaitsForDoneWrapper(callback, opt_timeout);
   return beforeEach(wrapped);
