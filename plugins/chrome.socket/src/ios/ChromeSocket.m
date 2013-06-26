@@ -498,6 +498,9 @@ static NSString* stringFromData(NSData* data) {
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"tcp"]);
 
+    if ([address isEqualToString:@"0.0.0.0"])
+        address = nil;
+
     NSError* error = nil;
     BOOL success = [socket->_socket acceptOnInterface:address port:port error:&error];
     VERBOSE_LOG(@"NTFY %@.%@ Listen on addr: %@ and port: %d -- %@", socketId, command.callbackId, address, port, error);
