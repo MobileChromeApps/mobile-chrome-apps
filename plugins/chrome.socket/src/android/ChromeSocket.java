@@ -9,13 +9,16 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -66,6 +69,16 @@ public class ChromeSocket extends CordovaPlugin {
             getInfo(args, callbackContext);
         } else if ("getNetworkList".equals(action)) {
             getNetworkList(args, callbackContext);
+        } else if ("joinGroup".equals(action)) {
+            joinGroup(args, callbackContext);
+        } else if ("leaveGroup".equals(action)) {
+            leaveGroup(args, callbackContext);
+        } else if ("setMulticastTimeToLive".equals(action)) {
+            setMulticastTimeToLive(args, callbackContext);
+        } else if ("setMulticastLoopbackMode".equals(action)) {
+            setMulticastLoopbackMode(args, callbackContext);
+        } else if ("getJoinedGroups".equals(action)) {
+            getJoinedGroups(args, callbackContext);
         } else {
             return false;
         }
@@ -283,9 +296,81 @@ public class ChromeSocket extends CordovaPlugin {
     }
 
 
+    // Multicast calls
+    private void joinGroup(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        String address = args.getString(1);
+        int ret = sd.joinGroup(address);
+        callbackContext.success(ret);
+    }
+
+    private void leaveGroup(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        String address = args.getString(1);
+        int ret = sd.leaveGroup(address);
+        callbackContext.success(ret);
+    }
+
+    private void setMulticastTimeToLive(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        int ttl = args.getInt(1);
+        int ret = sd.setMulticastTimeToLive(ttl);
+        callbackContext.success(ret);
+    }
+
+    private void setMulticastLoopbackMode(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        boolean enabled = args.getBoolean(1);
+        int ret = sd.setMulticastLoopbackMode(enabled);
+        callbackContext.success(ret);
+    }
+
+    private void getJoinedGroups(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
+        int socketId = args.getInt(0);
+
+        SocketData sd = sockets.get(Integer.valueOf(socketId));
+        if (sd == null) {
+            Log.e(LOG_TAG, "No socket with socketId " + socketId);
+            return;
+        }
+
+        Collection<String> ret = sd.getJoinedGroups();
+        callbackContext.success(new JSONArray(ret));
+    }
+
+
     private static class SocketData {
         Socket tcpSocket;
         DatagramSocket udpSocket;
+        MulticastSocket multicastSocket;
         ServerSocket serverSocket;
 
         public enum Type { TCP, UDP; }
@@ -299,11 +384,15 @@ public class ChromeSocket extends CordovaPlugin {
 
         private boolean isServer = false;
 
+        private boolean multicast = false;
+
         BlockingQueue<ReadData> readQueue;
         private ReadThread readThread;
 
         BlockingQueue<AcceptData> acceptQueue;
         private AcceptThread acceptThread;
+
+        private HashSet<String> multicastGroups;
 
 
         public SocketData(Type type) {
@@ -564,6 +653,92 @@ public class ChromeSocket extends CordovaPlugin {
             }
         }
 
+        // Multicast handlers
+        public int joinGroup(String address) {
+            try {
+                if (type != Type.UDP) {
+                    Log.e(LOG_TAG, "joinGroup not allowed with TCP sockets.");
+                    return -5; // INVALID_HANDLE
+                }
+
+                if (multicastSocket == null) {
+                    if (!bound) {
+                        Log.e(LOG_TAG, "joinGroup not allowed unless socket is bound to a port");
+                        return -15; // SOCKET_NOT_CONNECTED
+                    }
+
+                    multicastSocket = new MulticastSocket(port);
+                    multicastGroups = new HashSet<String>();
+                    multicast = true;
+                }
+
+                if (multicastGroups.contains(address)) {
+                    Log.e(LOG_TAG, "Attempted to join an already joined multicast group.");
+                    return -147; // ADDRESS_IN_USE
+                }
+
+                multicastGroups.add(address);
+                multicastSocket.joinGroup(InetAddress.getByName(address));
+                return 0;
+            } catch (IOException ioe) {
+                Log.e(LOG_TAG, "Exception while joining multicast group: " + ioe);
+                return -2; // FAILED
+            }
+        }
+
+        public int leaveGroup(String address) {
+            try {
+                if (!multicast) {
+                    Log.e(LOG_TAG, "Not a multicast socket");
+                    return -2; // FAILED
+                }
+
+                if (multicastGroups.contains(address)) {
+                    multicastGroups.remove(address);
+                    multicastSocket.leaveGroup(InetAddress.getByName(address));
+                    return 0;
+                }
+            } catch (IOException ioe) {
+                Log.e(LOG_TAG, "Exception while leaving multicast group: " + ioe);
+            }
+
+            return -2; // FAILED
+        }
+
+        public int setMulticastTimeToLive(int ttl) {
+            try {
+                if (multicast) {
+                    if (0 <= ttl && ttl <= 255) {
+                        multicastSocket.setTimeToLive(ttl);
+                        return 0;
+                    } else {
+                        return -4; // INVALID_ARGUMENT
+                    }
+                }
+            } catch (IOException ioe) {
+                Log.e(LOG_TAG, "Exception while setting multicast TTL: " + ioe);
+            }
+            return -2; // FAILED
+        }
+
+        public int setMulticastLoopbackMode(boolean enabled) {
+            try {
+                if (multicast) {
+                    multicastSocket.setLoopbackMode(!enabled);
+                    return 0;
+                }
+            } catch (IOException ioe) {
+                Log.e(LOG_TAG, "Exception while setting multicast loopback mode: " + ioe);
+            }
+            return -2; // FAILED
+        }
+
+
+        public Collection<String> getJoinedGroups() {
+            return multicastGroups;
+        }
+
+
         private static class ReadData {
             public int size;
             public boolean killThread;
@@ -629,7 +804,11 @@ public class ChromeSocket extends CordovaPlugin {
                             }
 
                             DatagramPacket packet = new DatagramPacket(out, out.length);
-                            udpSocket.receive(packet);
+                            if (multicastSocket != null && readData.recvFrom) {
+                                multicastSocket.receive(packet);
+                            } else {
+                                udpSocket.receive(packet);
+                            }
 
                             // Truncate the buffer if the message was shorter than it.
                             if (packet.getLength() != out.length) {

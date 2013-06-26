@@ -232,11 +232,21 @@ exports.leaveGroup = function(socketId, address, callback) {
 }
 
 exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
-    console.warn('chrome.socket.setMulticastTimeToLive not implemented yet');
+    if (platform.id !== 'android') {
+        console.warn('chrome.socket.setMulticastTimeToLive not implemented yet');
+        return;
+    }
+
+    exec(callback, null, 'ChromeSocket', 'setMulticastTimeToLive', [socketId, ttl]);
 }
 
 exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
-    console.warn('chrome.socket.setMulticastLoopbackMode not implemented yet');
+    if (platform.id !== 'android') {
+        console.warn('chrome.socket.setMulticastLoopbackMode not implemented yet');
+        return;
+    }
+
+    exec(callback, null, 'ChromeSocket', 'setMulticastLoopbackMode', [socketId, enabled]);
 }
 
 exports.getJoinedGroups = function(socketId, callback) {
