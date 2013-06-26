@@ -603,4 +603,23 @@ static NSString* stringFromData(NSData* data) {
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:ret] callbackId:command.callbackId];
 }
 
+- (void)joinGroup:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSString* address = [command argumentAtIndex:1];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+    assert([socket->_mode isEqualToString:@"udp"]);
+
+    VERBOSE_LOG(@"REQ %@.%@ joinGroup", socketId, command.callbackId);
+
+    BOOL success = [socket->_socket joinMulticastGroup:address error:nil];
+    if (success) {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
+}
+
 @end

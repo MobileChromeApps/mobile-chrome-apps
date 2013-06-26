@@ -206,7 +206,13 @@ exports.getNetworkList = function(callback) {
 };
 
 exports.joinGroup = function(socketId, address, callback) {
-    console.warn('chrome.socket.joinGroup not implemented yet');
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function() {
+        callback(-1000);
+    };
+    exec(win, fail, 'ChromeSocket', 'joinGroup', [socketId, address]);
 }
 
 exports.leaveGroup = function(socketId, address, callback) {
