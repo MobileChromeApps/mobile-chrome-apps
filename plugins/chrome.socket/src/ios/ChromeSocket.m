@@ -38,6 +38,10 @@ static NSString* stringFromData(NSData* data) {
 
 #pragma mark ChromeSocketSocket interface
 
+/*
+ * A note about the name ChromeSocketSocket:  ChromeSocket is the name of the plugin, and we need an internal
+ * representation of a Socket, hense ChromeSocket..Socket
+ */
 @interface ChromeSocketSocket : NSObject {
     @public
     __weak ChromeSocket* _plugin;
@@ -52,6 +56,8 @@ static NSString* stringFromData(NSData* data) {
     NSMutableArray* _writeCallbacks;
 
     NSMutableArray* _acceptSocketQueue;
+
+    NSMutableSet* _multiCastGroups;
 }
 @end
 
@@ -83,6 +89,7 @@ static NSString* stringFromData(NSData* data) {
         _readCallbacks = [NSMutableArray array];
         _writeCallbacks = [NSMutableArray array];
         _acceptSocketQueue = [NSMutableArray array];
+        _multiCastGroups = [NSMutableSet set];
 
         if (theSocket == nil) {
             if ([_mode isEqualToString:@"tcp"]) {
@@ -164,14 +171,14 @@ static NSString* stringFromData(NSData* data) {
 - (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError *)error
 {
     VERBOSE_LOG(@"socketDidDisconnect socketId: %u", _socketId);
-    
+
     void (^ callback)(BOOL) = _connectCallback;
-    
+
     if(callback == nil)
         return;
-    
+
     callback(NO);
-    
+
     _connectCallback = nil;
 }
 
@@ -611,15 +618,52 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
     assert(socket != nil);
     assert([socket->_mode isEqualToString:@"udp"]);
+    assert(![socket->_multiCastGroups containsObject:address]);
 
     VERBOSE_LOG(@"REQ %@.%@ joinGroup", socketId, command.callbackId);
 
     BOOL success = [socket->_socket joinMulticastGroup:address error:nil];
     if (success) {
+        [socket->_multiCastGroups addObject:address];
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
     }
+}
+
+- (void)leaveGroup:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSString* address = [command argumentAtIndex:1];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+    assert([socket->_mode isEqualToString:@"udp"]);
+    assert([socket->_multiCastGroups containsObject:address]);
+
+    VERBOSE_LOG(@"REQ %@.%@ leaveGroup", socketId, command.callbackId);
+
+    BOOL success = [socket->_socket leaveMulticastGroup:address error:nil];
+    if (success) {
+        [socket->_multiCastGroups removeObject:address];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
+}
+
+- (void)getJoinedGroups:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+
+    ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
+    assert(socket != nil);
+    assert([socket->_mode isEqualToString:@"udp"]);
+
+    VERBOSE_LOG(@"REQ %@.%@ getJoinedGroups", socketId, command.callbackId);
+
+    NSArray* ret = [socket->_multiCastGroups allObjects];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:ret] callbackId:command.callbackId];
 }
 
 @end

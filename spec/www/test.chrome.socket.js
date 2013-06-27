@@ -23,6 +23,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
   var bindAddr = '0.0.0.0';
   var connectAddr = '127.0.0.1';
   var multicastAddr = '224.0.1.' + Math.floor(Math.random()*256); // 224.0.1.0 to 239.255.255.255
+  var multicastAddr2 = '224.0.2.' + Math.floor(Math.random()*256);
   var port = Math.floor(Math.random() * (65535-1024)) + 1024; // random in 1024 -> 65535
   var arr = new Uint8Array(256);
   for (var i = 0; i < arr.length; i++) {
@@ -367,7 +368,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
     });
 
 
-    itWaitsForDone('multiCast', function(done) {
+    itWaitsForDone('multiCast joinGroup single local client', function(done) {
       chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
         expect(bindResult1).toEqual(0);
         chrome.socket.joinGroup(sockets[0].socketId, multicastAddr, function(joinResult1) {
@@ -384,6 +385,51 @@ chromeSpec('chrome.socket', function(runningInBackground) {
               expect(writeResult.bytesWritten).toBeGreaterThan(0);
             });
 
+          });
+        });
+
+      });
+    });
+
+    itWaitsForDone('multiCast leaveGroup', function(done) {
+      chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
+        expect(bindResult1).toEqual(0);
+        chrome.socket.joinGroup(sockets[0].socketId, multicastAddr, function(joinResult1) {
+          expect(joinResult1).toEqual(0);
+          chrome.socket.leaveGroup(sockets[0].socketId, multicastAddr, function(leaveResult1) {
+            expect(leaveResult1).toEqual(0);
+            chrome.socket.recvFrom(sockets[0].socketId, function(readResult) {
+              expect(readResult).toBeNull();
+            });
+            setTimeout(done, 100);
+
+            chrome.socket.bind(sockets[1].socketId, bindAddr, 0, function(bindResult2) {
+              expect(bindResult2).toEqual(0);
+              chrome.socket.sendTo(sockets[1].socketId, data, multicastAddr, port, function(writeResult) {
+                expect(writeResult).toBeTruthy();
+                expect(writeResult.bytesWritten).toBeGreaterThan(0);
+              });
+
+            });
+          });
+        });
+
+      });
+    });
+
+    itWaitsForDone('multiCast getJoinedGroups', function(done) {
+      chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
+        expect(bindResult1).toEqual(0);
+        chrome.socket.joinGroup(sockets[0].socketId, multicastAddr, function(joinResult1) {
+          expect(joinResult1).toEqual(0);
+          chrome.socket.joinGroup(sockets[0].socketId, multicastAddr2, function(joinResult2) {
+            expect(joinResult2).toEqual(0);
+            chrome.socket.getJoinedGroups(sockets[0].socketId, function(joinedGroups) {
+              expect(joinedGroups.length).toBe(2);
+              expect(joinedGroups).toContain(multicastAddr);
+              expect(joinedGroups).toContain(multicastAddr2);
+              done();
+            });
           });
         });
 

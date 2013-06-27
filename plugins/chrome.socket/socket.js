@@ -216,7 +216,13 @@ exports.joinGroup = function(socketId, address, callback) {
 }
 
 exports.leaveGroup = function(socketId, address, callback) {
-    console.warn('chrome.socket.leaveGroup not implemented yet');
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function() {
+        callback(-1000);
+    };
+    exec(win, fail, 'ChromeSocket', 'leaveGroup', [socketId, address]);
 }
 
 exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
@@ -228,7 +234,7 @@ exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
 }
 
 exports.getJoinedGroups = function(socketId, callback) {
-    console.warn('chrome.socket.getJoinedGroups not implemented yet');
+    exec(callback, null, 'ChromeSocket', 'getJoinedGroups', [socketId]);
 }
 
 /* Converted From chromium/src/net/base/net_error_list.h
