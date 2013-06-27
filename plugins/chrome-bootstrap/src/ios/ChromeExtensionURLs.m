@@ -18,6 +18,10 @@
 
 @interface ChromeAppCORSURLProtocol : NSURLProtocol {
     NSURLConnection *proxyConnection;
+    NSString *originalOrigin;
+    NSString *CORSRequestHeaders;
+    NSString *CORSRequestMethod;
+    BOOL isRequestAuthenticated;
 }
 @end
 
@@ -156,6 +160,10 @@ static void initialize_whitlist_dict() {
 - (void)startLoading
 {
     NSMutableURLRequest* newRequest = [[self request] mutableCopy];
+    originalOrigin = [[self request] valueForHTTPHeaderField:@"Origin"];
+    isRequestAuthenticated = [[self request] valueForHTTPHeaderField:@"Authorization"] != nil;
+    CORSRequestHeaders = [[self request] valueForHTTPHeaderField:@"Access-Control-Request-Headers"];
+    CORSRequestMethod = [[self request] valueForHTTPHeaderField:@"Access-Control-Request-Method"];
     [newRequest setValue:nil forHTTPHeaderField:@"Origin"];
     proxyConnection = [[NSURLConnection alloc] initWithRequest:newRequest delegate:self];
 }
@@ -165,7 +173,19 @@ static void initialize_whitlist_dict() {
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *hresponse = (NSHTTPURLResponse *)response;
         NSMutableDictionary *headers = [[hresponse allHeaderFields] mutableCopy];
-        [headers setValue:@"*" forKey:@"Access-Control-Allow-Origin"];
+        if (isRequestAuthenticated || [headers valueForKey:@"WWW-Authenticate"] != nil ||
+        CORSRequestHeaders != nil) {
+            [headers setValue:originalOrigin forKey:@"Access-Control-Allow-Origin"];
+            [headers setValue:@"true" forKey:@"Access-Control-Allow-Credentials"];
+            if (CORSRequestHeaders != nil) {
+                [headers setValue:CORSRequestHeaders forKey:@"Access-Control-Allow-Headers"];
+            }
+            if (CORSRequestMethod != nil) {
+              [headers setValue:CORSRequestMethod forKey:@"Access-Control-Allow-Methods"];
+            }
+        } else {
+            [headers setValue:@"*" forKey:@"Access-Control-Allow-Origin"];
+        }
         NSHTTPURLResponse *newResponse = [[NSHTTPURLResponse alloc]initWithURL:[hresponse URL] statusCode:[hresponse statusCode] HTTPVersion:@"HTTP/1.1" headerFields:headers];
         [[self client] URLProtocol:self didReceiveResponse:newResponse cacheStoragePolicy:NSURLCacheStorageAllowed];
     }
