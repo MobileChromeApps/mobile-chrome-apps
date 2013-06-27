@@ -98,7 +98,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
       this.addMatchers({
         toBeValidTcpReadResultEqualTo: function(data) {
           if (Object.prototype.toString.call(data).slice(8,-1) !== 'ArrayBuffer')
-            throw 'toBeValidTcpReadResultEqualTo expects an ArrayBuffer';
+            throw new Error('toBeValidTcpReadResultEqualTo expects an ArrayBuffer');
 
           var readResult = this.actual;
           if (!readResult) return false;
@@ -244,7 +244,7 @@ chromeSpec('chrome.socket', function(runningInBackground) {
       this.addMatchers({
         toBeValidUdpReadResultEqualTo: function(data) {
           if (Object.prototype.toString.call(data).slice(8,-1) !== 'ArrayBuffer')
-            throw 'toBeValidTcpReadResultEqualTo expects an ArrayBuffer';
+            throw new Error('toBeValidTcpReadResultEqualTo expects an ArrayBuffer');
 
           var readResult = this.actual;
           if (!readResult) return false;
