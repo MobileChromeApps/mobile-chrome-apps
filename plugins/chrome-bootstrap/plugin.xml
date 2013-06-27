@@ -86,6 +86,7 @@
       <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
       <access origin="chrome-extension://*" />
       <preference name="KeyboardDisplayRequiresUserAction" value="false" />
+      <preference name="UIWebViewBounce" value="false" />
     </config-file>
   </platform>
 </plugin>
