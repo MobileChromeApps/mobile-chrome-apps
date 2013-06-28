@@ -32,6 +32,7 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -93,22 +94,18 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
     }
 
     @Override
-    public String modifyNewRequestUrl(String url) {
-        return replacePatternsInLine(url);
+    public Uri modifyNewRequestUrl(Uri uri) {
+        return Uri.parse(replacePatternsInLine(uri.toString()));
     }
 
     @Override
-    public InputStream modifyResponseInputStream(String url, InputStream is) {
-        String cleanUrl = url.split("\\?")[0].split("#")[0];
-        String[] urlParts = cleanUrl.split("/");
-        String fileName = urlParts[urlParts.length - 1];
-
+    public InputStream modifyResponseInputStream(Uri uri, InputStream is) {
         try {
-            if (fileName.endsWith(".css") || fileName.equals("manifest.json")) {
+            if (uri.getPath().endsWith(".css") || uri.getPath().equals("manifest.json")) {
                 is = replaceI18nPlaceholders(is);
             }
         } catch (IOException ioe) {
-            Log.e(LOG_TAG, "Error occurred while replacing i18n Tags in file: " + fileName, ioe);
+            Log.e(LOG_TAG, "Error occurred while replacing i18n Tags in file: " + uri, ioe);
             // If an error occurs, unlocalized content is returned
         }
         return is;

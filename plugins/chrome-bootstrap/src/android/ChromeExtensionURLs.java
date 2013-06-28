@@ -11,8 +11,8 @@ import java.util.NavigableSet;
 import java.util.TreeMap;
 
 import org.apache.cordova.api.CordovaPlugin;
-import org.apache.cordova.api.DataResource;
-import org.apache.cordova.api.DataResourceContext;
+import org.apache.cordova.UriResolver;
+import org.apache.cordova.UriResolvers;
 
 import android.annotation.TargetApi;
 import android.net.Uri;
@@ -22,7 +22,6 @@ import android.util.Log;
 public class ChromeExtensionURLs extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeExtensionURLs";
-    private static final String CHROME_EXTENSION_SEEN = "ChromeExtensionParsed";
     // Plugins can register themselves to assist or modify the url decoding
     // We use a priority queue to enforce some order
     // Plugins are called in ascending order of priority to modify the url's and the response
@@ -30,8 +29,8 @@ public class ChromeExtensionURLs extends CordovaPlugin {
 
     public static interface RequestModifyInterface
     {
-        public String modifyNewRequestUrl(String url);
-        public InputStream modifyResponseInputStream(String url, InputStream is);
+        public Uri modifyNewRequestUrl(Uri uri);
+        public InputStream modifyResponseInputStream(Uri uri, InputStream is);
     }
 
     public static boolean registerInterfaceAtPriority(RequestModifyInterface plugin, int priority) {
@@ -52,52 +51,47 @@ public class ChromeExtensionURLs extends CordovaPlugin {
         return true;
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
-    public DataResource handleDataResourceRequest(DataResource dataResource, DataResourceContext dataResourceContext) {
-        Uri uri = dataResource.getUri();
-        String url = uri.toString();
+    public UriResolver resolveUri(Uri uri) {
         // Check the scheme to see if we need to handle.
         // Also ensure we haven't intercepted it before
         //  If this check wasn't present, the content-loaded section would go into an infinite loop of data retrieval attempts
-        if(uri.getScheme().equals("chrome-extension") && !dataResourceContext.getDataMap().containsKey(CHROME_EXTENSION_SEEN)){
-            dataResourceContext.getDataMap().put(CHROME_EXTENSION_SEEN, "");
-            NavigableSet<Integer> pluginPrioritySet = registeredPlugins.navigableKeySet();
-            for(Integer pluginPriority : pluginPrioritySet) {
-                RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
-                if(plugin != null) {
-                    url = plugin.modifyNewRequestUrl(url);
-                }
+        if (!uri.getScheme().equals("chrome-extension")) {
+            return null;
+        }
+        NavigableSet<Integer> pluginPrioritySet = registeredPlugins.navigableKeySet();
+        for(Integer pluginPriority : pluginPrioritySet) {
+            RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
+            if(plugin != null) {
+                uri = plugin.modifyNewRequestUrl(uri);
             }
+        }
 
-            InputStream is = null;
-            String filePath = uri.getPath();
+        InputStream is = null;
+        String filePath = uri.getPath();
 
-            if ("/chrome-content-loaded".equals(filePath)) {
-                is = new ByteArrayInputStream("Object.defineProperty(document, 'readyState', {get: function() { return 'loading'}, configurable: true });".getBytes());
-            } else {
-                url = "file:///android_asset/www" + filePath;
-                // We need the input stream below for the modifyResponseInputStream. So we load using a separate request.
-                dataResource = DataResource.initiateNewDataRequestForUri(url, this.webView.pluginManager, this.cordova, "ChromeExtensionUrls");
-                try {
-                    //update the two params we are interested in the url and the inputstream
-                    url = dataResource.getUri().toString();
-                    is = dataResource.getInputStream();
-                } catch (IOException e) {
-                    Log.e(LOG_TAG, "Error occurred while trying to load asset", e);
-                    return null;
-                }
-            }
+        if ("/chrome-content-loaded".equals(filePath)) {
+            return UriResolvers.createInline(uri, "Object.defineProperty(document, 'readyState', {get: function() { return 'loading'}, configurable: true });", "text/javascript");
+        }
 
-            for(Integer pluginPriority : pluginPrioritySet) {
+        // We need the input stream below for the modifyResponseInputStream. So we load using a separate request.
+        uri = new Uri.Builder().scheme("file").path("android_asset" + filePath).build();
+        UriResolver resolver = webView.resolveUri(uri);
+
+        try {
+            // update the two params we are interested in the url and the inputstream
+            is = resolver.getInputStream();
+
+            for (Integer pluginPriority : pluginPrioritySet) {
                 RequestModifyInterface plugin = registeredPlugins.get(pluginPriority);
-                if(plugin != null) {
-                    is = plugin.modifyResponseInputStream(url, is);
+                if (plugin != null) {
+                    is = plugin.modifyResponseInputStream(uri, is);
                 }
             }
             // Let the mimetype, os etc get resolved by the default loaders
-            return new DataResource(cordova, Uri.parse(url), is, null /* os */, null /* mimeType */, false /* writable */, null /* realFile */);
-        } else {
+            return UriResolvers.createReadOnly(uri, is, resolver.getMimeType());
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error occurred while trying to load asset", e);
             return null;
         }
     }
