@@ -4,3 +4,15 @@
 [submodule "mobile-chrome-app-samples"]
 	path = mobile-chrome-app-samples
 	url = https://github.com/MobileChromeApps/mobile-chrome-app-samples.git
+[submodule "cordova/cordova-cli"]
+	path = cordova/cordova-cli
+	url = https://github.com/MobileChromeApps/cordova-cli.git
+[submodule "cordova/cordova-js"]
+	path = cordova/cordova-js
+	url = https://git-wip-us.apache.org/repos/asf/cordova-js.git
+[submodule "cordova/cordova-android"]
+	path = cordova/cordova-android
+	url = https://git-wip-us.apache.org/repos/asf/cordova-android.git
+[submodule "cordova/cordova-ios"]
+	path = cordova/cordova-ios
+	url = https://git-wip-us.apache.org/repos/asf/cordova-ios.git
