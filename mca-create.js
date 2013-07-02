@@ -349,13 +349,6 @@ function initRepo() {
     }, true);
   }
 
-  function computeGitVersion(callback) {
-    exec('git describe --tags --long', function(stdout) {
-      var version = stdout.replace(/^2.5.0-.*?-/, 'dev-');
-      callback(version);
-    }, null, true);
-  }
-
   function checkOutSelf(callback) {
     console.log('## Checking Out mobile-chrome-apps');
 
@@ -449,11 +442,9 @@ function initRepo() {
   function buildCordovaJs(callback) {
     console.log('## Building cordova-js');
     process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
-    computeGitVersion(function(version) {
-      var packager = require(path.join(scriptDir, 'cordova', 'cordova-js', 'build', 'packager'));
-      packager.generate('ios', version);
-      packager.generate('android', version);
-      callback();
+    var packager = require(path.join(scriptDir, 'cordova', 'cordova-js', 'build', 'packager'));
+    packager.generate('ios', undefined, function() {
+      packager.generate('android', undefined, callback);
     });
   }
 
