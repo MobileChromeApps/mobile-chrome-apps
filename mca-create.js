@@ -83,7 +83,7 @@ var ACTIVE_PLUGINS = [
 ];
 
 function cordovaCmd(args) {
-  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
+  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
 }
 
 /******************************************************************************/
@@ -448,9 +448,9 @@ function initRepo() {
 
   function buildCordovaJs(callback) {
     console.log('## Building cordova-js');
-    process.chdir(path.join(scriptDir, 'cordova-js'));
+    process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
     computeGitVersion(function(version) {
-      var packager = require(path.join(scriptDir, 'cordova-js', 'build', 'packager'));
+      var packager = require(path.join(scriptDir, 'cordova', 'cordova-js', 'build', 'packager'));
       packager.generate('ios', version);
       packager.generate('android', version);
       callback();
@@ -516,22 +516,21 @@ function createApp(appId) {
     console.log(curCmd.join(' '));
     exec(cordovaCmd(curCmd), function() {
       chdir(path.join(origDir, appName));
-      /*
-      var cordova = require(path.join(scriptDir, 'cordova-cli', 'cordova'));
+      var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
       cordova.config(path.join('.'), {
         lib: {
           android: {
-            uri: path.join(scriptDir, 'cordova-cli', 'mca-lib', 'cordova-android'),
+            uri: path.join(scriptDir, 'cordova', 'cordova-android'),
             version: "master",
             id: "cordova-master",
           },
           ios: {
-            uri: path.join(scriptDir, 'cordova-cli', 'mca-lib', 'cordova-ios'),
+            uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
             version: "master",
             id: "cordova-master",
           },
         },
-      });*/
+      });
       runCmd();
     }, undefined, true);
   }
@@ -611,7 +610,7 @@ function updateApp() {
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
-      copyFile(path.join(scriptDir, 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join(assetDirForPlatform(platform), 'cordova.js'), callback);
+      copyFile(path.join(scriptDir, 'cordova', 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join(assetDirForPlatform(platform), 'cordova.js'), callback);
     };
   }
 
