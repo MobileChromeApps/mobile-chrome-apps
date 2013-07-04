@@ -14,9 +14,27 @@
 
   <name>Chrome Apps Alarms API</name>
 
+  <dependency id="chrome.bootstrap" url="." subdir="plugins/chrome-bootstrap" />
   <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="chrome.storage" url="." subdir="plugins/chrome.storage" />
 
   <js-module src="alarms.js" name="Alarms">
     <clobbers target="chrome.alarms" />
   </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeAlarms.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/AlarmReceiver.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/Alarm.java" target-dir="src/com/google/cordova" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeAlarms">
+        <param name="android-package" value="com.google.cordova.ChromeAlarms"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <receiver android:name="com.google.cordova.AlarmReceiver" />
+    </config-file>
+  </platform>
 </plugin>

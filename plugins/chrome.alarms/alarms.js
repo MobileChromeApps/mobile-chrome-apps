@@ -3,27 +3,40 @@
 // found in the LICENSE file.
 
 var exports = module.exports;
-var alarms = {};
+var exec = require('cordova/exec');
+var storage = require('org.chromium.chrome.storage.Storage');
+var platform = require('cordova/platform');
+var bootstrap = require('org.chromium.chrome-app-bootstrap.bootstrap');
+var channel = require('cordova/channel');
+var Event = require('org.chromium.chrome-common.events');
+var useNativeAlarms = platform.id == 'android';
+var alarms = Object.create(null);
 
-function Alarm(name, scheduledTime, periodInMinutes, timeoutId) {
-    this.name = name;
-    this.scheduledTime = scheduledTime;
-    if (periodInMinutes) {
-        this.periodInMinutes = periodInMinutes;
-    }
-    this.timeoutId = timeoutId;
+function makeAlarm(name, scheduledTime, periodInMinutes, timeoutId) {
+    var alarm = { };
+    alarm.name = name;
+    alarm.scheduledTime = scheduledTime;
+    alarm.periodInMinutes = periodInMinutes;
+    alarm.timeoutId = timeoutId;
+    return alarm;
 }
 
-function triggerAlarm(name) {
+exports.triggerAlarm = function(name) {
     if (!(name in alarms)) {
         return;
     }
-    exports.onAlarm.fire(alarms[name]);
-    if (alarms[name].periodInMinutes) {
-        alarms[name].scheduledTime += alarms[name].periodInMinutes*60000;
-        alarms[name].timeoutId = setTimeout(function() { triggerAlarm(name) }, alarms[name].scheduledTime - Date.now());
+    alarm = alarms[name];
+    exports.onAlarm.fire(alarm);
+    if (alarm.periodInMinutes) {
+        alarm.scheduledTime += alarm.periodInMinutes*60000;
+        if (!useNativeAlarms) {
+            alarm.timeoutId = setTimeout(function() { exports.triggerAlarm(name) }, alarm.scheduledTime - Date.now());
+        }
     } else {
         delete alarms[name];
+    }
+    if (useNativeAlarms) {
+        storage.internal.set({'alarms':alarms});
     }
 }
 
@@ -32,26 +45,32 @@ exports.create = function(name, alarmInfo) {
         alarmInfo = name;
         name = '';
     }
-    if (name in alarms) {
-        exports.clear(name);
-    }
     var when;
     if ('when' in alarmInfo) {
         when = alarmInfo.when;
         if ('delayInMinutes' in alarmInfo) {
-            throw 'Error during alarms.create: Cannot set both when and delayInMinutes.';
+            throw new Error('Error during alarms.create: Cannot set both when and delayInMinutes.');
         }
     } else if ('delayInMinutes' in alarmInfo) {
         when = Date.now() + alarmInfo.delayInMinutes*60000;
     } else if ('periodInMinutes' in alarmInfo) {
         when = Date.now() + alarmInfo.periodInMinutes*60000;
     } else {
-        throw 'Error during alarms.create: Must set at least one of when, delayInMinutes, or periodInMinutes';
+        console.error('Error during alarms.create: Must set at least one of when, delayInMinutes, or periodInMinutes');
+        return;
     }
-    var periodInMinutes = alarmInfo.periodInMinutes || null;
 
-    var timeoutId = setTimeout(function() { triggerAlarm(name) }, when - Date.now());
-    alarms[name] = new Alarm(name, when, periodInMinutes, timeoutId);
+    if (useNativeAlarms) {
+        alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes);
+        storage.internal.set({'alarms':alarms});
+        exec(undefined, undefined, 'ChromeAlarms', 'create', [name, when, alarmInfo.periodInMinutes]);
+    } else {
+        if (name in alarms) {
+            exports.clear(name);
+        }
+        var timeoutId = setTimeout(function() { exports.triggerAlarm(name) }, when - Date.now());
+        alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes, timeoutId);
+    }
 }
 
 exports.get = function(name, callback) {
@@ -60,7 +79,9 @@ exports.get = function(name, callback) {
         name = '';
     }
     if (!(name in alarms)) {
-        throw 'Error during alarms.get: No alarm named \'' + name + '\' exists.';
+        console.error('Error during alarms.get: No alarm named \'' + name + '\' exists.');
+        callback();
+        return;
     }
     setTimeout(function() {
         callback(alarms[name])
@@ -82,19 +103,72 @@ exports.clear = function clear(name) {
         name = '';
     }
     if (!(name in alarms)) {
-        throw 'Error during alarms.clear: No alarm named \'' + name + '\' exists.';
+        console.error('Error during alarms.clear: No alarm named \'' + name + '\' exists.');
+        return;
     }
-    clearTimeout(alarms[name].timeoutId);
-    delete alarms[name];
+
+    if (useNativeAlarms) {
+        delete alarms[name];
+        storage.internal.set({'alarms':alarms});
+        exec(undefined, undefined, 'ChromeAlarms', 'clear', [[name]]);
+    } else {
+        clearTimeout(alarms[name].timeoutId);
+        delete alarms[name];
+    }
 }
 
 exports.clearAll = function() {
+    var names = Object.keys(alarms);
+    if (useNativeAlarms) {
+        alarms = {};
+        storage.internal.set({'alarms':alarms});
+        exec(undefined, undefined, 'ChromeAlarms', 'clear', [names]);
+    } else {
+        names.forEach(function(name) {
+            exports.clear(name);
+        });
+    }
+}
+
+exports.onAlarm = new Event('onAlarm');
+function reregisterAlarms() {
+    // Iterate over Object.keys(alarms) rather than using a normal
+    // for (var name in alarms) loop because alarms can be deleted as we are
+    // iterating in the case where a non-repeating alarm gets fired.
     Object.keys(alarms).forEach(function(name) {
-        exports.clear(name);
+        var scheduledTime = alarms[name].scheduledTime;
+        if (Date.now() > scheduledTime) {
+            // The behavior of desktop chrome if we missed firing an alarm at the scheduled time is to fire
+            // the alarm initially and if periodInMinutes is set, then schedule so that the firing points
+            // are aligned with what they originally were when the alarm was previously created. We try to
+            // emulate this behavior here.
+            exports.triggerAlarm(name);
+            if (!(name in alarms)) {
+              return;
+            }
+            var periodInMillis = alarms[name].periodInMinutes*60000;
+            scheduledTime += Math.ceil((Date.now() - scheduledTime)/periodInMillis)*periodInMillis;
+        }
+        var alarmCreateInfo = {'when':scheduledTime};
+        if ('periodInMinutes' in alarms[name]) {
+            alarmCreateInfo.periodInMinutes = alarms[name].periodInMinutes;
+        }
+        exports.create(name, alarmCreateInfo);
     });
 }
 
-var Event = require('org.chromium.chrome-common.events');
-if (Event) {
-    exports.onAlarm = new Event('onAlarm');
+if (useNativeAlarms) {
+    channel.createSticky('onChromeAlarmsReady');
+    channel.waitForInitialization('onChromeAlarmsReady');
+    channel.onCordovaReady.subscribe(function() {
+        storage.internal.get('alarms', function(values) {
+            if (!values.alarms) {
+                channel.initializationComplete('onChromeAlarmsReady');
+                return;
+            }
+            alarms = values.alarms;
+            channel.initializationComplete('onChromeAlarmsReady');
+            bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
+        });
+    });
 }
