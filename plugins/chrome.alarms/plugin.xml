@@ -14,7 +14,6 @@
 
   <name>Chrome Apps Alarms API</name>
 
-  <dependency id="chrome.bootstrap" url="." subdir="plugins/chrome-bootstrap" />
   <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
   <dependency id="chrome.storage" url="." subdir="plugins/chrome.storage" />
 

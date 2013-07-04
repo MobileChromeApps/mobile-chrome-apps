@@ -6,7 +6,10 @@ var exports = module.exports;
 var exec = require('cordova/exec');
 var storage = require('org.chromium.chrome.storage.Storage');
 var platform = require('cordova/platform');
-var bootstrap = require('org.chromium.chrome-app-bootstrap.bootstrap');
+var bootstrap = null;
+try {
+    bootstrap = require('org.chromium.chrome-app-bootstrap.bootstrap');
+} catch (e) { }
 var channel = require('cordova/channel');
 var Event = require('org.chromium.chrome-common.events');
 var useNativeAlarms = platform.id == 'android';
@@ -168,7 +171,11 @@ if (useNativeAlarms) {
             }
             alarms = values.alarms;
             channel.initializationComplete('onChromeAlarmsReady');
-            bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
+            if (bootstrap) {
+                bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
+            } else {
+                reregisterAlarms();
+            }
         });
     });
 }
