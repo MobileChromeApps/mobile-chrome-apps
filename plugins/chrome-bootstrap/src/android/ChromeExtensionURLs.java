@@ -75,7 +75,7 @@ public class ChromeExtensionURLs extends CordovaPlugin {
         }
 
         // We need the input stream below for the modifyResponseInputStream. So we load using a separate request.
-        uri = new Uri.Builder().scheme("file").path("android_asset" + filePath).build();
+        uri = new Uri.Builder().scheme("file").path("android_asset/www" + filePath).build();
         UriResolver resolver = webView.resolveUri(uri);
 
         try {
