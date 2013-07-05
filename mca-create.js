@@ -513,12 +513,12 @@ function createApp(appId) {
           android: {
             uri: path.join(scriptDir, 'cordova', 'cordova-android'),
             version: "master",
-            id: "cordova-master",
+            id: "cordova-mca",
           },
           ios: {
             uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
             version: "master",
-            id: "cordova-master",
+            id: "cordova-mca",
           },
         },
       });
