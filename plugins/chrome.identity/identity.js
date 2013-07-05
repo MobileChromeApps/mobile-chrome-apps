@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var platformId = cordova.require('cordova/platform').id;
+var exec = require('cordova/exec');
+var platformId = require('cordova/platform').id;
+
+try {
 var runtime = require('org.chromium.chrome-app-bootstrap.runtime');
+} catch(e) {}
 
 exports.TokenDetails = function(interactive) {
     this.interactive = interactive || false;
@@ -27,7 +31,8 @@ exports.getAuthToken = function(details, callback) {
         details = new exports.TokenDetails();
     }
     if (typeof callback == 'undefined') {
-        chrome.runtime.lastError = { 'message' : 'Callback function required' };
+        if (runtime)
+            runtime.lastError = { 'message' : 'Callback function required' };
         // Not calling callback as it wasnt provided
         return;
     }
@@ -37,7 +42,7 @@ exports.getAuthToken = function(details, callback) {
 
     if (platformId == 'android') {
         // Use native implementation for logging into google accounts
-        cordova.exec(callback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
+        exec(callback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
     } else {
         // Use web app oauth flow
         _getAuthTokenJS(callback, fail, details);
@@ -56,7 +61,8 @@ exports.launchWebAuthFlow = function(details, callback) {
     }
 
     if(failed === true) {
-        chrome.runtime.lastError = { 'message' : failMessage };
+        if (runtime)
+            runtime.lastError = { 'message' : failMessage };
         // Not calling callback as it wasnt provided
         return;
     }
@@ -74,7 +80,10 @@ function _getAuthTokenJS(win, fail , details) {
         failed = true;
         failMessage = 'Unsupported mode - Non interactive mode is not supported';
     }
-    var manifestJson = runtime.getManifest();
+
+    // If we are not using chrome.runtime, check for oauth2 args in the details map
+    var manifestJson = (runtime) ? runtime.getManifest() : details;
+
     if(typeof manifestJson == 'undefined') {
         failed = true;
         failMessage = 'manifest.json is not defined';
@@ -90,7 +99,8 @@ function _getAuthTokenJS(win, fail , details) {
     }
 
     if (failed) {
-        chrome.runtime.lastError = { 'message' : failMessage };
+        if (runtime)
+            runtime.lastError = { 'message' : failMessage };
         fail();
         return;
     }
@@ -104,7 +114,8 @@ function _getAuthTokenJS(win, fail , details) {
     _launchInAppBrowser(finalURL, redirect_uri, function(newLoc) {
         var token = _getParameterFromUrl(newLoc, 'access_token', '#');
         if(typeof token == 'undefined') {
-            chrome.runtime.lastError = { 'message' : 'The redirect uri did not have the access token' };
+            if (runtime)
+                runtime.lastError = { 'message' : 'The redirect uri did not have the access token' };
             fail();
         } else {
             win(token);
