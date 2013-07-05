@@ -181,7 +181,13 @@ exports.accept = function(socketId, callback) {
         };
         callback(acceptInfo);
     };
-    exec(win, null, 'ChromeSocket', 'accept', [socketId]);
+    var fail = callback && function() {
+        var acceptInfo = {
+            resultCode: -1000
+        };
+        callback(acceptInfo);
+    };
+    exec(win, fail, 'ChromeSocket', 'accept', [socketId]);
 };
 
 
@@ -234,7 +240,11 @@ exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
 }
 
 exports.getJoinedGroups = function(socketId, callback) {
-    exec(callback, null, 'ChromeSocket', 'getJoinedGroups', [socketId]);
+    var win = callback;
+    var fail = callback && function() {
+        callback(-1000);
+    };
+    exec(win, fail, 'ChromeSocket', 'getJoinedGroups', [socketId]);
 }
 
 /* Converted From chromium/src/net/base/net_error_list.h
