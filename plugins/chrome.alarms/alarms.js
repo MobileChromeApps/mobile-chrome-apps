@@ -38,9 +38,7 @@ exports.triggerAlarm = function(name) {
     } else {
         delete alarms[name];
     }
-    if (useNativeAlarms) {
-        storage.internal.set({'alarms':alarms});
-    }
+    storage.internal.set({'alarms':alarms});
 }
 
 exports.create = function(name, alarmInfo) {
@@ -65,15 +63,15 @@ exports.create = function(name, alarmInfo) {
 
     if (useNativeAlarms) {
         alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes);
-        storage.internal.set({'alarms':alarms});
         exec(undefined, undefined, 'ChromeAlarms', 'create', [name, when, alarmInfo.periodInMinutes]);
     } else {
         if (name in alarms) {
-            exports.clear(name);
+            clearTimeout(alarms[name].timeoutId);
         }
         var timeoutId = setTimeout(function() { exports.triggerAlarm(name) }, when - Date.now());
         alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes, timeoutId);
     }
+    storage.internal.set({'alarms':alarms});
 }
 
 exports.get = function(name, callback) {
@@ -111,26 +109,25 @@ exports.clear = function clear(name) {
     }
 
     if (useNativeAlarms) {
-        delete alarms[name];
-        storage.internal.set({'alarms':alarms});
         exec(undefined, undefined, 'ChromeAlarms', 'clear', [[name]]);
     } else {
         clearTimeout(alarms[name].timeoutId);
-        delete alarms[name];
     }
+    delete alarms[name];
+    storage.internal.set({'alarms':alarms});
 }
 
 exports.clearAll = function() {
     var names = Object.keys(alarms);
     if (useNativeAlarms) {
         alarms = {};
-        storage.internal.set({'alarms':alarms});
         exec(undefined, undefined, 'ChromeAlarms', 'clear', [names]);
     } else {
         names.forEach(function(name) {
             exports.clear(name);
         });
     }
+    storage.internal.set({'alarms':alarms});
 }
 
 exports.onAlarm = new Event('onAlarm');
@@ -149,6 +146,7 @@ function reregisterAlarms() {
             if (!(name in alarms)) {
               return;
             }
+            clearTimeout(alarms[name].timeoutId);
             var periodInMillis = alarms[name].periodInMinutes*60000;
             scheduledTime += Math.ceil((Date.now() - scheduledTime)/periodInMillis)*periodInMillis;
         }
@@ -156,26 +154,25 @@ function reregisterAlarms() {
         if ('periodInMinutes' in alarms[name]) {
             alarmCreateInfo.periodInMinutes = alarms[name].periodInMinutes;
         }
+        delete alarms[name];
         exports.create(name, alarmCreateInfo);
     });
 }
 
-if (useNativeAlarms) {
-    channel.createSticky('onChromeAlarmsReady');
-    channel.waitForInitialization('onChromeAlarmsReady');
-    channel.onCordovaReady.subscribe(function() {
-        storage.internal.get('alarms', function(values) {
-            if (!values.alarms) {
-                channel.initializationComplete('onChromeAlarmsReady');
-                return;
-            }
-            alarms = values.alarms;
+channel.createSticky('onChromeAlarmsReady');
+channel.waitForInitialization('onChromeAlarmsReady');
+channel.onCordovaReady.subscribe(function() {
+    storage.internal.get('alarms', function(values) {
+        if (!values.alarms) {
             channel.initializationComplete('onChromeAlarmsReady');
-            if (bootstrap) {
-                bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
-            } else {
-                reregisterAlarms();
-            }
-        });
+            return;
+        }
+        alarms = values.alarms;
+        channel.initializationComplete('onChromeAlarmsReady');
+        if (bootstrap) {
+            bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
+        } else {
+            reregisterAlarms();
+        }
     });
-}
+});
