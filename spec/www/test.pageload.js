@@ -33,6 +33,19 @@ chromeSpec('pageload', function(runningInBackground) {
       it('should not have executed inline scripts', function() {
         expect(window.shouldNotExecute).toBeUndefined();
       });
+      it('should have executed scripts in order', function() {
+        expect(scriptExec1).toBe(1);
+        expect(scriptExec2).toBe(2);
+        expect(scriptExec3).toBe(3);
+        expect(scriptExec4).toBe(4);
+        expect(scriptExec5).toBe(5);
+        expect(scriptExec6).toBe(6);
+        expect(scriptExec7).toBe(7);
+        expect(scriptExec8).toBe(8);
+      });
+      it('should properly resolve root-relative script URL', function() {
+        expect(scriptExec9).toBe(9);
+      });
     });
   }
 });

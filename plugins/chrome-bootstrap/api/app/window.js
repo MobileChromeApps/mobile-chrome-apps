@@ -56,28 +56,30 @@ function applyAttributes(attrText, destNode) {
   copyAttributes(dummyNode.firstChild, destNode);
 }
 
-// Evals the scripts serially since sometimes browsers don't execute
-// them in the order they are injected :(.
-// TODO: This is clearly slower for multiple scripts. We could maybe see if
-// injecting after DOM mutation events fire?
+// Evals the scripts in order.
 function evalScripts(rootNode, afterFunc) {
-  var scripts = Array.prototype.slice.call(rootNode.getElementsByTagName('script'));
+  var scripts = rootNode.getElementsByTagName('script');
   var doc = rootNode.ownerDocument;
-  function helper() {
-    var script = scripts.shift();
-    if (!script) {
+  var numRemaining = scripts.length;
+  function onLoadCallback(a) {
+    if (!numRemaining--) {
       afterFunc && afterFunc();
-      // Don't bother with inline scripts since they aren't evalled on desktop.
-    } else if (script.src) {
-      var replacement = doc.createElement('script');
-      copyAttributes(script, replacement);
-      replacement.onload = helper;
-      script.parentNode.replaceChild(replacement, script);
-    } else {
-      helper();
     }
   }
-  helper();
+  for (var i = 0, script; script = scripts[i]; ++i) {
+    if (script.src) {
+      var replacement = doc.createElement('script');
+      copyAttributes(script, replacement);
+      replacement.onload = onLoadCallback;
+      replacement.async = false;
+      script.parentNode.replaceChild(replacement, script);
+    } else {
+      // Skip over inline scripts.
+      onLoadCallback();
+    }
+  }
+  // Handle the no scripts case.
+  onLoadCallback();
 }
 
 function rewritePage(pageContent, filePath) {
