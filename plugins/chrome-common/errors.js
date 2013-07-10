@@ -6,19 +6,25 @@ try {
 var runtime = require('org.chromium.chrome-app-bootstrap.runtime');
 } catch(e) {}
 
+// Typical Usage:
+//
+// if (fail_condition)
+//   return callbackWithError('You should blah blah', fail, optional_args_to_fail...)
 function callbackWithError(msg, callback) {
   console.error(msg);
 
   if (typeof callback !== 'function')
     return;
 
-  if (typeof runtime !== 'undefined')
-    runtime.lastError = { 'message' : msg };
+  try {
+    if (typeof runtime !== 'undefined')
+      runtime.lastError = { 'message' : msg };
 
-  callback.apply(null, Array.prototype.slice(arguments, 2));
-
-  if (typeof runtime !== 'undefined')
-    delete runtime.lastError;
+    callback.apply(null, Array.prototype.slice(arguments, 2));
+  } finally {
+    if (typeof runtime !== 'undefined')
+      delete runtime.lastError;
+  }
 }
 
 module.exports = {
