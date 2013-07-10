@@ -62,6 +62,9 @@ var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
 
+// Handle the rename of tmpDir to tmpdir nicely.
+os.tmpdir = os.tmpdir || os.tmpDir || undefined;
+
 /******************************************************************************/
 /******************************************************************************/
 
