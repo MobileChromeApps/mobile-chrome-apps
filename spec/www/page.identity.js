@@ -10,36 +10,36 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
 
   addButton('Test getAuthToken', function() {
     chromespec.log('getAuthToken: Waiting for callback');
-    var tokenDetails = new chrome.identity.TokenDetails(true);
-    chrome.identity.getAuthToken(tokenDetails, function(token) {
-        if(typeof token === 'undefined'|| token === -1) {
-            chromespec.log('getAuthToken Error');
-        } else {
-            try {
-                var xhr = new XMLHttpRequest();
-                var loc = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + token;
-                xhr.open('GET', loc, false /* sync */);
-                xhr.send(null);
-                var resp = JSON.parse(xhr.responseText);
-                chromespec.log("Attempted to retrieve name from the account: " + resp.name);
-            } catch (e) {
-                var str = "An error occurred while attempting to retrieve name from the account: " + e;
-                chromespec.log(str);
-            }
+    chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        if (!token)
+            return chromespec.log('getAuthToken failed with Error: ' + chrome.runtime.lastError);
+        chromespec.log('success: ' + token);
+        try {
+            var xhr = new XMLHttpRequest();
+            var loc = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + token;
+            xhr.open('GET', loc, false /* sync */);
+            xhr.send(null);
+            var resp = JSON.parse(xhr.responseText);
+            chromespec.log("Attempted to retrieve name from the account: " + resp.name);
+        } catch (e) {
+            var str = "An error occurred while attempting to retrieve name from the account: " + e;
+            chromespec.log(str);
         }
     });
   });
 
   addButton('Test launchWebAuthFlow (google.com)', function() {
     chromespec.log('launchWebAuthFlow (google.com): Waiting for callback');
-    var webAuthDetails = new chrome.identity.WebAuthFlowDetails('https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fmail.google.com%2Fmail%2Ffeed%2Fatom');
+
+    var webAuthDetails = {
+        interactive: true,
+        url: 'https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fmail.google.com%2Fmail%2Ffeed%2Fatom'
+    };
     chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
-      if (!b) {
-        chromespec.log('Auth failed.');
-      } else {
-        b=b.split('token=')[1];
-        chromespec.log('token is' + b);
-      }
+      if (!url)
+        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError);
+      var token = url.split('token=')[1];
+      chromespec.log('success: ' + token);
     });
   });
 
@@ -51,16 +51,17 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     var APPURL='https://'+chrome.runtime.id+'.chromiumapp.org/';
     var FACEBOOK_LOGIN_SUCCESS_URL= 'http://www.any.do/facebook_proxy/login_success?redirect='+encodeURIComponent(APPURL);
     var FACEBOOK_OAUTH_URL = 'http://www.facebook.com/dialog/oauth?display=popup&scope='+FACEBOOK_PERMISSIONS+'&client_id='+FACEBOOK_APP_ID+'&redirect_uri='+FACEBOOK_LOGIN_SUCCESS_URL;
-    chrome.identity.launchWebAuthFlow({
+
+    var webAuthDetails = {
+        interactive: true,
         url:FACEBOOK_OAUTH_URL,
-        interactive:true
-    }, function(b) {
-      if (!b) {
-        chromespec.log('Auth failed.');
-      } else {
-        b=b.split('token=')[1];
-        chromespec.log('token is' + b);
-      }
+    };
+
+    chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
+      if (!url)
+        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError);
+      var token = url.split('token=')[1];
+      chromespec.log('success: ' + token);
     });
   });
 });

@@ -45,7 +45,7 @@ exports.launchWebAuthFlow = function(details, callback) {
         return callbackWithError('WebAuthFlowDetails object required', callback);
     }
 
-    launchInAppBrowserForOauth1and2(details.url, callback);
+    launchInAppBrowserForOauth1and2(details.url, details.interactive, callback);
 };
 
 function getAuthTokenJS(win, fail , details) {
@@ -134,7 +134,7 @@ function launchInAppBrowser(authURL, redirectURL, interactive, callback) {
     });
 }
 
-function launchInAppBrowserForOauth1and2(authURL, callback) {
+function launchInAppBrowserForOauth1and2(authURL, interactive, callback) {
     // TODO: see what the termination conditions are for desktop's implementation.
     var oAuthBrowser = window.open(authURL, '_blank', 'location=yes,hidden=yes');
     var success = false;
@@ -159,13 +159,19 @@ function launchInAppBrowserForOauth1and2(authURL, callback) {
     oAuthBrowser.addEventListener('loadstop', function(event) {
         if (success)
             return;
-        oAuthBrowser.show();
+        if (interactive)
+            oAuthBrowser.show();
+        else
+            oAuthBrowser.close();
     });
     oAuthBrowser.addEventListener('loaderror', function(event) {
         if (success)
             return;
         // Showing in-app-browser on loaderror so user gets feedback.  But, it might be better to just close right away.
-        oAuthBrowser.show();
+        if (interactive)
+            oAuthBrowser.show();
+        else
+            oAuthBrowser.close();
     });
     oAuthBrowser.addEventListener('exit', function(event) {
         if (success)
