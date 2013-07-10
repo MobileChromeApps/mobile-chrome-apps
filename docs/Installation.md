@@ -16,7 +16,7 @@ Note: iOS development can only be done on OSX.
 
 * Install the [Android SDK and Developer Tools](http://developer.android.com/sdk/index.html), which comes bundled with Eclipse.
 * Ensure that the folder with `android` and `adb` commands are added to your `PATH`.
-** Note, you may have to run the `android` command and install platform-tools before you can add `adb` to your `PATH`.
+ * Note, you may have to run the `android` command and install platform-tools before you can add `adb` to your `PATH`.
 * Run the `android` tool, and use it to install the Android 4.2.2 SDK, and the Google Play Services APIs.
 * Update Google Play Services with this command:
 
