@@ -71,6 +71,7 @@ function evalScripts(rootNode, afterFunc) {
       var replacement = doc.createElement('script');
       copyAttributes(script, replacement);
       replacement.onload = onLoadCallback;
+      replacement.onerror = onLoadCallback;
       replacement.async = false;
       script.parentNode.replaceChild(replacement, script);
     } else {
