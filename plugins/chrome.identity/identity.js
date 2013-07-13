@@ -45,7 +45,7 @@ exports.launchWebAuthFlow = function(details, callback) {
         return callbackWithError('WebAuthFlowDetails object required', callback);
     }
 
-    launchInAppBrowserForOauth1and2(details.url, details.interactive, callback);
+    launchInAppBrowser(details.url, details.interactive, callback);
 };
 
 function getAuthTokenJS(win, fail , details) {
@@ -67,8 +67,8 @@ function getAuthTokenJS(win, fail , details) {
     var scope = manifestJson.oauth2.scopes;
     var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join('&'));
 
-    launchInAppBrowser(finalURL, redirect_uri, details.interactive, function(newLoc) {
-        var token = getParameterFromUrl(newLoc, 'access_token', '#');
+    launchInAppBrowser(finalURL, details.interactive, function(newLoc) {
+        var token = getAllParametersFromUrl(newLoc, '#')['access_token'];
         if (typeof token === 'undefined') {
             return callbackWithError('The redirect uri did not have the access token', fail);
         }
@@ -92,49 +92,7 @@ function getAllParametersFromUrl(url, startString, endString) {
     return retObj;
 }
 
-function getParameterFromUrl(url, param, startString, endString) {
-    var retObj = getAllParametersFromUrl(url, startString, endString);
-    return retObj[param];
-}
-
-function launchInAppBrowser(authURL, redirectURL, interactive, callback) {
-    var oAuthBrowser = window.open(authURL, '_blank', 'location=yes,hidden=yes');
-    var success = false;
-    oAuthBrowser.addEventListener('loadstart', function(event) {
-        if (success)
-            return;
-        var newLoc = event.url;
-        if (newLoc.indexOf(redirectURL) !== 0)
-            return;
-        success = true;
-        oAuthBrowser.close();
-        callback(newLoc);
-    });
-    oAuthBrowser.addEventListener('loadstop', function(event) {
-        if (success)
-            return;
-        if (interactive)
-            oAuthBrowser.show();
-        else
-            oAuthBrowser.close();
-    });
-    oAuthBrowser.addEventListener('loaderror', function(event) {
-        if (success)
-            return;
-        // Showing in-app-browser on loaderror so user gets feedback.  But, it might be better to just close right away.
-        if (interactive)
-            oAuthBrowser.show();
-        else
-            oAuthBrowser.close();
-    });
-    oAuthBrowser.addEventListener('exit', function(event) {
-        if (success)
-            return;
-        callback();
-    });
-}
-
-function launchInAppBrowserForOauth1and2(authURL, interactive, callback) {
+function launchInAppBrowser(authURL, interactive, callback) {
     // TODO: see what the termination conditions are for desktop's implementation.
     var oAuthBrowser = window.open(authURL, '_blank', 'location=yes,hidden=yes');
     var success = false;
@@ -167,7 +125,6 @@ function launchInAppBrowserForOauth1and2(authURL, interactive, callback) {
     oAuthBrowser.addEventListener('loaderror', function(event) {
         if (success)
             return;
-        // Showing in-app-browser on loaderror so user gets feedback.  But, it might be better to just close right away.
         if (interactive)
             oAuthBrowser.show();
         else
