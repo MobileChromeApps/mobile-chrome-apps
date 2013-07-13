@@ -73,5 +73,6 @@ exports.reload = function() {
   location.reload();
 };
 
-stubs.createStub(exports, 'id', '{appId}');
+exports.id = exports.getManifest()['key'];
+
 stubs.createStub(exports, 'requestUpdateCheck', function(){});
