@@ -17,6 +17,7 @@
         "page.jasmine.js",
         "page.fileSystem.js",
         "page.identity.js",
+        "page.notifications.js",
         "page.runtime.js",
         "page.socket.js",
         "page.syncFileSystem.js",
@@ -33,6 +34,7 @@
   "permissions": [
     "alarms",
     "fileSystem",
+    "notifications",
     "storage",
     {
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
