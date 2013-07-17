@@ -7,7 +7,11 @@
 //=======
 
 // The app's id is stored here.  It's used for the Drive syncable directory name.
-var _appId = 'chrome-spec';
+// TODO(maxw): Consider exposing a function to allow developers to change this id.
+var _appId = 'change_me';
+try {
+    _appId = require('org.chromium.chrome-app-bootstrap.runtime').id;
+} catch (e) { }
 
 // When we get an auth token string, we store it here.
 var _tokenString;
@@ -821,16 +825,18 @@ function getTokenString(callback) {
         return;
     }
 
-    // First, initiate the web auth flow.
-    var webAuthDetails = new chrome.identity.WebAuthFlowDetails('https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive');
+    // Initiate the web auth flow.
+    var webAuthDetails = {
+        interactive: true,
+        url: 'https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive'
+    };
     chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
-        if (typeof url === 'undefined' || url === '') {
-            console.log('Failed to complete web auth flow.');
-            return;
-        } else {
-            // Extract the token string and save it for later use.
+        if (url) {
             _tokenString = extractTokenString(url);
             callback();
+        } else {
+            // TODO(maxw): Improve this failure case.
+            console.log('Authentication failed.');
         }
     });
 }
