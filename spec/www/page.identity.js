@@ -12,7 +12,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     chromespec.log('getAuthToken: Waiting for callback');
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
         if (!token)
-            return chromespec.log('getAuthToken failed with Error: ' + chrome.runtime.lastError);
+            return chromespec.log('getAuthToken failed with Error: ' + chrome.runtime.lastError.message);
         chromespec.log('success: ' + token);
         try {
             var xhr = new XMLHttpRequest();
@@ -37,7 +37,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
     chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
       if (!url)
-        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError);
+        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError.message);
       var token = url.split('token=')[1];
       chromespec.log('success: ' + token);
     });
@@ -59,7 +59,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
 
     chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
       if (!url)
-        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError);
+        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError.message);
       var token = url.split('token=')[1];
       chromespec.log('success: ' + token);
     });
