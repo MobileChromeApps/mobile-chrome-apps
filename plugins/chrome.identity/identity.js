@@ -115,20 +115,24 @@ function launchInAppBrowser(authURL, interactive, callback) {
         }
     });
     oAuthBrowser.addEventListener('loadstop', function(event) {
-        if (success)
-            return;
-        if (interactive)
-            oAuthBrowser.show();
-        else
-            oAuthBrowser.close();
+        setTimeout(function() { // some sites use js redirects :(
+            if (success)
+                return;
+            if (interactive)
+                oAuthBrowser.show();
+            else
+                oAuthBrowser.close();
+        }, 250);
     });
     oAuthBrowser.addEventListener('loaderror', function(event) {
-        if (success)
-            return;
-        if (interactive)
-            oAuthBrowser.show();
-        else
-            oAuthBrowser.close();
+        setTimeout(function() { // some sites use js redirects :(
+            if (success)
+                return;
+            if (interactive)
+                oAuthBrowser.show();
+            else
+                oAuthBrowser.close();
+        }, 250);
     });
     oAuthBrowser.addEventListener('exit', function(event) {
         if (success)
