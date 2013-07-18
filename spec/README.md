@@ -4,10 +4,8 @@ This is a collection of automatic and manual tests that exercise various `chrome
 
 ## As a Mobile Chrome App
 
-    ./mca-create.js com.google.ChromeSpec
-    cd ChromeSpec
-    rm -rf app
-    ln -s /path/to/spec app
+    # From mobile-chrome-apps repository:
+    ./mca.js create com.google.ChromeSpec --source=spec
 
 ## As a Desktop Chrome App
 
