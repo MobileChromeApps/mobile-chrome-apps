@@ -673,7 +673,7 @@ function main() {
   } else if (command == 'create') {
     var appId = commandLineFlags._[1] || '';
     toolsCheck();
-    if (!fs.existsSync('cordova/cordova-js/pkg/cordova.ios.js')) {
+    if (!fs.existsSync(path.join(scriptDir, 'cordova/cordova-js/pkg/cordova.ios.js'))) {
       initCommand();
     }
     createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
