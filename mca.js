@@ -433,8 +433,10 @@ function initCommand() {
     }
 
     exec('git pull --rebase', function() {
-      if (command === 'init')
+      if (command === 'init') {
+        callback();
         return;
+      }
       reRunThisScriptWithNewVersionThenExit();
     });
   }
