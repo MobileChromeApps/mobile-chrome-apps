@@ -10,7 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.util.NavigableSet;
 import java.util.TreeMap;
 
-import org.apache.cordova.api.CordovaPlugin;
+import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.UriResolver;
 import org.apache.cordova.UriResolvers;
 
