@@ -5,7 +5,6 @@
 package com.google.cordova;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.cordova.CordovaArgs;
+import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.JSONUtils;
 import org.apache.cordova.CallbackContext;
@@ -37,13 +37,11 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
+import com.squareup.okhttp.internal.Base64;
+
 public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.RequestModifyInterface {
 
     private static final String LOG_TAG = "ChromeI18n";
-    // Ensure we register with Chrome Extension Urls just once
-    private static ChromeI18n registeredInstance = null;
-    // Choose a priority for org.apache.cordova.ChromeExtensionURLs. This should be unique for any plugin that wants to register
-    private final int CHROME_EXTENSION_URL_PRIORITY = 1000;
     // Save the locale chain so we don't have to recalculate each time
     private List<String> chosenLocales;
     // Save any retrieved message.json contents in memory so that we don't have to retrieve it again
@@ -53,21 +51,8 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        // Unregister any old ChromeI18n objects. This should not be required as Cordova maintains a single instance of each plugin
-        if(registeredInstance != null) {
-            if (ChromeExtensionURLs.unregisterInterfaceAtPriority(registeredInstance, CHROME_EXTENSION_URL_PRIORITY)) {
-                registeredInstance = null;
-            } else {
-                throw new IllegalArgumentException("Unable to unregister the existing interface at priority : " + CHROME_EXTENSION_URL_PRIORITY
-                    + ". Possible duplication of priority by multiple plugins");
-            }
-        }
-        if(ChromeExtensionURLs.registerInterfaceAtPriority(this, CHROME_EXTENSION_URL_PRIORITY)) {
-            registeredInstance = this;
-        } else {
-            throw new IllegalArgumentException("Unable to register the interface at priority : " + CHROME_EXTENSION_URL_PRIORITY
-                + ". Possible duplication of priority by multiple plugins");
-        }
+        ChromeExtensionURLs extPlugin = (ChromeExtensionURLs)webView.pluginManager.getPlugin("ChromeExtensionURLs");
+        extPlugin.i18nPlugin = this;
     }
 
     @Override
@@ -94,24 +79,29 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
     }
 
     @Override
-    public Uri modifyNewRequestUrl(Uri uri) {
-        return Uri.parse(replacePatternsInLine(uri.toString()));
-    }
-
-    @Override
-    public InputStream modifyResponseInputStream(Uri uri, InputStream is) {
-        try {
-            if (uri.getPath().endsWith(".css") || uri.getPath().equals("manifest.json")) {
-                is = replaceI18nPlaceholders(is);
+    public Uri remapChromeUri(Uri uri) {
+        Uri ret = Uri.parse(replacePatternsInLine(uri.toString()));
+        if (ret.getPath().endsWith(".css") || uri.getPath().equals("manifest.json")) {
+            Uri fileUri = new Uri.Builder().scheme("file").path("android_asset/www" + uri.getPath()).build();
+            fileUri = webView.getResourceApi().remapUri(fileUri);
+            try {
+                OpenForReadResult readResult = webView.getResourceApi().openForRead(fileUri, true);
+                try {
+                    byte[] newData = replaceI18nPlaceholders(readResult.inputStream);
+                    return Uri.parse("data:text/css;charset=utf-8;base64," + Base64.encode(newData));
+                } finally {
+                    if (readResult != null) {
+                        readResult.inputStream.close();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException ioe) {
-            Log.e(LOG_TAG, "Error occurred while replacing i18n Tags in file: " + uri, ioe);
-            // If an error occurs, unlocalized content is returned
         }
-        return is;
+        return ret;
     }
 
-    private InputStream replaceI18nPlaceholders(InputStream is) throws IOException {
+    private byte[] replaceI18nPlaceholders(InputStream is) throws IOException {
         // Process the input stream line by line
         // Default byte array size is 32 bytes. Use something more reasonable for web resources - 32K
         int defaultByteArraySize = 32768;
@@ -124,7 +114,7 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
             // Note the last line might get an extra \n pushed in. This shouldn't affect the loading of web resources
             os.write((line + ls).getBytes());
         }
-        return new ByteArrayInputStream(os.toByteArray());
+        return os.toByteArray();
     }
 
     private String replacePatternsInLine(String line) {
