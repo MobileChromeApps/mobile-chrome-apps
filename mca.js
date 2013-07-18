@@ -472,6 +472,40 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     fatal('App Name must follow the pattern: com.company.id');
   }
   var appName = match[1];
+  var appDir = null;
+
+  function resolveTilde(string) {
+    // TODO: implement better
+    if (string.substr(0,1) === '~')
+      string = process.env.HOME + string.substr(1)
+    return path.resolve(string)
+  }
+  function validateSourceArgStep(callback) {
+    var sourceArg = commandLineFlags.source;
+    if (!sourceArg) {
+      appDir = path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www');
+    } else {
+      var dirsToTry = [
+        sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
+        sourceArg === 'spec' && path.join(scriptDir, 'chrome-cordova', 'spec', 'www'),
+        sourceArg && path.join(scriptDir, 'mobile-chrome-app-samples', sourceArg, 'www')
+      ];
+      for (var i = 0; appDir = dirsToTry[i]; i++) {
+        if (appDir) console.log('Searching for Chrome app source in ' + appDir);
+        if (appDir && fs.existsSync(appDir)) {
+          if (!fs.existsSync(path.join(appDir, 'manifest.json'))) {
+            fatal('No manifest.json file found within: ' + appDir);
+          } else {
+            break;
+          }
+        }
+      }
+      if (!appDir) {
+        fatal('Directory does not exist.');
+      }
+    }
+    callback();
+  }
 
   function createStep(callback) {
     console.log('## Creating Your Application');
@@ -542,42 +576,22 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     if (!fs.existsSync(wwwDir)) {
       return;
     }
-    copyFile(path.join(wwwDir, 'config.xml'), 'config.xml', function() {
-      recursiveDelete(wwwDir);
-      function resolveTilde(string) {
-        // TODO: implement better
-        if (string.substr(0,1) === '~')
-          string = process.env.HOME + string.substr(1)
-        return path.resolve(string)
+    var wwwConfigPath = path.join(wwwDir, 'config.xml');
+    var configFileData = fs.readFileSync(wwwConfigPath, 'utf8');
+    recursiveDelete(wwwDir);
+    fs.mkdirSync(wwwDir);
+    copyDirectory(appDir, wwwDir, function() {
+      if (!fs.existsSync(wwwConfigPath)) {
+        fs.writeFileSync(wwwConfigPath, configFileData);
       }
-      var dirsToTry = [
-        commandLineFlags.source && path.resolve(origDir, resolveTilde(commandLineFlags.source)),
-        commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source, 'www'),
-        path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www')
-      ];
-      if (commandLineFlags.source === 'spec') {
-        dirsToTry.unshift(path.join(scriptDir, 'chrome-cordova', 'spec', 'www'));
-      }
-      for (var i=0; i < dirsToTry.length; i++) {
-        var appDir = dirsToTry[i];
-        if (appDir) console.log('Searching for Chrome app source in ' + appDir);
-        if (appDir && fs.existsSync(appDir)) {
-          fs.mkdirSync(wwwDir);
-          copyDirectory(appDir, wwwDir, function() {
-            copyFile('config.xml', path.join(wwwDir, 'config.xml'), function() {
-              fs.unlinkSync('config.xml');
-              callback();
-            });
-          });
-          break;
-        }
-      }
+      callback();
     });
   }
   function prepareStep(callback) {
     exec(cordovaCmd(['prepare']), callback);
   }
 
+  eventQueue.push(validateSourceArgStep);
   eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
   eventQueue.push(createDefaultApp);
