@@ -336,6 +336,15 @@ function toolsCheck() {
 /******************************************************************************/
 /******************************************************************************/
 // Init
+function buildCordovaJsStep(callback) {
+  console.log('## Building cordova-js');
+  process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
+  var packager = require(path.join(scriptDir, 'cordova', 'cordova-js', 'build', 'packager'));
+  packager.generate('ios', undefined, function() {
+    packager.generate('android', undefined, callback);
+  });
+}
+
 
 function initCommand() {
   function checkGit(callback) {
@@ -441,15 +450,6 @@ function initCommand() {
     });
   }
 
-  function buildCordovaJs(callback) {
-    console.log('## Building cordova-js');
-    process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
-    var packager = require(path.join(scriptDir, 'cordova', 'cordova-js', 'build', 'packager'));
-    packager.generate('ios', undefined, function() {
-      packager.generate('android', undefined, callback);
-    });
-  }
-
   function cleanup(callback) {
     process.chdir(origDir);
     callback();
@@ -458,7 +458,7 @@ function initCommand() {
   eventQueue.push(checkGit);
   eventQueue.push(checkOutSelf);
   eventQueue.push(checkOutSubModules);
-  eventQueue.push(buildCordovaJs);
+  eventQueue.push(buildCordovaJsStep);
   eventQueue.push(cleanup);
 }
 
@@ -574,10 +574,14 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
     });
   }
+  function prepareStep(callback) {
+    exec(cordovaCmd(['prepare']), callback);
+  }
 
+  eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
   eventQueue.push(createDefaultApp);
-  eventQueue.push(function(callback) { updateAppCommand(); callback(); });
+  eventQueue.push(prepareStep);
 }
 
 /******************************************************************************/
