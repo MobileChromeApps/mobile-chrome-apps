@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 var platformId = cordova.require('cordova/platform').id;
-var FileEntry = cordova.require('cordova/plugin/FileEntry');
 var exec = cordova.require('cordova/exec');
 
 // Generate a failure function.

@@ -5,7 +5,6 @@
 chromeSpec('chrome.fileSystem', function(runningInBackground) {
   describeCordovaOnly('chrome.fileSystem', function() {
     // Create a file entry for testing.
-    var FileEntry = cordova.require('cordova/plugin/FileEntry');
     var fileEntry = new FileEntry('filename', 'fullpath');
 
     describe('getDisplayPath()', function() {

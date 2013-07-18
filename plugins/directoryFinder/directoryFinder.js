@@ -20,7 +20,6 @@
 */
 
 var exec = require('cordova/exec');
-var DirectoryEntry = require('cordova/plugin/DirectoryEntry')
 
 var DirectoryFinder = { };
 
