@@ -27,16 +27,24 @@
 /******************************************************************************/
 
 if (typeof WScript != 'undefined') {
+function wscriptWrapper() {
   var shell = WScript.CreateObject("WScript.Shell");
+  var args = [];
+  for (var i = 0; i < WScript.Arguments.Length; ++i) {
+    args.push('"' + WScript.Arguments.Item(i) + '"');
+  }
   var ret;
   try {
     // Don't worry about passing along arguments here. It's stricly a double-click convenience.
-    ret = shell.Run('cmd /c node "' + WScript.ScriptFullName + '" --pause_on_exit', 1, true);
+    var cmd = 'cmd /c node "' + WScript.ScriptFullName + '" ' + args.join(' ') + ' --pause_on_exit';
+    ret = shell.Run(cmd, 1, true);
   } catch (e) {
     shell.Popup('NodeJS is not installed. Please install it from http://nodejs.org');
     ret = 1;
   }
   WScript.Quit(ret);
+}
+wscriptWrapper();
 }
 
 /******************************************************************************/
@@ -505,14 +513,14 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           android: {
             uri: path.join(scriptDir, 'cordova', 'cordova-android'),
             version: "master",
-            id: "cordova-master",
+            id: "cordova-master"
           },
           ios: {
             uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
             version: "master",
-            id: "cordova-master",
-          },
-        },
+            id: "cordova-master"
+          }
+        }
       });
       runCmd();
     }, undefined, true);
@@ -609,14 +617,15 @@ function updateAppCommand() {
 /******************************************************************************/
 /******************************************************************************/
 function parseCommandLine() {
-  var argv = optimist
+  console.log('got args: ' + process.argv);
+  commandLineFlags = optimist
       .usage('Usage: $0 command [commandArgs]\n' +
              '\n' +
              'Valid Commands:\n' +
              '\n' +
              'init - Checks for updates to the mobile-chrome-apps repository and ensures the environment is setup correctly.\n' +
              '    Examples:\n' +
-             '        $0 init.\n' +
+             '        mca.js init.\n' +
              '\n' +
              'create [--android] [--ios] [--source path] - Creates a new project.\n' +
              '    Flags:\n' +
@@ -624,8 +633,8 @@ function parseCommandLine() {
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
              '        --source=path/to/chromeapp: Create a project based on the given chrome app.\n' +
              '    Examples:\n' +
-             '        $0 create org.chromium.Demo\n' +
-             '        $0 create org.chromium.Spec --android --source=chrome-cordova/spec/www\n'
+             '        mca.js create org.chromium.Demo\n' +
+             '        mca.js create org.chromium.Spec --android --source=chrome-cordova/spec/www\n'
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
@@ -635,15 +644,17 @@ function parseCommandLine() {
       'init': 1,
       'update-app': 1 // Secret command used by our prepare hook.
   };
-  if (argv.h || !validCommands[argv._[0]]) {
+  if (commandLineFlags.h || !validCommands[commandLineFlags._[0]]) {
+    if (commandLineFlags._[0]) {
+      fatal('Invalid command: ' + commandLineFlags._[0] + '. Use --help for usage.');
+    }
     optimist.showHelp();
-    process.exit(1);
+    exit(1);
   }
-  return argv;
 }
 
 function main() {
-  commandLineFlags = parseCommandLine();
+  parseCommandLine();
   var command = commandLineFlags._[0];
   if (command == 'update-app') {
     updateAppCommand();
@@ -664,3 +675,4 @@ function main() {
 if (require.main === module) {
     main();
 }
+
