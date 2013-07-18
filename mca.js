@@ -69,6 +69,7 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
+var command = null;
 
 /******************************************************************************/
 /******************************************************************************/
@@ -409,16 +410,24 @@ function initCommand() {
         }
       });
     }
+    function checkIfNeedsUpdate() {
+      exec('git pull --rebase --dry-run', function(stdout, stderr) {
+        var needsUpdate = (!!stdout || !!stderr);
+        if (needsUpdate)
+          promptForUpdate();
+      }, function(error) {
+        console.log("Could not update repo:");
+        console.error(error.toString());
+        console.log("Continuing without update.");
+        callback();
+      }, true);
+    }
 
-    exec('git pull --rebase --dry-run', function(stdout, stderr) {
-      var needsUpdate = (!!stdout || !!stderr);
-      updateAndRerun();
-    }, function(error) {
-      console.log("Could not update repo:");
-      console.error(error.toString());
-      console.log("Continuing without update.");
-      callback();
-    }, true);
+    exec('git pull --rebase', function() {
+      if (command === 'init')
+        return;
+      reRunThisScriptWithNewVersionThenExit();
+    });
   }
 
   function checkOutSubModules(callback) {
@@ -655,7 +664,7 @@ function parseCommandLine() {
 
 function main() {
   parseCommandLine();
-  var command = commandLineFlags._[0];
+  command = commandLineFlags._[0];
   if (command == 'update-app') {
     updateAppCommand();
   } else if (command == 'init') {
