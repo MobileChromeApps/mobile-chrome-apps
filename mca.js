@@ -631,7 +631,6 @@ function updateAppCommand() {
 /******************************************************************************/
 /******************************************************************************/
 function parseCommandLine() {
-  console.log('got args: ' + process.argv);
   commandLineFlags = optimist
       .usage('Usage: $0 command [commandArgs]\n' +
              '\n' +
