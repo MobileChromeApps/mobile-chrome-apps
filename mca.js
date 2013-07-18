@@ -544,9 +544,14 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }
     copyFile(path.join(wwwDir, 'config.xml'), 'config.xml', function() {
       recursiveDelete(wwwDir);
+      function resolveTilde(string) {
+        // TODO: implement better
+        if (string.substr(0,1) === '~')
+          string = process.env.HOME + string.substr(1)
+        return path.resolve(string)
+      }
       var dirsToTry = [
-        // TODO: resolve leading ~ to $HOME
-        commandLineFlags.source && path.resolve(origDir, commandLineFlags.source),
+        commandLineFlags.source && path.resolve(origDir, resolveTilde(commandLineFlags.source)),
         commandLineFlags.source && path.join(scriptDir, 'mobile-chrome-app-samples', commandLineFlags.source, 'www'),
         path.join(scriptDir, 'mobile-chrome-app-samples', 'helloworld', 'www')
       ];
