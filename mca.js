@@ -75,19 +75,21 @@ var command = null;
 /******************************************************************************/
 
 var ACTIVE_PLUGINS = [
-    'chrome-bootstrap',
-    'chrome.alarms',
-    'chrome.fileSystem',
-    'chrome.i18n',
-    'chrome.identity',
-    'chrome.socket',
-    'chrome.storage',
-    'chrome.syncFileSystem',
-    'directoryFinder',
-    'fileChooser',
-    'polyfill-CustomEvent',
-    'polyfill-Function.bind',
-    'polyfill-xhr-blob'
+    path.join(scriptDir, 'cordova', 'cordova-plugin-file'),
+    path.join(scriptDir, 'cordova', 'cordova-plugin-inappbrowser'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'directoryFinder'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-Function.bind'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-blob')
 ];
 
 function cordovaCmd(args) {
@@ -521,8 +523,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    ACTIVE_PLUGINS.forEach(function(pluginName) {
-      cmds.push(['plugin', 'add', path.join(scriptDir, 'chrome-cordova', 'plugins', pluginName)]);
+    ACTIVE_PLUGINS.forEach(function(pluginPath) {
+      cmds.push(['plugin', 'add', pluginPath]);
     });
 
     function runCmd() {
@@ -630,6 +632,14 @@ function updateAppCommand() {
     };
   }
 
+  function fixIosWhitelist(callback) {
+    var configPath = path.join('platforms', 'ios', path.basename(process.cwd()), 'config.xml')
+    var data = fs.readFileSync(configPath, 'utf8');
+    data = data.replace('<access origin="*" />', '<access origin="*" />\n<access origin="chrome-extension://*" />');
+    fs.writeFileSync(configPath, data);
+    callback();
+  }
+
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -643,6 +653,7 @@ function updateAppCommand() {
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
+    eventQueue.push(fixIosWhitelist);
     eventQueue.push(createAddJsStep('ios'));
   }
 }
