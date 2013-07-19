@@ -94,11 +94,14 @@ function getAllParametersFromUrl(url, startString, endString) {
 
 function launchInAppBrowser(authURL, interactive, callback) {
     // TODO: see what the termination conditions are for desktop's implementation.
-    var oAuthBrowser = window.open(authURL, '_blank', 'location=yes,hidden=yes');
+    var oAuthBrowser = window.open(authURL, '_blank', 'hidden=yes');
     var success = false;
+    var timeoutid;
     oAuthBrowser.addEventListener('loadstart', function(event) {
         if (success)
             return;
+        if (timeoutid)
+            timeoutid = clearTimeout(timeoutid);
         var newLoc = event.url;
         var paramsAfterQuestion = getAllParametersFromUrl(newLoc, "?", "#");
         var paramsAfterPound = getAllParametersFromUrl(newLoc, "#");
@@ -115,7 +118,7 @@ function launchInAppBrowser(authURL, interactive, callback) {
         }
     });
     oAuthBrowser.addEventListener('loadstop', function(event) {
-        setTimeout(function() { // some sites use js redirects :(
+        timeoutid = setTimeout(function() { // some sites use js redirects :(
             if (success)
                 return;
             if (interactive)
@@ -125,7 +128,7 @@ function launchInAppBrowser(authURL, interactive, callback) {
         }, 250);
     });
     oAuthBrowser.addEventListener('loaderror', function(event) {
-        setTimeout(function() { // some sites use js redirects :(
+        timeoutid = setTimeout(function() { // some sites use js redirects :(
             if (success)
                 return;
             if (interactive)
