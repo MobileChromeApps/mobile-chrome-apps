@@ -15,6 +15,7 @@
   <name>Chrome Apps Identity API</name>
 
   <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="com.google.playservices" url="https://github.com/MobileChromeApps/google-play-services.git" />
 
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />
