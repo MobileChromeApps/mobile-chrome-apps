@@ -60,6 +60,7 @@ var path = require('path');
 var ncp = require('ncp');
 var optimist = require('optimist');
 
+// Globals
 var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
@@ -69,7 +70,6 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
-var command = null;
 
 /******************************************************************************/
 /******************************************************************************/
@@ -236,17 +236,9 @@ function recursiveDelete(dirPath) {
 function waitForKey(opt_prompt, callback) {
   if (typeof opt_prompt == 'function') {
     callback = opt_prompt;
-    opt_prompt = 'press a key';
+    opt_prompt = 'Press the Any Key';
   }
-  console.log(opt_prompt);
-  function cont(key) {
-    if (key == '\u0003') {
-      process.exit(2);
-    }
-    process.stdin.removeListener('data', cont);
-    process.stdin.pause();
-    callback(key);
-  }
+  process.stdout.write(opt_prompt);
   process.stdin.resume();
   try {
     // This fails if the process is a spawned child (likely a node bug);
@@ -254,7 +246,15 @@ function waitForKey(opt_prompt, callback) {
   } catch (e) {
   }
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', cont);
+  process.stdin.on('data', function cont(key) {
+    if (key == '\u0003') {
+      process.exit(2);
+    }
+    process.stdin.removeListener('data', cont);
+    process.stdin.pause();
+    process.stdout.write('\n');
+    callback(key);
+  });
 }
 
 /******************************************************************************/
@@ -272,7 +272,10 @@ function parseTargetOutput(targetOutput) {
 }
 
 function toolsCheck() {
-  console.log('## Checking that tools are installed');
+  function printHeader(callback) {
+    console.log('## Checking that tools are installed');
+    callback();
+  }
   function checkAndroid(callback) {
     exec('android list targets', function(targetOutput) {
       hasAndroidSdk = true;
@@ -329,6 +332,7 @@ function toolsCheck() {
     }
     callback();
   }
+  eventQueue.push(printHeader);
   eventQueue.push(checkNodeVersion);
   eventQueue.push(checkAndroid);
   eventQueue.push(checkXcode);
@@ -337,7 +341,42 @@ function toolsCheck() {
 
 /******************************************************************************/
 /******************************************************************************/
+
+function ensureHasRunInit() {
+  eventQueue.push(function(callback) {
+    if (!fs.existsSync(path.join(scriptDir, 'cordova/cordova-js/pkg/cordova.ios.js')))
+      return fatal('Please run \'' + scriptName + ' init\' first');
+    callback();
+  });
+}
+
+function promptIfNeedsUpdate() {
+  eventQueue.push(function(callback) {
+    process.chdir(scriptDir);
+    exec('git pull --rebase --dry-run', function(stdout, stderr) {
+      var needsUpdate = (!!stdout || !!stderr);
+      if (!needsUpdate)
+        return callback();
+
+      console.log('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
+      waitForKey('Continue anyway? [y/n] ', function(key) {
+        if (key.toLowerCase() !== 'y')
+          return exit(1);
+        callback();
+      });
+    }, function(error) {
+      console.log("Could not check repo for updates:");
+      console.error(error.toString());
+      callback();
+    }, true);
+  });
+}
+
+
+/******************************************************************************/
+/******************************************************************************/
 // Init
+
 function buildCordovaJsStep(callback) {
   console.log('## Building cordova-js');
   process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
@@ -346,7 +385,6 @@ function buildCordovaJsStep(callback) {
     packager.generate('android', undefined, callback);
   });
 }
-
 
 function initCommand() {
   function checkGit(callback) {
@@ -365,86 +403,19 @@ function initCommand() {
   }
 
   function checkOutSelf(callback) {
-    console.log('## Checking Out mobile-chrome-apps');
+    console.log('## Updating mobile-chrome-apps');
 
-    function reRunThisScriptWithNewVersionThenExit() {
-      console.log(scriptName + ' has been updated.  Restarting with new version.');
-      console.log(new Array(80).join('*'));
-      console.log(new Array(80).join('*'));
-      process.chdir(origDir);
-      // TODO: We should quote the args.
-      spawn(process.argv[0], process.argv.slice(1), function() {
-        exit(0);
-      });
+    if (path.basename(scriptDir) !== 'mobile-chrome-apps' || !fs.existsSync(path.join(scriptDir, '.git'))) {
+      fatal('This script is not in a valid mobile-chrome-apps repo');
     }
 
-    // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
-    var requiresClone = true;
-    // First - try the directory of the script.
-    if (scriptDir.slice(0, 2) != '\\\\') {
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    // Next - try the CWD, if it is
-    if (requiresClone && path.basename(origDir) == 'mobile-chrome-apps') {
-      scriptDir = origDir;
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    // Next - see if it exists within the CWD.
-    if (requiresClone && fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
-      scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    if (requiresClone) {
-      scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      chdir(origDir);
-      recursiveDelete('mobile-chrome-apps');
-      exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
-        console.log('Successfully cloned mobile-chrome-apps repo');
-        chdir(scriptDir);
-        return;
-      });
-      return;
-    }
-
-    function updateAndRerun() {
-      exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
-    }
-    function promptForUpdate() {
-      waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
-        if (key.toLowerCase() == 'y') {
-          updateAndRerun();
-        } else {
-          callback();
-        }
-      });
-    }
-    function checkIfNeedsUpdate() {
-      exec('git pull --rebase --dry-run', function(stdout, stderr) {
-        var needsUpdate = (!!stdout || !!stderr);
-        if (needsUpdate)
-          promptForUpdate();
-      }, function(error) {
-        console.log("Could not update repo:");
-        console.error(error.toString());
-        console.log("Continuing without update.");
-        callback();
-      }, true);
-    }
-
-    exec('git pull --rebase', function() {
-      if (command === 'init') {
-        callback();
-        return;
-      }
-      reRunThisScriptWithNewVersionThenExit();
-    });
+    process.chdir(scriptDir);
+    exec('git pull --rebase', callback);
   }
 
   function checkOutSubModules(callback) {
-    console.log('## Checking Out SubModules');
+    console.log('## Updating git submodules');
+
     process.chdir(scriptDir);
     exec('git submodule update --init --recursive --rebase', callback, function(error) {
       console.log("Could not update submodules:");
@@ -658,9 +629,9 @@ function updateAppCommand() {
   }
 }
 
+/******************************************************************************/
+/******************************************************************************/
 
-/******************************************************************************/
-/******************************************************************************/
 function parseCommandLine() {
   commandLineFlags = optimist
       .usage('Usage: $0 command [commandArgs]\n' +
@@ -699,20 +670,26 @@ function parseCommandLine() {
 
 function main() {
   parseCommandLine();
-  command = commandLineFlags._[0];
-  if (command == 'update-app') {
-    updateAppCommand();
-  } else if (command == 'init') {
-    toolsCheck();
-    initCommand();
-  } else if (command == 'create') {
-    var appId = commandLineFlags._[1] || '';
-    toolsCheck();
-    if (!fs.existsSync(path.join(scriptDir, 'cordova/cordova-js/pkg/cordova.ios.js'))) {
+  var command = commandLineFlags._[0];
+  var appId = commandLineFlags._[1] || '';
+
+  var commandActions = {
+    'update-app': function() {
+      updateAppCommand();
+    },
+    'init': function() {
+      toolsCheck();
       initCommand();
-    }
-    createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
-  }
+    },
+    'create': function() {
+      ensureHasRunInit();
+      promptIfNeedsUpdate();
+      toolsCheck();
+      createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
+    },
+  };
+  commandActions[command]();
+
   pump();
 }
 
