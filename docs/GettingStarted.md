@@ -56,7 +56,7 @@ You should be all set to build and run, but there are a few things to watch for.
 
 Your HTML, CSS and JS files live within the `www` directory.
 
-_Every time_ you change them, you _must_ run the `./mca-update.js` script located in the root of your project.  Otherwise, those changes will not be reflected.
+_Every time_ you change them, you _must_ run `./cordova prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
 
 ## Experiencing Hiccups?
