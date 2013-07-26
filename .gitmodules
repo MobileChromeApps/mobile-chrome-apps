@@ -16,3 +16,9 @@
 [submodule "cordova/cordova-ios"]
 	path = cordova/cordova-ios
 	url = https://git-wip-us.apache.org/repos/asf/cordova-ios.git
+[submodule "cordova/cordova-plugin-file"]
+	path = cordova/cordova-plugin-file
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-file.git
+[submodule "cordova/cordova-plugin-inappbrowser"]
+	path = cordova/cordova-plugin-inappbrowser
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-inappbrowser.git

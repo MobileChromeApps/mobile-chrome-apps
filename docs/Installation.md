@@ -16,6 +16,7 @@ Note: iOS development can only be done on OSX.
 
 * Install the [Android SDK and Developer Tools](http://developer.android.com/sdk/index.html), which comes bundled with Eclipse.
 * Ensure that the folder with `android` and `adb` commands are added to your `PATH`.
+ * Note, you may have to run the `android` command and install platform-tools before you can add `adb` to your `PATH`.
 * Run the `android` tool, and use it to install the Android 4.2.2 SDK, and the Google Play Services APIs.
 * Update Google Play Services with this command:
 
@@ -27,10 +28,13 @@ Note: iOS development can only be done on OSX.
 
 ## Clone This Repository
 
-* Clone this repository.  Then run `mca-create.js` to have it auto-install its dependencies.
+* Clone this repository.  Then run `mca.js init` to have it auto-install its dependencies.
 
         git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
-        mobile-chrome-apps/mca-create.js
+        cd mobile-chrome-apps
+        ./mca.js init
+
+* On Windows, remove the "./" prefix from the last line.
 
 ## Experiencing Hiccups?
 

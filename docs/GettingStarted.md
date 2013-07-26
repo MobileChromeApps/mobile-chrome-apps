@@ -8,7 +8,7 @@ Now that you have installed the Mobile Chrome Apps framework, lets use it to cre
 
 ### Step 1: Create a Project
 
-    path/to/mca-create.js com.companyname.YourApp --source=path/to/ChromeApp
+    path/to/mca.js create com.companyname.YourApp --source=path/to/ChromeApp
 
 * Don't create projects inside the `mobile-chrome-apps` directory.
 * `--source` flag is optional, if you leave it out, you will start with a HelloWorld template.
@@ -56,7 +56,7 @@ You should be all set to build and run, but there are a few things to watch for.
 
 Your HTML, CSS and JS files live within the `www` directory.
 
-_Every time_ you change them, you _must_ run the `./mca-update.js` script located in the root of your project.  Otherwise, those changes will not be reflected.
+_Every time_ you change them, you _must_ run `./cordova prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
 
 ## Experiencing Hiccups?
