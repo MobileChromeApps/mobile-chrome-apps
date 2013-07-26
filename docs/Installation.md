@@ -24,7 +24,7 @@ Note: iOS development can only be done on OSX.
 
 ### node.js
 
-* Install a _recent_ version of [node.js](http://nodejs.org) (Node 0.6.x, which ships with several Linux distributions, is too old)
+* Install a _recent_ version of [node.js](http://nodejs.org) (Node 0.7.11 is the minimum supported version. 0.6.x, which ships with several Linux distributions, is too old)
 
 ## Clone This Repository
 
