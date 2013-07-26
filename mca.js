@@ -72,6 +72,8 @@ var hasAndroidPlayServices = false;
 var hasXcode = false;
 var command = null;
 
+var ANDROID_VERSION = 'android-17';
+
 /******************************************************************************/
 /******************************************************************************/
 
@@ -283,7 +285,7 @@ function toolsCheck() {
       if (targets.length === 0) {
           console.log('No Android Platforms are installed');
       } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1 ||
-                 targets.indexOf('android-17') > -1) {
+                 targets.indexOf(ANDROID_VERSION) > -1) {
           hasAndroidPlatform = true;
           console.log('Android 4.2.2 (Google APIs) Platform is installed.');
       } else {
@@ -606,19 +608,33 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     console.log('## Enabling Google Play Services');
 
     exec('which android', function(targetOutput) {
-      var dest_dir = 'platforms/android/third_party';
-      var src_dir = targetOutput + '/extras/google/google_play_services/libproject/google-play-services_lib';
+      var path = targetOutput.split('/');
+      path = path.slice(0, -2);
 
+      var third_party = 'platforms/android/third_party';
+      var dest_dir = third_party + '/google-play-services_lib';
+
+      var services_dir = path.join('/') + '/extras/google/google_play_services';
+      var src_dir = services_dir + '/libproject/google-play-services_lib';
+
+      fs.mkdirSync(third_party);
       fs.mkdirSync(dest_dir);
       copyDirectory(src_dir, dest_dir, function() {
 
-        exec('android update project --target android-17 --path platforms/android --library third_party/google-play-services_lib', function() {
+      var cmdPrefix = 'android update project --target ' + ANDROID_VERSION;
+
+      exec(cmdPrefix + ' --path platforms/android --library third_party/google-play-services_lib', function() {
+        exec(cmdPrefix + ' --path platforms/android/third_party/google-play-services_lib', function() {
           console.log('Successfully setup Google Play Services.');
           callback();
         }, function() {
-          console.log('Failed automatic setup of Google Play Services.');
+          console.log('Failed to update google_play_services.');
           callback();
         }, true);
+      }, function() {
+        console.log('Failed automatic setup of Google Play Services.');
+        callback();
+      }, true);
       });
 
     }, function() {
