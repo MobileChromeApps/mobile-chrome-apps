@@ -78,19 +78,22 @@ var ACTIVE_PLUGINS = [
     path.join(scriptDir, 'cordova', 'cordova-plugin-file'),
     path.join(scriptDir, 'cordova', 'cordova-plugin-inappbrowser'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'directoryFinder'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-Function.bind'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-blob')
 ];
+
+var PLUGIN_MAP = {
+  'alarms': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms')],
+  'fileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
+                 path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser')],
+  'experimental': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'socket': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket')],
+  'storage': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage')],
+  'syncFileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
+}
 
 function cordovaCmd(args) {
   return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
@@ -448,6 +451,10 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
   var appName = match[1];
   var appDir = null;
+  var manifestFile = null;
+  var manifest = null;
+
+  var whitelist = [];
 
   function resolveTilde(string) {
     // TODO: implement better
@@ -468,7 +475,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       for (var i = 0; appDir = dirsToTry[i]; i++) {
         if (appDir) console.log('Searching for Chrome app source in ' + appDir);
         if (appDir && fs.existsSync(appDir)) {
-          if (!fs.existsSync(path.join(appDir, 'manifest.json'))) {
+          manifestFile = path.join(appDir, 'manifest.json');
+          if (!fs.existsSync(manifestFile)) {
             fatal('No manifest.json file found within: ' + appDir);
           } else {
             break;
@@ -480,6 +488,44 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
     }
     callback();
+  }
+
+  function readManifestStep(callback) {
+    /* If we have reached this point and manifestFile is set, then it is the
+     * name of a readable manifest file.
+     */
+    if (manifestFile) {
+      fs.readFile(manifestFile, { encoding: 'utf-8' }, function(err, data) {
+        if (err) {
+console.log(err);
+          fatal('Unable to open manifest ' + manifestFile + ' for reading.');
+        }
+        try {
+          manifest = JSON.parse(data);
+          if (manifest && manifest.permissions) {
+            for (var i = manifest.permissions.length; i > 0; --i) {
+              var plugins = PLUGIN_MAP[manifest.permissions[i]];
+              if (plugins) {
+                for (var j = 0; j < plugins.length; ++j) {
+                  ACTIVE_PLUGINS.push(plugins[j]);
+                }
+              } else if (manifest.permissions[i].indexOf('://') > -1) {
+                whitelist.push(manifest.permissions[i]);
+              } else if (manifest.permissions[i] == "<all_urls>") {
+                whitelist.push("*");
+              }
+            }
+          }
+console.log(JSON.stringify(whitelist));
+          callback();
+        } catch (e) {
+console.log(e);
+          fatal('Unable to parse manifest ' + manifestFile);
+        }
+      });
+    } else {
+      callback();
+    }
   }
 
   function createStep(callback) {
@@ -567,6 +613,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   eventQueue.push(validateSourceArgStep);
+  eventQueue.push(readManifestStep);
   eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
   eventQueue.push(createDefaultApp);
