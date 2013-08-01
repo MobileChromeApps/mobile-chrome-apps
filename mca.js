@@ -553,6 +553,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     });
 
     function runCmd() {
+      chdir(path.join(origDir, appName));
       var curCmd = cmds.shift();
       if (curCmd) {
         console.log(curCmd.join(' '));
@@ -575,47 +576,35 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
     }
 
+    fs.mkdirSync(appName);
+    var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
+    cordova.config(path.join(origDir, appName), {
+      lib: {
+        android: {
+          uri: path.join(scriptDir, 'cordova', 'cordova-android'),
+          version: "mca",
+          id: "cordova-mca"
+        },
+        ios: {
+          uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
+          version: "mca",
+          id: "cordova-mca"
+        },
+        www: {
+          uri: appDir,
+          version: "mca",
+          id: appName
+        }
+      }
+    });
+
     var curCmd = ['create', appName, appId, appName];
     console.log(curCmd.join(' '));
     exec(cordovaCmd(curCmd), function() {
-      chdir(path.join(origDir, appName));
-      var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
-      cordova.config(path.join('.'), {
-        lib: {
-          android: {
-            uri: path.join(scriptDir, 'cordova', 'cordova-android'),
-            version: "master",
-            id: "cordova-master"
-          },
-          ios: {
-            uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
-            version: "master",
-            id: "cordova-master"
-          }
-        }
-      });
       runCmd();
     }, undefined, true);
   }
 
-  function createDefaultApp(callback) {
-    console.log('## Creating Default Chrome App');
-    // TODO: add merges dir
-    var wwwDir = 'www';
-    if (!fs.existsSync(wwwDir)) {
-      return;
-    }
-    var wwwConfigPath = path.join(wwwDir, 'config.xml');
-    var configFileData = fs.readFileSync(wwwConfigPath, 'utf8');
-    recursiveDelete(wwwDir);
-    fs.mkdirSync(wwwDir);
-    copyDirectory(appDir, wwwDir, function() {
-      if (!fs.existsSync(wwwConfigPath)) {
-        fs.writeFileSync(wwwConfigPath, configFileData);
-      }
-      callback();
-    });
-  }
   function prepareStep(callback) {
     exec(cordovaCmd(['prepare']), callback);
   }
@@ -624,7 +613,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   eventQueue.push(readManifestStep);
   eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
-  eventQueue.push(createDefaultApp);
   eventQueue.push(prepareStep);
 }
 
