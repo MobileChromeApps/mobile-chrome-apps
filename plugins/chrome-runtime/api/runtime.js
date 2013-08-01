@@ -5,9 +5,6 @@
 var argscheck = cordova.require('cordova/argscheck');
 var Event = require('org.chromium.chrome-common.events');
 var stubs = require('org.chromium.chrome-common.stubs');
-try {
-var mobile = require('org.chromium.chrome-bootstrap.mobile.impl');
-} catch(e) {}
 
 var manifestJson = null;
 
@@ -62,11 +59,12 @@ exports.setManifest = function(manifest) {
 }
 
 exports.getBackgroundPage = function(callback) {
+  try {
+  var mobile = require('org.chromium.chrome-bootstrap.mobile.impl');
+  } catch(e) {}
   argscheck.checkArgs('f', 'chrome.runtime.getBackgroundPage', arguments);
-  if (!mobile)
-    return;
   setTimeout(function() {
-    callback(mobile.bgWindow);
+    callback(typeof mobile !== 'undefined' ? mobile.bgWindow : undefined);
   }, 0);
 };
 
