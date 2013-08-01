@@ -48,7 +48,7 @@ exports.launchWebAuthFlow = function(details, callback) {
     launchInAppBrowser(details.url, details.interactive, callback);
 };
 
-function getAuthTokenJS(win, fail , details) {
+function getAuthTokenJS(win, fail, details) {
     // If we are not using chrome.runtime, check for oauth2 args in the details map
     var manifestJson = (runtime) ? runtime.getManifest() : details;
 
@@ -68,6 +68,14 @@ function getAuthTokenJS(win, fail , details) {
     var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join('&'));
 
     launchInAppBrowser(finalURL, details.interactive, function(newLoc) {
+        // If we're redirected to this ServiceLoginAuth page, try again; we should get the token.
+        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
+            // Unfortunately, this timeout is necessary, or else the authentication page comes up again.
+            // TODO(maxw): Find a better way to solve this issue.
+            window.setTimeout(getAuthTokenJS, 1000, win, fail, details);
+            return;
+        }
+
         var token = getAllParametersFromUrl(newLoc, '#')['access_token'];
         if (typeof token === 'undefined') {
             return callbackWithError('The redirect uri did not have the access token', fail);
@@ -112,6 +120,13 @@ function launchInAppBrowser(authURL, interactive, callback) {
                 success = true;
             }
         });
+
+        // On first login, it redirects to "https://accounts.google.com/ServiceLoginAuth".
+        // In this case, we close the in-app browser and kick off authentication again.
+        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
+            success = true;
+        }
+
         if (success) {
             oAuthBrowser.close();
             callback(newLoc);
@@ -143,3 +158,4 @@ function launchInAppBrowser(authURL, interactive, callback) {
         callback();
     });
 }
+

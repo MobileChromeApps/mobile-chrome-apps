@@ -822,31 +822,16 @@ function getTokenString(callback) {
         return;
     }
 
-    // Initiate the web auth flow.
-    var webAuthDetails = {
-        interactive: true,
-        url: 'https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive'
-    };
-    chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
-        if (url) {
-            _tokenString = extractTokenString(url);
+    // Get the auth token.
+    chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        if (token) {
+            _tokenString = token;
             callback();
         } else {
             // TODO(maxw): Improve this failure case.
             console.log('Authentication failed.');
         }
     });
-}
-
-// This function extracts a token string from a URL and returns it.
-function extractTokenString(url) {
-    var startIndex = url.indexOf('access_token=') + 13;
-    var remainder = url.substring(startIndex); // This string starts with the token string.
-    var endIndex = remainder.indexOf('&');
-    if (endIndex < 0) {
-        return remainder;
-    }
-    return remainder.substring(0, endIndex);
 }
 
 //=======================
