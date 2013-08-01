@@ -80,6 +80,7 @@ var ACTIVE_PLUGINS = [
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'directoryFinder'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-Function.bind'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-blob')
@@ -91,7 +92,6 @@ var PLUGIN_MAP = {
                  path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser')],
   'experimental': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
   'socket': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket')],
-  'storage': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage')],
   'syncFileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
 }
 
