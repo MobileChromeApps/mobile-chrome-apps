@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var chrome = window.chrome;
+var runtime = require('org.chromium.chrome-runtime.runtime');
+var app_runtime = require('org.chromium.chrome-runtime.app.runtime');
+var storage = require('org.chromium.chrome.storage.Storage');
 
 exports.fgWindow = window;
 exports.bgWindow = null;
@@ -10,11 +12,11 @@ exports.eventIframe = null;
 
 function createBgChrome() {
   return {
-    __proto__: chrome,
+    __proto__: window.chrome,
     app: {
-      __proto__: chrome.app,
+      __proto__: window.chrome.app,
       window: {
-        __proto__: chrome.app.window,
+        __proto__: window.chrome.app.window,
         current: function() { return null; }
       }
     }
@@ -31,7 +33,7 @@ exports.init = function() {
 };
 
 exports.bgInit = function(bgWnd) {
-  var bootstrap = require("org.chromium.chrome-app-bootstrap.bootstrap");
+  var bootstrap = require("org.chromium.chrome-bootstrap.bootstrap");
   var exec = require("cordova/exec");
 
   exports.bgWindow = bgWnd;
@@ -50,10 +52,10 @@ exports.bgInit = function(bgWnd) {
   }
   bgWnd.addEventListener('load', onLoad, false);
 
-  var manifestJson = chrome.runtime.getManifest();
+  var manifestJson = runtime.getManifest();
   var version = manifestJson.version;
 
-  chrome.storage.internal.get(['version', 'shutdownClean'], function(data) {
+  storage.internal.get(['version', 'shutdownClean'], function(data) {
     var installDetails;
     if (data.version != version) {
       if(data.version) {
@@ -72,17 +74,17 @@ exports.bgInit = function(bgWnd) {
     var restart = !data.shutdownClean && data.version;
 
     // Clear the clean shutdown flag on startup
-    chrome.storage.internal.set({'version': version, 'shutdownClean': false}, function() {
+    storage.internal.set({'version': version, 'shutdownClean': false}, function() {
       // Add some additional startup events if the app was not shut down properly
       // last time, or if it has been upgraded, or if it has just been intstalled.
       if (restart) {
         bootstrap.onBackgroundPageLoaded.subscribe(function() {
-          chrome.app.runtime.onRestarted.fire();
+          app_runtime.onRestarted.fire();
         });
       }
       if (installDetails) {
         bootstrap.onBackgroundPageLoaded.subscribe(function() {
-          chrome.runtime.onInstalled.fire(installDetails);
+          runtime.onInstalled.fire(installDetails);
         });
       }
 
@@ -90,7 +92,7 @@ exports.bgInit = function(bgWnd) {
       bootstrap.onBackgroundPageLoaded.subscribe(function() {
         exec(function(data) {
           if (data) {
-            chrome.app.runtime.onLaunched.fire();
+            app_runtime.onLaunched.fire();
           }
         }, null, "ChromeBootstrap", "doesNeedLaunch", []);
       });

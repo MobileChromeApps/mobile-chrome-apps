@@ -6,7 +6,7 @@ var exec = require('cordova/exec');
 var platformId = require('cordova/platform').id;
 var callbackWithError = require('org.chromium.chrome-common.errors').callbackWithError;
 try {
-var runtime = require('org.chromium.chrome-app-bootstrap.runtime');
+var runtime = require('org.chromium.chrome-runtime.runtime');
 } catch(e) {}
 
 exports.getAuthToken = function(details, callback) {

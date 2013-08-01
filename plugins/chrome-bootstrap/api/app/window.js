@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 var Event = require('org.chromium.chrome-common.events');
-var mobile = require('org.chromium.chrome-app-bootstrap.mobile.impl');
-var ChromeExtensionURLs = require('org.chromium.chrome-app-bootstrap.helpers.ChromeExtensionURLs');
+var mobile = require('org.chromium.chrome-bootstrap.mobile.impl');
+var ChromeExtensionURLs = require('org.chromium.chrome-bootstrap.helpers.ChromeExtensionURLs');
 
 // The AppWindow created by chrome.app.window.create.
 var createdAppWindow = null;

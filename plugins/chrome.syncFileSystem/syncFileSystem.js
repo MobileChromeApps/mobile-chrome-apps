@@ -7,11 +7,8 @@
 //=======
 
 // The app's id is stored here.  It's used for the Drive syncable directory name.
-// TODO(maxw): Consider exposing a function to allow developers to change this id.
-var _appId = 'change_me';
-try {
-    _appId = require('org.chromium.chrome-app-bootstrap.runtime').id;
-} catch (e) { }
+// TODO(mmocny): Do not cache this value -- and dont read it at load time, so that the app has a chance to update it
+_appId = require('org.chromium.chrome-runtime.runtime').id;
 
 // When we get an auth token string, we store it here.
 var _tokenString;

@@ -18,4 +18,6 @@
   </js-module>
   <js-module src="errors.js" name="errors">
   </js-module>
+  <js-module src="stubs.js" name="stubs">
+  </js-module>
 </plugin>

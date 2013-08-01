@@ -5,7 +5,7 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome-app-bootstrap"
+    id="org.chromium.chrome-bootstrap"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=2.4.0" />
@@ -14,28 +14,19 @@
   <name>Chrome Apps Core</name>
 
   <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="chrome.runtime" url="." subdir="plugins/chrome-runtime" />
+  <dependency id="chrome.storage" url="." subdir="plugins/chrome.storage" />
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
   <js-module src="api/bootstrap.js" name="bootstrap">
-  </js-module>
-
-  <js-module src="api/app/runtime.js" name="app.runtime">
-    <clobbers target="chrome.app.runtime" />
   </js-module>
 
   <js-module src="api/app/window.js" name="app.window">
     <clobbers target="chrome.app.window" />
   </js-module>
 
-  <js-module src="api/helpers/stubs.js" name="helpers.stubs">
-  </js-module>
-
   <js-module src="api/mobile.js" name="mobile.impl">
     <clobbers target="chrome.mobile.impl" />
-  </js-module>
-
-  <js-module src="api/runtime.js" name="runtime">
-    <clobbers target="chrome.runtime" />
   </js-module>
 
   <!-- Integration files -->

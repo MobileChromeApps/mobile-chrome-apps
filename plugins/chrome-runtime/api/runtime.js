@@ -4,8 +4,11 @@
 
 var argscheck = cordova.require('cordova/argscheck');
 var Event = require('org.chromium.chrome-common.events');
-var stubs = require('org.chromium.chrome-app-bootstrap.helpers.stubs');
-var mobile = require('org.chromium.chrome-app-bootstrap.mobile.impl');
+var stubs = require('org.chromium.chrome-common.stubs');
+try {
+var mobile = require('org.chromium.chrome-bootstrap.mobile.impl');
+} catch(e) {}
+
 var manifestJson = null;
 
 exports.onSuspend = new Event('onSuspend');
@@ -53,8 +56,15 @@ exports.getManifest = function() {
   return manifestJson;
 };
 
+// This is an extension for vanilla cordova apps
+exports.setManifest = function(manifest) {
+  manifestJson = manifest;
+}
+
 exports.getBackgroundPage = function(callback) {
   argscheck.checkArgs('f', 'chrome.runtime.getBackgroundPage', arguments);
+  if (!mobile)
+    return;
   setTimeout(function() {
     callback(mobile.bgWindow);
   }, 0);

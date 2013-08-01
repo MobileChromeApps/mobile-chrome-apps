@@ -16,6 +16,6 @@ channel.onCordovaReady.subscribe(function() {
   // We do this delay so that plugins have a chance to initialize using the bridge before we load the chrome app background scripts/event page
   var channelsToWaitFor = channel.deviceReadyChannelsArray.filter(function(c) { return c.type !== 'onDOMContentLoaded'; });
   channel.join(function() {
-    require('org.chromium.chrome-app-bootstrap.mobile.impl').init();
+    require('org.chromium.chrome-bootstrap.mobile.impl').init();
   }, channelsToWaitFor);
 });
