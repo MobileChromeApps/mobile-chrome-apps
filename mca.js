@@ -504,27 +504,35 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
       try {
         manifest = eval('(' + data + ')'); // JSON.parse(data);
-        if (manifest && manifest.permissions) {
-          for (var i = 0; i < manifest.permissions.length; ++i) {
-            var plugins = PLUGIN_MAP[manifest.permissions[i]];
-            if (plugins) {
-              for (var j = 0; j < plugins.length; ++j) {
-                ACTIVE_PLUGINS.push(plugins[j]);
-              }
-            } else if (typeof manifest.permissions[i] === "object" ) {
-               // TODO permission may be first key of the map? iterate properties?
-            } else if (manifest.permissions[i].indexOf('://') > -1) {
-              whitelist.push(manifest.permissions[i]);
-            } else if (manifest.permissions[i] === "<all_urls>") {
-              whitelist.push("*");
-            }
-          }
-        }
-        callback();
       } catch (e) {
         console.log(e);
         fatal('Unable to parse manifest ' + manifestFile);
       }
+      var permissions = [];
+      if (manifest && manifest.permissions) {
+        for (var i = 0; i < manifest.permissions.length; ++i) {
+          if (typeof manifest.permissions[i] === "string") {
+            if (manifest.permissions[i].indexOf('://') > -1) {
+              whitelist.push(manifest.permissions[i]);
+            } else if (manifest.permissions[i] === "<all_urls>") {
+              whitelist.push("*");
+            } else {
+              permissions.push(manifest.permissions[i]);
+            }
+          } else {
+            permissions = permissions.concat(Object.keys(manifest.permissions[i]));
+          }
+        }
+      }
+      for (var i = 0; i < permissions.length; i++) {
+        var plugins = PLUGIN_MAP[permissions[i]];
+        if (plugins) {
+          for (var j = 0; j < plugins.length; ++j) {
+            ACTIVE_PLUGINS.push(plugins[j]);
+          }
+        }
+      }
+      callback();
     });
   }
 
