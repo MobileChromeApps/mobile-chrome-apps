@@ -495,38 +495,37 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     /* If we have reached this point and manifestFile is set, then it is the
      * name of a readable manifest file.
      */
-    if (manifestFile) {
-      fs.readFile(manifestFile, { encoding: 'utf-8' }, function(err, data) {
-        if (err) {
-console.log(err);
-          fatal('Unable to open manifest ' + manifestFile + ' for reading.');
-        }
-        try {
-          manifest = JSON.parse(data);
-          if (manifest && manifest.permissions) {
-            for (var i = manifest.permissions.length; i > 0; --i) {
-              var plugins = PLUGIN_MAP[manifest.permissions[i]];
-              if (plugins) {
-                for (var j = 0; j < plugins.length; ++j) {
-                  ACTIVE_PLUGINS.push(plugins[j]);
-                }
-              } else if (manifest.permissions[i].indexOf('://') > -1) {
-                whitelist.push(manifest.permissions[i]);
-              } else if (manifest.permissions[i] == "<all_urls>") {
-                whitelist.push("*");
+    if (!manifestFile) {
+      return callback();
+    }
+    fs.readFile(manifestFile, { encoding: 'utf-8' }, function(err, data) {
+      if (err) {
+        fatal('Unable to open manifest ' + manifestFile + ' for reading.');
+      }
+      try {
+        manifest = eval('(' + data + ')'); // JSON.parse(data);
+        if (manifest && manifest.permissions) {
+          for (var i = 0; i < manifest.permissions.length; ++i) {
+            var plugins = PLUGIN_MAP[manifest.permissions[i]];
+            if (plugins) {
+              for (var j = 0; j < plugins.length; ++j) {
+                ACTIVE_PLUGINS.push(plugins[j]);
               }
+            } else if (typeof manifest.permissions[i] === "object" ) {
+               // TODO permission may be first key of the map? iterate properties?
+            } else if (manifest.permissions[i].indexOf('://') > -1) {
+              whitelist.push(manifest.permissions[i]);
+            } else if (manifest.permissions[i] === "<all_urls>") {
+              whitelist.push("*");
             }
           }
-console.log(JSON.stringify(whitelist));
-          callback();
-        } catch (e) {
-console.log(e);
-          fatal('Unable to parse manifest ' + manifestFile);
         }
-      });
-    } else {
-      callback();
-    }
+        callback();
+      } catch (e) {
+        console.log(e);
+        fatal('Unable to parse manifest ' + manifestFile);
+      }
+    });
   }
 
   function createStep(callback) {
