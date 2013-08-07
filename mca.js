@@ -68,8 +68,11 @@ var scriptDir = path.dirname(process.argv[1]);
 var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
+var hasAndroidPlayServices = false;
 var hasXcode = false;
 var command = null;
+
+var ANDROID_VERSION = 'android-17';
 
 /******************************************************************************/
 /******************************************************************************/
@@ -282,7 +285,7 @@ function toolsCheck() {
       if (targets.length === 0) {
           console.log('No Android Platforms are installed');
       } else if (targets.indexOf('Google Inc.:Google APIs:17') > -1 ||
-                 targets.indexOf('android-17') > -1) {
+                 targets.indexOf(ANDROID_VERSION) > -1) {
           hasAndroidPlatform = true;
           console.log('Android 4.2.2 (Google APIs) Platform is installed.');
       } else {
@@ -291,6 +294,27 @@ function toolsCheck() {
       callback();
     }, function() {
       console.log('Android SDK not detected on your PATH.');
+      callback();
+    }, true);
+  }
+  function checkAndroidPlayServices(callback) {
+    if (!hasAndroidPlatform) {
+      callback();
+      return;
+    }
+    // The sdk command lists items that can either be installed or need to be
+    // updated. If we don't find Play services in the list then we know it is
+    // installed and up to date.
+    exec('android list sdk', function(targetOutput) {
+      if (targetOutput.indexOf('Google Play services') < 0) {
+        hasAndroidPlayServices = true;
+        console.log('Google Play services is installed.');
+      } else {
+        fatal('Google Play services is not installed or is not up-to-date.');
+      }
+      callback();
+    }, function() {
+      console.log('Unable to list android sdks.');
       callback();
     }, true);
   }
@@ -331,6 +355,7 @@ function toolsCheck() {
   }
   eventQueue.push(checkNodeVersion);
   eventQueue.push(checkAndroid);
+  eventQueue.push(checkAndroidPlayServices);
   eventQueue.push(checkXcode);
   eventQueue.push(checkAtLeastOneTool);
 }
@@ -573,6 +598,51 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }, undefined, true);
   }
 
+  function addPlayServicesIfNeeded(callback) {
+    // TODO(dsinclair): Skip on Windows until we know where the services lib lives.
+    if (isWindows || !hasAndroidSdk) {
+      callback();
+      return;
+    }
+
+    console.log('## Enabling Google Play Services');
+
+    exec('which android', function(targetOutput) {
+      var path = targetOutput.split('/');
+      path = path.slice(0, -2);
+
+      var third_party = 'platforms/android/third_party';
+      var dest_dir = third_party + '/google-play-services_lib';
+
+      var services_dir = path.join('/') + '/extras/google/google_play_services';
+      var src_dir = services_dir + '/libproject/google-play-services_lib';
+
+      fs.mkdirSync(third_party);
+      fs.mkdirSync(dest_dir);
+      copyDirectory(src_dir, dest_dir, function() {
+
+      var cmdPrefix = 'android update project --target ' + ANDROID_VERSION;
+
+      exec(cmdPrefix + ' --path platforms/android --library third_party/google-play-services_lib', function() {
+        exec(cmdPrefix + ' --path platforms/android/third_party/google-play-services_lib', function() {
+          console.log('Successfully setup Google Play Services.');
+          callback();
+        }, function() {
+          console.log('Failed to update google_play_services.');
+          callback();
+        }, true);
+      }, function() {
+        console.log('Failed automatic setup of Google Play Services.');
+        callback();
+      }, true);
+      });
+
+    }, function() {
+      console.log('Unable to find android executable.');
+      callback();
+    }, true);
+  }
+
   function createDefaultApp(callback) {
     console.log('## Creating Default Chrome App');
     // TODO: add merges dir
@@ -598,6 +668,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   eventQueue.push(validateSourceArgStep);
   eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
+  eventQueue.push(addPlayServicesIfNeeded);
   eventQueue.push(createDefaultApp);
   eventQueue.push(prepareStep);
 }
