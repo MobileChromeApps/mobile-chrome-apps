@@ -2,13 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+var runtime = require('org.chromium.chrome-runtime.runtime');
+
 //=======
 // Drive
 //=======
-
-// The app's id is stored here.  It's used for the Drive syncable directory name.
-// TODO(mmocny): Do not cache this value -- and dont read it at load time, so that the app has a chance to update it
-var _appId = require('org.chromium.chrome-runtime.runtime').id;
 
 // When we get an auth token string, we store it here.
 var _tokenString;
@@ -41,7 +39,7 @@ var CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN = 'last_write_win';
 var CONFLICT_RESOLUTION_POLICY_MANUAL = 'manual';
 
 var SYNC_FILE_SYSTEM_PREFIX = 'sfs';
-var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-next_change_id';
+var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-next_change_id';
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -209,7 +207,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
     };
     var onGetSyncableRootDirectoryIdSuccess = function(syncableRootDirectoryId) {
         // Get the app directory id.
-        getDirectoryId(_appId /* directoryName */, syncableRootDirectoryId /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableAppDirectoryIdSuccess);
+        getDirectoryId(runtime.id /* directoryName */, syncableRootDirectoryId /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableAppDirectoryIdSuccess);
     };
     var onGetTokenStringSuccess = function() {
         // Get the Drive "Chrome Syncable FileSystem" directory id.
@@ -225,7 +223,7 @@ function sync(entry, callback) {
         // Drive, unfortunately, does not allow searching by path.
         // Begin the process of drilling down to find the correct parent directory.  We can start with the app directory.
         var pathRemainder = entry.fullPath;
-        var appIdIndex = pathRemainder.indexOf(_appId);
+        var appIdIndex = pathRemainder.indexOf(runtime.id);
 
         // If the app id isn't in the path, we can't sync it.
         if (appIdIndex < 0) {
@@ -248,7 +246,7 @@ function sync(entry, callback) {
         };
 
         // Using the remainder of the path, start the recursive process of drilling down.
-        pathRemainder = pathRemainder.substring(appIdIndex + _appId.length + 1);
+        pathRemainder = pathRemainder.substring(appIdIndex + runtime.id.length + 1);
         syncAtPath(entry, _syncableAppDirectoryId, pathRemainder, augmentedCallback);
     };
 
@@ -374,7 +372,7 @@ function remove(entry, callback) {
     };
     var onGetTokenStringSuccess = function() {
         // Get the file id and pass it on.
-        var appIdIndex = entry.fullPath.indexOf(_appId);
+        var appIdIndex = entry.fullPath.indexOf(runtime.id);
 
         // If the app id isn't in the path, we can't remove it.
         if (appIdIndex < 0) {
@@ -382,7 +380,7 @@ function remove(entry, callback) {
             return;
         }
 
-        var relativePath = entry.fullPath.substring(appIdIndex + _appId.length + 1);
+        var relativePath = entry.fullPath.substring(appIdIndex + runtime.id.length + 1);
         if (entry.isFile) {
             getFileId(relativePath, _syncableAppDirectoryId, onGetIdSuccess);
         } else {
@@ -564,7 +562,7 @@ function deleteFile(fileName, callback) {
     var onRequestFileSystemSuccess = function(fileSystem) {
         // TODO(maxw): Make the directory name app-specific.
         var getDirectoryFlags = { create: false };
-        fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
+        fileSystem.root.getDirectory(runtime.id, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
     };
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
@@ -624,7 +622,7 @@ function saveData(fileName, data, callback) {
     var onRequestFileSystemSuccess = function(fileSystem) {
         // TODO(maxw): Make the directory name app-specific.
         var getDirectoryFlags = { create: false };
-        fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
+        fileSystem.root.getDirectory(runtime.id, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
     };
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
@@ -776,13 +774,13 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
 
 // This function returns a key to use for file id caching.
 function constructFileIdKey(entryName) {
-    return SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-' + entryName;
+    return SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-' + entryName;
 }
 
 // This function returns the file name associated with the given cached file id key.
 function extractFileName(key) {
-    return key.substring(key.indexOf(_appId) + _appId.length + 1);
-    return SYNC_FILE_SYSTEM_PREFIX + '-' + _appId + '-' + entryName;
+    return key.substring(key.indexOf(runtime.id) + runtime.id.length + 1);
+    return SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-' + entryName;
 }
 
 // This function caches the given Drive id.
@@ -883,7 +881,7 @@ exports.requestFileSystem = function(callback) {
         };
 
         // TODO(maxw): Make the directory name app-specific.
-        fileSystem.root.getDirectory(_appId, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryFailure);
+        fileSystem.root.getDirectory(runtime.id, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryFailure);
     };
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
