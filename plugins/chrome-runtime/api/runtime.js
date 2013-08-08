@@ -81,6 +81,8 @@ exports.reload = function() {
   location.reload();
 };
 
-exports.id = exports.getManifest()['key'];
+exports.__defineGetter__("id", function(){
+  return exports.getManifest()['key'];
+});
 
 stubs.createStub(exports, 'requestUpdateCheck', function(){});
