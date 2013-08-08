@@ -34,7 +34,7 @@ window.runningInBg = true;
     } else {
       bufferedLogs.push(text);
     }
-    console.log(text);
+    console.log('[ChromeSpec log] ' + text);
   }
 
   function clearLogs() {
