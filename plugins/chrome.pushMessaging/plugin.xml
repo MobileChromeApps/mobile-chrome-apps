@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.chrome.pushMessaging"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="chrome.identity" url="." subdir="plugins/chrome.identity" />
+
+  <js-module src="pushMessaging.js" name="pushMessaging">
+    <clobbers target="chrome.pushMessaging" />
+  </js-module>
+
+  <name>Chrome Apps Push Messaging API</name>
+
+  <platform name="android">
+    <source-file src="src/android/ChromePushMessaging.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/PushMessageReceiver.java" target-dir="src/com/google/cordova" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromePushMessaging">
+        <param name="android-package" value="com.google.cordova.ChromePushMessaging"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file> 
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <receiver android:name="com.google.cordova.PushMessageReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+        <intent-filter>
+          <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+        </intent-filter>
+      </receiver>
+    </config-file>
+  </platform>
+</plugin>
