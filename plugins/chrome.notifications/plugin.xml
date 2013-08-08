@@ -17,11 +17,10 @@
   <dependency id="chrome.runtime" url="." subdir="plugins/chrome-runtime" />
   <dependency id="chrome.storage" url="." subdir="plugins/chrome.storage" />
 
-  <js-module src="notifications.js" name="notifications">
-    <clobbers target="chrome.notifications" />
-  </js-module>
-
   <platform name="android">
+    <js-module src="notifications.js" name="notifications">
+      <clobbers target="chrome.notifications" />
+    </js-module>
     <source-file src="src/android/ChromeNotifications.java" target-dir="src/com/google/cordova" />
     <source-file src="src/android/NotificationReceiver.java" target-dir="src/com/google/cordova" />
 
