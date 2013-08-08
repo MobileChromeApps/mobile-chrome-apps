@@ -455,8 +455,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
   var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
 
-  function cordovaCmd(args) {
-    return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
+  function runCmd(cmd, callback) {
+    console.log(cmd.join(' '));
+    cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
   }
 
   function resolveTilde(string) {
@@ -555,11 +556,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
 
-    function runCmd(cmd, callback) {
-      console.log(cmd.join(' '));
-      cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
-    }
-
     function runAllCmds(callback) {
       var curCmd = cmds.shift();
       if (!curCmd)
@@ -612,7 +608,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function prepareStep(callback) {
-    exec(cordovaCmd(['prepare']), callback);
+    runCmd(['prepare'], callback);
   }
 
   eventQueue.push(validateSourceArgStep);
