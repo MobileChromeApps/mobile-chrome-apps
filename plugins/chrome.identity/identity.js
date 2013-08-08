@@ -6,8 +6,12 @@ var exec = require('cordova/exec');
 var platformId = require('cordova/platform').id;
 var callbackWithError = require('org.chromium.chrome-common.errors').callbackWithError;
 try {
-var runtime = require('org.chromium.chrome-runtime.runtime');
+    var runtime = require('org.chromium.chrome-runtime.runtime');
 } catch(e) {}
+
+// TODO(maxw): Automatically handle expiration.
+// TODO(maxw): Can multiple tokens be cached?
+var cachedToken;
 
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
@@ -24,17 +28,34 @@ exports.getAuthToken = function(details, callback) {
         callback();
     };
 
+    // If we have a cached token, send it along.
+    if (cachedToken) {
+        callback(cachedToken);
+        return;
+    }
+
+    // Augment the callback so that it caches a received token.
+    var augmentedCallback = function(token) {
+        if (token) {
+            cachedToken = token;
+        }
+        callback(token);
+    };
+
     if (platformId === 'android') {
         // Use native implementation for logging into google accounts
-        exec(callback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
+        exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
     } else {
         // Use web app oauth flow
-        getAuthTokenJS(callback, fail, details);
+        getAuthTokenJS(augmentedCallback, fail, details);
     }
 };
 
-exports.removeCachedAuthToken = function() {
-    console.warn('chrome.identity.removeCachedAuthToken not implemented yet');
+exports.removeCachedAuthToken = function(details, callback) {
+    if (details && details.token === cachedToken) {
+        cachedToken = null;
+    }
+    callback();
 }
 
 exports.launchWebAuthFlow = function(details, callback) {

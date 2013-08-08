@@ -8,7 +8,7 @@
 
 // The app's id is stored here.  It's used for the Drive syncable directory name.
 // TODO(mmocny): Do not cache this value -- and dont read it at load time, so that the app has a chance to update it
-_appId = require('org.chromium.chrome-runtime.runtime').id;
+var _appId = require('org.chromium.chrome-runtime.runtime').id;
 
 // When we get an auth token string, we store it here.
 var _tokenString;
@@ -816,12 +816,6 @@ function removeDriveIdFromCache(fileName, callback) {
 
 // This function initiates a web auth flow, eventually getting a token string and passing it to the given callback.
 function getTokenString(callback) {
-    // TODO(maxw): Handle this correctly.  Tokens expire!
-    if (_tokenString) {
-        callback();
-        return;
-    }
-
     // Get the auth token.
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
         if (token) {
