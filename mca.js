@@ -649,14 +649,6 @@ function updateAppCommand() {
     };
   }
 
-  function fixIosWhitelist(callback) {
-    var configPath = path.join('platforms', 'ios', path.basename(process.cwd()), 'config.xml')
-    var data = fs.readFileSync(configPath, 'utf8');
-    data = data.replace('<access origin="*" />', '<access origin="*" />\n<access origin="chrome-extension://*" />');
-    fs.writeFileSync(configPath, data);
-    callback();
-  }
-
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -670,7 +662,6 @@ function updateAppCommand() {
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
-    eventQueue.push(fixIosWhitelist);
     eventQueue.push(createAddJsStep('ios'));
   }
 }
