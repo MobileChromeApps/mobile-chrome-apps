@@ -558,6 +558,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     });
 
     function runAllCmds(callback) {
+      chdir(path.join(origDir, appName));
       var curCmd = cmds.shift();
       if (!curCmd)
         return callback();
@@ -603,7 +604,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     });
 
     runCmd(['create', appName, appId, appName], function() {
-      chdir(path.join(origDir, appName));
       runAllCmds(afterAllCommands);
     });
   }
