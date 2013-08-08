@@ -89,9 +89,11 @@ var ACTIVE_PLUGINS = [
 
 var PLUGIN_MAP = {
   'alarms': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms')],
+  'experimental': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
   'fileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
                  path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser')],
-  'experimental': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'identity': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'notifications': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.notifications')],
   'socket': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket')],
   'syncFileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
 }
