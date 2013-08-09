@@ -456,7 +456,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
   var whitelist = [];
 
-  var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
+  var cordova = require('cordova');
 
   function runCmd(cmd, callback) {
     console.log(cmd.join(' '));
@@ -577,9 +577,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
       // Create a convenience link to our version of CLI.
       if (isWindows) {
-        fs.writeFileSync('cordova.cmd', '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" %*');
+        fs.writeFileSync('cordova.cmd', '"' + process.argv[0] + '" "' + path.join(scriptDir, 'node_modules', 'cordova', 'bin', 'cordova') + '" %*');
       } else {
-        fs.symlinkSync(path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova'), 'cordova')
+        fs.symlinkSync(path.join(scriptDir, 'node_modules', 'cordova', 'bin', 'cordova'), 'cordova')
       }
       callback();
     }

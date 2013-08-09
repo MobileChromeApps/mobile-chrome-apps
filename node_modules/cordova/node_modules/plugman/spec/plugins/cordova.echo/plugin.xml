@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="com.cordova.echo"
+    version="1.0.0">
+
+    <engines>
+        <engine name="cordova" version=">=2.3.0" />
+    </engines>
+
+    <name>cordova echo</name>
+
+    <js-module src="www/client.js">
+        <clobbers target="cordova.echo"/>
+    </js-module>
+
+    <platform name="blackberry10">
+        <source-file src="src/blackberry10/index.js" target-dir="cordova.echo"/>
+        <lib-file src="src/blackberry10/native/device/echoJnext.so" arch="device"/>
+        <lib-file src="src/blackberry10/native/simulator/echoJnext.so" arch="simulator"/>
+        <config-file target="config.xml" parent="/widget">
+            <feature id="cordova.echo" required="true" version="1.0.0.0"/>
+        </config-file>
+    </platform>
+</plugin>

@@ -1,0 +1,42 @@
+Synopsis
+    
+    cordova command [options]
+
+Global Commands
+
+    create <PATH> [ID] [NAME] ................ creates a cordova project in the specified PATH, with
+                                               optional NAME and ID (reverse-domain-style package name)
+    help ..................................... shows this syntax summary
+
+Project-Level Commands
+
+    platform(s) [{add|remove|rm} <PLATFORM>] .. add or remove a specified PLATFORM, OR
+                                                list all installed, available and unavailable platforms
+    plugin(s) [{add|remove|rm} <PATH|URI>] .... add or remove a plugin from the specified PATH or URI, OR
+                                                list all currently installed plugins
+    prepare [PLATFORM..] ...................... copies files for specified platforms, or all platforms,
+                                               so that the project is ready to build in each SDK.
+    compile [PLATFORM..] ...................... builds the app for specified platforms, or all platforms
+    build [PLATFORM...] ....................... shortcut for prepare, then compile
+    emulate [PLATFORM...] ..................... deploys app in specified (or all) platforms' emulator,
+                                                opening emulator if necessary
+    run [PLATFORM...] ......................... deploys app on specified (or all) platform devices, which
+                                                must be properly connected and configured in each SDK
+    serve <PLATFORM> [PORT] ................... runs a local web server for the specified platform's www/
+                                                directory, with optional port number that defaults to 8000.
+                                                (Note: you must edit the native code to reference the server.)
+
+Command-line Flags/Options
+
+    -v, --version ............................. prints out this utility's version
+    -d, --verbose ............................. debug mode produces verbose log output for all activity,
+                                                including output of sub-commands cordova invokes
+
+Example usage
+
+    $ cordova create Baz
+    $ cd Baz
+    $ cordova platform add android
+    $ cordova build
+    $ cordova serve android
+

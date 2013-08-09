@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2013 Anis Kadri
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="com.phonegap.plugins.childbrowser"
+    version="0.6.0">
+
+    <name>Child Browser</name>
+
+    <asset src="www/childbrowser" target="childbrowser" />
+    <asset src="www/childbrowser_file.html" target="childbrowser_file.html" />
+
+    <js-module src="www/childbrowser.js" name="ChildBrowser">
+        <clobbers target="childbrowser" />
+    </js-module>
+
+    <config-file target="config.xml" parent="/*">
+        <access origin="build.phonegap.com" />
+        <access origin="s3.amazonaws.com" />
+    </config-file>
+    
+    <info>No matter what platform you are installing to, this notice is very important.</info>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity android:name="com.phonegap.plugins.childBrowser.ChildBrowser"
+                      android:label="@string/app_name">
+                <intent-filter>
+                </intent-filter>
+            </activity>
+        </config-file>
+
+        <!-- CDV < 2.0 -->
+        <config-file target="res/xml/plugins.xml" parent="/plugins">
+            <plugin name="ChildBrowser"
+                value="com.phonegap.plugins.childBrowser.ChildBrowser"/>
+        </config-file>
+
+        <!-- CDV 2.0+ (for now) -->
+        <config-file target="res/xml/config.xml" parent="/cordova/plugins">
+            <plugin name="ChildBrowser"
+                value="com.phonegap.plugins.childBrowser.ChildBrowser"/>
+        </config-file>
+
+        <source-file src="src/android/ChildBrowser.java"
+                target-dir="src/com/phonegap/plugins/childBrowser" />
+        <info>Please make sure you read this because it is very important to complete the installation of your plugin.</info>
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+        <plugins-plist key="com.phonegap.plugins.childbrowser"
+            string="ChildBrowserCommand" />
+
+        <config-file target="config.xml" parent="/widget/plugins">
+            <plugin name="ChildBrowser"
+                value="ChildBrowserCommand" />
+        </config-file>
+
+        <resource-file src="src/ios/ChildBrowser.bundle" />
+        <resource-file src="src/ios/ChildBrowserViewController.xib" />
+
+        <config-file target="*-Info.plist" parent="AppId">
+            <string>$APP_ID</string>
+        </config-file>
+        
+        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
+            <array>
+              <dict>
+                <key>PackageName</key>
+                <string>$PACKAGE_NAME</string>
+              </dict>
+            </array>
+        </config-file>
+
+        <header-file src="src/ios/ChildBrowserCommand.h" />
+        <header-file src="src/ios/ChildBrowserViewController.h" />
+        <header-file src="src/ios/TargetDirTest.h" target-dir="targetDir"/>
+
+        <source-file src="src/ios/ChildBrowserCommand.m" />
+        <source-file src="src/ios/ChildBrowserViewController.m" />
+        <source-file src="src/ios/preserveDirs/PreserveDirsTest.m" preserve-dirs="true" />
+        <header-file src="src/ios/TargetDirTest.m" target-dir="targetDir"/>
+
+        <!-- framework for testing (not actual dependency of ChildBrowser -->
+        <framework src="libsqlite3.dylib" />
+        <framework src="social.framework" weak="true" />
+        <framework src="music.framework" weak="rabbit" />
+    </platform>
+    <!-- wp7 -->
+    <platform name="wp7">
+        <resource-file src="src\wp7\Images\appbar.back.rest.png" />
+        <config-file target="config.xml" parent="/widget/plugins">
+            <plugin name="ChildBrowser"
+                value="ChildBrowser"/>
+        </config-file>
+
+        <source-file src="src\wp7\ChildBrowserCommand.cs"
+                     target-dir="Plugins\" />
+
+        <!-- modify the project file to include the added files -->
+        <config-file target=".csproj" parent=".">  
+        </config-file> 
+
+    </platform>
+
+    <!-- wp8 -->
+    <platform name="wp8">
+        <resource-file src="src\wp7\Images\appbar.back.rest.png" />
+        <config-file target="config.xml" parent="/widget/plugins">
+            <plugin name="ChildBrowser"
+                value="ChildBrowser"/>
+        </config-file>
+
+        <source-file src="src\wp7\ChildBrowserCommand.cs"
+                     target-dir="Plugins\" />
+
+        <!-- modify the project file to include the added files -->
+        <config-file target=".csproj" parent=".">  
+        </config-file> 
+
+    </platform>
+</plugin>

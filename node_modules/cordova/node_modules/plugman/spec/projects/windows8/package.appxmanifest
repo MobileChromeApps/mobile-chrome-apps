@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
+  <Identity Name="efffab2f-bfc5-4eda-b545-45ef4995f55a" Version="1.0.0.0" Publisher="CN=Jesse" />
+  <Properties>
+    <DisplayName>CordovaApp</DisplayName>
+    <PublisherDisplayName>Jesse</PublisherDisplayName>
+    <Logo>images\storelogo.png</Logo>
+  </Properties>
+  <Prerequisites>
+    <OSMinVersion>6.2.1</OSMinVersion>
+    <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
+  </Prerequisites>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" StartPage="www/index.html">
+      <VisualElements DisplayName="CordovaApp" Logo="www\img\logo.png" SmallLogo="www\img\smalllogo.png" Description="CordovaApp" ForegroundText="light" BackgroundColor="#464646">
+        <DefaultTile ShowName="allLogos" />
+        <SplashScreen Image="www\img\splashscreen.png" />
+      </VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>
