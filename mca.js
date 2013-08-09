@@ -408,10 +408,6 @@ function initCommand() {
   function checkOutSelf(callback) {
     console.log('## Updating mobile-chrome-apps');
 
-    if (path.basename(scriptDir) !== 'mobile-chrome-apps' || !fs.existsSync(path.join(scriptDir, '.git'))) {
-      fatal('This script is not in a valid mobile-chrome-apps repo');
-    }
-
     process.chdir(scriptDir);
     exec('git pull --rebase', callback);
   }
