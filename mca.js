@@ -77,6 +77,7 @@ var hasXcode = false;
 var ACTIVE_PLUGINS = [
     path.join(scriptDir, 'cordova', 'cordova-plugin-file'),
     path.join(scriptDir, 'cordova', 'cordova-plugin-inappbrowser'),
+    path.join(scriptDir, 'cordova', 'cordova-plugin-network-information'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-navigation'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),

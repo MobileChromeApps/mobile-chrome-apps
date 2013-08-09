@@ -22,3 +22,6 @@
 [submodule "cordova/cordova-plugin-inappbrowser"]
 	path = cordova/cordova-plugin-inappbrowser
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-inappbrowser.git
+[submodule "cordova/cordova-plugin-network-information"]
+	path = cordova/cordova-plugin-network-information
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-network-information.git
