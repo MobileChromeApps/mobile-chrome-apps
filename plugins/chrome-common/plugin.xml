@@ -13,11 +13,19 @@
 
   <name>Chrome Apps Common Utils</name>
 
+
   <js-module src="events.js" name="events">
     <clobbers target="chrome.Event" />
   </js-module>
   <js-module src="errors.js" name="errors">
   </js-module>
   <js-module src="stubs.js" name="stubs">
+  </js-module>
+  <js-module src="helpers.js" name="helpers">
+  </js-module>
+
+  <js-module src="lib/CryptoJS/sha256.js" name="CryptoJS-sha256">
+  </js-module>
+  <js-module src="lib/CryptoJS/enc-base64-min.js" name="CryptoJS-enc-base64-min">
   </js-module>
 </plugin>
