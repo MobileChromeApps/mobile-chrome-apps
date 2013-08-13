@@ -110,6 +110,7 @@ module.exports = {
             } else {
                 // local path
                 // symlink instead of copying
+                shell.mkdir('-p', path.join(download_dir, '..'));
                 fs.symlinkSync((uri.protocol && uri.protocol[1] == ':' ? uri.href : uri.path), download_dir, 'dir');
                 hooker.fire('after_library_download', {
                     platform:platform,

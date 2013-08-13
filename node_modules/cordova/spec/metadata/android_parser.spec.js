@@ -114,7 +114,7 @@ describe('android project parser', function() {
         });
 
         describe('update_from_config method', function() {
-            var et, xml, find, write_xml, root, cfg, readdir, cfg_parser, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm;
+            var et, xml, find, write_xml, root, cfg, readdir, cfg_parser, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             beforeEach(function() {
                 find_obj = {
                     text:'hi'
@@ -140,11 +140,13 @@ describe('android project parser', function() {
                 cfg.version = function() { return 'one point oh' };
                 cfg.access.get = function() { return [] };
                 cfg.preference.get = function() { return [] };
+                cfg.content = function() { return 'index.html' };
                 read.andReturn('some java package');
                 cfg_access_add = jasmine.createSpy('config_parser access add');
                 cfg_access_rm = jasmine.createSpy('config_parser access rm');
                 cfg_pref_rm = jasmine.createSpy('config_parser pref rm');
                 cfg_pref_add = jasmine.createSpy('config_parser pref add');
+                cfg_content = jasmine.createSpy('config_parser content');
                 cfg_parser = spyOn(util, 'config_parser').andReturn({
                     access:{
                         remove:cfg_access_rm,
@@ -155,7 +157,8 @@ describe('android project parser', function() {
                         remove:cfg_pref_rm,
                         get:function(){},
                         add:cfg_pref_add
-                    }
+                    },
+                    content:cfg_content
                 });
             });
 
@@ -196,6 +199,10 @@ describe('android project parser', function() {
                 p.update_from_config(cfg);
                 expect(cfg_pref_add).toHaveBeenCalledWith({name:"useBrowserHistory",value:"true"});
                 expect(cfg_pref_add).toHaveBeenCalledWith({name:"exit-on-suspend",value:"false"});
+            });
+            it('should update the content tag', function() {
+                p.update_from_config(cfg);
+                expect(cfg_content).toHaveBeenCalledWith('index.html');
             });
         });
         describe('www_dir method', function() {

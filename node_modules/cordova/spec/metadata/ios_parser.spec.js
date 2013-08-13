@@ -99,7 +99,7 @@ describe('ios project parser', function () {
 
         describe('update_from_config method', function() {
             var et, xml, find, write_xml, root, mv;
-            var cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm;
+            var cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             var plist_parse, plist_build, xc;
             var update_name, xc_write;
             beforeEach(function() {
@@ -137,10 +137,12 @@ describe('ios project parser', function () {
                 cfg.version = function() { return 'one point oh' };
                 cfg.access.get = function() { return [] };
                 cfg.preference.get = function() { return [] };
+                cfg.content = function() { return 'index.html'; };
                 cfg_access_add = jasmine.createSpy('config_parser access add');
                 cfg_access_rm = jasmine.createSpy('config_parser access rm');
                 cfg_pref_rm = jasmine.createSpy('config_parser pref rm');
                 cfg_pref_add = jasmine.createSpy('config_parser pref add');
+                cfg_content = jasmine.createSpy('config_parser content');
                 cfg_parser.andReturn({
                     access:{
                         remove:cfg_access_rm,
@@ -151,7 +153,8 @@ describe('ios project parser', function () {
                         remove:cfg_pref_rm,
                         get:function(){},
                         add:cfg_pref_add
-                    }
+                    },
+                    content:cfg_content
                 });
                 p = new platforms.ios.parser(ios_proj);
             });
@@ -198,6 +201,12 @@ describe('ios project parser', function () {
                 cfg.preference.get = function() { return [sample_pref] };
                 p.update_from_config(cfg, function() {
                     expect(cfg_pref_add).toHaveBeenCalledWith(sample_pref);
+                    done();
+                });
+            });
+            it('should update the content tag / start page', function(done) {
+                p.update_from_config(cfg, function() {
+                    expect(cfg_content).toHaveBeenCalledWith('index.html');
                     done();
                 });
             });

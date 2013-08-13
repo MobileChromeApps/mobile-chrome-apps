@@ -87,19 +87,23 @@ describe('blackberry10 project parser', function() {
 
         describe('update_from_config method', function() {
             var et, xml, find, write_xml, root, cfg, find_obj, root_obj;
-            var xml_name, xml_pkg, xml_version, xml_access_rm, xml_update, xml_append;
+            var xml_name, xml_pkg, xml_version, xml_access_rm, xml_update, xml_append, xml_content;
             beforeEach(function() {
+                xml_content = jasmine.createSpy('xml content');
                 xml_name = jasmine.createSpy('xml name');
                 xml_pkg = jasmine.createSpy('xml pkg');
                 xml_version = jasmine.createSpy('xml version');
                 xml_access_rm = jasmine.createSpy('xml access rm');
+                xml_access_add = jasmine.createSpy('xml access add');
                 xml_update = jasmine.createSpy('xml update');
                 xml_append = jasmine.createSpy('xml append');
                 p.xml.name = xml_name;
                 p.xml.packageName = xml_pkg;
                 p.xml.version = xml_version;
+                p.xml.content = xml_content;
                 p.xml.access = {
-                    remove:xml_access_rm
+                    remove:xml_access_rm,
+                    add: xml_access_add
                 };
                 p.xml.update = xml_update;
                 p.xml.doc = {
@@ -123,11 +127,12 @@ describe('blackberry10 project parser', function() {
                 });
                 xml = spyOn(ET, 'XML');
                 cfg = new config_parser();
-                cfg.name = function() { return 'testname' };
-                cfg.packageName = function() { return 'testpkg' };
-                cfg.version = function() { return 'one point oh' };
-                cfg.access.get = function() { return [] };
-                cfg.preference.get = function() { return [] };
+                cfg.name = function() { return 'testname'; };
+                cfg.content = function() { return 'index.html'; };
+                cfg.packageName = function() { return 'testpkg'; };
+                cfg.version = function() { return 'one point oh'; };
+                cfg.access.getAttributes = function() { return []; };
+                cfg.preference.get = function() { return []; };
             });
 
             it('should write out the app name to config.xml', function() {
@@ -147,9 +152,14 @@ describe('blackberry10 project parser', function() {
                 expect(xml_access_rm).toHaveBeenCalled();
             });
             it('should update the whitelist', function() {
-                cfg.access.get = function() { return ['one'] };
+                cfg.access.getAttributes = function() { return [{origin: 'one'},{uri: "two", subdomains: "false"}]; };
                 p.update_from_config(cfg);
-                expect(xml_append.mostRecentCall.args[0].attrib.uri).toEqual('one');
+                expect(xml_access_add).toHaveBeenCalledWith('one', undefined);
+                expect(xml_access_add).toHaveBeenCalledWith('two', 'false');
+            });
+            it('should update the start page (content tag)', function() {
+                p.update_from_config(cfg);
+                expect(xml_content).toHaveBeenCalledWith('index.html');
             });
         });
         describe('www_dir method', function() {

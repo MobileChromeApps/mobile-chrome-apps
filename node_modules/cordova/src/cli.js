@@ -3,8 +3,8 @@ var optimist  = require('optimist'),
     plugman   = require('plugman'),
     platforms = require("../platforms");
 
-module.exports = function CLI(args) {
-    args = optimist(args)
+module.exports = function CLI(inputArgs) {
+    args = optimist(inputArgs)
         .boolean('d')
         .boolean('verbose')
         .boolean('v')
@@ -15,13 +15,13 @@ module.exports = function CLI(args) {
         return console.log(require('../package').version);
     }
 
-    var tokens = args._.slice(2),
+    var tokens = inputArgs.slice(2),
         opts = {
             platforms: [],
             options: [],
             verbose: (args.d || args.verbose)
         },
-        cmd = tokens && tokens.length ? tokens[0] : undefined;
+        cmd;
 
     // provide clean output on exceptions rather than dumping a stack trace
     process.on('uncaughtException', function(err){
@@ -39,13 +39,22 @@ module.exports = function CLI(args) {
         cordova.on('warn', console.warn);
         plugman.on('log', console.log);
         plugman.on('warn', console.warn);
+        //Remove the corresponding token
+        if(args.d && args.verbose) {
+            tokens.splice(Math.min(tokens.indexOf("-d"), tokens.indexOf("--verbose")), 1);
+        } else if (args.d) {
+            tokens.splice(tokens.indexOf("-d"), 1);
+        } else if (args.verbose) {
+            tokens.splice(tokens.indexOf("--verbose"), 1);
+        }
+
     }
 
+    cmd = tokens && tokens.length ? tokens.splice(0,1) : undefined;
     if (cmd === undefined) {
         return cordova.help();
     }
 
-    tokens = tokens.slice(1);
     if (cordova.hasOwnProperty(cmd)) {
         if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
             // Filter all non-platforms into options

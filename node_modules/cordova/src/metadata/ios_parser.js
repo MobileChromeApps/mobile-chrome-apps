@@ -99,6 +99,7 @@ module.exports.prototype = {
         var plistFile = path.join(this.cordovaproj, this.originalName + '-Info.plist');
         var infoPlist = plist.parseFileSync(plistFile);
         infoPlist['CFBundleIdentifier'] = pkg;
+
         // Update version (bundle version)
         infoPlist['CFBundleVersion'] = version;
         var info_contents = plist.build(infoPlist);
@@ -113,6 +114,9 @@ module.exports.prototype = {
         config.access.get().forEach(function(uri) {
             self.config.access.add(uri);
         });
+
+        // Update content (start page)
+        this.config.content(config.content());
         
         // Update preferences
         this.config.preference.remove();

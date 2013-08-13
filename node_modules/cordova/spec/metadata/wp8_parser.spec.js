@@ -29,7 +29,7 @@ var platforms = require('../../platforms'),
 
 describe('wp8 project parser', function() {
     var proj = '/some/path';
-    var exists, exec, custom, readdir;
+    var exists, exec, custom, readdir, cfg_parser;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
         exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
@@ -37,6 +37,7 @@ describe('wp8 project parser', function() {
         });
         custom = spyOn(config, 'has_custom_path').andReturn(false);
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.csproj']);
+        cfg_parser = spyOn(util, 'config_parser');
     });
 
     describe('constructions', function() {
@@ -99,7 +100,7 @@ describe('wp8 project parser', function() {
         });
 
         describe('update_from_config method', function() {
-            var et, xml, find, write_xml, root, cfg, cfg_parser, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm;
+            var et, xml, find, write_xml, root, cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             beforeEach(function() {
                 find_obj = {
                     text:'hi',
@@ -121,6 +122,7 @@ describe('wp8 project parser', function() {
                 xml = spyOn(ET, 'XML');
                 cfg = new config_parser();
                 cfg.name = function() { return 'testname' };
+                cfg.content = function() { return 'index.html' };
                 cfg.packageName = function() { return 'testpkg' };
                 cfg.version = function() { return 'one point oh' };
                 cfg.access.get = function() { return [] };
@@ -129,18 +131,20 @@ describe('wp8 project parser', function() {
                 cfg_access_rm = jasmine.createSpy('config_parser access rm');
                 cfg_pref_rm = jasmine.createSpy('config_parser pref rm');
                 cfg_pref_add = jasmine.createSpy('config_parser pref add');
-                cfg_parser = spyOn(util, 'config_parser').andReturn({
+                cfg_content = jasmine.createSpy('config_parser content');
+                p.config = {
                     access:{
                         remove:cfg_access_rm,
                         get:function(){},
                         add:cfg_access_add
                     },
+                    content:cfg_content,
                     preference:{
                         remove:cfg_pref_rm,
                         get:function(){},
                         add:cfg_pref_add
                     }
-                });
+                };
                 readdir.andReturn(['test.sln']);
             });
 
@@ -155,6 +159,10 @@ describe('wp8 project parser', function() {
             it('should write out the app version to wmappmanifest.xml', function() {
                 p.update_from_config(cfg);
                 expect(find_obj.attrib.Version).toEqual('one point oh');
+            });
+            it('should update the content element (start page)', function() {
+                p.update_from_config(cfg);
+                expect(cfg_content).toHaveBeenCalledWith('index.html');
             });
         });
         describe('www_dir method', function() {
