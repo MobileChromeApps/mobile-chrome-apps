@@ -172,16 +172,6 @@ window.runningInBg = true;
     injectScripts(chromespec.fgDoc, scripts, onScriptsLoaded);
   }
 
-  function ensureCordovaInitializes() {
-    var timerId = window.setTimeout(function() {
-      log('Cordova failed to initialize.');
-    }, 500);
-    chromespec.fgDoc.addEventListener('deviceready', function() {
-      window.clearTimeout(timerId);
-      log('Cordova initialized. platform: ' + chromespec.fgWnd.device.platform);
-    }, false);
-  }
-
   function onScriptsLoaded() {
     var homeButton = chromespec.createButton('Home', changePage.bind(null, 0));
     homeButton.classList.add('home-btn');
@@ -195,8 +185,6 @@ window.runningInBg = true;
     chrome.storage.local.get('chromespec-page', function(values) {
       changePage(values && values['chromespec-page'] || 0);
     });
-    if (typeof cordova !== 'undefined')
-      ensureCordovaInitializes();
   }
 
   function changePage(pageIndex) {
