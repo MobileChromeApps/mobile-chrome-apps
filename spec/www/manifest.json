@@ -26,7 +26,6 @@
     }
   },
   "key": "ennblpbfnkjcecccennjdcdpdonpongb",
-
   "icons": {
     "16": "assets/icon-128x128.png",
     "128": "assets/icon-128x128.png"
@@ -44,7 +43,7 @@
   ],
   "default_locale": "fr",
   "oauth2": {
-    "client_id": "95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com",
+    "client_id": "429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com",
     "scopes": [
       "https://docs.google.com/feeds/",
       "https://docs.googleusercontent.com/",
@@ -55,3 +54,4 @@
     ]
   }
 }
+

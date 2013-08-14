@@ -66,7 +66,19 @@ exports.launchWebAuthFlow = function(details, callback) {
         return callbackWithError('WebAuthFlowDetails object required', callback);
     }
 
-    launchInAppBrowser(details.url, details.interactive, callback);
+    var augmentedCallback = function(url) {
+        // If we're redirected to this ServiceLoginAuth page, try again; we should get the token.
+        if (url === 'https://accounts.google.com/ServiceLoginAuth') {
+            // Unfortunately, this timeout is necessary, or else the authentication page comes up again.
+            // TODO(maxw): Find a better way to solve this issue.
+            window.setTimeout(exports.launchWebAuthFlow, 1000, details, callback);
+            return;
+        }
+
+        callback(url);
+    };
+
+    launchInAppBrowser(details.url, details.interactive, augmentedCallback);
 };
 
 function getAuthTokenJS(win, fail, details) {

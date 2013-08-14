@@ -8,45 +8,47 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     rootEl.appendChild(button);
   }
 
-  addButton('Test getAuthToken', function() {
-    chromespec.log('getAuthToken: Waiting for callback');
-    chrome.identity.getAuthToken({ interactive: true }, function(token) {
-        if (!token)
-            return chromespec.log('getAuthToken failed with Error: ' + chrome.runtime.lastError.message);
-        chromespec.log('success: ' + token);
-        try {
-            var xhr = new XMLHttpRequest();
-            var loc = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + token;
-            xhr.open('GET', loc, false /* sync */);
-            xhr.send(null);
-            var resp = JSON.parse(xhr.responseText);
-            chromespec.log("Attempted to retrieve name from the account: " + resp.name);
-        } catch (e) {
-            var str = "An error occurred while attempting to retrieve name from the account: " + e;
-            chromespec.log(str);
-        }
-    });
+  addButton('Get auth token', function() {
+    var onGetAuthTokenSuccess = function(token) {
+      chromespec.log('Token: ' + token);
+    };
+
+    chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
   });
 
-  addButton('Test launchWebAuthFlow (google.com)', function() {
+  addButton('Remove cached auth token', function() {
+    var onRemoveCachedAuthTokenSuccess = function() {
+      chromespec.log('Token removed from cache.');
+    };
+
+    var onInitialGetAuthTokenSuccess = function(token) {
+      chromespec.log('Removing token ' + token + ' from cache.');
+
+      // Remove the token!
+      chrome.identity.removeCachedAuthToken({ token: token }, onRemoveCachedAuthTokenSuccess);
+    };
+
+    // First, we need to get the existing auth token.
+    chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
+  });
+
+  addButton('Launch Google web auth flow', function() {
     chromespec.log('launchWebAuthFlow (google.com): Waiting for callback');
 
     var webAuthDetails = {
-        interactive: true,
-        url: 'https://accounts.google.com/o/oauth2/auth?client_id=95499094623-0kel3jp6sp8l5jrfm3m5873h493uupvr.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.ca&response_type=token&scope=https%3A%2F%2Fmail.google.com%2Fmail%2Ffeed%2Fatom'
+      interactive: true,
+      url: 'https://accounts.google.com/o/oauth2/auth?client_id=429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.com&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com/auth/userinfo.profile'
     };
-    chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
-      if (!url)
-        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError.message);
-      var token = url.split('token=')[1];
-      chromespec.log('success: ' + token);
-    });
+
+    var onLaunchWebAuthFlowSuccess = function(url) {
+      chromespec.log('Resulting URL: ' + url);
+    };
+
+    chrome.identity.launchWebAuthFlow(webAuthDetails, onLaunchWebAuthFlowSuccess);
   });
 
-  addButton('Test launchWebAuthFlow (facebook.com)', function() {
-    chromespec.log('launchWebAuthFlow (AnyDo+facebook): Waiting for callback');
-
-    var FACEBOOK_PERMISSIONS='email,user_birthday,friends_birthday,user_relationships,read_friendlists,publish_stream,publish_actions,user_checkins,user_interests,user_religion_politics,user_events,friends_events,offline_access';
+  addButton('Launch Facebook web auth flow', function() {
+    var FACEBOOK_PERMISSIONS='email';
     var FACEBOOK_APP_ID='218307504870310';
     var APPURL='https://'+chrome.runtime.id+'.chromiumapp.org/';
     var FACEBOOK_LOGIN_SUCCESS_URL= 'http://www.any.do/facebook_proxy/login_success?redirect='+encodeURIComponent(APPURL);
@@ -57,11 +59,11 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
         url:FACEBOOK_OAUTH_URL,
     };
 
-    chrome.identity.launchWebAuthFlow(webAuthDetails, function(url) {
-      if (!url)
-        return chromespec.log('Failed with Error: ' + chrome.runtime.lastError.message);
-      var token = url.split('token=')[1];
-      chromespec.log('success: ' + token);
-    });
+    var onLaunchWebAuthFlowSuccess = function(url) {
+        chromespec.log('Resulting URL: ' + url);
+    };
+
+    chrome.identity.launchWebAuthFlow(webAuthDetails, onLaunchWebAuthFlowSuccess);
   });
 });
+
