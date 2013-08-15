@@ -5,6 +5,7 @@
 var argscheck = cordova.require('cordova/argscheck');
 var Event = require('org.chromium.chrome-common.events');
 var stubs = require('org.chromium.chrome-common.stubs');
+var helpers = require('org.chromium.chrome-common.helpers');
 
 var manifestJson = null;
 
@@ -56,6 +57,7 @@ exports.getManifest = function() {
 // This is an extension for vanilla cordova apps
 exports.setManifest = function(manifest) {
   manifestJson = manifest;
+  calculateAndCacheAppId();
 }
 
 exports.getBackgroundPage = function(callback) {
@@ -81,8 +83,32 @@ exports.reload = function() {
   location.reload();
 };
 
-exports.__defineGetter__("id", function(){
-  return exports.getManifest()['key'];
-});
+function calculateAndCacheAppId() {
+  var appId;
+  try {
+    require('org.chromium.chrome-bootstrap.bootstrap');
+    var key = exports.getManifest()['key'];
+    if (typeof key === 'undefined') {
+      // For development, we want a consistent ID even without a public key.  Chrome uses the app path instead of name.
+      appId = helpers.mapAppNameToAppId(exports.getManifest()['name']);
+    } else {
+      try {
+        appId = helpers.mapAppKeyToAppId(key);
+      } catch (e) {
+        // If you are a mobile chrome app, and you do have a key in your manifest, and its invalid, we shouldn't pretend to return a valid appId
+        console.error('Your manifest file has an invalid \'key\', cannot produce application id.');
+        // leaving appId undefined.
+      }
+    }
+  } catch (e) {
+    // TODO: return fully qualified name given during cordova project creation
+    appId = exports.getManifest()['name'];
+  }
+  exports.__defineGetter__("id", function() {
+    return appId;
+  });
+  return appId;
+}
+exports.__defineGetter__("id", calculateAndCacheAppId);
 
 stubs.createStub(exports, 'requestUpdateCheck', function(){});
