@@ -98,7 +98,7 @@ function getAuthTokenJS(win, fail, details) {
     var redirect_uri = 'http://www.google.com';
     var client_id = manifestJson.oauth2.client_id;
     var scope = manifestJson.oauth2.scopes;
-    var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join('&'));
+    var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join(' '));
 
     launchInAppBrowser(finalURL, details.interactive, function(newLoc) {
         // If we're redirected to this ServiceLoginAuth page, try again; we should get the token.
