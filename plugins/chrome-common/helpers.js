@@ -3,7 +3,7 @@ require('org.chromium.chrome-common.CryptoJS-enc-base64-min'); // just need to m
 
 var hexToMPDecimalLookupTable = {
   0:'a', 1:'b', 2:'c', 3:'d',
-  4:'e', 5:'e', 6:'g', 7:'h',
+  4:'e', 5:'f', 6:'g', 7:'h',
   8:'i', 9:'j', a:'k', b:'l',
   c:'m', d:'n', e:'o', f:'p',
 };
