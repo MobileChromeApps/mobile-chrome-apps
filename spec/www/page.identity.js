@@ -32,6 +32,50 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
   });
 
+  addButton('Get name via Google\'s User Info API', function() {
+    var onGetAuthTokenSuccess = function(token) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var responseText = JSON.parse(xhr.responseText);
+                    chromespec.log('Name: ' + responseText.name);
+                } else {
+                    chromespec.log('Failed with status ' + xhr.status + '.');
+                }
+            }
+        };
+        xhr.open('GET', 'https://www.googleapis.com/oauth2/v3/userinfo')
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.send(null);
+    };
+
+    chromespec.log('Retrieving name...');
+    chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
+  });
+
+  addButton('Get name via Google\'s Drive API', function() {
+    var onGetAuthTokenSuccess = function(token) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var responseText = JSON.parse(xhr.responseText);
+                    chromespec.log('Name: ' + responseText.name);
+                } else {
+                    chromespec.log('Failed with status ' + xhr.status + '.');
+                }
+            }
+        };
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/about')
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.send(null);
+    };
+
+    chromespec.log('Retrieving name...');
+    chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
+  });
+
   addButton('Launch Google web auth flow', function() {
     chromespec.log('launchWebAuthFlow (google.com): Waiting for callback');
 
