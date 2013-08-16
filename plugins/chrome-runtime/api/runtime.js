@@ -46,7 +46,8 @@ exports.onSuspendCanceled.addListener = function(f) {
 
 exports.getManifest = function() {
   if (!manifestJson) {
-    var xhr = new XMLHttpRequest();
+    // Need to use origXMLHttpRequest here to access file w/o whitelist
+    var xhr = new origXMLHttpRequest();
     xhr.open('GET', 'manifest.json', false /* sync */);
     xhr.send(null);
     manifestJson = eval('(' + xhr.responseText + ')'); //JSON.parse(xhr.responseText);

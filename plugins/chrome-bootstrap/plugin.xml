@@ -38,6 +38,7 @@
   <platform name="android">
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/com/google/cordova" />
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeChromeClient.java" target-dir="src/com/google/cordova" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
 

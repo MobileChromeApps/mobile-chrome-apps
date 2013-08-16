@@ -137,7 +137,7 @@ exports.create = function(filePath, options, callback) {
     return;
   }
   createdAppWindow = new AppWindow();
-  var xhr = new XMLHttpRequest();
+  var xhr = new origXMLHttpRequest();
   xhr.open('GET', filePath, true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
