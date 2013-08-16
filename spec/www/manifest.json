@@ -18,6 +18,7 @@
         "page.fileSystem.js",
         "page.identity.js",
         "page.notifications.js",
+        "page.pushMessaging.js",
         "page.runtime.js",
         "page.socket.js",
         "page.syncFileSystem.js",
@@ -25,6 +26,8 @@
       ]
     }
   },
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCq7U5RoVWf4rUqCS+VDN1lNffuc1BfodrsjUBv6BDeqRust5ePjbsDBzmW6aUjgwhb38WIJNihOqLl7HRYlG4F25FjiK+GUwM3zCfZFgJpKmakuofpSEmkkoniHTcuqGKpQn2o9j5lPom7iM0Dq2LdN+WTDc0qe0/2Ndp3SH+A0QIDAQAB",
+  "senderId": "429153676186",
 
   "icons": {
     "16": "assets/icon-128x128.png",
@@ -35,11 +38,13 @@
     "fileSystem",
     "identity",
     "notifications",
+    "pushMessaging",
     {
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
     },
     "storage",
-    "syncFileSystem"
+    "syncFileSystem",
+    "https://accounts.google.com/o/oauth2/token"
   ],
   "default_locale": "fr",
   "oauth2": {
@@ -50,7 +55,8 @@
       "https://spreadsheets.google.com/feeds/",
       "https://www.googleapis.com/auth/drive",
       "https://www.googleapis.com/auth/adsense",
-      "https://www.googleapis.com/auth/userinfo.profile"
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/gcm_for_chrome.readonly"
     ]
   }
 }
