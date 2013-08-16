@@ -87,12 +87,10 @@ public class ChromePushMessaging extends CordovaPlugin {
     }
     
     static private void fireOnMessage(String payload) {
-        Log.i(LOG_TAG, "Firing onMessage. payload = " + payload);
         webView.sendJavascript("chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'" + payload + "'})");
     }
     
     private void fireStartupMessages(final CordovaArgs args, final CallbackContext callbackContext) {
-        Log.i(LOG_TAG, "Firing startup messages. num = " + pendingMessages.size());
         safeToFireMessages = true;
         for (int i = 0; i < pendingMessages.size(); i++) {
             fireOnMessage(pendingMessages.get(i));
@@ -107,7 +105,6 @@ public class ChromePushMessaging extends CordovaPlugin {
                 try {
                     GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(cordova.getActivity());
                     String regid = gcm.register(args.getString(0));
-                    Log.i(LOG_TAG, "Device registered, registration id=" + regid);
                     callbackContext.success(regid);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not get registration ID", e);
