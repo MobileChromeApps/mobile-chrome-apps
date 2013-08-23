@@ -19,6 +19,7 @@
 var fs            = require('fs'),
     path          = require('path'),
     et            = require('elementtree'),
+    xml           = require('../xml-helpers'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),
@@ -66,9 +67,7 @@ module.exports.prototype = {
         } else throw new Error('update_from_config requires a config_parser object');
 
         //Get manifest file
-        var man = fs.readFileSync(this.manifest_path, 'utf-8');
-        var cleanedMan = man.replace('\ufeff', ''); //Windows is the BOM
-        var manifest = new et.ElementTree(et.XML(cleanedMan));
+        var manifest = xml.parseElementtreeSync(this.manifest_path);
 
         //Update app version
         var version = config.version();
@@ -105,9 +104,7 @@ module.exports.prototype = {
          *  - App.xaml.cs
          */
          var pkg = config.packageName();
-         var raw = fs.readFileSync(this.csproj_path, 'utf-8');
-         var cleanedPage = raw.replace(/^\uFEFF/i, '');
-         var csproj = new et.ElementTree(et.XML(cleanedPage));
+         var csproj = xml.parseElementtreeSync(this.csproj_path);
          prev_name = csproj.find('.//RootNamespace').text;
          if(prev_name != pkg) {
             events.emit('log', "Updating package name from " + prev_name + " to " + pkg);
@@ -118,10 +115,7 @@ module.exports.prototype = {
             csproj.find('.//SilverlightAppEntry').text = pkg + '.App';
             fs.writeFileSync(this.csproj_path, csproj.write({indent: 4}), 'utf-8');
             //MainPage.xaml
-            raw = fs.readFileSync(path.join(this.wp7_proj_dir, 'MainPage.xaml'), 'utf-8');
-            // Remove potential UTF Byte Order Mark
-            cleanedPage = raw.replace(/^\uFEFF/i, '');
-            var mainPageXAML = new et.ElementTree(et.XML(cleanedPage));
+            var mainPageXAML = xml.parseElementtreeSync(path.join(this.wp7_proj_dir, 'MainPage.xaml'));
             mainPageXAML.getroot().attrib['x:Class'] = pkg + '.MainPage';
             fs.writeFileSync(path.join(this.wp7_proj_dir, 'MainPage.xaml'), mainPageXAML.write({indent: 4}), 'utf-8');
             //MainPage.xaml.cs
@@ -129,9 +123,7 @@ module.exports.prototype = {
             var namespaceRegEx = new RegExp('namespace ' + prev_name);
             fs.writeFileSync(path.join(this.wp7_proj_dir, 'MainPage.xaml.cs'), mainPageCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
             //App.xaml
-            raw = fs.readFileSync(path.join(this.wp7_proj_dir, 'App.xaml'), 'utf-8');
-            cleanedPage = raw.replace(/^\uFEFF/i, '');
-            var appXAML = new et.ElementTree(et.XML(cleanedPage));
+            var appXAML = xml.parseElementtreeSync(path.join(this.wp7_proj_dir, 'App.xaml'));
             appXAML.getroot().attrib['x:Class'] = pkg + '.App';
             fs.writeFileSync(path.join(this.wp7_proj_dir, 'App.xaml'), appXAML.write({indent: 4}), 'utf-8');
             //App.xaml.cs
@@ -168,9 +160,7 @@ module.exports.prototype = {
     },
     // updates the csproj file to explicitly list all www content.
     update_csproj:function() {
-        var raw = fs.readFileSync(this.csproj_path, 'utf-8');
-        var cleaned = raw.replace(/^\uFEFF/i, '');
-        var csproj_xml = new et.ElementTree(et.XML(cleaned));
+        var csproj_xml = xml.parseElementtreeSync(this.csproj_path);
         // remove any previous references to the www files
         var item_groups = csproj_xml.findall('ItemGroup');
         for (var i = 0, l = item_groups.length; i < l; i++) {

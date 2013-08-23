@@ -43,7 +43,7 @@ inflect.camelize = function(lower_case_and_underscored_word, first_letter_in_upp
   if (first_letter_in_uppercase) {
     return util.string.upcase(result);
   } else {
-    return result;
+    return util.string.downcase(result);
   }
 };
 

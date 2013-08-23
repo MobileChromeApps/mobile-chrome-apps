@@ -118,14 +118,11 @@ module.exports = function create (dir, id, name, callback) {
     var config_json = config.read(dir);
 
     var finalize = function(www_lib) {
-        while (!fs.existsSync(path.join(www_lib, 'index.html'))) {
+        // Keep going into child "www" folder if exists in stock app package.
+        while (fs.existsSync(path.join(www_lib, 'www'))) {
             www_lib = path.join(www_lib, 'www');
-            if (!fs.existsSync(www_lib)) {
-                var err = new Error('downloaded www assets in ' + www_lib + ' does not contain index.html, or www subdir with index.html');
-                if (callback) return callback(err);
-                else throw err;
-            }
         }
+
         shell.cp('-rf', path.join(www_lib, '*'), www_dir);
         var configPath = util.projectConfig(dir);
         // Add template config.xml for apps that are missing it

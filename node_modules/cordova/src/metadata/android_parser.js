@@ -19,6 +19,7 @@
 var fs            = require('fs'),
     path          = require('path'),
     et            = require('elementtree'),
+    xml           = require('../xml-helpers'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),
@@ -81,12 +82,12 @@ module.exports.prototype = {
 
         // Update app name by editing res/values/strings.xml
         var name = config.name();
-        var strings = new et.ElementTree(et.XML(fs.readFileSync(this.strings, 'utf-8')));
+        var strings = xml.parseElementtreeSync(this.strings);
         strings.find('string[@name="app_name"]').text = name;
         fs.writeFileSync(this.strings, strings.write({indent: 4}), 'utf-8');
         events.emit('log', 'Wrote out Android application name to "' + name + '"');
 
-        var manifest = new et.ElementTree(et.XML(fs.readFileSync(this.manifest, 'utf-8')));
+        var manifest = xml.parseElementtreeSync(this.manifest);
         // Update the version by changing the AndroidManifest android:versionName
         var version = config.version();
         manifest.getroot().attrib["android:versionName"] = version;

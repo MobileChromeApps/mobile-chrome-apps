@@ -91,9 +91,9 @@ module.exports = function platform(command, targets, callback) {
                                 else throw err;
                             } else {
                                 if (config_json.lib && config_json.lib[t]) {
-                                    call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, callback, end);
+                                    call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template, callback, end);
                                 } else {
-                                    call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, callback, end);
+                                    call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null, callback, end);
                                 }
                             }
                         });
@@ -198,7 +198,7 @@ function createOverrides(projectRoot, target) {
     shell.mkdir('-p', path.join(cordova_util.appDir(projectRoot), 'merges', target));
 };
 
-function call_into_create(target, projectRoot, cfg, id, version, callback, end) {
+function call_into_create(target, projectRoot, cfg, id, version, template_dir, callback, end) {
     var output = path.join(projectRoot, 'platforms', target);
 
     // Check if output directory already exists.
@@ -223,6 +223,9 @@ function call_into_create(target, projectRoot, cfg, id, version, callback, end) 
                 var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
                 var name = cfg.name();
                 var command = util.format('"%s" %s "%s" "%s" "%s"', bin, args, output, pkg, name);
+                if (template_dir) {
+                    command += ' "' + template_dir + '"';
+                }
                 events.emit('log', 'Running bin/create for platform "' + target + '" with command: "' + command + '" (output to follow)');
 
                 shell.exec(command, {silent:true,async:true}, function(code, create_output) {

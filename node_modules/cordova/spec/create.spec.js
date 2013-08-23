@@ -15,7 +15,7 @@ describe('create command', function () {
         cp = spyOn(shell, 'cp');
         config_spy = spyOn(cordova, 'config');
         config_read = spyOn(config, 'read').andReturn({});
-        exists = spyOn(fs, 'existsSync').andReturn(true);
+        exists = spyOn(fs, 'existsSync').andReturn(false);
         load_cordova = spyOn(lazy_load, 'cordova').andCallFake(function(platform, cb) {
             cb();
         });
@@ -131,10 +131,6 @@ describe('create command', function () {
             });
         });
         it('should add a missing www/config.xml', function(done) {
-            exists.andCallFake(function(path) {
-                // return false for config.xml otherwise return true (default spy action)
-                return !path.match('config.xml');
-            });
             cordova.create(tempDir, function() {
                 expect(shell.cp).toHaveBeenCalledWith(
                     path.resolve(__dirname, '..', 'templates', 'config.xml'),
@@ -144,6 +140,10 @@ describe('create command', function () {
             });
         });
         it('should not replace an existing www/config.xml', function(done) {
+            exists.andCallFake(function(p) {
+                if (p.indexOf('config.xml') > -1) return true;
+                return false;
+            });
             cordova.create(tempDir, function() {
                 expect(shell.cp).not.toHaveBeenCalledWith(
                     path.resolve(__dirname, '..', 'templates', 'config.xml'),

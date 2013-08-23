@@ -16,12 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-var et = require('elementtree'),
-    fs = require('fs');
+var xml = require('./xml-helpers'),
+    fs  = require('fs');
 
 function plugin_parser(xmlPath) {
     this.path = xmlPath;
-    this.doc = new et.ElementTree(et.XML(fs.readFileSync(xmlPath, 'utf-8')));
+    this.doc = xml.parseElementtreeSync(xmlPath);
     this.platforms = this.doc.findall('platform').map(function(p) {
         return p.attrib.name;
     });

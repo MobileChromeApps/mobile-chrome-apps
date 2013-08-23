@@ -17,11 +17,12 @@
     under the License.
 */
 var et = require('elementtree'),
+    xml= require('./xml-helpers'),
     fs = require('fs');
 
 function config_parser(path) {
     this.path = path;
-    this.doc = new et.ElementTree(et.XML(fs.readFileSync(path, 'utf-8')));
+    this.doc = xml.parseElementtreeSync(path);
     this.access = new access(this);
     this.preference = new preference(this);
 }

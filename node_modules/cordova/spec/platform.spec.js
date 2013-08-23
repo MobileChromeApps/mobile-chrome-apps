@@ -147,6 +147,44 @@ describe('platform command', function() {
                 expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp.phonegap.bleeding edge.wp8.bin.create/gi);
                 expect(exec.mostRecentCall.args[0]).toContain(project_dir);
             });
+            it('should use a custom template directory if there is one specified in the configuration', function() {
+                var template_dir = "/tmp/custom-template"
+                load.andCallThrough();
+                config_read.andReturn({
+                    lib: {
+                        android: {
+                            uri: "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
+                            version: "3.0.0",
+                            id: "cordova",
+                            template: template_dir
+                        }
+                    }
+                });
+                cordova.platform('add', 'android');
+                expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
+                expect(exec.mostRecentCall.args[0]).toContain(project_dir);
+                expect(exec.mostRecentCall.args[0]).toContain(template_dir);
+            });
+            it('should not use a custom template directory if there is not one specified in the configuration', function() {
+                load.andCallThrough();
+                config_read.andReturn({
+                    lib: {
+                        android: {
+                            uri: "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
+                            version: "3.0.0",
+                            id: "cordova",
+                        }
+                    }
+                });
+                cordova.platform('add', 'android');
+                expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
+                expect(exec.mostRecentCall.args[0]).toContain(project_dir);
+            });
+            it('should not use a custom template directory if there is no user-defined configuration', function() {
+                cordova.platform('add', 'android');
+                expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
+                expect(exec.mostRecentCall.args[0]).toContain(project_dir);
+            });
         });
         describe('`remove`',function() {
             it('should remove a supported and added platform', function() {
