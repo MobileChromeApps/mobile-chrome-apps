@@ -3,12 +3,54 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.cors', function(runningInBackground) {
-  var testNode = null;
-  var langEnUs = navigator.language.toLowerCase() == 'en-us';
 
   describe('CORS', function() {
-    it('should work', function() {
-      expect(navigator.language.toLowerCase()).toBe('en-us');
+    it('should xhr to google', function() {
+      var win = jasmine.createSpy('win');
+      var lose = jasmine.createSpy('lose');
+      runs(function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://www.google.com/');
+        xhr.onreadystatechange = function() {
+          //alert("RS: " + xhr.readyState+ "; S: " + xhr.status);
+          if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+              win();
+            } else {
+              lose();
+            }
+          }
+        };
+        xhr.send();
+      });
+      waitsFor(function() { return win.calls.length > 0 || lose.calls.length > 0 }, 10000);
+      runs(function() { expect(win).toHaveBeenCalled();
+        expect(lose).not.toHaveBeenCalled();
+      });
     });
+
+    it('should not xhr to google.ca', function() {
+      var win = jasmine.createSpy('win');
+      var lose = jasmine.createSpy('lose');
+      runs(function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://www.google.ca/');
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+              lose();
+            } else {
+              win();
+            }
+          }
+        };
+        xhr.send();
+      });
+      waitsFor(function() { return win.calls.length > 0 || lose.calls.length > 0 }, 10000);
+      runs(function() { expect(win).toHaveBeenCalled();
+        expect(lose).not.toHaveBeenCalled();
+      });
+    });
+
   });
 });
