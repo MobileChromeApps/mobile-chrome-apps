@@ -451,6 +451,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var manifest = null;
 
   var whitelist = [];
+  var chromeAppId;
 
   var cordova = require('cordova');
 
@@ -534,6 +535,16 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           }
         }
       }
+      if (manifest.key) {
+        // stub for testing
+        function mapAppKeyToAppId(key) {
+          return 'abcdefghijklmnopabcdefghijklmnop';
+        }
+        chromeAppId = mapAppKeyToAppId(manifest.key);
+      } else {
+        // All zeroes -- should we use rand() here instead?
+        chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+      }
       callback();
     });
   }
@@ -603,7 +614,31 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     });
 
     runCmd(['create', appName, appId, appName], function() {
-      runAllCmds(afterAllCommands);
+      writeConfigStep(function() {
+        runAllCmds(afterAllCommands);
+      });
+    });
+  }
+
+  function writeConfigStep(callback) {
+    console.log("Writing config.xml");
+    fs.readFile(path.join(scriptDir, 'chrome-cordova', 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        var whitelistXML = "";
+        for (var i = 0; i < whitelist.length; i++) {
+          whitelistXML = whitelistXML + "    <access origin=\"" + whitelist[i] + "\" />\n";
+        }
+      var configfile = data.replace(/__APP_NAME__/, (manifest && manifest.name) || appName)
+          .replace(/__APP_ID__/, appId)
+          .replace(/__APP_VERSION__/, (manifest && manifest.version) || "0.0.1")
+          .replace(/__CHROME_APP_ID__/, chromeAppId)
+          .replace(/__DESCRIPTION__/, (manifest && manifest.description) || "Plain text description of this app")
+          .replace(/__AUTHOR__/, (manifest && manifest.author) || "Author name and email")
+          .replace(/__WHITELIST__/, whitelistXML);
+      fs.writeFile(path.join(appName, 'www', 'config.xml'), configfile, callback);
+      }
     });
   }
 
