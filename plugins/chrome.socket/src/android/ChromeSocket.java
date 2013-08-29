@@ -278,15 +278,15 @@ public class ChromeSocket extends CordovaPlugin {
             // Enumerations are a crappy legacy API, can't use the for (foo : bar) syntax.
             while(interfaces.hasMoreElements()) {
                 iface = interfaces.nextElement();
-                JSONObject data = new JSONObject();
                 Enumeration<InetAddress> addresses = iface.getInetAddresses();
 
                 String address = addresses.hasMoreElements() ? addresses.nextElement().getHostAddress() : null;
-                data.put("name", iface.getDisplayName());
                 if (address != null) {
+                  JSONObject data = new JSONObject();
+                  data.put("name", iface.getDisplayName());
                   data.put("address", address);
+                  list.put(data);
                 }
-                list.put(data);
             }
 
             callbackContext.success(list);
@@ -377,8 +377,12 @@ public class ChromeSocket extends CordovaPlugin {
         private Type type;
 
         // Cached values used by UDP read()/write().
+        // These are the REMOTE address and port.
         private InetAddress address;
         private int port;
+
+        private int localPort;
+
         private boolean connected = false; // Only applies to UDP, where connect() restricts who the socket will receive from.
         private boolean bound = false;
 
@@ -402,6 +406,9 @@ public class ChromeSocket extends CordovaPlugin {
         public SocketData(Socket incoming) {
             this.type = Type.TCP;
             tcpSocket = incoming;
+            connected = true;
+            address = incoming.getInetAddress();
+            port = incoming.getPort();
             init();
         }
 
@@ -414,16 +421,21 @@ public class ChromeSocket extends CordovaPlugin {
             // That's exactly what the boolean connected tracks.
             info.put("connected", connected);
 
-            if (connected) {
-                info.put("peerAddress", address.getHostAddress());
-                info.put("peerPort", port);
+            if (connected || isServer || bound) {
+                if (connected) {
+                    info.put("peerAddress", address.getHostAddress());
+                    info.put("peerPort", port);
+                }
 
-                if (type == Type.TCP) {
+                if (isServer) { // TCP server socket
+                    info.put("localAddress", serverSocket.getInetAddress().getHostAddress());
+                    info.put("localPort", serverSocket.getLocalPort());
+                } else if (type == Type.TCP) {
                     info.put("localAddress", tcpSocket.getLocalAddress().getHostAddress());
                     info.put("localPort", tcpSocket.getLocalPort());
-                } else {
+                } else { // UDP socket
                     info.put("localAddress", udpSocket.getLocalAddress().getHostAddress());
-                    info.put("localAddress", udpSocket.getLocalPort());
+                    info.put("localPort", udpSocket.getLocalPort());
                 }
             }
 
@@ -488,6 +500,7 @@ public class ChromeSocket extends CordovaPlugin {
                     udpSocket.bind(new InetSocketAddress(port));
                 }
                 this.bound = true;
+                this.localPort = port;
             } catch (SocketException se) {
                 Log.e(LOG_TAG, "Failed to create UDP socket.", se);
                 return false;
@@ -596,6 +609,15 @@ public class ChromeSocket extends CordovaPlugin {
                     }
                     serverSocket.close();
                 // readQueue == null means that connect() failed.
+                } else if (multicastSocket != null) {
+                    for(String address : multicastGroups) {
+                        multicastSocket.leaveGroup(InetAddress.getByName(address));
+                    }
+                    multicastSocket.close();
+                    multicastGroups = null;
+                    if (readQueue != null) {
+                        readQueue.put(new ReadData(true));
+                    }
                 } else if (readQueue != null) {
                     readQueue.put(new ReadData(true));
                     if(type == Type.TCP) {
@@ -610,10 +632,11 @@ public class ChromeSocket extends CordovaPlugin {
             tcpSocket = null;
             udpSocket = null;
             serverSocket = null;
+            multicastSocket = null;
         }
 
         public void destroy() {
-            if (tcpSocket != null || udpSocket != null || serverSocket != null) {
+            if (tcpSocket != null || udpSocket != null || serverSocket != null || multicastSocket != null) {
                 disconnect();
             }
         }
@@ -667,7 +690,11 @@ public class ChromeSocket extends CordovaPlugin {
                         return -15; // SOCKET_NOT_CONNECTED
                     }
 
-                    multicastSocket = new MulticastSocket(port);
+                    // Unbind and destroy my UDP socket, since it's no longer needed.
+                    udpSocket.close();
+                    udpSocket = null;
+
+                    multicastSocket = new MulticastSocket(localPort);
                     multicastGroups = new HashSet<String>();
                     multicast = true;
                 }
@@ -805,7 +832,7 @@ public class ChromeSocket extends CordovaPlugin {
 
                             DatagramPacket packet = new DatagramPacket(out, out.length);
                             if (multicastSocket != null && readData.recvFrom) {
-                                multicastSocket.receive(packet);
+                            	multicastSocket.receive(packet);
                             } else {
                                 udpSocket.receive(packet);
                             }
