@@ -578,7 +578,11 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       var curCmd = cmds.shift();
       if (!curCmd)
         return callback();
-      runCmd(curCmd, runAllCmds.bind(null, callback));
+      runCmd(curCmd, function(err) {
+        if (err)
+          return fatal(err);
+        runAllCmds(callback);
+      });
     }
 
     function afterAllCommands() {
