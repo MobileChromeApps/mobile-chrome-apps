@@ -4,18 +4,17 @@
 
 package com.google.cordova;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.StreamCorruptedException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.cordova.CordovaArgs;
+import org.apache.cordova.CordovaResourceApi;
+import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
 import org.apache.cordova.JSONUtils;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -23,17 +22,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 public class ChromeStorage extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeStorage";
-    private ExecutorService executorService = null;
-
-    public ChromeStorage() {
-        executorService = Executors.newSingleThreadExecutor();
-    }
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -57,39 +51,37 @@ public class ChromeStorage extends CordovaPlugin {
         return false;
     }
 
-    private static String getStorageFile(String namespace) {
-        return "__chromestorage_" + namespace;
+    private Uri getStorageFile(String namespace) {
+        String fileName = "__chromestorage_" + namespace;
+        File f = cordova.getActivity().getFileStreamPath(fileName);
+        return webView.getResourceApi().remapUri(Uri.fromFile(f));
     }
 
-    private JSONObject getStorage(String namespace) throws StreamCorruptedException, IOException, ClassNotFoundException, JSONException {
-        Context context = this.cordova.getActivity();
-        File file = new File(context.getFilesDir(), getStorageFile(namespace));
+    private JSONObject getStorage(String namespace) throws IOException, JSONException {
         JSONObject oldMap = new JSONObject();
-
-        if(file.exists()) {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
-                byte[] bytes = new byte[(int) file.length()];
-                fis.read(bytes);
-                String content = (new String(bytes)).trim();
-                if (content.length() > 0) {
-                    oldMap = new JSONObject(content);
-                }
-            } catch (FileNotFoundException e) {
-                //Suppress the file not found exception
-            } finally {
-                try { fis.close(); } catch (Exception e1) { }
+        CordovaResourceApi resourceApi = webView.getResourceApi();
+        try {
+            OpenForReadResult readResult = resourceApi.openForRead(getStorageFile(namespace));
+            ByteArrayOutputStream readBytes = new ByteArrayOutputStream((int)readResult.length);
+            resourceApi.copyResource(readResult, readBytes);
+            byte[] bytes = readBytes.toByteArray();
+            String content = (new String(bytes)).trim();
+            if (content.length() > 0) {
+                oldMap = new JSONObject(content);
             }
+        } catch (FileNotFoundException e) {
+            //Suppress the file not found exception
         }
         return oldMap;
     }
 
     private void setStorage(String namespace, JSONObject map) throws IOException {
-        Context context = this.cordova.getActivity();
-        FileOutputStream fos = context.openFileOutput(getStorageFile(namespace), Context.MODE_PRIVATE);
-        fos.write(map.toString().getBytes());
-        fos.close();
+        OutputStream outputStream = webView.getResourceApi().openOutputStream(getStorageFile(namespace));
+        try {
+            outputStream.write(map.toString().getBytes());
+        } finally {
+            outputStream.close();
+        }
     }
 
     private JSONObject getStoredValuesForKeys(CordovaArgs args, boolean useDefaultValues) {
@@ -131,7 +123,10 @@ public class ChromeStorage extends CordovaPlugin {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Storage is corrupted!", e);
+            ret = null;
+        } catch (IOException e) {
             Log.e(LOG_TAG, "Could not retrieve storage", e);
             ret = null;
         }
@@ -140,7 +135,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private void get(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 JSONObject storage = getStoredValuesForKeys(args, /*useDefaultValues*/ true);
@@ -155,7 +150,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private void getBytesInUse(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 //Don't use default values as the keys that don't have values in storage don't affect size
@@ -171,7 +166,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private void set(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -202,7 +197,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private void remove(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -242,7 +237,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private void clear(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
