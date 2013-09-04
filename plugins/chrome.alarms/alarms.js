@@ -120,7 +120,7 @@ exports.clear = function clear(name) {
 exports.clearAll = function() {
     var names = Object.keys(alarms);
     if (useNativeAlarms) {
-        alarms = {};
+        alarms = Object.create(null);
         exec(undefined, undefined, 'ChromeAlarms', 'clear', [names]);
     } else {
         names.forEach(function(name) {
@@ -168,6 +168,7 @@ channel.onCordovaReady.subscribe(function() {
             return;
         }
         alarms = values.alarms;
+        alarms.__proto__ = null;
         channel.initializationComplete('onChromeAlarmsReady');
         if (bootstrap) {
             bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);

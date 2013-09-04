@@ -142,6 +142,7 @@ channel.onCordovaReady.subscribe(function() {
     storage.internal.get('notifications', function(values) {
         if (values.notifications) {
             notifications = values.notifications;
+            notifications.__proto__ = null;
         }
         channel.initializationComplete('onChromeNotificationsReady');
         if (bootstrap) {
