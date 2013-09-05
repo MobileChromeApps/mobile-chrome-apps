@@ -21,7 +21,7 @@
   </js-module>
 
   <platform name="android">
-    <!-- <dependency id="com.google.playservices" url="https://github.com/MobileChromeApps/google-play-services.git" /> -->
+    <dependency id="com.google.playservices" url="https://github.com/MobileChromeApps/google-play-services.git" />
 
     <source-file src="src/android/ChromeIdentity.java" target-dir="src/com/google/cordova" />
 
