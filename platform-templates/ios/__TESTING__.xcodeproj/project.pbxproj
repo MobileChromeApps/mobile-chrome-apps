@@ -356,7 +356,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = ./copy_www.sh;
+			shellScript = cordova/lib/copy-www-build-step.sh;
 		};
 /* End PBXShellScriptBuildPhase section */
 
