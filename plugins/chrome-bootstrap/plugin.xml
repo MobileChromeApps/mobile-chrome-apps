@@ -54,8 +54,6 @@
 
       <access origin="chrome-extension://*" />
 
-      <!-- TODO: Remove in favour of an app template -->
-      <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
     </config-file>
   </platform>
 
@@ -79,8 +77,6 @@
 
       <access origin="chrome-extension://*" />
 
-      <!-- TODO: Remove in favour of an app template -->
-      <content src="chrome-extension://ohgfbmefaoadakchflddcopcmphnlcba/chromeapp.html" />
       <preference name="KeyboardDisplayRequiresUserAction" value="false" />
       <preference name="UIWebViewBounce" value="false" />
     </config-file>
