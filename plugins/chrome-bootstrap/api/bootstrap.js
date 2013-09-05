@@ -20,7 +20,14 @@ channel.onCordovaReady.subscribe(function() {
   // We do this delay so that plugins have a chance to initialize using the bridge before we load the chrome app background scripts/event page
   var channelsToWaitFor = channel.deviceReadyChannelsArray.filter(function(c) { return c.type !== 'onDOMContentLoaded'; });
   channel.join(function() {
+    // Save the original XHR object; we may need it during bootstrap
     window.origXMLHttpRequest = XMLHttpRequest;
-    window.constructor.prototype.open.call(window, 'foo', 'bar');
+    if (navigator.userAgent.indexOf("Android") > 0) {
+      // On Android, open a background window to handle CORS requests
+      window.constructor.prototype.open.call(window, 'foo', 'bar');
+    } else {
+      // On other platforms, continue with initialization
+      window.onChromeCorsReady();
+    }
   }, channelsToWaitFor);
 });
