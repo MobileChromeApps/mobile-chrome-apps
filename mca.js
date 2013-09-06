@@ -417,7 +417,7 @@ function initCommand() {
     console.log('## Updating git submodules');
 
     process.chdir(scriptDir);
-    exec('git submodule update --init --recursive --rebase', callback, function(error) {
+    exec('git submodule update --init --recursive', callback, function(error) {
       console.log("Could not update submodules:");
       console.error(error.toString());
       console.log("Continuing without update.");
