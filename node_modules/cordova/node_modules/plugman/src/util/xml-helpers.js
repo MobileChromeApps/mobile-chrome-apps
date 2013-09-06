@@ -71,10 +71,22 @@ module.exports = {
         return true;
     },
 
-    // adds node to doc at selector
+    // adds node to doc at selector, creating parent if it doesn't exist
     graftXML: function(doc, nodes, selector) {
         var parent = resolveParent(doc, selector);
-        if (!parent) return false;
+        if (!parent) {
+            //Try to create the parent recursively if necessary
+            try {
+                var parentToCreate = et.XML("<" + path.basename(selector) + ">"),
+                    parentSelector = path.dirname(selector);
+
+                this.graftXML(doc, [parentToCreate], parentSelector);
+            } catch (e) {
+                return false;
+            }
+            parent = resolveParent(doc, selector);
+            if (!parent) return false;
+        }
 
         nodes.forEach(function (node) {
             // check if child is unique first

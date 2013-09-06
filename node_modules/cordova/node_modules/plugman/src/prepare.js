@@ -140,10 +140,13 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir) {
     
             allModules.forEach(function(module) {
                 // Copy the plugin's files into the www directory.
-                var dirname = path.dirname(module.attrib.src);
-    
-                var dir = path.join(platformPluginsDir, plugin_id, dirname);
-                shell.mkdir('-p', dir);
+                // NB: We can't always use path.* functions here, because they will use platform slashes.
+                // But the path in the plugin.xml and in the cordova_plugins.js should be always forward slashes.
+                var pathParts = module.attrib.src.split('/');
+
+                var fsDirname = path.join.apply(path, pathParts.slice(0, -1));
+                var fsDir = path.join(platformPluginsDir, plugin_id, fsDirname);
+                shell.mkdir('-p', fsDir);
     
                 // Read in the file, prepend the cordova.define, and write it back out.
                 var moduleName = plugin_id + '.';
@@ -154,16 +157,17 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir) {
                     moduleName += result[1];
                 }
     
-                var scriptContent = fs.readFileSync(path.join(pluginDir, module.attrib.src), 'utf-8');
+                var fsPath = path.join.apply(path, pathParts);
+                var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8');
                 scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) {' + scriptContent + '});\n';
-                fs.writeFileSync(path.join(platformPluginsDir, plugin_id, module.attrib.src), scriptContent, 'utf-8');
+                fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
                 if(platform == 'wp7' || platform == 'wp8' || platform == "windows8") {
-                    wp_csproj.addSourceFile(path.join('www', 'plugins', plugin_id, module.attrib.src));
+                    wp_csproj.addSourceFile(path.join('www', 'plugins', plugin_id, fsPath));
                 }
     
                 // Prepare the object for cordova_plugins.json.
                 var obj = {
-                    file: path.join('plugins', plugin_id, module.attrib.src),
+                    file: ['plugins', plugin_id, module.attrib.src].join('/'),
                     id: moduleName
                 };
     

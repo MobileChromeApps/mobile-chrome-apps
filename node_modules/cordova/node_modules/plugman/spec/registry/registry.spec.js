@@ -8,7 +8,7 @@ describe('registry', function() {
     describe('manifest', function() {
         var pluginDir, packageJson;
         beforeEach(function() {
-            pluginDir = __dirname + '/../plugins/DummyPlugin';
+            pluginDir = __dirname + '/../plugins/EnginePlugin';
             packageJson = path.resolve(pluginDir, 'package.json');
         });
         afterEach(function() {
@@ -18,8 +18,11 @@ describe('registry', function() {
         it('should generate a package.json from a plugin.xml', function() {
             manifest.generatePackageJsonFromPluginXml(pluginDir);
             expect(fs.existsSync(packageJson));
-            expect(JSON.parse(fs.readFileSync(packageJson)).name).toEqual('com.phonegap.plugins.dummyplugin');
-            expect(JSON.parse(fs.readFileSync(packageJson)).version).toEqual('0.6.0');
+            expect(JSON.parse(fs.readFileSync(packageJson)).name).toEqual('com.cordova.engine');
+            expect(JSON.parse(fs.readFileSync(packageJson)).version).toEqual('1.0.0');
+            expect(JSON.parse(fs.readFileSync(packageJson)).engines).toEqual(
+            [ { name : 'cordova', version : '>=2.3.0' }, { name : 'cordova-plugman', version : '>=0.10.0' }, { name : 'mega-fun-plugin', version : '>=1.0.0' }, { name : 'mega-boring-plugin', version : '>=3.0.0' } ]
+            );
         });
     });
     describe('actions', function() {

@@ -18,6 +18,24 @@ module.exports = function fetchPlugin(plugin_dir, plugins_dir, options, callback
 
     // clone from git repository
     var uri = url.parse(plugin_dir);
+
+    // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
+    // NB: No leading or trailing slash on the subdir.
+    if (uri.hash) {
+        var result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
+        if (result) {
+            if (result[1])
+                options.git_ref = result[1];
+            if(result[2])
+                options.subdir = result[2];
+
+            // Recurse and exit with the new options and truncated URL.
+            var new_dir = plugin_dir.substring(0, plugin_dir.indexOf('#'));
+            module.exports(new_dir, plugins_dir, options, callback);
+            return;
+        }
+    }
+
     if ( uri.protocol && uri.protocol != 'file:' && !plugin_dir.match(/^\w+:\\/)) {
         if (options.link) {
             var err = new Error('--link is not supported for git URLs');

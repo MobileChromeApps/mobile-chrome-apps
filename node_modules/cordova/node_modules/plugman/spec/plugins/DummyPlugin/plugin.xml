@@ -64,6 +64,7 @@
 
         <source-file src="src/android/DummyPlugin.java"
                 target-dir="src/com/phonegap/plugins/dummyplugin" />
+        <lib-file src="src/android/TestLib.jar" />
     </platform>
 
     <!-- blackberry10 -->

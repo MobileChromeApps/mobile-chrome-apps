@@ -10,7 +10,7 @@ You must have `git` on your PATH to be able to install plugins directly from rem
 
 ## Plugin Specification
 
---&gt; [plugin_spec.md](plugin_spec.md) &lt;--
+--&gt; [Available on docs.cordova.io](http://cordova.apache.org/docs/en/3.0.0/plugin_ref_spec.md) &lt;--
 
 ## Quickstart
 

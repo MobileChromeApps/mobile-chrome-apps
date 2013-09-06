@@ -3,10 +3,6 @@ Node.JS module “Deep Extend”
 
 Recursive object extending.
 
-Version
------
-0.2.5
-
 Install
 -----
 

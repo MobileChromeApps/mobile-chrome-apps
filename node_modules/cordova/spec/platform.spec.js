@@ -101,14 +101,14 @@ describe('platform command', function() {
             expect(is_cordova).toHaveBeenCalled();
         });
 
-        describe('`ls`', function() { 
+        describe('`ls`', function() {
             afterEach(function() {
                 cordova.removeAllListeners('results');
             });
             it('should list out no platforms for a fresh project', function(done) {
                 list_platforms.andReturn([]);
                 cordova.on('results', function(res) {
-                    expect(res).toEqual('No platforms added. Use `cordova platform add <platform>`.');
+                    expect(res).toMatch(/^Installed platforms:\s*Available platforms:.*$/);
                     done();
                 });
                 cordova.platform('list');
@@ -116,7 +116,7 @@ describe('platform command', function() {
 
             it('should list out added platforms in a project', function(done) {
                 cordova.on('results', function(res) {
-                    expect(res.length).toEqual(5);
+                    expect(res).toMatch(/^Installed platforms: ios, android, wp7, wp8, blackberry10\s*Available platforms:\s*$/);
                     done();
                 });
                 cordova.platform('list');

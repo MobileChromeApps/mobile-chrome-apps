@@ -3,6 +3,7 @@ var configChanges = require('../../src/util/config-changes'),
     ios_parser = require('../../src/platforms/ios'),
     fs      = require('fs'),
     os      = require('osenv'),
+    plugman = require('../../plugman'),
     et      = require('elementtree'),
     path    = require('path'),
     plist = require('plist'),
@@ -316,6 +317,18 @@ describe('config-changes module', function() {
                     configChanges.process(plugins_dir, temp, 'ios');
                     expect(spy).toHaveBeenCalledWith(path.join(temp, 'SampleApp', 'PhoneGap.plist').replace(/\\/g, '/'));
                 });
+                it('should provide a deprecation warning message when used', function() {
+                    shell.cp('-rf', ios_plist_project, temp);
+                    shell.cp('-rf', dummyplugin, plugins_dir);
+                    var cfg = configChanges.get_platform_json(plugins_dir, 'ios');
+                    cfg.prepare_queue.installed = [{'plugin':'DummyPlugin', 'vars':{}}];
+                    configChanges.save_platform_json(cfg, plugins_dir, 'ios');
+
+                    spyOn(plist, 'parseFileSync').andReturn({Plugins:{}});
+                    var spy = spyOn(plugman, 'emit');
+                    configChanges.process(plugins_dir, temp, 'ios');
+                    expect(spy).toHaveBeenCalledWith('warn', 'DEPRECATION WARNING: Plugin "com.phonegap.plugins.dummyplugin" uses <plugins-plist> element(s), which are now deprecated. Support will be removed in Cordova 3.4.');
+                });
             });
             it('should resolve wildcard config-file targets to the project, if applicable', function() {
                 shell.cp('-rf', ios_config_xml, temp);
@@ -439,6 +452,19 @@ describe('config-changes module', function() {
                 var spy = spyOn(plist, 'parseFileSync').andReturn({Plugins:{}});
                 configChanges.process(plugins_dir, temp, 'ios');
                 expect(spy).toHaveBeenCalledWith(path.join(temp, 'SampleApp', 'PhoneGap.plist').replace(/\\/g, '/'));
+            });
+            it('should provide a deprecation warning message when used', function() {
+                shell.cp('-rf', ios_plist_project, temp);
+                // install plugin
+                configChanges.add_installed_plugin_to_prepare_queue(plugins_dir, 'DummyPlugin', 'ios', {});
+                configChanges.process(plugins_dir, temp, 'ios');
+                // set up an uninstall
+                configChanges.add_uninstalled_plugin_to_prepare_queue(plugins_dir, 'DummyPlugin', 'ios');
+
+                spyOn(plist, 'parseFileSync').andReturn({Plugins:{}});
+                var spy = spyOn(plugman, 'emit');
+                configChanges.process(plugins_dir, temp, 'ios');
+                expect(spy).toHaveBeenCalledWith('warn', 'DEPRECATION WARNING: Plugin "com.phonegap.plugins.dummyplugin" uses <plugins-plist> element(s), which are now deprecated. Support will be removed in Cordova 3.4.');
             });
             it('should save changes to global config munge after completing an uninstall', function() {
                 shell.cp('-rf', android_two_project, temp);

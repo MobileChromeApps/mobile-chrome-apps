@@ -41,20 +41,23 @@ module.exports = {
     },
     // Sometimes we want to remove some java, and prune any unnecessary empty directories
     deleteJava:function(project_dir, destFile) {
-        fs.unlinkSync(path.resolve(project_dir,destFile));
-        // check if directory is empty
+        var file = path.resolve(project_dir, destFile);
+        if (!fs.existsSync(file)) return;
 
-        var curDir = path.resolve(project_dir, path.dirname(destFile));
+        module.exports.removeFileF(file);
+
+        // check if directory is empty
+        var curDir = path.dirname(file);
+
         while(curDir !== path.resolve(project_dir, 'src')) {
-            //console.log('curDir ' + curDir);
-            if(fs.readdirSync(curDir).length == 0) {
+            if(fs.existsSync(curDir) && fs.readdirSync(curDir) == 0) {
                 fs.rmdirSync(curDir);
                 curDir = path.resolve(curDir, '..');
             } else {
                 // directory not empty...do nothing
                 break;
             }
-        }   
+        }
     },
     // handle <asset> elements
     asset:{

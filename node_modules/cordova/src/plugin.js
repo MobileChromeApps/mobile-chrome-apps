@@ -121,9 +121,15 @@ module.exports = function plugin(command, targets, callback) {
                                 if (callback) callback(err);
                                 else throw err;
                             } else {
-                                // Iterate over all platforms in the project and install the plugin.
-                                platformList.forEach(function(platform) {
-                                    var platformRoot = path.join(projectRoot, 'platforms', platform),
+                                // Iterate (in serial!) over all platforms in the project and install the plugin.
+                                var doInstall = function(platformIndex) {
+                                    if (platformIndex >= platformList.length) {
+                                        end();
+                                        return;
+                                    }
+
+                                    var platform = platformList[platformIndex],
+                                        platformRoot = path.join(projectRoot, 'platforms', platform),
                                         parser = new platforms[platform].parser(platformRoot),
                                         options = {
                                             www_dir: parser.staging_dir(),
@@ -144,9 +150,11 @@ module.exports = function plugin(command, targets, callback) {
                                     }
 
                                     events.emit('log', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                    plugman.install(platform, platformRoot, path.basename(dir), pluginsDir, options);
-                                });
-                                end();
+                                    plugman.install(platform, platformRoot, path.basename(dir), pluginsDir, options, function() {
+                                        doInstall(platformIndex+1);
+                                    });
+                                };
+                                doInstall(0);
                             }
                         });
                     });

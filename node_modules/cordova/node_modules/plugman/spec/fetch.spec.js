@@ -61,6 +61,24 @@ describe('fetch', function() {
             fetch(url, temp, { subdir: dir, git_ref: ref });
             expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, jasmine.any(Function));
         });
+        it('should extract the git ref from the URL hash, if provided', function() {
+            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef";
+            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            fetch(url, temp, {});
+            expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef', jasmine.any(Function));
+        });
+        it('should extract the subdir from the URL hash, if provided', function() {
+            var url = "https://github.com/bobeast/GAPlugin.git#:fakeSubDir";
+            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            fetch(url, temp, {});
+            expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined, jasmine.any(Function));
+        });
+        it('should extract the git ref and subdir from the URL hash, if provided', function() {
+            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/";
+            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            fetch(url, temp, {});
+            expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef', jasmine.any(Function));
+        });
         it('should throw if used with url and `link` param', function() {
             expect(function() {
                 fetch("https://github.com/bobeast/GAPlugin.git", temp, {link:true});

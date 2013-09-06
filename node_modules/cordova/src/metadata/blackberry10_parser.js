@@ -36,7 +36,7 @@ module.exports = function blackberry_parser(project) {
 
 module.exports.check_requirements = function(project_root, callback) {
     var lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../../platforms').blackberry10.version);
-    shell.exec(path.join(lib_path, 'bin', 'check_reqs'), {silent:true, async:true}, function(code, output) {
+    shell.exec("\"" + path.join(lib_path, 'bin', 'check_reqs') + "\"", {silent:true, async:true}, function(code, output) {
         if (code !== 0) {
             callback(output);
         } else {

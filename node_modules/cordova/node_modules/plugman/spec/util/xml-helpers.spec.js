@@ -40,37 +40,37 @@ describe('xml-helpers', function(){
 
         it('should return true for identical tags', function(){
             expect(xml_helpers.equalNodes(usesNetworkOne, usesNetworkTwo)).toBe(true);
-        });   
-        
+        });
+
         it('should return false for different attributes', function(){
             expect(xml_helpers.equalNodes(usesNetworkOne, usesReceive)).toBe(false);
-        });  
-        
+        });
+
         it('should distinguish between text', function(){
             expect(xml_helpers.equalNodes(helloTagOne, goodbyeTag)).toBe(false);
-        });  
-        
+        });
+
         it('should ignore whitespace in text', function(){
             expect(xml_helpers.equalNodes(helloTagOne, helloTagTwo)).toBe(true);
-        });    
-        
+        });
+
         describe('should compare children', function(){
             it('by child quantity', function(){
                 var one = et.XML('<i><b>o</b></i>'),
                     two = et.XML('<i><b>o</b><u></u></i>');
-        
-                expect(xml_helpers.equalNodes(one, two)).toBe(false);        
+
+                expect(xml_helpers.equalNodes(one, two)).toBe(false);
             });
-            
+
             it('by child equality', function(){
                 var one = et.XML('<i><b>o</b></i>'),
                     two = et.XML('<i><u></u></i>'),
                     uno = et.XML('<i>\n<b>o</b>\n</i>');
-        
-                expect(xml_helpers.equalNodes(one, uno)).toBe(true); 
-                expect(xml_helpers.equalNodes(one, two)).toBe(false);       
+
+                expect(xml_helpers.equalNodes(one, uno)).toBe(true);
+                expect(xml_helpers.equalNodes(one, two)).toBe(false);
             });
-        }); 
+        });
     });
     describe('pruneXML', function() {
         var config_xml;
@@ -123,6 +123,21 @@ describe('xml-helpers', function(){
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, '/*');
             expect(config_xml.findall('access').length).toEqual(3);
+        });
+
+        it('for simple XPath paths, the parent should be created if not present', function () {
+            var doc = new et.ElementTree(et.XML('<widget>')),
+                children = [et.XML('<rim:permits> super_awesome_permission </rim:permits>')],
+                selector= "/widget/rim:permissions";
+            expect(xml_helpers.graftXML(doc, children, selector)).toBe(true);
+            expect(et.tostring(doc.getroot())).toContain("<rim:permissions><rim:permits> super_awesome_permission </rim:permits></rim:permissions>");
+        });
+
+        it('returns false for more complicated selectors', function () {
+            var doc = new et.ElementTree(et.XML('<widget>')),
+                children = [et.XML('<rim:permits> super_awesome_permission </rim:permits>')],
+                selector= "/bookstore/book[price>35]/title";
+            expect(xml_helpers.graftXML(doc, children, selector)).toBe(false);
         });
     });
 });

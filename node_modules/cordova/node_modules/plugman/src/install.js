@@ -65,6 +65,107 @@ function possiblyFetch(actions, platform, project_dir, id, plugins_dir, options,
     }
 }
 
+function checkEngines(engines, callback) {
+    engines.forEach(function(engine){    
+        if(semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion == null){
+            // engine ok!
+        }else{
+            var err = new Error('Plugin doesn\'t support this project\'s '+engine.name+' version. '+engine.name+': ' + engine.currentVersion + ', failed version requirement: ' + engine.minVersion);
+            if (callback) return callback(err);
+            else throw err;
+        }  
+    });
+}
+
+function cleanVersionOutput(version, name){
+    var out = version.trim();
+    var rc_index = out.indexOf('rc');
+    var dev_index = out.indexOf('dev');
+    if (rc_index > -1) {
+        out = out.substr(0, rc_index) + '-' + out.substr(rc_index);
+    }  
+
+    // strip out the -dev and put a warning about using the dev branch
+    if (dev_index > -1) {
+        // some platform still lists dev branches as just dev, set to null and continue
+        if(out=="dev"){
+            out = null;
+        }else{
+            out = out.substr(0, dev_index-1);
+        }
+        require('../plugman').emit('log', name+' has been detected as using a development branch. Attemping to install anyways.');
+    }     
+    return out;
+}
+
+// exec engine scripts in order to get the current engine version
+function callEngineScripts(engines) {
+    var engineScript;
+    var engineScriptVersion;
+   
+    engines.forEach(function(engine){
+        if(fs.existsSync(engine.scriptSrc)){
+            fs.chmodSync(engine.scriptSrc, '755');
+            engineScript = shell.exec(engine.scriptSrc, {silent: true});
+            if (engineScript.code === 0) {
+                engineScriptVersion = cleanVersionOutput(engineScript.output, engine.name)
+            }else{
+                engineScriptVersion = null;
+                require('../plugman').emit('log', 'Cordova project '+ engine.scriptSrc +' script failed (has a '+ engine.scriptSrc +' script, but something went wrong executing it), continuing anyways.');
+            }  
+        }else if(engine.currentVersion){
+            engineScriptVersion = cleanVersionOutput(engine.currentVersion, engine.name)           
+        }else{
+            engineScriptVersion = null;
+            require('../plugman').emit('log', 'Cordova project '+ engine.scriptSrc +' not detected (lacks a '+ engine.scriptSrc +' script), continuing.');
+        } 
+        engine.currentVersion = engineScriptVersion;
+    });
+    
+    return engines;
+}
+
+// return only the engines we care about/need
+function getEngines(pluginElement, platform, project_dir, plugin_dir){
+    var engines = pluginElement.findall('engines/engine');
+    var defaultEngines = require('./util/default-engines')(project_dir);
+    var uncheckedEngines = [];
+    var cordovaEngineIndex, cordovaPlatformEngineIndex, theName, platformIndex, defaultPlatformIndex;
+    // load in known defaults and update when necessary
+    engines.forEach(function(engine){   
+        theName = engine.attrib["name"];
+        
+        // check to see if the engine is listed as a default engine
+        if(defaultEngines[theName]){
+            // make sure engine is for platform we are installing on
+            defaultPlatformIndex = defaultEngines[theName].platform.indexOf(platform);
+            if(defaultPlatformIndex > -1 || defaultEngines[theName].platform === '*'){
+                defaultEngines[theName].minVersion = defaultEngines[theName].minVersion ? defaultEngines[theName].minVersion : engine.attrib["version"];
+                defaultEngines[theName].currentVersion = defaultEngines[theName].currentVersion ? defaultEngines[theName].currentVersion : null;
+                defaultEngines[theName].scriptSrc = defaultEngines[theName].scriptSrc ? defaultEngines[theName].scriptSrc : null;
+                defaultEngines[theName].name = theName;
+                
+                // set the indices so we can pop the cordova engine when needed
+                if(theName==='cordova') cordovaEngineIndex = uncheckedEngines.length;
+                if(theName==='cordova-'+platform) cordovaPlatformEngineIndex = uncheckedEngines.length;
+                
+                uncheckedEngines.push(defaultEngines[theName]);
+            }
+        // check for other engines
+        }else{
+            platformIndex = engine.attrib["platform"].indexOf(platform);
+            if(platformIndex > -1 || engine.attrib["platform"] === '*'){
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.attrib["platform"], 'scriptSrc':path.resolve(plugin_dir, engine.attrib["scriptSrc"]), 'minVersion' :  engine.attrib["version"]});
+            }
+        }
+    });
+    
+    // make sure we check for platform req's and not just cordova reqs
+    if(cordovaEngineIndex && cordovaPlatformEngineIndex) uncheckedEngines.pop(cordovaEngineIndex);
+    return uncheckedEngines;
+}
+
+
 // possible options: cli_variables, www_dir, is_top_level
 function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options, callback) {
     var xml_path     = path.join(plugin_dir, 'plugin.xml')
@@ -93,47 +194,11 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         if (callback) callback();
         return;
     }
-
-    // checking engine
-    // will there be a case for multiple engine support?
-    var versionPath = path.join(project_dir, 'cordova', 'version');
-    // windows8, wp7, wp8 all use a .bat file
-    if (!fs.existsSync(versionPath)) {
-        versionPath += ".bat";
-    }
-    if (fs.existsSync(versionPath)) {
-        // need to rethink this so I don't have to chmod anything
-        fs.chmodSync(versionPath, '755');
-        var versionScript = shell.exec(versionPath, {silent: true});
-        // Only check cordova version if the version script was successful.
-        if (versionScript.code === 0) {
-            var current_version = versionScript.output.trim();
-            var rc_index = current_version.indexOf('rc');
-            if (rc_index > -1) {
-                current_version = current_version.substr(0, rc_index) + '-' + current_version.substr(rc_index);
-            }
-            var engines = plugin_et.findall('engines/engine');
-            engines.forEach(function(engine){
-                if(engine.attrib["name"].toLowerCase() === "cordova"){
-                    var engineVersion = engine.attrib["version"];
-                    // clean only versionScript.output since semver.clean strips out
-                    // the gt and lt operators
-                    if(current_version == 'dev' || semver.satisfies(current_version, engineVersion)){
-                        // engine ok!
-                    } else {
-                        var err = new Error('Plugin doesn\'t support this project\'s Cordova version. Project version: ' + current_version + ', failed version requirement: ' + engineVersion);
-                        if (callback) return callback(err);
-                        else throw err;
-                    }
-                } else {
-                    // check for other engines? worklight phonegap etc
-                }
-            });
-        }
-    } else {
-        require('../plugman').emit('log', 'Cordova project version not detected (lacks a ./cordova/version script), continuing.');
-    }
-
+    
+    var theEngines = getEngines(plugin_et, platform, project_dir, plugin_dir);
+    theEngines = callEngineScripts(theEngines);
+    checkEngines(theEngines, callback);
+    
     // checking preferences, if certain variables are not provided, we should throw.
     prefs = plugin_et.findall('./preference') || [];
     prefs = prefs.concat(plugin_et.findall('./platform[@name="'+platform+'"]/preference'));

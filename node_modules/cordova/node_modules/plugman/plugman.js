@@ -32,6 +32,7 @@ plugman = {
     publish:            require('./src/publish'),
     unpublish:          require('./src/unpublish'),
     search:             require('./src/search'),
+    info:               require('./src/info'),
     config_changes:     require('./src/util/config-changes'),
     on:                 emitter.addListener,
     off:                emitter.removeListener,
@@ -74,6 +75,9 @@ plugman.commands =  {
 
     'search'   : function(cli_opts) {
         plugman.search(cli_opts.argv.remain);
+    },
+    'info'     : function(cli_opts) {
+        plugman.info(cli_opts.argv.remain);
     },
 
     'publish'  : function(cli_opts) {

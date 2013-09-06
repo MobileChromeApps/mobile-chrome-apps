@@ -23,6 +23,7 @@ var xml_path     = path.join(dummyplugin, 'plugin.xml')
 var platformTag = plugin_et.find('./platform[@name="android"]');
 var dummy_id = plugin_et._root.attrib['id'];
 var valid_source = platformTag.findall('./source-file'),
+    valid_libs = platformTag.findall('./lib-file'),
     assets = plugin_et.findall('./asset'),
     configChanges = platformTag.findall('./config-file');
 
@@ -65,6 +66,14 @@ describe('android project handler', function() {
         afterEach(function() {
             shell.rm('-rf', temp);
         });
+        describe('of <lib-file> elements', function() {
+            it("should copy jar files to project/libs", function () {
+                var s = spyOn(common, 'copyFile');
+
+                android['lib-file'].install(valid_libs[0], dummyplugin, temp);
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/TestLib.jar', temp, path.join('libs', 'TestLib.jar'));
+            });
+        });
         describe('of <source-file> elements', function() {
             beforeEach(function() {
                 shell.cp('-rf', android_one_project, temp);
@@ -105,6 +114,14 @@ describe('android project handler', function() {
         });
         afterEach(function() {
             shell.rm('-rf', temp);
+        });
+        describe('of <lib-file> elements', function(done) {
+            it('should remove jar files', function () {
+                var s = spyOn(common, 'removeFile');
+                android['lib-file'].install(valid_libs[0], dummyplugin, temp);
+                android['lib-file'].uninstall(valid_libs[0], temp, dummy_id);
+                expect(s).toHaveBeenCalledWith(temp, path.join('libs', 'TestLib.jar'));
+            });
         });
         describe('of <source-file> elements', function() {
             it('should remove stuff by calling common.deleteJava', function(done) {

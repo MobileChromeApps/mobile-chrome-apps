@@ -20,6 +20,7 @@ var config            = require('./config'),
     cordova_util      = require('./util'),
     util              = require('util'),
     fs                = require('fs'),
+    os                = require('os'),
     path              = require('path'),
     hooker            = require('./hooker'),
     events            = require('./events'),
@@ -137,7 +138,21 @@ module.exports = function platform(command, targets, callback) {
                     if (callback) callback(err);
                     else throw err;
                 } else {
-                    events.emit('results', (platforms_on_fs.length ? platforms_on_fs : 'No platforms added. Use `cordova platform add <platform>`.'));
+                    var results = 'Installed platforms: ' + platforms_on_fs.join(', ') + '\n';
+                    var available = ['android', 'blackberry10'];
+                    if (os.platform() === 'darwin')
+                        available.push('ios');
+                    if (os.platform() === 'win32') {
+                        available.push('wp7');
+                        available.push('wp8');
+                    }
+
+                    available = available.filter(function(p) {
+                        return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
+                    });
+                    results += 'Available platforms: ' + available.join(', ');
+
+                    events.emit('results', results);
                     hooks.fire('after_platform_ls', function(err) {
                         if (err) {
                             if (callback) callback(err);

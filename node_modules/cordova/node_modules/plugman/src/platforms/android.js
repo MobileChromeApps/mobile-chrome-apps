@@ -43,5 +43,17 @@ module.exports = {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.deleteJava(project_dir, dest);
         }
+    },
+    "lib-file":{
+        install:function(lib_el, plugin_dir, project_dir) {
+            var src = lib_el.attrib.src;
+            var dest = path.join("libs", path.basename(src));
+            common.copyFile(plugin_dir, src, project_dir, dest);
+        },
+        uninstall:function(lib_el, project_dir) {
+            var src = lib_el.attrib.src;
+            var dest = path.join("libs", path.basename(src));
+            common.removeFile(project_dir, dest);
+        }
     }
 };

@@ -27,7 +27,7 @@ var cordova = require('../cordova'),
     platforms = require('../platforms');
 
 var cwd = process.cwd();
-var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
+var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; }).sort();
 var sample_plugins = ['one','two'];
 var project_dir = path.join('some','path');
 var plugins_dir = path.join(project_dir, 'plugins');
@@ -59,7 +59,9 @@ describe('plugin command', function() {
         prep_spy = spyOn(cordova, 'prepare').andCallFake(function(t, cb) {
             cb();
         });
-        plugman_install = spyOn(plugman, 'install');
+        plugman_install = spyOn(plugman, 'install').andCallFake(function(platform, platform_dir, plugin, plugins_dir, options, callback) {
+            callback();
+        });
         plugman_fetch = spyOn(plugman, 'fetch').andCallFake(function(target, plugins_dir, opts, cb) { cb(false, path.join(plugins_dir, target)); });
         plugman_search = spyOn(plugman, 'search').andCallFake(function(params, cb) { cb(); });
         uninstallPlatform = spyOn(plugman.uninstall, 'uninstallPlatform');
@@ -132,14 +134,14 @@ describe('plugin command', function() {
                 cordova.plugin('add', sample_plugins);
                 sample_plugins.forEach(function(plug) {
                     supported_platforms.forEach(function(plat) {
-                        expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), plug, plugins_dir, jasmine.any(Object));
+                        expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), plug, plugins_dir, jasmine.any(Object), jasmine.any(Function));
                     });
                 });
             });
             it('should pass down variables into plugman', function() {
                 cordova.plugin('add', "one", "--variable", "foo=bar");
                 supported_platforms.forEach(function(plat) {
-                    expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), "one", plugins_dir, {www_dir: jasmine.any(String), cli_variables: { FOO: "bar"}});
+                    expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), "one", plugins_dir, {www_dir: jasmine.any(String), cli_variables: { FOO: "bar"}}, jasmine.any(Function));
                 });
             });
             it('should trigger callback without an error', function(done) {
