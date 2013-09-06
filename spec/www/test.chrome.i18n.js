@@ -19,7 +19,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
 
   if (!runningInBackground) {
     it('should not replace placeholders in html', function() {
-      expect(document.getElementById('i18n-html-test').innerHTML).toBe('__MSG_appname__');
+      expect(document.getElementById('i18n-html-test').innerHTML).toBe('__MSG_description__');
     });
 
     describe('CSS', function() {

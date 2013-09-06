@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 {
-  "name": "__MSG_appname__",
-  "description": "Automated and manual tests for Cordova and Chrome APIs",
+  "name": "Chrome Spec",
+  "description": "__MSG_description__",
   "manifest_version": 2,
   "minimum_chrome_version": "23",
   "version": "0.1.0",
