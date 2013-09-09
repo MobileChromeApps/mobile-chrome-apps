@@ -4,11 +4,12 @@ Mobile Chrome Apps is a toolkit for porting [Chrome Packaged Apps](http://develo
 
 ## 30 Second Summary
 
-* You're writing a Chrome Packaged App that runs on Windows, OSX, Linux, and ChromeOS.  Sweet.
-* You use this toolkit to create an Android and/or iOS app template, with our chrome runtime and chrome API polyfills.
-* You import your app, modify it for mobile friendly design, work around limitations, and test.
-* ????
-* Publish to the iOS App and/or Android Play store.
+* You're excited about Chrome Packaged App for Windows, OSX, Linux, and ChromeOS.  Sweet!
+* You've discovered this toolkit for creating Android & iOS hybrid native apps with chrome app polyfills.
+* Follow our Guide (below) to Import your existing chrome app (or start fresh).
+* ???? 
+  * (modify for mobile design, fix bugs, work-around limitations, and test)
+* Publish to the Android Play Store or iOS App Store.
 * Profit!
 
 ## Documentation
