@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.apache.cordova.CordovaArgs;
-import org.apache.cordova.JSONUtils;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
@@ -57,6 +56,19 @@ public class ChromeIdentity extends CordovaPlugin {
         return false;
     }
 
+    private static List<String> toStringList(JSONArray array) throws JSONException {
+        if (array == null) {
+            return null;
+        }
+        List<String> list = new ArrayList<String>();
+
+        for (int i = 0, l = array.length(); i < l; i++) {
+            list.add(array.get(i).toString());
+        }
+
+        return list;
+    }
+
     private List<String> loadScopesFromManifest() throws IOException, JSONException {
         Context context = this.cordova.getActivity();
         InputStream is = context.getAssets().open("www/manifest.json");
@@ -71,7 +83,7 @@ public class ChromeIdentity extends CordovaPlugin {
         if(oAuthObj != null) {
             JSONArray oAuthScopes = oAuthObj.optJSONArray("scopes");
             if(oAuthScopes != null) {
-                scopes = JSONUtils.toStringList(oAuthScopes);
+                scopes = toStringList(oAuthScopes);
             } else {
                 throw new IllegalArgumentException("scopes missing from manifest.json");
             }

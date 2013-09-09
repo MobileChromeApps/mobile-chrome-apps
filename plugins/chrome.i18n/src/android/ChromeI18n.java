@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
 import org.apache.cordova.CordovaWebView;
-import org.apache.cordova.JSONUtils;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -245,8 +244,21 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
         return null;
     }
 
+    private static List<String> toStringList(JSONArray array) throws JSONException {
+        if (array == null) {
+            return null;
+        }
+        List<String> list = new ArrayList<String>();
+
+        for (int i = 0, l = array.length(); i < l; i++) {
+            list.add(array.get(i).toString());
+        }
+
+        return list;
+    }
+
     private JSONObject toLowerCaseMessage(JSONObject contents) throws JSONException {
-        List<String> messages = JSONUtils.toStringList(contents.names());
+        List<String> messages = toStringList(contents.names());
         for(String message : messages) {
             JSONObject value = contents.getJSONObject(message);
             contents.remove(message);

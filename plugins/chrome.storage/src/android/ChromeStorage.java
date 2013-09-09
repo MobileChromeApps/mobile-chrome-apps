@@ -15,7 +15,6 @@ import java.util.List;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
-import org.apache.cordova.JSONUtils;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
@@ -49,6 +48,19 @@ public class ChromeStorage extends CordovaPlugin {
         }
 
         return false;
+    }
+
+    private static List<String> toStringList(JSONArray array) throws JSONException {
+        if (array == null) {
+            return null;
+        }
+        List<String> list = new ArrayList<String>();
+
+        for (int i = 0, l = array.length(); i < l; i++) {
+            list.add(array.get(i).toString());
+        }
+
+        return list;
     }
 
     private Uri getStorageFile(String namespace) {
@@ -94,13 +106,13 @@ public class ChromeStorage extends CordovaPlugin {
             List<String> keys = new ArrayList<String>();
 
             if (jsonObject != null) {
-                keys = JSONUtils.toStringList(jsonObject.names());
+                keys = toStringList(jsonObject.names());
                 // Ensure default values of keys are maintained
                 if (useDefaultValues) {
                     ret = jsonObject;
                 }
             } else if (jsonArray != null) {
-                keys = JSONUtils.toStringList(jsonArray);
+                keys = toStringList(jsonArray);
             } else if (isNull) {
                 keys = null;
             }
@@ -176,7 +188,7 @@ public class ChromeStorage extends CordovaPlugin {
                     JSONObject oldValues = new JSONObject();
 
                     if (keyArray != null) {
-                        List<String> keys = JSONUtils.toStringList(keyArray);
+                        List<String> keys = toStringList(keyArray);
                         JSONObject storage = getStorage(namespace);
                         for (String key : keys) {
                             Object oldValue = storage.opt(key);
@@ -209,9 +221,9 @@ public class ChromeStorage extends CordovaPlugin {
                     JSONObject oldValues = new JSONObject();
 
                     if (jsonObject != null) {
-                        keys = JSONUtils.toStringList(jsonObject.names());
+                        keys = toStringList(jsonObject.names());
                     } else if (jsonArray != null) {
-                        keys = JSONUtils.toStringList(jsonArray);
+                        keys = toStringList(jsonArray);
                     } else if (isNull) {
                         keys = null;
                     }
