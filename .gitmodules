@@ -25,3 +25,6 @@
 [submodule "cordova/cordova-plugin-network-information"]
 	path = cordova/cordova-plugin-network-information
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-network-information.git
+[submodule "cordova/google-play-services"]
+	path = cordova/google-play-services
+	url = https://github.com/MobileChromeApps/google-play-services.git
