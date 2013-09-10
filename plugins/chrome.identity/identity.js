@@ -9,9 +9,12 @@ try {
     var runtime = require('org.chromium.chrome-runtime.runtime');
 } catch(e) {}
 
-// TODO(maxw): Automatically handle expiration.
-// TODO(maxw): Can multiple tokens be cached?
-var cachedToken;
+// TODO(maxw): Store the refresh token in local storage.
+// TODO(maxw): Perhaps store the client secret in the manifest?
+var clientSecret = 'Q_Jk5GKsGcA-Dp9GcqMKRnAP';
+var clientId;
+var accessToken;
+var refreshToken;
 
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
@@ -28,21 +31,35 @@ exports.getAuthToken = function(details, callback) {
         callback();
     };
 
-    // If we have a cached token, send it along.
-    if (cachedToken) {
-        callback(cachedToken);
+    // If we have a cached access token, send it along.
+    if (accessToken) {
+        callback(accessToken);
+        return;
+    }
+
+    // If we have a refresh token, get a new access token.
+    if (refreshToken) {
+        refreshAccessToken(callback);
         return;
     }
 
     // Augment the callback so that it caches a received token.
-    var augmentedCallback = function(token) {
-        if (token) {
-            cachedToken = token;
+    var augmentedCallback = function(tokenObject) {
+        if (tokenObject) {
+            if (tokenObject.access_token) {
+                accessToken = tokenObject.access_token;
+            }
+            if (tokenObject.refresh_token) {
+                refreshToken = tokenObject.refresh_token;
+
+                // Set a time to refresh the access token.
+                setTimeout(refreshAccessToken, tokenObject.expires_in * 1000, null);
+            }
         }
-        callback(token);
+        callback(accessToken);
     };
 
-    if (platformId === 'android') {
+    if (0 /*platformId === 'android'*/) {
         // Use native implementation for logging into google accounts
         exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
     } else {
@@ -52,8 +69,8 @@ exports.getAuthToken = function(details, callback) {
 };
 
 exports.removeCachedAuthToken = function(details, callback) {
-    if (details && details.token === cachedToken) {
-        cachedToken = null;
+    if (details && details.token === accessToken) {
+        accessToken = null;
     }
     callback();
 }
@@ -94,43 +111,40 @@ function getAuthTokenJS(win, fail, details) {
     if (typeof manifestJson.oauth2.scopes === 'undefined')
         return callbackWithError('scopes missing from manifest.json', fail);
 
-    var authURLBase = 'https://accounts.google.com/o/oauth2/auth?response_type=token';
-    var redirect_uri = 'http://www.google.com';
-    var client_id = manifestJson.oauth2.client_id;
+    var authURLBase = 'https://accounts.google.com/o/oauth2/auth?response_type=code';
+    clientId = manifestJson.oauth2.client_id;
+    var redirectUri = 'http://www.google.com';
     var scope = manifestJson.oauth2.scopes;
-    var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join(' '));
+    var finalURL = authURLBase + '&client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&scope=' + encodeURIComponent(scope.join(' ')) + '&access_type=offline';
 
     launchInAppBrowser(finalURL, details.interactive, function(newLoc) {
-        // If we're redirected to this ServiceLoginAuth page, try again; we should get the token.
-        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
-            // Unfortunately, this timeout is necessary, or else the authentication page comes up again.
-            // TODO(maxw): Find a better way to solve this issue.
-            window.setTimeout(getAuthTokenJS, 1000, win, fail, details);
-            return;
+        // We should have a new location with an authorization code.
+        var code = newLoc.substring(newLoc.indexOf('code=') + 5);
+        if (typeof code === 'undefined') {
+            return callbackWithError('The redirect uri did not have a code.', fail);
         }
 
-        var token = getAllParametersFromUrl(newLoc, '#')['access_token'];
-        if (typeof token === 'undefined') {
-            return callbackWithError('The redirect uri did not have the access token', fail);
+        // Use the access code to get some tokens.
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://accounts.google.com/o/oauth2/token');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                if (xhr.status < 200 || xhr.status > 300) {
+                    console.log('Could not redeem code; status ' + xhr.status + '.');
+                } else {
+                    var responseData = JSON.parse(xhr.responseText);
+                    win(responseData);
+                }
+            }
         }
-        win(token);
+        var data = 'code=' + code +
+                   '&client_id=' + clientId +
+                   '&client_secret=' + clientSecret +
+                   '&redirect_uri=' + redirectUri +
+                   '&grant_type=authorization_code';
+        xhr.send(data);
     });
-}
-
-function getAllParametersFromUrl(url, startString, endString) {
-    if (typeof url !== 'undefined' && typeof startString !== 'undefined')
-        url = url.split(startString)[1];
-    if (typeof url !== 'undefined' && typeof endString !== 'undefined')
-        url = url.split(endString)[0];
-    if (typeof url === 'undefined')
-        return {};
-
-    var retObj = {};
-    url.split('&').forEach(function(arg) {
-        var pair = arg.split('=');
-        retObj[pair[0]] = decodeURIComponent(pair[1]);
-    });
-    return retObj;
 }
 
 function launchInAppBrowser(authURL, interactive, callback) {
@@ -143,24 +157,10 @@ function launchInAppBrowser(authURL, interactive, callback) {
             return;
         if (timeoutid)
             timeoutid = clearTimeout(timeoutid);
+
         var newLoc = event.url;
-        var paramsAfterQuestion = getAllParametersFromUrl(newLoc, "?", "#");
-        var paramsAfterPound = getAllParametersFromUrl(newLoc, "#");
-        var keys = Object.keys(paramsAfterQuestion).concat(Object.keys(paramsAfterPound));
-
-        ['access_token', 'oauth_verifier', 'token'].forEach(function(breakKey) {
-            if (keys.indexOf(breakKey) != -1) {
-                success = true;
-            }
-        });
-
-        // On first login, it redirects to "https://accounts.google.com/ServiceLoginAuth".
-        // In this case, we close the in-app browser and kick off authentication again.
-        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
+        if (newLoc.indexOf('code=') != -1) {
             success = true;
-        }
-
-        if (success) {
             oAuthBrowser.close();
             callback(newLoc);
         }
@@ -190,5 +190,37 @@ function launchInAppBrowser(authURL, interactive, callback) {
             return;
         callback();
     });
+}
+
+function refreshAccessToken(callback) {
+    // Use the refresh code to get a new access token.
+    console.log("Refreshing access token.");
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://accounts.google.com/o/oauth2/token');
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status < 200 || xhr.status > 300) {
+                console.log('Could not redeem code; status ' + xhr.status + '.');
+            } else {
+                // Cache the refreshed access token.
+                var responseData = JSON.parse(xhr.responseText);
+                accessToken = responseData.access_token;
+
+                // Schedule another access token refresh.
+                setTimeout(refreshAccessToken, responseData.expires_in * 1000);
+
+                // Send the refreshed token to the callback.
+                if (callback) {
+                    callback(accessToken);
+                }
+            }
+        }
+    }
+    var data = 'refresh_token=' + refreshToken +
+               '&client_id=' + clientId +
+               '&client_secret=' + clientSecret +
+               '&grant_type=refresh_token';
+    xhr.send(data);
 }
 
