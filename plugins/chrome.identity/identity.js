@@ -200,8 +200,12 @@ function refreshAccessToken(callback) {
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
-            if (xhr.status < 200 || xhr.status > 300) {
-                console.log('Could not redeem code; status ' + xhr.status + '.');
+            if (xhr.status === 400) {
+                // Assume this is a bad refresh token.  Remove it.
+                console.log('Invalid refresh token!  It has been removed.');
+                refreshToken = null;
+            } else if (xhr.status < 200 || xhr.status > 300) {
+                console.log('Could not refresh access token; status ' + xhr.status + '.');
             } else {
                 // Cache the refreshed access token.
                 var responseData = JSON.parse(xhr.responseText);
