@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProductVersion>10.0.20506</ProductVersion>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{3677C1B7-D68B-4CF9-BF8A-E869D437A6DF}</ProjectGuid>
+        <ProjectTypeGuids>{C089C8C0-30E0-4E22-80C0-CE093F111A43};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>my.test.project</RootNamespace>
+        <AssemblyName>my.test.project</AssemblyName>
+        <TargetFrameworkVersion>v8.0</TargetFrameworkVersion>
+        <SilverlightVersion>
+        </SilverlightVersion>
+        <TargetFrameworkProfile>
+        </TargetFrameworkProfile>
+        <TargetFrameworkIdentifier>WindowsPhone</TargetFrameworkIdentifier>
+        <SilverlightApplication>true</SilverlightApplication>
+        <SupportedCultures>en-US</SupportedCultures>
+        <XapOutputs>true</XapOutputs>
+        <GenerateSilverlightManifest>true</GenerateSilverlightManifest>
+        <XapFilename>CordovaAppProj_$(Configuration)_$(Platform).xap</XapFilename>
+        <SilverlightManifestTemplate>Properties\AppManifest.xml</SilverlightManifestTemplate>
+        <SilverlightAppEntry>my.test.project.App</SilverlightAppEntry>
+        <ValidateXaml>true</ValidateXaml>
+        <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <BackgroundAgentType />
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>Bin\Debug</OutputPath>
+        <DefineConstants>TRACE;DEBUG;SILVERLIGHT;WINDOWS_PHONE;WP8</DefineConstants>
+        <NoStdLib>true</NoStdLib>
+        <NoConfig>true</NoConfig>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>Bin\Release</OutputPath>
+        <DefineConstants>TRACE;SILVERLIGHT;WINDOWS_PHONE;WP8</DefineConstants>
+        <NoStdLib>true</NoStdLib>
+        <NoConfig>true</NoConfig>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+        <DebugSymbols>true</DebugSymbols>
+        <OutputPath>Bin\x86\Debug</OutputPath>
+        <DefineConstants>DEBUG;TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+        <NoStdLib>true</NoStdLib>
+        <DebugType>full</DebugType>
+        <PlatformTarget>
+        </PlatformTarget>
+        <ErrorReport>prompt</ErrorReport>
+        <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+        <Optimize>false</Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+        <OutputPath>Bin\x86\Release</OutputPath>
+        <DefineConstants>TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+        <Optimize>true</Optimize>
+        <NoStdLib>true</NoStdLib>
+        <DebugType>pdbonly</DebugType>
+        <PlatformTarget>
+        </PlatformTarget>
+        <ErrorReport>prompt</ErrorReport>
+        <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+        <DebugSymbols>true</DebugSymbols>
+        <OutputPath>Bin\ARM\Debug</OutputPath>
+        <DefineConstants>DEBUG;TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+        <NoStdLib>true</NoStdLib>
+        <DebugType>full</DebugType>
+        <PlatformTarget>
+        </PlatformTarget>
+        <ErrorReport>prompt</ErrorReport>
+        <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+        <Prefer32Bit>false</Prefer32Bit>
+        <Optimize>false</Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+        <OutputPath>Bin\ARM\Release</OutputPath>
+        <DefineConstants>TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+        <Optimize>true</Optimize>
+        <NoStdLib>true</NoStdLib>
+        <DebugType>pdbonly</DebugType>
+        <PlatformTarget>
+        </PlatformTarget>
+        <ErrorReport>prompt</ErrorReport>
+        <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="App.xaml.cs">
+            <DependentUpon>App.xaml</DependentUpon>
+        </Compile>
+        <Compile Include="MainPage.xaml.cs">
+            <DependentUpon>MainPage.xaml</DependentUpon>
+        </Compile>
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Page Include="src\UI\PageTest.xaml">
+            <SubType>Designer</SubType>
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Plugins\org.apache.cordova.core.InAppBrowser\InAppBrowser.cs" />
+    </ItemGroup>
+        <ItemGroup>
+        <Compile Include="src\UI\PageTest.xaml.cs">
+            <DependentUpon>PageTest.xaml</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="LibraryTest">
+            <HintPath>lib\LibraryTest.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="src\FileTest.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="src\Content.img" />
+    </ItemGroup>
+</Project>

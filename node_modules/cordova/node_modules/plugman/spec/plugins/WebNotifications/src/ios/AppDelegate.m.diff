@@ -1,0 +1,18 @@
+- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification
+{
+    // Note: if app wasn't running, you can still get a LN and then it doesn't call this function,
+    // I think it calls app start but notifies you that LN caused the app start or something like that.
+    
+    //UIApplicationState state = [application applicationState];
+    //BOOL wasForeground = (state == UIApplicationStateActive);
+    
+    //NSString *title = [notification.userInfo objectForKey:@"title"];
+    //NSString *body = [notification.userInfo objectForKey:@"body"];
+    NSString *tag = [notification.userInfo objectForKey:@"tag"];
+    
+    [(WebNotifications*)[self.viewController getCommandInstance:@"WebNotifications"] clickNofification:tag];
+    
+    application.applicationIconBadgeNumber = 0;
+    application.scheduledLocalNotifications = [NSArray arrayWithArray:application.scheduledLocalNotifications]; // "hack" to clear seen notifications
+}
+

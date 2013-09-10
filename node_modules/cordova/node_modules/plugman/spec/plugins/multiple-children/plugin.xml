@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Copyright 2013 Anis Kadri
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="com.pushwoosh.plugins.pushwoosh"
+    version="3.0.0">
+
+    <name>Pushwoosh</name>
+
+    <!-- android -->
+    <platform name="android">
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+			<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+			
+			<!--library-->
+			<uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+			
+			<!-- GCM connects to Google Services. -->
+			<uses-permission android:name="android.permission.INTERNET"/>
+			
+			<!-- GCM requires a Google account. -->
+			<uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+			
+			<!-- Keeps the processor from sleeping when a message is received. -->
+			<uses-permission android:name="android.permission.WAKE_LOCK"/>
+			
+			<!--
+			 Creates a custom permission so only this app can receive its messages.
+			 
+			 NOTE: the permission *must* be called PACKAGE.permission.C2D_MESSAGE,
+			 where PACKAGE is the application's package name.
+			 -->
+			<permission
+			android:name="$PACKAGE_NAME.permission.C2D_MESSAGE"
+			android:protectionLevel="signature"/>
+			<uses-permission
+			android:name="$PACKAGE_NAME.permission.C2D_MESSAGE"/>
+			
+			<!-- This app has permission to register and receive data message. -->
+			<uses-permission
+			android:name="com.google.android.c2dm.permission.RECEIVE"/>
+		</config-file>
+		
+		<config-file target="AndroidManifest.xml" parent="/manifest/application/activity">
+			<intent-filter>
+				<action android:name="$PACKAGE_NAME.MESSAGE"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+			</intent-filter>
+		</config-file>
+
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+			<activity android:name="com.arellomobile.android.push.PushWebview"/>
+			
+			<activity android:name="com.arellomobile.android.push.MessageActivity"/>
+			
+			<activity android:name="com.arellomobile.android.push.PushHandlerActivity"/>
+			
+			<!--
+			 BroadcastReceiver that will receive intents from GCM
+			 services and handle them to the custom IntentService.
+			 
+			 The com.google.android.c2dm.permission.SEND permission is necessary
+			 so only GCM services can send data messages for the app.
+			 -->
+			<receiver
+				android:name="com.google.android.gcm.GCMBroadcastReceiver"
+				android:permission="com.google.android.c2dm.permission.SEND">
+				<intent-filter>
+					<!-- Receives the actual messages. -->
+					<action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+					<!-- Receives the registration id. -->
+					<action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+					<category android:name="$PACKAGE_NAME"/>
+				</intent-filter>
+			</receiver>
+			
+			<!--
+			 Application-specific subclass of PushGCMIntentService that will
+			 handle received messages.
+			 -->
+			<service android:name="com.arellomobile.android.push.PushGCMIntentService"/>        					
+			
+		</config-file>
+		
+		<config-file target="res/xml/plugins.xml" parent="/plugins">
+            <plugin name="PushNotification"
+			value="com.pushwoosh.test.plugin.pushnotifications.PushNotifications" onload="true"/>
+        </config-file>
+    </platform>
+</plugin>

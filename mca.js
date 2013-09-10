@@ -59,7 +59,9 @@ var path = require('path');
 // Third-party modules.
 var ncp = require('ncp');
 var optimist = require('optimist');
+var Crypto = require('cryptojs').Crypto
 
+// Globals
 var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
@@ -69,7 +71,6 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
-var command = null;
 
 /******************************************************************************/
 /******************************************************************************/
@@ -77,23 +78,26 @@ var command = null;
 var ACTIVE_PLUGINS = [
     path.join(scriptDir, 'cordova', 'cordova-plugin-file'),
     path.join(scriptDir, 'cordova', 'cordova-plugin-inappbrowser'),
+    path.join(scriptDir, 'cordova', 'cordova-plugin-network-information'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-navigation'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'directoryFinder'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-Function.bind'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-blob')
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-blob'),
+    path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-blob-constructor')
 ];
 
-function cordovaCmd(args) {
-  return '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" ' + args.join(' ');
+var PLUGIN_MAP = {
+  'alarms': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.alarms')],
+  'fileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
+                 path.join(scriptDir, 'chrome-cordova', 'plugins', 'fileChooser')],
+  'identity': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'notifications': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.notifications')],
+  'socket': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.socket')],
+  'syncFileSystem': [path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
 }
 
 /******************************************************************************/
@@ -236,17 +240,9 @@ function recursiveDelete(dirPath) {
 function waitForKey(opt_prompt, callback) {
   if (typeof opt_prompt == 'function') {
     callback = opt_prompt;
-    opt_prompt = 'press a key';
+    opt_prompt = 'Press the Any Key';
   }
-  console.log(opt_prompt);
-  function cont(key) {
-    if (key == '\u0003') {
-      process.exit(2);
-    }
-    process.stdin.removeListener('data', cont);
-    process.stdin.pause();
-    callback(key);
-  }
+  process.stdout.write(opt_prompt);
   process.stdin.resume();
   try {
     // This fails if the process is a spawned child (likely a node bug);
@@ -254,7 +250,15 @@ function waitForKey(opt_prompt, callback) {
   } catch (e) {
   }
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', cont);
+  process.stdin.on('data', function cont(key) {
+    if (key == '\u0003') {
+      process.exit(2);
+    }
+    process.stdin.removeListener('data', cont);
+    process.stdin.pause();
+    process.stdout.write('\n');
+    callback(key);
+  });
 }
 
 /******************************************************************************/
@@ -272,7 +276,10 @@ function parseTargetOutput(targetOutput) {
 }
 
 function toolsCheck() {
-  console.log('## Checking that tools are installed');
+  function printHeader(callback) {
+    console.log('## Checking that tools are installed');
+    callback();
+  }
   function checkAndroid(callback) {
     exec('android list targets', function(targetOutput) {
       hasAndroidSdk = true;
@@ -329,6 +336,7 @@ function toolsCheck() {
     }
     callback();
   }
+  eventQueue.push(printHeader);
   eventQueue.push(checkNodeVersion);
   eventQueue.push(checkAndroid);
   eventQueue.push(checkXcode);
@@ -337,7 +345,42 @@ function toolsCheck() {
 
 /******************************************************************************/
 /******************************************************************************/
+
+function ensureHasRunInit() {
+  eventQueue.push(function(callback) {
+    if (!fs.existsSync(path.join(scriptDir, 'cordova/cordova-js/pkg/cordova.ios.js')))
+      return fatal('Please run \'' + scriptName + ' init\' first');
+    callback();
+  });
+}
+
+function promptIfNeedsUpdate() {
+  eventQueue.push(function(callback) {
+    process.chdir(scriptDir);
+    exec('git pull --rebase --dry-run', function(stdout, stderr) {
+      var needsUpdate = (!!stdout || !!stderr);
+      if (!needsUpdate)
+        return callback();
+
+      console.log('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
+      waitForKey('Continue anyway? [y/n] ', function(key) {
+        if (key.toLowerCase() !== 'y')
+          return exit(1);
+        callback();
+      });
+    }, function(error) {
+      console.log("Could not check repo for updates:");
+      console.error(error.toString());
+      callback();
+    }, true);
+  });
+}
+
+
+/******************************************************************************/
+/******************************************************************************/
 // Init
+
 function buildCordovaJsStep(callback) {
   console.log('## Building cordova-js');
   process.chdir(path.join(scriptDir, 'cordova', 'cordova-js'));
@@ -346,7 +389,6 @@ function buildCordovaJsStep(callback) {
     packager.generate('android', undefined, callback);
   });
 }
-
 
 function initCommand() {
   function checkGit(callback) {
@@ -365,88 +407,17 @@ function initCommand() {
   }
 
   function checkOutSelf(callback) {
-    console.log('## Checking Out mobile-chrome-apps');
+    console.log('## Updating mobile-chrome-apps');
 
-    function reRunThisScriptWithNewVersionThenExit() {
-      console.log(scriptName + ' has been updated.  Restarting with new version.');
-      console.log(new Array(80).join('*'));
-      console.log(new Array(80).join('*'));
-      process.chdir(origDir);
-      // TODO: We should quote the args.
-      spawn(process.argv[0], process.argv.slice(1), function() {
-        exit(0);
-      });
-    }
-
-    // If the repo doesn't exist where the script is, then use the CWD as the checkout location.
-    var requiresClone = true;
-    // First - try the directory of the script.
-    if (scriptDir.slice(0, 2) != '\\\\') {
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    // Next - try the CWD, if it is
-    if (requiresClone && path.basename(origDir) == 'mobile-chrome-apps') {
-      scriptDir = origDir;
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    // Next - see if it exists within the CWD.
-    if (requiresClone && fs.existsSync(path.join(origDir, 'mobile-chrome-apps'))) {
-      scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      process.chdir(scriptDir);
-      requiresClone = !fs.existsSync('.git');
-    }
-    if (requiresClone) {
-      scriptDir = path.join(origDir, 'mobile-chrome-apps');
-      chdir(origDir);
-      recursiveDelete('mobile-chrome-apps');
-      exec('git clone "https://github.com/MobileChromeApps/mobile-chrome-apps.git"', function() {
-        console.log('Successfully cloned mobile-chrome-apps repo');
-        chdir(scriptDir);
-        return;
-      });
-      return;
-    }
-
-    function updateAndRerun() {
-      exec('git pull --rebase', reRunThisScriptWithNewVersionThenExit);
-    }
-    function promptForUpdate() {
-      waitForKey('There are new git repo updates. Would you like to autoupdate? [y/n] ', function(key) {
-        if (key.toLowerCase() == 'y') {
-          updateAndRerun();
-        } else {
-          callback();
-        }
-      });
-    }
-    function checkIfNeedsUpdate() {
-      exec('git pull --rebase --dry-run', function(stdout, stderr) {
-        var needsUpdate = (!!stdout || !!stderr);
-        if (needsUpdate)
-          promptForUpdate();
-      }, function(error) {
-        console.log("Could not update repo:");
-        console.error(error.toString());
-        console.log("Continuing without update.");
-        callback();
-      }, true);
-    }
-
-    exec('git pull --rebase', function() {
-      if (command === 'init') {
-        callback();
-        return;
-      }
-      reRunThisScriptWithNewVersionThenExit();
-    });
+    process.chdir(scriptDir);
+    exec('git pull --rebase', callback);
   }
 
   function checkOutSubModules(callback) {
-    console.log('## Checking Out SubModules');
+    console.log('## Updating git submodules');
+
     process.chdir(scriptDir);
-    exec('git submodule update --init --recursive --rebase', callback, function(error) {
+    exec('git submodule update --init --recursive', callback, function(error) {
       console.log("Could not update submodules:");
       console.error(error.toString());
       console.log("Continuing without update.");
@@ -477,6 +448,18 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
   var appName = match[1];
   var appDir = null;
+  var manifestFile = null;
+  var manifest = null;
+
+  var whitelist = [];
+  var chromeAppId;
+
+  var cordova = require('cordova');
+
+  function runCmd(cmd, callback) {
+    console.log(cmd.join(' '));
+    cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
+  }
 
   function resolveTilde(string) {
     // TODO: implement better
@@ -497,7 +480,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       for (var i = 0; appDir = dirsToTry[i]; i++) {
         if (appDir) console.log('Searching for Chrome app source in ' + appDir);
         if (appDir && fs.existsSync(appDir)) {
-          if (!fs.existsSync(path.join(appDir, 'manifest.json'))) {
+          manifestFile = path.join(appDir, 'manifest.json');
+          if (!fs.existsSync(manifestFile)) {
             fatal('No manifest.json file found within: ' + appDir);
           } else {
             break;
@@ -511,12 +495,74 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     callback();
   }
 
+  function readManifestStep(callback) {
+    /* If we have reached this point and manifestFile is set, then it is the
+     * name of a readable manifest file.
+     */
+    if (!manifestFile) {
+      return callback();
+    }
+    fs.readFile(manifestFile, { encoding: 'utf-8' }, function(err, data) {
+      if (err) {
+        fatal('Unable to open manifest ' + manifestFile + ' for reading.');
+      }
+      try {
+        manifest = eval('(' + data + ')'); // JSON.parse(data);
+      } catch (e) {
+        console.log(e);
+        fatal('Unable to parse manifest ' + manifestFile);
+      }
+      var permissions = [];
+      if (manifest && manifest.permissions) {
+        for (var i = 0; i < manifest.permissions.length; ++i) {
+          if (typeof manifest.permissions[i] === "string") {
+            if (manifest.permissions[i].indexOf('://') > -1) {
+              whitelist.push(manifest.permissions[i]);
+            } else if (manifest.permissions[i] === "<all_urls>") {
+              whitelist.push("*");
+            } else {
+              permissions.push(manifest.permissions[i]);
+            }
+          } else {
+            permissions = permissions.concat(Object.keys(manifest.permissions[i]));
+          }
+        }
+      }
+      for (var i = 0; i < permissions.length; i++) {
+        var plugins = PLUGIN_MAP[permissions[i]];
+        if (plugins) {
+          for (var j = 0; j < plugins.length; ++j) {
+            ACTIVE_PLUGINS.push(plugins[j]);
+          }
+        }
+      }
+      if (manifest.key) {
+        // stub for testing
+        function mapAppKeyToAppId(key) {
+          var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
+                       '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
+          return (Crypto.SHA256(new Buffer(key, 'base64'))
+                  .substr(0,32)
+                  .replace(/[a-f0-9]/g, function(char) {
+                     return mpdec[char];
+                  }));
+        }
+        chromeAppId = mapAppKeyToAppId(manifest.key);
+      } else {
+        // All zeroes -- should we use rand() here instead?
+        chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+      }
+      callback();
+    });
+  }
+
   function createStep(callback) {
     console.log('## Creating Your Application');
     chdir(origDir);
 
     var platformSpecified = addAndroidPlatform || addIosPlatform;
     var cmds = [];
+
     if ((!platformSpecified && hasXcode) || addIosPlatform) {
       cmds.push(['platform', 'add', 'ios']);
     }
@@ -527,78 +573,95 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
 
-    function runCmd() {
-      var curCmd = cmds.shift();
-      if (curCmd) {
-        console.log(curCmd.join(' '));
-        exec(cordovaCmd(curCmd), runCmd, undefined, true);
-      } else {
-        // Create a script that runs update.js.
-        if (isWindows) {
-          fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'cd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" update-app');
-        } else {
-          fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\ncd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" update-app');
-          fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
-        }
-        // Create a convenience link to our version of CLI.
-        if (isWindows) {
-          fs.writeFileSync('cordova.cmd', '"' + process.argv[0] + '" "' + path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova') + '" %*');
-        } else {
-          fs.symlinkSync(path.join(scriptDir, 'cordova', 'cordova-cli', 'bin', 'cordova'), 'cordova')
-        }
-        callback();
-      }
-    }
-
-    var curCmd = ['create', appName, appId, appName];
-    console.log(curCmd.join(' '));
-    exec(cordovaCmd(curCmd), function() {
+    function runAllCmds(callback) {
       chdir(path.join(origDir, appName));
-      var cordova = require(path.join(scriptDir, 'cordova', 'cordova-cli', 'cordova'));
-      cordova.config(path.join('.'), {
-        lib: {
-          android: {
-            uri: path.join(scriptDir, 'cordova', 'cordova-android'),
-            version: "master",
-            id: "cordova-master"
-          },
-          ios: {
-            uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
-            version: "master",
-            id: "cordova-master"
-          }
-        }
+      var curCmd = cmds.shift();
+      if (!curCmd)
+        return callback();
+      runCmd(curCmd, function(err) {
+        if (err)
+          return fatal(err);
+        runAllCmds(callback);
       });
-      runCmd();
-    }, undefined, true);
-  }
-
-  function createDefaultApp(callback) {
-    console.log('## Creating Default Chrome App');
-    // TODO: add merges dir
-    var wwwDir = 'www';
-    if (!fs.existsSync(wwwDir)) {
-      return;
     }
-    var wwwConfigPath = path.join(wwwDir, 'config.xml');
-    var configFileData = fs.readFileSync(wwwConfigPath, 'utf8');
-    recursiveDelete(wwwDir);
-    fs.mkdirSync(wwwDir);
-    copyDirectory(appDir, wwwDir, function() {
-      if (!fs.existsSync(wwwConfigPath)) {
-        fs.writeFileSync(wwwConfigPath, configFileData);
+
+    function afterAllCommands() {
+      // Create a script that runs update.js.
+      if (isWindows) {
+        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'cd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" update-app');
+      } else {
+        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\ncd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(scriptDir, scriptName) + '" update-app');
+        fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
+      }
+      // Create a convenience link to our version of CLI.
+      if (isWindows) {
+        fs.writeFileSync('cordova.cmd', '"' + process.argv[0] + '" "' + path.join(scriptDir, 'node_modules', 'cordova', 'bin', 'cordova') + '" %*');
+      } else {
+        fs.symlinkSync(path.join(scriptDir, 'node_modules', 'cordova', 'bin', 'cordova'), 'cordova')
       }
       callback();
+    }
+
+    fs.mkdirSync(appName);
+    cordova.config(path.join(origDir, appName), {
+      lib: {
+        android: {
+          uri: path.join(scriptDir, 'cordova', 'cordova-android'),
+          version: "mca",
+          id: "cordova-mca",
+          template: path.join(scriptDir, 'chrome-cordova', 'platform-templates', 'android'),
+        },
+        ios: {
+          uri: path.join(scriptDir, 'cordova', 'cordova-ios'),
+          version: "mca",
+          id: "cordova-mca",
+          template: path.join(scriptDir, 'chrome-cordova', 'platform-templates', 'ios'),
+        },
+        www: {
+          uri: appDir,
+          version: "mca",
+          id: appName
+        }
+      }
+    });
+
+    runCmd(['create', appName, appId, appName], function() {
+      writeConfigStep(function() {
+        runAllCmds(afterAllCommands);
+      });
     });
   }
+
+  function writeConfigStep(callback) {
+    console.log("Writing config.xml");
+    fs.readFile(path.join(scriptDir, 'chrome-cordova', 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        var whitelistXML = "";
+        for (var i = 0; i < whitelist.length; i++) {
+          whitelistXML = whitelistXML + "    <access origin=\"" + whitelist[i] + "\" />\n";
+        }
+      var configfile = data.replace(/__APP_NAME__/, (manifest && manifest.name) || appName)
+          .replace(/__APP_ID__/, appId)
+          .replace(/__APP_VERSION__/, (manifest && manifest.version) || "0.0.1")
+          .replace(/__CHROME_APP_ID__/, chromeAppId)
+          .replace(/__DESCRIPTION__/, (manifest && manifest.description) || "Plain text description of this app")
+          .replace(/__AUTHOR__/, (manifest && manifest.author) || "Author name and email")
+          .replace(/__WHITELIST__/, whitelistXML);
+      fs.writeFile(path.join(appName, 'www', 'config.xml'), configfile, callback);
+      }
+    });
+  }
+
   function prepareStep(callback) {
-    exec(cordovaCmd(['prepare']), callback);
+    runCmd(['prepare'], callback);
   }
 
   eventQueue.push(validateSourceArgStep);
+  eventQueue.push(readManifestStep);
   eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
-  eventQueue.push(createDefaultApp);
   eventQueue.push(prepareStep);
 }
 
@@ -632,14 +695,6 @@ function updateAppCommand() {
     };
   }
 
-  function fixIosWhitelist(callback) {
-    var configPath = path.join('platforms', 'ios', path.basename(process.cwd()), 'config.xml')
-    var data = fs.readFileSync(configPath, 'utf8');
-    data = data.replace('<access origin="*" />', '<access origin="*" />\n<access origin="chrome-extension://*" />');
-    fs.writeFileSync(configPath, data);
-    callback();
-  }
-
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -653,14 +708,13 @@ function updateAppCommand() {
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
-    eventQueue.push(fixIosWhitelist);
     eventQueue.push(createAddJsStep('ios'));
   }
 }
 
+/******************************************************************************/
+/******************************************************************************/
 
-/******************************************************************************/
-/******************************************************************************/
 function parseCommandLine() {
   commandLineFlags = optimist
       .usage('Usage: $0 command [commandArgs]\n' +
@@ -699,20 +753,26 @@ function parseCommandLine() {
 
 function main() {
   parseCommandLine();
-  command = commandLineFlags._[0];
-  if (command == 'update-app') {
-    updateAppCommand();
-  } else if (command == 'init') {
-    toolsCheck();
-    initCommand();
-  } else if (command == 'create') {
-    var appId = commandLineFlags._[1] || '';
-    toolsCheck();
-    if (!fs.existsSync(path.join(scriptDir, 'cordova/cordova-js/pkg/cordova.ios.js'))) {
+  var command = commandLineFlags._[0];
+  var appId = commandLineFlags._[1] || '';
+
+  var commandActions = {
+    'update-app': function() {
+      updateAppCommand();
+    },
+    'init': function() {
+      toolsCheck();
       initCommand();
-    }
-    createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
-  }
+    },
+    'create': function() {
+      ensureHasRunInit();
+      promptIfNeedsUpdate();
+      toolsCheck();
+      createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
+    },
+  };
+  commandActions[command]();
+
   pump();
 }
 

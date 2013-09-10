@@ -1,0 +1,18 @@
+// !$*UTF8*$!
+{
+    archiveVersion = 1;
+    classes = {
+    };
+    empties = (
+    );
+    ARCHS = (
+        armv6,
+        armv7,
+    );
+    files = (
+        1D60589B0D05DD56006BFB54 /* main.m in Sources */,
+        1D3623260D0F684500981E51 /* AppDelegate.m in Sources */,
+    );
+    objectVersion = 45;
+    rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}
