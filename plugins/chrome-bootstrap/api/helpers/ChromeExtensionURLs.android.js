@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 exports.releaseReadyWait = function() {
+  cordova.fireDocumentEvent('DOMContentLoaded');
   Object.defineProperty(document, 'readyState', {get: function() { return 'complete'}, configurable: true });
-  cordova.fireWindowEvent('DOMContentReady');
   cordova.fireWindowEvent('load');
 };
