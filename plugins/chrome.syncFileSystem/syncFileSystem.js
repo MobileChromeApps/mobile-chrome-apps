@@ -39,7 +39,6 @@ var CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN = 'last_write_win';
 var CONFLICT_RESOLUTION_POLICY_MANUAL = 'manual';
 
 var SYNC_FILE_SYSTEM_PREFIX = 'sfs';
-var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-next_change_id';
 
 // Error codes.
 var FILE_NOT_FOUND_ERROR = 1;
@@ -429,6 +428,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
 
 // This function checks for changes since the most recent change id.
 function getDriveChanges(successCallback, errorCallback) {
+    var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-next_change_id';
     var onGetTokenStringSuccess = function() {
         // Send a request to retrieve the changes.
         var xhr = new XMLHttpRequest();
