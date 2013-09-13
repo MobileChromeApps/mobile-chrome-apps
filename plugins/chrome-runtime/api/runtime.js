@@ -7,7 +7,7 @@ var Event = require('org.chromium.chrome-common.events');
 var stubs = require('org.chromium.chrome-common.stubs');
 var helpers = require('org.chromium.chrome-common.helpers');
 
-var manifestJson = null;
+var manifestJson;
 
 exports.onSuspend = new Event('onSuspend');
 exports.onInstalled = new Event('onInstalled');
@@ -45,12 +45,17 @@ exports.onSuspendCanceled.addListener = function(f) {
 };
 
 exports.getManifest = function() {
-  if (!manifestJson) {
+  if (typeof manifestJson == 'undefined') {
     // May need to use origXMLHttpRequest here to access file w/o whitelist
     var xhr = new (window.origXMLHttpRequest || XMLHttpRequest)();
     xhr.open('GET', 'manifest.json', false /* sync */);
     xhr.send(null);
-    manifestJson = eval('(' + xhr.responseText + ')'); //JSON.parse(xhr.responseText);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      // Don't use JSON.parse, since it fails on comments.
+      manifestJson = eval('(' + xhr.responseText + ')');
+    } else {
+      manifestJson = null;
+    }
   }
   return manifestJson;
 };
