@@ -40,15 +40,15 @@ public class ChromeChromeClient extends CordovaChromeClient {
     		@Override
     		public WebResourceResponse shouldInterceptRequest(final WebView view, String url) {
     			if (Config.isUrlWhiteListed(url)) {
-        			Log.d("WhitelistCheck", "Fail: " + url);
+                    Log.d("WhitelistCheck", "Pass: " + url);
     				return super.shouldInterceptRequest(view, url);
     			}
-    			Log.d("WhitelistCheck", "Pass: " + url);
+                Log.d("WhitelistCheck", "Fail: " + url);
     			return new WebResourceResponse(null, null, null);
     		}
     		@Override
     		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-    			String payload = "<html>hu<script>opener.XMLHttpRequest=XMLHttpRequest;opener.onChromeCorsReady();</script></html>";
+    			String payload = "<!doctype html><html><body><script>opener.corsXMLHttpRequest=XMLHttpRequest;opener.onChromeCorsReady();</script></body></html>";
     			newWebView.loadDataWithBaseURL("file:///hi.html", payload, "text/html", "UTF-8", "file:///hi.html");
     			return true;
     		}

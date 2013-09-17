@@ -19,7 +19,7 @@ function proxyProperty(_this, propertyName, writable) {
 }
 
 var nativeXHR = window.XMLHttpRequest;
-function blobXHR() {
+function chromeXHR() {
     var that=this;
     this._proxy = new nativeXHR();
     this._response = null;
@@ -71,8 +71,15 @@ function blobXHR() {
     });
 }
 /* Proxy methods */
-['open','setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType'].forEach(function(elem) {
-    blobXHR.prototype[elem] = proxyMethod(elem);
+['setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType'].forEach(function(elem) {
+    chromeXHR.prototype[elem] = proxyMethod(elem);
 });
 
-exports.XMLHttpRequest = blobXHR;
+chromeXHR.prototype.open = function(method, url) {
+  if (url.indexOf('http') == 0) {
+    this._proxy = new corsXMLHttpRequest();
+  }
+  this._proxy.open.apply(this._proxy, arguments);
+};
+
+exports.XMLHttpRequest = chromeXHR;
