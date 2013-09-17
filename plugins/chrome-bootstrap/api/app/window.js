@@ -92,6 +92,10 @@ function rewritePage(pageContent, filePath) {
     fgHead.removeChild(fgHead.lastChild);
   }
 
+  mobile.fgWindow.history &&
+    mobile.fgWindow.history.replaceState &&
+      mobile.fgWindow.history.replaceState(null, null, filePath);
+
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {
     startIndex += RegExp.lastMatch.length;
