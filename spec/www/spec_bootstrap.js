@@ -51,15 +51,15 @@ window.runningInBg = true;
     return newButton;
   }
 
-  function createDropdown(name, values) {
+  function createDropdown(text, id, values) {
     var container = chromespec.fgDoc.createElement('div');
 
     // Create the title label.
-    container.appendChild(document.createTextNode(name + ': '));
+    container.appendChild(document.createTextNode(text));
 
     // Create the dropdown.
     var dropdown = chromespec.fgDoc.createElement('select');
-    dropdown.id = name + '-dropdown';
+    dropdown.id = id;
     for (var value in values) {
       var option = chromespec.fgDoc.createElement('option');
       option.value = values[value];

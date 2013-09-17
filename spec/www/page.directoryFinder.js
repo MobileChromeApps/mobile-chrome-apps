@@ -11,34 +11,34 @@ chromespec.registerSubPage('cordova.file.directoryFinder', function(rootEl) {
     rootEl.appendChild(button);
   }
 
-  function addDropdown(name, values) {
-    var dropdown = chromespec.createDropdown(name, values);
+  function addDropdown(text, id, values) {
+    var dropdown = chromespec.createDropdown(text, id, values);
     rootEl.appendChild(dropdown);
   }
 
-  addDropdown('writable', { 'TRUE' : true, 'FALSE' : false });
-  addDropdown('sandboxed', { 'TRUE' : true, 'FALSE' : false });
-  addDropdown('category', Category);
-  addDropdown('persistence', Persistence);
+  addDropdown('writable: ', 'writable-dropdown', { 'TRUE' : true, 'FALSE' : false });
+  addDropdown('sandboxed: ', 'sandboxed-dropdown', { 'TRUE' : true, 'FALSE' : false });
+  addDropdown('category: ', 'category-dropdown', Category);
+  addDropdown('persistence: ', 'persistence-dropdown', Persistence);
 
   addButton('Retrieve directories', function() {
     var writableDropdown = chromespec.fgDoc.getElementById('writable-dropdown');
-    var selectedWritableOption = writableDropdown.options[writableDropdown.selectedIndex];
+    var selectedWritableValue = writableDropdown.options[writableDropdown.selectedIndex].value;
 
     var sandboxedDropdown = chromespec.fgDoc.getElementById('sandboxed-dropdown');
-    var selectedSandboxedOption = sandboxedDropdown.options[sandboxedDropdown.selectedIndex];
+    var selectedSandboxedValue = sandboxedDropdown.options[sandboxedDropdown.selectedIndex].value;
 
     var categoryDropdown = chromespec.fgDoc.getElementById('category-dropdown');
-    var selectedCategoryOption = categoryDropdown.options[categoryDropdown.selectedIndex];
+    var selectedCategoryValue = categoryDropdown.options[categoryDropdown.selectedIndex].value;
 
     var persistenceDropdown = chromespec.fgDoc.getElementById('persistence-dropdown');
-    var selectedPersistenceOption = persistenceDropdown.options[persistenceDropdown.selectedIndex];
+    var selectedPersistenceValue = persistenceDropdown.options[persistenceDropdown.selectedIndex].value;
 
     var getDirectoryForPurposeCallback = function(directoryEntry) {
       chromespec.log('path: ' + directoryEntry.fullPath);
     };
 
-    cordova.file.getDirectoryForPurpose(selectedWritableOption.value, selectedSandboxedOption.value, selectedCategoryOption.value, selectedPersistenceOption.value, getDirectoryForPurposeCallback);
+    cordova.file.getDirectoryForPurpose(selectedWritableValue, selectedSandboxedValue, selectedCategoryValue, selectedPersistenceValue, getDirectoryForPurposeCallback);
   });
 });
 

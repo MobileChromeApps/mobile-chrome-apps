@@ -22,7 +22,7 @@ var REFRESH_TOKEN_KEY = IDENTITY_PREFIX + '-' + runtime.id + '-refresh_token';
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
         callback = details;
-        details = { interactive: false };
+        details = { interactive: false, useWebAuth: false };
     }
     if (typeof callback !== 'function') {
         return callbackWithError('Callback function required');
@@ -93,12 +93,12 @@ exports.getAuthToken = function(details, callback) {
         };
 
         // Get an access token.
-        if (0 /*platformId === 'android'*/) {
-            // Use native implementation for logging into google accounts
-            exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
-        } else {
+        if (platformId !== 'android' || details.useWebAuth === 'true') {
             // Use web app oauth flow
             getAuthTokenJS(augmentedCallback, fail, details);
+        } else {
+            // Use native implementation for logging into google accounts
+            exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
         }
     };
 
