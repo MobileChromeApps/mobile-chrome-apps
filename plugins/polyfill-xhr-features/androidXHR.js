@@ -4,16 +4,34 @@
 
 function proxyMethod(methodName) {
     return function() {
-        this._proxy[methodName].apply(this._proxy, arguments);
+        if (this._activeProxy) {
+            this._activeProxy[methodName].apply(this._activeProxy, arguments);
+        } else {
+            this._nativeProxy[methodName].apply(this._nativeProxy, arguments);
+            this._corsProxy[methodName].apply(this._corsProxy, arguments);
+        }
     }
 }
 function proxyProperty(_this, propertyName, writable) {
     var descriptor = {
         configurable: true,
-        get: function() { return _this._proxy[propertyName]; }
+        get: function() {
+            if (_this._activeProxy) {
+                 return _this._activeProxy[propertyName];
+            } else {
+                 return _this._nativeProxy[propertyName];
+            }
+        }
     };
     if (writable) {
-        descriptor.set = function(val) { _this._proxy[propertyName] = val; };
+        descriptor.set = function(val) {
+            if (_this._activeProxy) {
+                _this._activeProxy[propertyName] = val;
+            } else {
+                _this._nativeProxy[propertyName] = val;
+                _this._corsProxy[propertyName] = val;
+            }
+        };
     }
     Object.defineProperty(_this, propertyName, descriptor);
 }
@@ -21,7 +39,9 @@ function proxyProperty(_this, propertyName, writable) {
 var nativeXHR = window.XMLHttpRequest;
 function chromeXHR() {
     var that=this;
-    this._proxy = new nativeXHR();
+    this._nativeProxy = new nativeXHR();
+    this._corsProxy = new corsXMLHttpRequest();
+    this._activeProxy = null;
     this._response = null;
     this._overrideResponseType = "";
     /* Proxy read/write properties */
@@ -43,11 +63,13 @@ function chromeXHR() {
         },
         set: function(val) {
             if (val === 'blob') {
-                this._proxy.responseType = 'arraybuffer';
+                this._nativeProxy.responseType = 'arraybuffer';
+                this._corsProxy.responseType = 'arraybuffer';
                 this._overrideResponseType = 'blob';
             } else {
-                this._proxy.responseType = val;
-                this._overrideResponseType = this._proxy.responseType;
+                this._nativeProxy.responseType = val;
+                this._corsProxy.responseType = val;
+                this._overrideResponseType = val;
             }
         }
     });
@@ -60,12 +82,12 @@ function chromeXHR() {
             if (this._overrideResponseType === 'blob') {
                 if (this.readyState !== 4) return null;
                 if (this._response === null) {
-                    var ct = this._proxy.getResponseHeader('content-type');
-                    this._response = new Blob([this._proxy.response], {type: ct});
+                    var ct = this._activeProxy.getResponseHeader('content-type');
+                    this._response = new Blob([this._activeProxy.response], {type: ct});
                 }
                 return this._response;
             } else {
-                return this._proxy.response;
+                return this._activeProxy.response;
             }
         }
     });
@@ -76,10 +98,12 @@ function chromeXHR() {
 });
 
 chromeXHR.prototype.open = function(method, url) {
-  if (url.indexOf('http') == 0) {
-    this._proxy = new corsXMLHttpRequest();
-  }
-  this._proxy.open.apply(this._proxy, arguments);
+    if (url.indexOf('http') == 0) {
+        this._activeProxy = this._corsProxy;
+    } else {
+        this._activeProxy = this._nativeProxy;
+    }
+    this._activeProxy.open.apply(this._activeProxy, arguments);
 };
 
 exports.XMLHttpRequest = chromeXHR;
