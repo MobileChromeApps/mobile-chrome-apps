@@ -114,6 +114,58 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
   });
 
+  addButton('Get files via Google\'s Drive API', function() {
+    var onGetAuthTokenSuccess = function(token) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var responseText = JSON.parse(xhr.responseText);
+                    var fileCount = responseText.items.length;
+                    var cappedCount = (fileCount <= 3) ? fileCount : 3
+                    chromespec.log('Files (' + cappedCount + ' of ' + fileCount + '):');
+                    for (var i = 0; i < cappedCount; i++) {
+                        chromespec.log('  ' + responseText.items[i].title);
+                    }
+                } else {
+                    chromespec.log('Failed with status ' + xhr.status + '.');
+                }
+            }
+        };
+        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files')
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.send(null);
+    };
+
+    chromespec.log('Retrieving files...');
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+  });
+
+  addButton('Get calendars via Google\'s Calendar API', function() {
+    var onGetAuthTokenSuccess = function(token) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var responseText = JSON.parse(xhr.responseText);
+                    chromespec.log('Calendars:');
+                    for (var i = 0; i < responseText.items.length; i++) {
+                        chromespec.log('  ' + responseText.items[i].summary);
+                    }
+                } else {
+                    chromespec.log('Failed with status ' + xhr.status + '.');
+                }
+            }
+        };
+        xhr.open('GET', 'https://www.googleapis.com/calendar/v3/users/me/calendarList')
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.send(null);
+    };
+
+    chromespec.log('Retrieving calendars...');
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+  });
+
   addButton('Launch Google web auth flow', function() {
     chromespec.log('launchWebAuthFlow (google.com): Waiting for callback');
 
