@@ -8,7 +8,7 @@ function proxyMethod(methodName) {
             this._activeProxy[methodName].apply(this._activeProxy, arguments);
         } else {
             this._nativeProxy[methodName].apply(this._nativeProxy, arguments);
-            this._corsProxy[methodName].apply(this._corsProxy, arguments);
+            if (this._corsProxy) this._corsProxy[methodName].apply(this._corsProxy, arguments);
         }
     }
 }
@@ -29,7 +29,7 @@ function proxyProperty(_this, propertyName, writable) {
                 _this._activeProxy[propertyName] = val;
             } else {
                 _this._nativeProxy[propertyName] = val;
-                _this._corsProxy[propertyName] = val;
+                if (_this._corsProxy) _this._corsProxy[propertyName] = val;
             }
         };
     }
@@ -40,7 +40,7 @@ var nativeXHR = window.XMLHttpRequest;
 function chromeXHR() {
     var that=this;
     this._nativeProxy = new nativeXHR();
-    this._corsProxy = new corsXMLHttpRequest();
+    this._corsProxy = window.corsXMLHttpRequest && new window.corsXMLHttpRequest();
     this._activeProxy = null;
     this._response = null;
     this._overrideResponseType = "";
@@ -64,11 +64,11 @@ function chromeXHR() {
         set: function(val) {
             if (val === 'blob') {
                 this._nativeProxy.responseType = 'arraybuffer';
-                this._corsProxy.responseType = 'arraybuffer';
+                if (this._corsProxy) this._corsProxy.responseType = 'arraybuffer';
                 this._overrideResponseType = 'blob';
             } else {
                 this._nativeProxy.responseType = val;
-                this._corsProxy.responseType = val;
+                if (this._corsProxy) this._corsProxy.responseType = val;
                 this._overrideResponseType = val;
             }
         }
@@ -98,7 +98,7 @@ function chromeXHR() {
 });
 
 chromeXHR.prototype.open = function(method, url) {
-    if (url.indexOf('http') == 0) {
+    if (this._corsProxy && url.indexOf('http') == 0) {
         this._activeProxy = this._corsProxy;
     } else {
         this._activeProxy = this._nativeProxy;
