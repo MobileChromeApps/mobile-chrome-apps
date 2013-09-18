@@ -9,15 +9,9 @@ try {
     var runtime = require('org.chromium.chrome-runtime.runtime');
 } catch(e) {}
 
-// TODO(maxw): Perhaps store the client secret in the manifest?
-var clientSecret = 'Q_Jk5GKsGcA-Dp9GcqMKRnAP';
-var clientId;
-var scopes;
-var accessToken;
-var refreshToken;
-
-var IDENTITY_PREFIX = 'id';
-var REFRESH_TOKEN_KEY = IDENTITY_PREFIX + '-' + runtime.id + '-refresh_token';
+// TODO(maxw): Automatically handle expiration.
+// TODO(maxw): Can multiple tokens be cached?
+var cachedToken;
 
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
@@ -34,81 +28,32 @@ exports.getAuthToken = function(details, callback) {
         callback();
     };
 
-    // If we have a cached access token, send it along.
-    if (accessToken) {
-        callback(accessToken);
+    // If we have a cached token, send it along.
+    if (cachedToken) {
+        callback(cachedToken);
         return;
     }
 
-    // If we have a refresh token, get a new access token.
-    if (refreshToken) {
-        refreshAccessToken(callback);
-        return;
-    }
-
-    // If we've gotten this far, we're going to need to get data from the manifest.  Do it now.
-    // If we are not using chrome.runtime, check for oauth2 args in the details map
-    var manifestJson = (runtime) ? runtime.getManifest() : details;
-
-    if (typeof manifestJson === 'undefined')
-        return callbackWithError('manifest.json is not defined', fail);
-    if (typeof manifestJson.oauth2 === 'undefined')
-        return callbackWithError('oauth2 missing from manifest.json', fail);
-    if (typeof manifestJson.oauth2.client_id === 'undefined')
-        return callbackWithError('client_id missing from manifest.json', fail);
-    if (typeof manifestJson.oauth2.scopes === 'undefined')
-        return callbackWithError('scopes missing from manifest.json', fail);
-
-    clientId = manifestJson.oauth2.client_id;
-    scopes = manifestJson.oauth2.scopes;
-
-    // If we have a refresh token in local storage, retrieve it and get a new access token.
-    var getRefreshTokenCallback = function(items) {
-        if (items[REFRESH_TOKEN_KEY]) {
-            refreshToken = items[REFRESH_TOKEN_KEY];
-            refreshAccessToken(callback);
-            return;
+    // Augment the callback so that it caches a received token.
+    var augmentedCallback = function(token) {
+        if (token) {
+            cachedToken = token;
         }
-
-        // Since we have no refresh token, we need to get an access token without it.
-        // Augment the callback so that it caches a received token.
-        var augmentedCallback = function(tokenObject) {
-            if (tokenObject) {
-                if (tokenObject.access_token) {
-                    accessToken = tokenObject.access_token;
-                }
-                if (tokenObject.refresh_token) {
-                    refreshToken = tokenObject.refresh_token;
-
-                    // Save the refresh token to local storage.
-                    var refreshTokenObject = { };
-                    refreshTokenObject[REFRESH_TOKEN_KEY] = refreshToken;
-                    chrome.storage.internal.set(refreshTokenObject);
-
-                    // Set a time to refresh the access token.
-                    setTimeout(refreshAccessToken, tokenObject.expires_in * 1000, null);
-                }
-            }
-            callback(accessToken);
-        };
-
-        // Get an access token.
-        if (platformId !== 'android' || details.useWebAuth === 'true') {
-            // Use web app oauth flow
-            getAuthTokenJS(augmentedCallback, fail, details);
-        } else {
-            // Use native implementation for logging into google accounts
-            exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
-        }
+        callback(token);
     };
 
-    // Attempt to get a refresh token from storage.
-    chrome.storage.internal.get(REFRESH_TOKEN_KEY, getRefreshTokenCallback);
+    if (platformId !== 'android' || details.useWebAuth === 'true') {
+        // Use web app oauth flow
+        getAuthTokenJS(augmentedCallback, fail, details);
+    } else {
+        // Use native implementation for logging into google accounts
+        exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
+    }
 };
 
 exports.removeCachedAuthToken = function(details, callback) {
-    if (details && details.token === accessToken) {
-        accessToken = null;
+    if (details && details.token === cachedToken) {
+        cachedToken = null;
     }
     callback();
 }
@@ -137,38 +82,55 @@ exports.launchWebAuthFlow = function(details, callback) {
 };
 
 function getAuthTokenJS(win, fail, details) {
-    var authURLBase = 'https://accounts.google.com/o/oauth2/auth?response_type=code';
-    var redirectUri = 'http://www.google.com';
-    var finalURL = authURLBase + '&client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&scope=' + encodeURIComponent(scopes.join(' ')) + '&access_type=offline';
+    // If we are not using chrome.runtime, check for oauth2 args in the details map
+    var manifestJson = (runtime) ? runtime.getManifest() : details;
+
+    if (typeof manifestJson === 'undefined')
+        return callbackWithError('manifest.json is not defined', fail);
+    if (typeof manifestJson.oauth2 === 'undefined')
+        return callbackWithError('oauth2 missing from manifest.json', fail);
+    if (typeof manifestJson.oauth2.client_id === 'undefined')
+        return callbackWithError('client_id missing from manifest.json', fail);
+    if (typeof manifestJson.oauth2.scopes === 'undefined')
+        return callbackWithError('scopes missing from manifest.json', fail);
+
+    var authURLBase = 'https://accounts.google.com/o/oauth2/auth?response_type=token';
+    var redirect_uri = 'http://www.google.com';
+    var client_id = manifestJson.oauth2.client_id;
+    var scope = manifestJson.oauth2.scopes;
+    var finalURL = authURLBase + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&client_id=' + encodeURIComponent(client_id) + '&scope=' + encodeURIComponent(scope.join(' '));
 
     launchInAppBrowser(finalURL, details.interactive, function(newLoc) {
-        // We should have a new location with an authorization code.
-        var code = newLoc.substring(newLoc.indexOf('code=') + 5);
-        if (code.length === 0) {
-            return callbackWithError('The redirect uri did not have a code.', fail);
+        // If we're redirected to this ServiceLoginAuth page, try again; we should get the token.
+        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
+            // Unfortunately, this timeout is necessary, or else the authentication page comes up again.
+            // TODO(maxw): Find a better way to solve this issue.
+            window.setTimeout(getAuthTokenJS, 1000, win, fail, details);
+            return;
         }
 
-        // Use the access code to get some tokens.
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://accounts.google.com/o/oauth2/token');
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4) {
-                if (xhr.status < 200 || xhr.status > 300) {
-                    console.log('Could not redeem code; status ' + xhr.status + '.');
-                } else {
-                    var responseData = JSON.parse(xhr.responseText);
-                    win(responseData);
-                }
-            }
+        var token = getAllParametersFromUrl(newLoc, '#')['access_token'];
+        if (typeof token === 'undefined') {
+            return callbackWithError('The redirect uri did not have the access token', fail);
         }
-        var data = 'code=' + code +
-                   '&client_id=' + clientId +
-                   '&client_secret=' + clientSecret +
-                   '&redirect_uri=' + redirectUri +
-                   '&grant_type=authorization_code';
-        xhr.send(data);
+        win(token);
     });
+}
+
+function getAllParametersFromUrl(url, startString, endString) {
+    if (typeof url !== 'undefined' && typeof startString !== 'undefined')
+        url = url.split(startString)[1];
+    if (typeof url !== 'undefined' && typeof endString !== 'undefined')
+        url = url.split(endString)[0];
+    if (typeof url === 'undefined')
+        return {};
+
+    var retObj = {};
+    url.split('&').forEach(function(arg) {
+        var pair = arg.split('=');
+        retObj[pair[0]] = decodeURIComponent(pair[1]);
+    });
+    return retObj;
 }
 
 function launchInAppBrowser(authURL, interactive, callback) {
@@ -181,10 +143,24 @@ function launchInAppBrowser(authURL, interactive, callback) {
             return;
         if (timeoutid)
             timeoutid = clearTimeout(timeoutid);
-
         var newLoc = event.url;
-        if (newLoc.indexOf('code=') != -1) {
+        var paramsAfterQuestion = getAllParametersFromUrl(newLoc, "?", "#");
+        var paramsAfterPound = getAllParametersFromUrl(newLoc, "#");
+        var keys = Object.keys(paramsAfterQuestion).concat(Object.keys(paramsAfterPound));
+
+        ['access_token', 'oauth_verifier', 'token'].forEach(function(breakKey) {
+            if (keys.indexOf(breakKey) != -1) {
+                success = true;
+            }
+        });
+
+        // On first login, it redirects to "https://accounts.google.com/ServiceLoginAuth".
+        // In this case, we close the in-app browser and kick off authentication again.
+        if (newLoc === 'https://accounts.google.com/ServiceLoginAuth') {
             success = true;
+        }
+
+        if (success) {
             oAuthBrowser.close();
             callback(newLoc);
         }
@@ -214,43 +190,5 @@ function launchInAppBrowser(authURL, interactive, callback) {
             return;
         callback();
     });
-}
-
-function refreshAccessToken(callback) {
-    // Use the refresh code to get a new access token.
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://accounts.google.com/o/oauth2/token');
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-            if (xhr.status === 400) {
-                // Assume this is a bad refresh token.  Remove it.
-                var removeRefreshTokenCallback = function() {
-                    console.log('Failed to use stored refresh token!  It has been removed.');
-                };
-                refreshToken = null;
-                chrome.storage.internal.remove(REFRESH_TOKEN_KEY, removeRefreshTokenCallback);
-            } else if (xhr.status < 200 || xhr.status > 300) {
-                console.log('Could not refresh access token; status ' + xhr.status + '.');
-            } else {
-                // Cache the refreshed access token.
-                var responseData = JSON.parse(xhr.responseText);
-                accessToken = responseData.access_token;
-
-                // Schedule another access token refresh.
-                setTimeout(refreshAccessToken, responseData.expires_in * 1000);
-
-                // Send the refreshed token to the callback.
-                if (callback) {
-                    callback(accessToken);
-                }
-            }
-        }
-    }
-    var data = 'refresh_token=' + refreshToken +
-               '&client_id=' + clientId +
-               '&client_secret=' + clientSecret +
-               '&grant_type=refresh_token';
-    xhr.send(data);
 }
 
