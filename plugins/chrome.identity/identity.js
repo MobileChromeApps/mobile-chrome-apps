@@ -16,7 +16,7 @@ var cachedToken;
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
         callback = details;
-        details = { interactive: false, useWebAuth: false };
+        details = { interactive: false, useNativeAuth: true };
     }
     if (typeof callback !== 'function') {
         return callbackWithError('Callback function required');
@@ -42,7 +42,7 @@ exports.getAuthToken = function(details, callback) {
         callback(token);
     };
 
-    if (platformId !== 'android' || details.useWebAuth === 'true') {
+    if (platformId !== 'android' || details.useNativeAuth === 'false') {
         // Use web app oauth flow
         getAuthTokenJS(augmentedCallback, fail, details);
     } else {

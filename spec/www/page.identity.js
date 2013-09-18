@@ -13,19 +13,19 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     rootEl.appendChild(dropdown);
   }
 
-  function getUseWebAuth() {
-    var useWebAuthDropdown = chromespec.fgDoc.getElementById('use-web-auth-dropdown');
-    return useWebAuthDropdown.options[useWebAuthDropdown.selectedIndex].value;
+  function getUseNativeAuth() {
+    var useNativeAuthDropdown = chromespec.fgDoc.getElementById('use-native-auth-dropdown');
+    return useNativeAuthDropdown.options[useNativeAuthDropdown.selectedIndex].value;
   }
 
-  addDropdown('(Android) Use web authentication? ', 'use-web-auth-dropdown', { 'yes' : true, 'no' : false });
+  addDropdown('(Android) Use native authentication? ', 'use-native-auth-dropdown', { 'yes' : true, 'no' : false });
 
   addButton('Get auth token', function() {
     var onGetAuthTokenSuccess = function(token) {
       chromespec.log('Token: ' + token);
     };
 
-    chrome.identity.getAuthToken({ interactive: true, useWebAuth: getUseWebAuth() }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
   });
 
   addButton('Remove cached auth token', function() {
@@ -41,7 +41,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken({ interactive: true, useWebAuth: getUseWebAuth() }, onInitialGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onInitialGetAuthTokenSuccess);
   });
 
   addButton('Revoke access and refresh tokens', function() {
@@ -67,7 +67,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     }
 
     // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken({ interactive: true, useWebAuth: getUseWebAuth() }, onInitialGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onInitialGetAuthTokenSuccess);
   });
 
   addButton('Get name via Google\'s User Info API', function() {
@@ -89,7 +89,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     chromespec.log('Retrieving name...');
-    chrome.identity.getAuthToken({ interactive: true, useWebAuth: getUseWebAuth() }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
   });
 
   addButton('Get name via Google\'s Drive API', function() {
@@ -111,7 +111,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     chromespec.log('Retrieving name...');
-    chrome.identity.getAuthToken({ interactive: true, useWebAuth: getUseWebAuth() }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
   });
 
   addButton('Launch Google web auth flow', function() {
