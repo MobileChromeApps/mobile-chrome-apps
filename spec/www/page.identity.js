@@ -18,6 +18,26 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     return useNativeAuthDropdown.options[useNativeAuthDropdown.selectedIndex].value;
   }
 
+  function hitEndpoint(endpoint, callback) {
+    var onGetAuthTokenSuccess = function(token) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            callback(JSON.parse(xhr.responseText));
+          } else {
+            chromespec.log('Failed with status ' + xhr.status + '.');
+          }
+        }
+      };
+      xhr.open('GET', endpoint);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.send(null);
+    };
+
+    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+  }
+
   addDropdown('(Android) Use native authentication? ', 'use-native-auth-dropdown', { 'yes' : true, 'no' : false });
 
   addButton('Get auth token', function() {
@@ -71,99 +91,35 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
   });
 
   addButton('Get name via Google\'s User Info API', function() {
-    var onGetAuthTokenSuccess = function(token) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var responseText = JSON.parse(xhr.responseText);
-                    chromespec.log('Name: ' + responseText.name);
-                } else {
-                    chromespec.log('Failed with status ' + xhr.status + '.');
-                }
-            }
-        };
-        xhr.open('GET', 'https://www.googleapis.com/oauth2/v3/userinfo')
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.send(null);
-    };
-
-    chromespec.log('Retrieving name...');
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    hitEndpoint('https://www.googleapis.com/oauth2/v3/userinfo', function(response) {
+      chromespec.log('Name: ' + response.name);
+    });
   });
 
   addButton('Get name via Google\'s Drive API', function() {
-    var onGetAuthTokenSuccess = function(token) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var responseText = JSON.parse(xhr.responseText);
-                    chromespec.log('Name: ' + responseText.name);
-                } else {
-                    chromespec.log('Failed with status ' + xhr.status + '.');
-                }
-            }
-        };
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/about')
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.send(null);
-    };
-
-    chromespec.log('Retrieving name...');
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    hitEndpoint('https://www.googleapis.com/drive/v2/about', function(response) {
+      chromespec.log('Name: ' + response.name);
+    });
   });
 
   addButton('Get files via Google\'s Drive API', function() {
-    var onGetAuthTokenSuccess = function(token) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var responseText = JSON.parse(xhr.responseText);
-                    var fileCount = responseText.items.length;
-                    var cappedCount = (fileCount <= 3) ? fileCount : 3
-                    chromespec.log('Files (' + cappedCount + ' of ' + fileCount + '):');
-                    for (var i = 0; i < cappedCount; i++) {
-                        chromespec.log('  ' + responseText.items[i].title);
-                    }
-                } else {
-                    chromespec.log('Failed with status ' + xhr.status + '.');
-                }
-            }
-        };
-        xhr.open('GET', 'https://www.googleapis.com/drive/v2/files')
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.send(null);
-    };
-
-    chromespec.log('Retrieving files...');
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    hitEndpoint('https://www.googleapis.com/calendar/v3/users/me/calendarList', function(response) {
+      var fileCount = response.items.length;
+      var cappedCount = (fileCount <= 3) ? fileCount : 3
+      chromespec.log('Files (' + cappedCount + ' of ' + fileCount + '):');
+      for (var i = 0; i < cappedCount; i++) {
+          chromespec.log('  ' + response.items[i].title);
+      }
+    });
   });
 
   addButton('Get calendars via Google\'s Calendar API', function() {
-    var onGetAuthTokenSuccess = function(token) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var responseText = JSON.parse(xhr.responseText);
-                    chromespec.log('Calendars:');
-                    for (var i = 0; i < responseText.items.length; i++) {
-                        chromespec.log('  ' + responseText.items[i].summary);
-                    }
-                } else {
-                    chromespec.log('Failed with status ' + xhr.status + '.');
-                }
-            }
-        };
-        xhr.open('GET', 'https://www.googleapis.com/calendar/v3/users/me/calendarList')
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.send(null);
-    };
-
-    chromespec.log('Retrieving calendars...');
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    hitEndpoint('https://www.googleapis.com/drive/v2/files', function(response) {
+      chromespec.log('Calendars:');
+      for (var i = 0; i < response.items.length; i++) {
+        chromespec.log('  ' + response.items[i].summary);
+      }
+    });
   });
 
   addButton('Launch Google web auth flow', function() {
