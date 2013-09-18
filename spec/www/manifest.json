@@ -45,7 +45,7 @@
     "storage",
     "syncFileSystem",
     "https://accounts.google.com/o/oauth2/token",
-    "http://www.google.com/*"
+    "http://www.apache.org/*"
   ],
   "default_locale": "fr",
   "oauth2": {

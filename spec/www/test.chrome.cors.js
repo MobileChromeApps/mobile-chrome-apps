@@ -5,14 +5,13 @@
 chromeSpec('chrome.cors', function(runningInBackground) {
 
   describe('CORS', function() {
-    it('should xhr to google', function() {
+    it('should xhr to apache.org', function() {
       var win = jasmine.createSpy('win');
       var lose = jasmine.createSpy('lose');
       runs(function() {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://www.google.com/');
+        xhr.open('GET', 'http://www.apache.org/');
         xhr.onreadystatechange = function() {
-          //alert("RS: " + xhr.readyState+ "; S: " + xhr.status);
           if (xhr.readyState == 4) {
             if (xhr.status == 200) {
               win();
@@ -29,12 +28,12 @@ chromeSpec('chrome.cors', function(runningInBackground) {
       });
     });
 
-    it('should not xhr to google.ca', function() {
+    it('should not xhr to google.com', function() {
       var win = jasmine.createSpy('win');
       var lose = jasmine.createSpy('lose');
       runs(function() {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://www.google.ca/');
+        xhr.open('GET', 'http://www.google.com/');
         xhr.onreadystatechange = function() {
           if (xhr.readyState == 4) {
             if (xhr.status == 200) {
