@@ -15,3 +15,10 @@ test('-', function (t) {
         { s: '-', _: [] }
     );
 });
+
+test('-a -- b', function (t) {
+    t.plan(3);
+    t.deepEqual(parse([ '-a', '--', 'b' ]), { a: true, _: [ 'b' ] });
+    t.deepEqual(parse([ '--a', '--', 'b' ]), { a: true, _: [ 'b' ] });
+    t.deepEqual(parse([ '--a', '--', 'b' ]), { a: true, _: [ 'b' ] });
+});
