@@ -19,10 +19,10 @@ chromeSpec('chrome.fileSystem', function(runningInBackground) {
       });
     });
     describe('getWritableEntry()', function() {
-      it('returns null', function() {
+      it('returns a writable file entry', function() {
         // Create the callback.
         var getWritableEntryCallback = function(writableFileEntry) {
-          expect(writableFileEntry).toBeNull();
+          expect(writableFileEntry).not.toBeNull();
         };
 
         // Get the writable file entry.
@@ -30,10 +30,10 @@ chromeSpec('chrome.fileSystem', function(runningInBackground) {
       });
     });
     describe('isWritableEntry()', function() {
-      it('returns false', function() {
+      it('returns true', function() {
         // Create the callback.
         var isWritableEntryCallback = function(isWritable) {
-          expect(isWritable).toBeFalsy();
+          expect(isWritable).toBeTruthy();
         };
 
         // Get whether the file entry is writable.
