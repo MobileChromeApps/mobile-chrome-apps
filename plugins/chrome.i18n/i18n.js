@@ -87,12 +87,16 @@ function _getMessageFromMessageJson(messageName, localeChain) {
     }
 }
 
+var availableLocales = [];
 function _isLocaleAvailable(locale) {
-    var fileName = _getFilePathForLocale(locale);
-    var xhr = new XMLHttpRequest();
-    xhr.open('HEAD', fileName, false /* sync */);
-    xhr.send(null);
-    availableLocales[locale] = (xhr.status === 200);
+    if (!availableLocales.hasOwnProperty(locale)) {
+        var fileName = _getFilePathForLocale(locale);
+        var xhr = new XMLHttpRequest();
+        xhr.open('HEAD', fileName, false /* sync */);
+        xhr.send(null);
+        availableLocales[locale] = (xhr.status === 200);
+    }
+    return availableLocales[locale];
 }
 
 var chosenLocales;
