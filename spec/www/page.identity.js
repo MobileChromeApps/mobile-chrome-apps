@@ -103,7 +103,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
   });
 
   addButton('Get files via Google\'s Drive API', function() {
-    hitEndpoint('https://www.googleapis.com/calendar/v3/users/me/calendarList', function(response) {
+    hitEndpoint('https://www.googleapis.com/drive/v2/files', function(response) {
       var fileCount = response.items.length;
       var cappedCount = (fileCount <= 3) ? fileCount : 3
       chromespec.log('Files (' + cappedCount + ' of ' + fileCount + '):');
@@ -114,7 +114,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
   });
 
   addButton('Get calendars via Google\'s Calendar API', function() {
-    hitEndpoint('https://www.googleapis.com/drive/v2/files', function(response) {
+    hitEndpoint('https://www.googleapis.com/calendar/v3/users/me/calendarList', function(response) {
       chromespec.log('Calendars:');
       for (var i = 0; i < response.items.length; i++) {
         chromespec.log('  ' + response.items[i].summary);
