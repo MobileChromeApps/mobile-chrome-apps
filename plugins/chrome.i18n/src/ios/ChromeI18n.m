@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "Chromei18n.h"
+#import "ChromeI18n.h"
 
 #if CHROME_I18N_VERBOSE_LOGGING
 #define VERBOSE_LOG NSLog
@@ -11,7 +11,7 @@
 #endif
 
 
-@implementation Chromei18n
+@implementation ChromeI18n
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
 {

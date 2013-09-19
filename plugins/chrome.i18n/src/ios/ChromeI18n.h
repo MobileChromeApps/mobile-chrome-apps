@@ -5,7 +5,7 @@
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
 
-@interface Chromei18n : CDVPlugin
+@interface ChromeI18n : CDVPlugin
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
 
