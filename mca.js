@@ -695,6 +695,43 @@ function updateAppCommand() {
     };
   }
 
+  /* Android asset packager ignores, by default, directories beginning with
+     underscores. This can be fixed with an update to the project.properties
+     file, but only when compiling with ant. There is a bug outstanding to
+     fix this behaviour in Eclipse/ADT as well.
+
+     References:
+       https://code.google.com/p/android/issues/detail?id=5343
+       https://code.google.com/p/android/issues/detail?id=41237
+   */
+  function moveI18NMessagesDir(platform) {
+    return function(callback) {
+      var badPath = path.join(assetDirForPlatform(platform), '_locales');
+      var betterPath = path.join(assetDirForPlatform(platform), 'MCA_locales');
+      if (fs.existsSync(badPath)) {
+        console.log('## Moving ' + platform + ' locales directory');
+        fs.renameSync(badPath, betterPath);
+        console.log('## Renaming directories inside locales');
+        fs.readdir(betterPath,function(err, files) {
+          if (!err) {
+            for (var i=0; i<files.length; i++) {
+              var fullName = path.join(betterPath, files[i]);
+              if (files[i] !== files[i].toLowerCase()) {
+                stats = fs.statSync(fullName);
+                if (stats.isDirectory()) {
+                  fs.renameSync(fullName, path.join(betterPath, files[i].toLowerCase()));
+                }
+              }
+            }
+          }
+          callback();
+        });
+      } else {
+        callback();
+      }
+    };
+  }
+
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -704,10 +741,12 @@ function updateAppCommand() {
 
   if (hasAndroid) {
     eventQueue.push(removeVestigalConfigFile('android'));
+    eventQueue.push(moveI18NMessagesDir('android'));
     eventQueue.push(createAddJsStep('android'));
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
+    eventQueue.push(moveI18NMessagesDir('ios'));
     eventQueue.push(createAddJsStep('ios'));
   }
 }
