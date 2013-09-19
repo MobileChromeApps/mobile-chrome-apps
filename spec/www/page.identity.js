@@ -27,6 +27,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
             callback(JSON.parse(xhr.responseText));
           } else {
             chromespec.log('Failed with status ' + xhr.status + '.');
+            chromespec.log('Response text: ' + JSON.stringify(xhr.responseText));
           }
         }
       };
@@ -118,6 +119,15 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       chromespec.log('Calendars:');
       for (var i = 0; i < response.items.length; i++) {
         chromespec.log('  ' + response.items[i].summary);
+      }
+    });
+  });
+
+  addButton('Get playlists via Google\'s YouTube API', function() {
+    hitEndpoint('https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true', function(response) {
+      chromespec.log('Playlists:');
+      for (var i = 0; i < response.items.length; i++) {
+        chromespec.log('  ' + response.items[i].snippet.title);
       }
     });
   });
