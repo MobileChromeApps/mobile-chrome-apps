@@ -38,7 +38,7 @@ function _endsWith(string, endString) {
 }
 
 function _getFilePathForLocale(locale) {
-    return 'locales/' + locale.toLowerCase() + '/messages.json';
+    return 'MCA_locales/' + locale.toLowerCase() + '/messages.json';
 }
 
 function _toLowerCaseMessageAndPlaceholders(obj) {
