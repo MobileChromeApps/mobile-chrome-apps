@@ -106,7 +106,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
   addButton('Get files via Google\'s Drive API', function() {
     hitEndpoint('https://www.googleapis.com/drive/v2/files', function(response) {
       var fileCount = response.items.length;
-      var cappedCount = (fileCount <= 3) ? fileCount : 3
+      var cappedCount = (fileCount <= 3) ? fileCount : 3;
       chromespec.log('Files (' + cappedCount + ' of ' + fileCount + '):');
       for (var i = 0; i < cappedCount; i++) {
           chromespec.log('  ' + response.items[i].title);
@@ -116,8 +116,10 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
 
   addButton('Get calendars via Google\'s Calendar API', function() {
     hitEndpoint('https://www.googleapis.com/calendar/v3/users/me/calendarList', function(response) {
-      chromespec.log('Calendars:');
-      for (var i = 0; i < response.items.length; i++) {
+      var calendarCount = response.items.length;
+      var cappedCount = (calendarCount <= 3) ? calendarCount : 3;
+      chromespec.log('Calendars (' + cappedCount + ' of ' + calendarCount + '):');
+      for (var i = 0; i < cappedCount; i++) {
         chromespec.log('  ' + response.items[i].summary);
       }
     });
@@ -125,8 +127,10 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
 
   addButton('Get playlists via Google\'s YouTube API', function() {
     hitEndpoint('https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true', function(response) {
-      chromespec.log('Playlists:');
-      for (var i = 0; i < response.items.length; i++) {
+      var playlistCount = response.items.length;
+      var cappedCount = (playlistCount <= 3) ? playlistCount : 3;
+      chromespec.log('Playlists (' + cappedCount + ' of ' + playlistCount + '):');
+      for (var i = 0; i < cappedCount; i++) {
         chromespec.log('  ' + response.items[i].snippet.title);
       }
     });
