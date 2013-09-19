@@ -51,13 +51,10 @@
   "oauth2": {
     "client_id": "429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com",
     "scopes": [
-      "https://docs.google.com/feeds/",
-      "https://docs.googleusercontent.com/",
-      "https://spreadsheets.google.com/feeds/",
+      "https://www.googleapis.com/auth/calendar.readonly",
       "https://www.googleapis.com/auth/drive",
-      "https://www.googleapis.com/auth/adsense",
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/gcm_for_chrome.readonly"
+      "https://www.googleapis.com/auth/youtube.readonly"
     ]
   }
 }
