@@ -58,7 +58,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       chromespec.log('Removing token ' + token + ' from cache.');
 
       // Remove the token!
-      chrome.identity.removeCachedAuthToken({ token: token }, onRemoveCachedAuthTokenSuccess);
+      chrome.identity.removeCachedAuthToken({ token: token, useNativeAuth: getUseNativeAuth() }, onRemoveCachedAuthTokenSuccess);
     };
 
     // First, we need to get the existing auth token.

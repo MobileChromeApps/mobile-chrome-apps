@@ -51,6 +51,9 @@ public class ChromeIdentity extends CordovaPlugin {
         if ("getAuthToken".equals(action)) {
             getAuthToken(args, callbackContext);
             return true;
+        } else if ("removeCachedAuthToken".equals(action)) {
+            removeCachedAuthToken(args, callbackContext);
+            return true;
         }
 
         return false;
@@ -221,4 +224,25 @@ public class ChromeIdentity extends CordovaPlugin {
             callbackContext.success(token);
         }
     }
+
+    private void removeCachedAuthToken(final CordovaArgs args, final CallbackContext callbackContext) {
+        this.cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                invalidateToken(args, callbackContext);
+            }
+        });
+    }
+
+    private void invalidateToken(CordovaArgs args, CallbackContext callbackContext) {
+        try {
+            JSONObject tokenObject = args.getJSONObject(0);
+            String token = tokenObject.getString("token");
+            Context context = this.cordova.getActivity();
+            GoogleAuthUtil.invalidateToken(context, token);
+            callbackContext.success();
+        } catch (JSONException e) {
+            callbackContext.error("Could not invalidate token due to JSONException.");
+        }
+    }
 }
+

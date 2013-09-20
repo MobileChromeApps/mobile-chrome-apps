@@ -28,6 +28,11 @@ exports.getAuthToken = function(details, callback) {
         callback();
     };
 
+    // Use native auth by default.
+    if (!details.useNativeAuth) {
+        details.useNativeAuth = 'true';
+    }
+
     // If we have a cached token, send it along.
     if (cachedToken) {
         callback(cachedToken);
@@ -52,10 +57,23 @@ exports.getAuthToken = function(details, callback) {
 };
 
 exports.removeCachedAuthToken = function(details, callback) {
+    // Use native auth by default.
+    if (!details.useNativeAuth) {
+        details.useNativeAuth = 'true';
+    }
+
+    // First, remove the cached token locally.
     if (details && details.token === cachedToken) {
         cachedToken = null;
     }
-    callback();
+
+    // If we're using native authentication, invalidate the token natively.  Otherwise, just call the callback.
+    if (platformId === 'android' && details.useNativeAuth === 'true') {
+        // Use native implementation for invalidating tokens
+        exec(callback, null, 'ChromeIdentity', 'removeCachedAuthToken', [details]);
+    } else {
+        callback();
+    }
 }
 
 exports.launchWebAuthFlow = function(details, callback) {
