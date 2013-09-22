@@ -64,7 +64,7 @@ public class ChromeStorage extends CordovaPlugin {
     }
 
     private Uri getStorageFile(String namespace) {
-        String fileName = "__chromestorage_" + namespace;
+        String fileName = "chromestorage_" + namespace;
         File f = cordova.getActivity().getFileStreamPath(fileName);
         return webView.getResourceApi().remapUri(Uri.fromFile(f));
     }
