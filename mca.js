@@ -178,13 +178,6 @@ function spawn(cmd, args, onSuccess, opt_onError, opt_silent) {
   }
 }
 
-function sudo(cmd, onSuccess, opt_onError, silent) {
-  if (!isWindows) {
-    cmd = 'sudo ' + cmd;
-  }
-  exec(cmd, onSuccess, opt_onError, silent);
-}
-
 function chdir(d) {
   d = path.resolve(scriptDir, d);
   if (process.cwd() != d) {
