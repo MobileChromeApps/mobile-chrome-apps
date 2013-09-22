@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 try {
-var runtime = require('org.chromium.chrome-runtime.runtime');
+var runtime = require('org.chromium-runtime.runtime');
 } catch(e) {}
 
 // Typical Usage:

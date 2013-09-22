@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var Event = require('org.chromium.chrome-common.events');
+var Event = require('org.chromium.common.events');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
 var bootstrap = null;
 try {
-    bootstrap = require('org.chromium.chrome-bootstrap.bootstrap');
+    bootstrap = require('org.chromium.bootstrap.bootstrap');
 } catch (e) { }
 
 exports.getChannelId = function(interactive, callback) {

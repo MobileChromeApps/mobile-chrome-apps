@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 var argscheck = cordova.require('cordova/argscheck');
-var Event = require('org.chromium.chrome-common.events');
-var stubs = require('org.chromium.chrome-common.stubs');
-var helpers = require('org.chromium.chrome-common.helpers');
+var Event = require('org.chromium.common.events');
+var stubs = require('org.chromium.common.stubs');
+var helpers = require('org.chromium.common.helpers');
 
 var manifestJson;
 
@@ -68,7 +68,7 @@ exports.setManifest = function(manifest) {
 
 exports.getBackgroundPage = function(callback) {
   try {
-  var mobile = require('org.chromium.chrome-bootstrap.mobile.impl');
+  var mobile = require('org.chromium.bootstrap.mobile.impl');
   } catch(e) {}
   argscheck.checkArgs('f', 'chrome.runtime.getBackgroundPage', arguments);
   setTimeout(function() {
@@ -92,7 +92,7 @@ exports.reload = function() {
 function calculateAndCacheAppId() {
   var appId;
   try {
-    require('org.chromium.chrome-bootstrap.bootstrap');
+    require('org.chromium.bootstrap.bootstrap');
     var key = exports.getManifest()['key'];
     if (typeof key === 'undefined') {
       // For development, we want a consistent ID even without a public key.  Chrome uses the app path instead of name.

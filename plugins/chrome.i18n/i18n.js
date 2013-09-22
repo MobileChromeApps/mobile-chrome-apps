@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 var exec = cordova.require('cordova/exec');
-var runtime = require('org.chromium.chrome-runtime.runtime');
+var runtime = require('org.chromium-runtime.runtime');
 
 exports.getAcceptLanguages = function(callback) {
     // In the chrome implementation, acceptLanguage value can change with updates so we make a native call to get the system language

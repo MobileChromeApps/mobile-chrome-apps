@@ -1,5 +1,5 @@
-var CryptoJS = require('org.chromium.chrome-common.CryptoJS-sha256');
-require('org.chromium.chrome-common.CryptoJS-enc-base64-min'); // just need to make sure this runs
+var CryptoJS = require('org.chromium.common.CryptoJS-sha256');
+require('org.chromium.common.CryptoJS-enc-base64-min'); // just need to make sure this runs
 
 var hexToMPDecimalLookupTable = {
   0:'a', 1:'b', 2:'c', 3:'d',

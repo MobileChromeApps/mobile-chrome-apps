@@ -5,7 +5,7 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome-navigation"
+    id="org.chromium.navigation"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=3.1.0-dev" />
@@ -14,10 +14,10 @@
   <name>Chrome Apps Navigation</name>
 
   <platform name="android">
-    <source-file src="src/android/ChromeNavigation.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeNavigation.java" target-dir="src/org/chromium" />
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeNavigation">
-        <param name="android-package" value="com.google.cordova.ChromeNavigation"/>
+        <param name="android-package" value="org.chromium.ChromeNavigation"/>
         <param name="onload" value="true"/>
         <url-filter value="http://" />
         <url-filter value="https://" />

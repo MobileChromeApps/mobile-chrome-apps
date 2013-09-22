@@ -11,7 +11,7 @@ var channel = require('cordova/channel')
 exports.onBackgroundPageLoaded = channel.createSticky('onBackgroundPageLoaded');
 
 window.onChromeCorsReady = function() {
-  require('org.chromium.chrome-bootstrap.mobile.impl').init();
+  require('org.chromium.bootstrap.mobile.impl').init();
 }
 
 // Add a deviceready listener that initializes the Chrome wrapper.

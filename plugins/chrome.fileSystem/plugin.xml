@@ -5,15 +5,15 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.fileSystem"
+    id="org.chromium.fileSystem"
     version="1.0.0">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps FileSystem API</name>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="org.chromium.common" />
 
   <js-module src="fileSystem.js" name="FileSystem">
     <clobbers target="chrome.fileSystem" />

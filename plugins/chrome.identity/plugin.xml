@@ -5,29 +5,29 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.identity"
-    version="1.0.0">
+    id="org.chromium.identity"
+    version="1.0.1">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Identity API</name>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.apache.cordova.inappbrowser" />
 
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />
-    <clobbers target="chrome.experimental.identity" />
   </js-module>
 
   <platform name="android">
-    <dependency id="com.google.playservices" url="." subdir="../cordova/google-play-services" />
+    <dependency id="com.google.playservices" />
 
-    <source-file src="src/android/ChromeIdentity.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeIdentity.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeIdentity">
-        <param name="android-package" value="com.google.cordova.ChromeIdentity"/>
+        <param name="android-package" value="org.chromium.ChromeIdentity"/>
       </feature>
       <access origin="https://accounts.google.com/*" />
     </config-file>

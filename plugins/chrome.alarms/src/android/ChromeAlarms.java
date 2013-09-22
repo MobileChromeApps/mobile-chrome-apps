@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package com.google.cordova;
+package org.chromium;
 
-import com.google.cordova.Alarm;
+import org.chromium.Alarm;
 
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaWebView;

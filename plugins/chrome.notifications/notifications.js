@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var Event = require('org.chromium.chrome-common.events');
-var storage = require('org.chromium.chrome.storage.Storage');
+var Event = require('org.chromium.common.events');
+var storage = require('org.chromium.storage.Storage');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
-var runtime = require('org.chromium.chrome-runtime.runtime');
+var runtime = require('org.chromium-runtime.runtime');
 var bootstrap = null;
 try {
-    bootstrap = require('org.chromium.chrome-app-bootstrap.bootstrap');
+    bootstrap = require('org.chromium-app-bootstrap.bootstrap');
 } catch (e) { }
 
 var notifications = Object.create(null);

@@ -181,7 +181,7 @@ StorageArea.prototype.clear = function(callback) {
     exec(win, fail, 'ChromeStorage', 'clear', [self._namespace]);
 };
 
-var Event = require('org.chromium.chrome-common.events');
+var Event = require('org.chromium.common.events');
 exports.onChanged = new Event('onChanged');
 
 var local = new StorageArea('local', exports.onChanged);
