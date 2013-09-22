@@ -6,7 +6,7 @@ var Event = require('org.chromium.common.events');
 var storage = require('org.chromium.storage.Storage');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
-var runtime = require('org.chromium-runtime.runtime');
+var runtime = require('org.chromium.runtime.runtime');
 var bootstrap = null;
 try {
     bootstrap = require('org.chromium-app-bootstrap.bootstrap');
