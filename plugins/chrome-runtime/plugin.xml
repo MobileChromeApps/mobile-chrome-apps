@@ -15,6 +15,7 @@
   <name>Chrome App Runtime</name>
 
   <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.storage" />
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
   <js-module src="api/app/runtime.js" name="app.runtime">
