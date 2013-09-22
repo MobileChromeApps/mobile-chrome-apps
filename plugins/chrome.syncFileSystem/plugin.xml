@@ -13,15 +13,11 @@
 
   <name>Chrome Apps SyncFileSystem API</name>
 
-  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.chromium.storage" />
+  <dependency id="org.chromium.identity" />
 
   <js-module src="syncFileSystem.js" name="SyncFileSystem">
     <clobbers target="chrome.syncFileSystem" />
   </js-module>
-
-<!--REVIEW: Are these required? How many more platforms might we need? -->
-  <!-- Empty platforms; this is a JS-only plugin. -->
-  <platform name="android"></platform>
-  <platform name="ios"></platform>
-  <platform name="bb"></platform>
 </plugin>
