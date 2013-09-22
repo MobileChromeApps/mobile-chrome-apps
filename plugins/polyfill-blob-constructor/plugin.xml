@@ -8,8 +8,7 @@
     id="org.chromium.polyfill.blob_constructor"
     version="1.0.0">
   <engines>
-<!--REVIEW: cargo cult? Why 2.4? -->
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>XHR blob returnType shim</name>

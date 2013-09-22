@@ -5,14 +5,14 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.pushMessaging"
+    id="org.chromium.pushMessaging"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="chrome.identity" url="." subdir="plugins/chrome.identity" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.identity" />
 
   <js-module src="pushMessaging.js" name="pushMessaging">
     <clobbers target="chrome.pushMessaging" />
@@ -21,20 +21,20 @@
   <name>Chrome Apps Push Messaging API</name>
 
   <platform name="android">
-    <source-file src="src/android/ChromePushMessaging.java" target-dir="src/com/google/cordova" />
-    <source-file src="src/android/PushMessageReceiver.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromePushMessaging.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/PushMessageReceiver.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromePushMessaging">
-        <param name="android-package" value="com.google.cordova.ChromePushMessaging"/>
+        <param name="android-package" value="org.chromium.ChromePushMessaging"/>
         <param name="onload" value="true" />
       </feature>
-    </config-file> 
+    </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <receiver android:name="com.google.cordova.PushMessageReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+      <receiver android:name="org.chromium.PushMessageReceiver" android:permission="com.google.android.c2dm.permission.SEND">
         <intent-filter>
           <action android:name="com.google.android.c2dm.intent.RECEIVE" />
         </intent-filter>

@@ -1,5 +1,5 @@
 // Added by mmocny to work with our module loader
-var CryptoJS = require('org.chromium.chrome-common.CryptoJS-sha256');
+var CryptoJS = require('org.chromium.common.CryptoJS-sha256');
 
 /*
 CryptoJS v3.1.2

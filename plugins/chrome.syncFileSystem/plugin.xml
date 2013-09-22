@@ -5,16 +5,15 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.syncFileSystem"
-    version="1.0.0">
+    id="org.chromium.syncFileSystem"
+    version="0.1.0">
   <engines>
-<!--REVIEW: cargo cult? Why 2.4? -->
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps SyncFileSystem API</name>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="org.chromium.common" />
 
   <js-module src="syncFileSystem.js" name="SyncFileSystem">
     <clobbers target="chrome.syncFileSystem" />

@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var runtime = require('org.chromium.chrome-runtime.runtime');
-var app_runtime = require('org.chromium.chrome-runtime.app.runtime');
-var storage = require('org.chromium.chrome.storage.Storage');
+var runtime = require('org.chromium-runtime.runtime');
+var app_runtime = require('org.chromium-runtime.app.runtime');
+var storage = require('org.chromium.storage.Storage');
 
 exports.fgWindow = window;
 exports.bgWindow = null;
@@ -33,7 +33,7 @@ exports.init = function() {
 };
 
 exports.bgInit = function(bgWnd) {
-  var bootstrap = require("org.chromium.chrome-bootstrap.bootstrap");
+  var bootstrap = require("org.chromium.bootstrap.bootstrap");
   var exec = require("cordova/exec");
 
   exports.bgWindow = bgWnd;

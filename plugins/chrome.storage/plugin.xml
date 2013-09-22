@@ -5,26 +5,26 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.storage"
+    id="org.chromium.storage"
     version="1.0.0">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Storage API</name>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="org.chromium.common" />
 
   <js-module src="storage.js" name="Storage">
     <clobbers target="chrome.storage" />
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/ChromeStorage.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeStorage.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeStorage">
-        <param name="android-package" value="com.google.cordova.ChromeStorage"/>
+        <param name="android-package" value="org.chromium.ChromeStorage"/>
       </feature>
     </config-file>
   </platform>

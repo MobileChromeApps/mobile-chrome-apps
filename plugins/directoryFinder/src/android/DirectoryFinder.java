@@ -1,4 +1,4 @@
-package com.google.cordova;
+package org.chromium;
 
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CallbackContext;

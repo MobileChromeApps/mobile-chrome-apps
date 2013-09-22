@@ -8,7 +8,7 @@
     id="org.chromium.polyfill.CustomEvent"
     version="1.0.0">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>CustomEvent constuctor shim</name>

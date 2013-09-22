@@ -1,4 +1,4 @@
-package com.google.cordova;
+package org.chromium;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -5,34 +5,34 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.chrome.alarms"
+    id="org.chromium.alarms"
     version="1.0.0">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Alarms API</name>
 
-  <dependency id="chrome.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="chrome.storage" url="." subdir="plugins/chrome.storage" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.storage" />
 
   <js-module src="alarms.js" name="Alarms">
     <clobbers target="chrome.alarms" />
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/ChromeAlarms.java" target-dir="src/com/google/cordova" />
-    <source-file src="src/android/AlarmReceiver.java" target-dir="src/com/google/cordova" />
-    <source-file src="src/android/Alarm.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/ChromeAlarms.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/AlarmReceiver.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/Alarm.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeAlarms">
-        <param name="android-package" value="com.google.cordova.ChromeAlarms"/>
+        <param name="android-package" value="org.chromium.ChromeAlarms"/>
         <param name="onload" value="true" />
       </feature>
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <receiver android:name="com.google.cordova.AlarmReceiver" />
+      <receiver android:name="org.chromium.AlarmReceiver" />
     </config-file>
   </platform>
 </plugin>

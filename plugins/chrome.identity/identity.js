@@ -4,9 +4,9 @@
 
 var exec = require('cordova/exec');
 var platformId = require('cordova/platform').id;
-var callbackWithError = require('org.chromium.chrome-common.errors').callbackWithError;
+var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 try {
-    var runtime = require('org.chromium.chrome-runtime.runtime');
+    var runtime = require('org.chromium-runtime.runtime');
 } catch(e) {}
 
 // TODO(maxw): Automatically handle expiration.

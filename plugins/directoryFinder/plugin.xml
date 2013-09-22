@@ -8,7 +8,7 @@
     id="org.chromium.directoryFinder"
     version="1.0.0">
   <engines>
-    <engine name="cordova" version=">=2.4.0" />
+    <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Directory Retriever</name>
@@ -18,11 +18,11 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/DirectoryFinder.java" target-dir="src/com/google/cordova" />
+    <source-file src="src/android/DirectoryFinder.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="DirectoryFinder">
-        <param name="android-package" value="com.google.cordova.DirectoryFinder"/>
+        <param name="android-package" value="org.chromium.DirectoryFinder"/>
       </feature>
     </config-file>
   </platform>
