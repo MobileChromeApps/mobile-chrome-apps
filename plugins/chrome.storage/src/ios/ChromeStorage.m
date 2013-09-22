@@ -39,14 +39,13 @@
 
 - (NSString*) getStorageFileForNamespace:(NSString*)namespace
 {
-    return [NSString stringWithFormat:@"__chromestorage_%@",namespace];
+    return [NSString stringWithFormat:@"chromestorage_%@", namespace];
 }
 
 - (NSDictionary*) getStorageForNamespace:(NSString*)namespace
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
+    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+    NSString *filePath = [parentDir stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
     NSDictionary* storage = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
 
@@ -60,9 +59,8 @@
 
 - (void) setStorage:(NSMutableDictionary*)storage forNamespace:(NSString*)namespace
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
+    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+    NSString *filePath = [parentDir stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
 
     if(![NSKeyedArchiver archiveRootObject:storage toFile:filePath]) {
         @throw [NSException exceptionWithName: @"Writing to file failed" reason:@"Unknown" userInfo:nil];
