@@ -8,6 +8,9 @@
     "message": "Le Chrome Spec",
     "description": "The title of our app."
   },
+  "description": {
+    "message": "The app description"
+  },
   "@test1": {
     "message": "Bonjour $NAME$. $NAME$, voulez-vous des $STUFF$?",
     "description": "Tests named placeholders",
