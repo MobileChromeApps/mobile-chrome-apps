@@ -29,6 +29,13 @@
       <feature name="ChromeIdentity">
         <param name="android-package" value="org.chromium.ChromeIdentity"/>
       </feature>
+      <access origin="https://accounts.google.com/*" />
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <config-file target="config.xml" parent="/widget">
+      <access origin="https://accounts.google.com/*" />
     </config-file>
   </platform>
 </plugin>
