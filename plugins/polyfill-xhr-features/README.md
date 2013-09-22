@@ -13,12 +13,6 @@ the response is examined.
 
 ##Installation
 
-### Cordova 2.7 or later with cordova cli and Plugman
-
-*   Assuming you've used cordova create to create the platforms, you can use
-        cordova plugin add directory-of-the-xhr-blob-plugin
-    to add the plugin
-
 ##Usage
 
     var xhr = new XMLHttpRequest();
