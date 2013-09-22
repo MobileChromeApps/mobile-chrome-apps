@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var runtime = require('org.chromium-runtime.runtime');
-var app_runtime = require('org.chromium-runtime.app.runtime');
+var runtime = require('org.chromium.runtime.runtime');
+var app_runtime = require('org.chromium.runtime.app.runtime');
 var storage = require('org.chromium.storage.Storage');
 
 exports.fgWindow = window;
