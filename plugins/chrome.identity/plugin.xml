@@ -31,6 +31,10 @@
       </feature>
       <access origin="https://accounts.google.com/*" />
     </config-file>
+    <config-file target="AndroidManifest.xml" parent="/*">
+      <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    </config-file>
+
   </platform>
 
   <platform name="ios">
