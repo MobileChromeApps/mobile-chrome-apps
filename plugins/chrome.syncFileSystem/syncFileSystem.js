@@ -5,7 +5,7 @@
 var runtime = require('org.chromium.chrome-runtime.runtime');
 var manifest = runtime.getManifest();
 if (!manifest) {
-    throw "Manifest does not exist and was not set.";
+    throw new Error("Manifest does not exist and was not set.");
 }
 
 //=======
