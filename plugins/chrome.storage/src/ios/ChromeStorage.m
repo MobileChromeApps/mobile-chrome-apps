@@ -44,7 +44,7 @@
 
 - (NSDictionary*) getStorageForNamespace:(NSString*)namespace
 {
-    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString *filePath = [parentDir stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
     NSDictionary* storage = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -59,7 +59,7 @@
 
 - (void) setStorage:(NSMutableDictionary*)storage forNamespace:(NSString*)namespace
 {
-    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+    NSString *parentDir = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString *filePath = [parentDir stringByAppendingPathComponent:[self getStorageFileForNamespace:namespace]];
 
     if(![NSKeyedArchiver archiveRootObject:storage toFile:filePath]) {
