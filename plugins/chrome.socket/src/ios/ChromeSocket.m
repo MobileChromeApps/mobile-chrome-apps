@@ -165,7 +165,6 @@ static NSString* stringFromData(NSData* data) {
         [_acceptSocketQueue addObject:socket];
     }
 
-    _acceptCallback = nil;
 }
 
 - (void)socketDidDisconnect:(GCDAsyncSocket*)sock withError:(NSError *)error
@@ -557,7 +556,9 @@ static NSString* stringFromData(NSData* data) {
     void (^callback)(NSUInteger socketId) = [^(NSUInteger socketId) {
         VERBOSE_LOG(@"ACK %d.%@ Accepted socketId: %u", socket->_socketId, command.callbackId, socketId);
 
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socketId] callbackId:command.callbackId];
+        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socketId];
+        [result setKeepCallbackAsBool:TRUE];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
     } copy];
 
     VERBOSE_LOG(@"REQ %@.%@ Accept", socketId, command.callbackId);
