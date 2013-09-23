@@ -2,7 +2,7 @@
 
 This plugin contains an API for doing OAuth2 authentication. On Android, it uses Google Play Services, and on iOS it uses InAppBrowser.
 
-Refer to docs at: [http://developer.chrome.com/apps/app_identity.html](http://developer.chrome.com/apps/app_identity.html)
+For how to use the API, refer to docs at: [http://developer.chrome.com/apps/app_identity.html](http://developer.chrome.com/apps/app_identity.html)
 
 For iOS, you need to create a "web" entry in your [API Dashboard](https://code.google.com/apis/console/)
 
@@ -34,3 +34,7 @@ Alternatively, you can install the org.chromium.runtime plugin and set the value
         scopes: [ 'ARRAY', 'OF', 'SCOPES' ]
       }
     });
+
+## Playing with Google APIs
+For an API Playground, and to find which scopes are needed for various APIs, use the [APIs Exploror](https://developers.google.com/apis-explorer/). Also consider using the [Google API JavaScript Client](https://code.google.com/p/google-api-javascript-client/) for an easier time.
+
