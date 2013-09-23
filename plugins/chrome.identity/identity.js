@@ -1,4 +1,4 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+cordova.define("org.chromium.identity.Identity", function(require, exports, module) {// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -24,8 +24,8 @@ exports.getAuthToken = function(details, callback) {
     if (typeof details !== 'object') {
         return callbackWithError('TokenDetails object required', callback);
     }
-    var fail = function() {
-        callback();
+    var fail = function(msg) {
+        callbackWithError(msg, callback);
     };
 
     // Use native auth by default.
@@ -51,8 +51,11 @@ exports.getAuthToken = function(details, callback) {
         // Use web app oauth flow
         getAuthTokenJS(augmentedCallback, fail, details);
     } else {
+        // If we are not using chrome.runtime, check for oauth2 args in the details map
+        var oauthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
+
         // Use native implementation for logging into google accounts
-        exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [details]);
+        exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oauthDetails]);
     }
 };
 
@@ -184,3 +187,4 @@ function launchInAppBrowser(authURL, interactive, callback) {
     });
 }
 
+});

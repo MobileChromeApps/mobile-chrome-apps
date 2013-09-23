@@ -59,61 +59,22 @@ public class ChromeIdentity extends CordovaPlugin {
         return false;
     }
 
-    private static List<String> toStringList(JSONArray array) throws JSONException {
-        if (array == null) {
-            return null;
-        }
-        List<String> list = new ArrayList<String>();
-
-        for (int i = 0, l = array.length(); i < l; i++) {
-            list.add(array.get(i).toString());
-        }
-
-        return list;
-    }
-
-    private List<String> loadScopesFromManifest() throws IOException, JSONException {
-        Context context = this.cordova.getActivity();
-        InputStream is = context.getAssets().open("www/manifest.json");
-        //Small trick to get the scanner to pull the entire input stream in one go
-        Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        String contents = s.hasNext() ? s.next() : "";
-
-        JSONObject manifestContents = new JSONObject(contents);
-        List<String> scopes = new ArrayList<String>();
-
-        JSONObject oAuthObj = manifestContents.optJSONObject("oauth2");
-        if(oAuthObj != null) {
-            JSONArray oAuthScopes = oAuthObj.optJSONArray("scopes");
-            if(oAuthScopes != null) {
-                scopes = toStringList(oAuthScopes);
-            } else {
-                throw new IllegalArgumentException("scopes missing from manifest.json");
-            }
-        } else {
-            throw new IllegalArgumentException("oauth2 missing from manifest.json");
-        }
-
-        return scopes;
-    }
-
-    private String getScopesString() throws IOException, JSONException {
-        List<String> scopes = loadScopesFromManifest();
+    private String getScopesString(CordovaArgs args) throws IOException, JSONException {
+        JSONArray scopes = args.getJSONObject(1).getJSONArray("scopes");
         StringBuilder ret = new StringBuilder("oauth2:");
 
-        for(int i = 0; i < scopes.size(); i++) {
-            if(i != 0) {
+        for (int i = 0; i < scopes.length(); i++) {
+            if (i != 0) {
                 ret.append(" ");
             }
-            ret.append(scopes.get(i));
+            ret.append(scopes.getString(i));
         }
         return ret.toString();
     }
 
     private TokenDetails getTokenDetailsFromArgs(CordovaArgs args) throws JSONException {
         TokenDetails tokenDetails = new TokenDetails();
-        JSONObject tokenDetailsObject = args.getJSONObject(0);
-        tokenDetails.interactive = tokenDetailsObject.getBoolean("interactive");
+        tokenDetails.interactive = args.getBoolean(0);
         return tokenDetails;
     }
 
@@ -186,12 +147,12 @@ public class ChromeIdentity extends CordovaPlugin {
 
         try {
             tokenDetails = getTokenDetailsFromArgs(args);
-            scope = getScopesString();
+            scope = getScopesString(args);
             context = this.cordova.getActivity();
             token = GoogleAuthUtil.getToken(context, account, scope);
         } catch (GooglePlayServicesAvailabilityException playEx) {
             // Play is not available
-            if(tokenDetails.interactive) {
+            if (tokenDetails.interactive) {
                 Activity myActivity = this.cordova.getActivity();
                 Dialog dialog = GooglePlayServicesUtil.getErrorDialog(playEx.getConnectionStatusCode(), myActivity , AUTH_REQUEST_CODE);
                 dialog.show();
