@@ -5,10 +5,6 @@
 package org.chromium;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CallbackContext;
@@ -24,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -99,7 +96,7 @@ public class ChromeIdentity extends CordovaPlugin {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         // Enter only if we have requests waiting
         if(savedContent) {
             if(requestCode == ACCOUNT_CHOOSER_INTENT ) {
@@ -113,15 +110,43 @@ public class ChromeIdentity extends CordovaPlugin {
                 this.savedCallbackContext = null;
                 this.savedCordovaArgs = null;
             } else if(requestCode == OAUTH_PERMISSIONS_GRANT_INTENT) {
-                if(resultCode == Activity.RESULT_OK && intent.hasExtra("authtoken")) {
-                    String token = intent.getStringExtra("authtoken");
-                    getAuthTokenCallback(token, this.savedCallbackContext);
-                } else {
-                    this.savedCallbackContext.error("User did not approve oAuth permissions request");
-                }
-                this.savedContent  = false;
-                this.savedCallbackContext = null;
-                this.savedCordovaArgs = null;
+                cordova.getThreadPool().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (resultCode == Activity.RESULT_OK) {
+                            String token = null;
+                            if (intent.hasExtra("authtoken")) {
+                                token = intent.getStringExtra("authtoken");
+                            } else {
+                                try {
+                                    token = GoogleAuthUtil.getToken(cordova.getActivity(), intent.getExtras().getString("authAccount"), intent.getExtras().getString("service"));
+                                } catch (UserRecoverableAuthException e) {
+                                    e.printStackTrace();
+                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
+                                    return;
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
+                                    return;
+                                } catch (GoogleAuthException e) {
+                                    e.printStackTrace();
+                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
+                                    return;
+                                }
+                            }
+                            if (token == null) {
+                                savedCallbackContext.error("Unknown auth error.");
+                            } else {
+                                getAuthTokenCallback(token, savedCallbackContext);
+                            }
+                        } else {
+                            savedCallbackContext.error("User did not approve oAuth permissions request");
+                        }
+                        savedContent  = false;
+                        savedCallbackContext = null;
+                        savedCordovaArgs = null;
+                    }
+                });
             }
         }
     }
@@ -200,6 +225,9 @@ public class ChromeIdentity extends CordovaPlugin {
             String token = tokenObject.getString("token");
             Context context = this.cordova.getActivity();
             GoogleAuthUtil.invalidateToken(context, token);
+            callbackContext.success();
+        } catch (SecurityException e) {
+            // This happens when trying to clear a token that doesn't exist.
             callbackContext.success();
         } catch (JSONException e) {
             callbackContext.error("Could not invalidate token due to JSONException.");
