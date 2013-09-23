@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 var runtime = require('org.chromium.chrome-runtime.runtime');
+var manifest = runtime.getManifest();
+if (!manifest) {
+    throw "Manifest does not exist and was not set.";
+}
 
 //=======
 // Drive
@@ -48,6 +52,12 @@ var REQUEST_FAILED_ERROR = 3;
 // Numerical constants.
 var INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = 2000;
 var MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = 64000;
+if (manifest.incoming_sync_delay && manifest.incoming_sync_delay.initial && manifest.incoming_sync_delay.maximum) {
+    INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.initial;
+    MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.maximum;
+} else {
+    console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.")
+}
 
 //----------------------------------
 // FileSystem function augmentation
@@ -854,8 +864,13 @@ exports.requestFileSystem = function(callback) {
                 console.log('Relevant changes: ' + numChanges + '.');
                 if (numChanges === 0) {
                     if (remoteToLocalSyncDelay < MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY) {
-                        remoteToLocalSyncDelay *= 2;
-                        console.log('  Remote-to-local sync delay doubled.');
+                        if (remoteToLocalSyncDelay * 2 <= MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY) {
+                          remoteToLocalSyncDelay *= 2;
+                          console.log('  Remote-to-local sync delay doubled.');
+                        } else {
+                          remoteToLocalSyncDelay = MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY;
+                          console.log('  Remote-to-local sync increased to and capped at ' + remoteToLocalSyncDelay + 'ms.');
+                        }
                     } else {
                         console.log('  Remote-to-local sync delay capped at ' + remoteToLocalSyncDelay + 'ms.');
                     }

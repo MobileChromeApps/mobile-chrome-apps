@@ -57,6 +57,10 @@
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/youtube.readonly"
     ]
+  },
+  "incoming_sync_delay": {
+    "initial": 2000,
+    "maximum": 64000
   }
 }
 
