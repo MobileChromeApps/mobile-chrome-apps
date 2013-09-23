@@ -457,8 +457,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   function resolveTilde(string) {
     // TODO: implement better
     if (string.substr(0,1) === '~')
-      string = process.env.HOME + string.substr(1)
-    return path.resolve(string)
+      return path.resolve(process.env.HOME + string.substr(1))
+    return string
   }
   function validateSourceArgStep(callback) {
     var sourceArg = commandLineFlags.source;
