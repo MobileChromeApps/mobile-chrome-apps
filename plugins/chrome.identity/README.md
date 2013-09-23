@@ -4,6 +4,16 @@ This plugin contains an API for doing OAuth2 authentication. On Android, it uses
 
 Refer to docs at: [http://developer.chrome.com/apps/app_identity.html](http://developer.chrome.com/apps/app_identity.html)
 
+For iOS, you need to create a "web" entry in your [API Dashboard](https://code.google.com/apis/console/)
+
+For Android, you need to create an "Android" entry in your [API Dashboard](https://code.google.com/apis/console/)
+
+To find your debug signing certificate (password=android):
+
+  keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore -list -v
+
+On windows, replace `~` with `%USERPROFILE%`
+
 When using this plugin outside the context of a Mobile Chrome App (app created with mca.js), you must provide OAuth settings via the `details` parameter of `getAuthToken`. For Example:
 
     chrome.identity.getAuthToken({
@@ -18,8 +28,9 @@ When using this plugin outside the context of a Mobile Chrome App (app created w
 
 Alternatively, you can install the org.chromium.runtime plugin and set the values in its manifest:
 
-    var manifest = chrome.runtime.getManifest();
-    manifest.oauth2 = {
+    var manifest = chrome.runtime.setManifest({
+      oauth2: {
         client_id: 'YOUR_CLIENT_ID',
         scopes: [ 'ARRAY', 'OF', 'SCOPES' ]
-    };
+      }
+    });
