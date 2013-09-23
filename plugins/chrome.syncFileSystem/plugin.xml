@@ -16,6 +16,7 @@
   <dependency id="org.chromium.runtime" />
   <dependency id="org.chromium.storage" />
   <dependency id="org.chromium.identity" />
+  <dependency id="org.apache.cordova.file" />
 
   <js-module src="syncFileSystem.js" name="SyncFileSystem">
     <clobbers target="chrome.syncFileSystem" />
