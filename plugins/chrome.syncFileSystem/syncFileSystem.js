@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var runtime = require('org.chromium.chrome-runtime.runtime');
+var runtime = require('org.chromium.runtime.runtime');
 var manifest = runtime.getManifest();
 if (!manifest) {
     throw new Error("Manifest does not exist and was not set.");
