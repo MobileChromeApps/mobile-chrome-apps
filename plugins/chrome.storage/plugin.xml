@@ -13,7 +13,7 @@
 
   <name>Chrome Apps Storage API</name>
 
-  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
 
   <js-module src="storage.js" name="Storage">
     <clobbers target="chrome.storage" />

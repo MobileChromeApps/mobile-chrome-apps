@@ -13,7 +13,7 @@
 
   <name>Chrome Apps I18n API</name>
 
-  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
 
   <js-module src="i18n.js" name="I18n">
     <clobbers target="chrome.i18n" />
