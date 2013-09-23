@@ -14,6 +14,7 @@
   <name>Chrome Apps Identity API</name>
 
   <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
   <dependency id="org.apache.cordova.inappbrowser" />
 
   <js-module src="identity.js" name="Identity">
