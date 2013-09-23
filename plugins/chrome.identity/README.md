@@ -4,7 +4,7 @@ This plugin contains an API for doing OAuth2 authentication. On Android, it uses
 
 Refer to docs at: [http://developer.chrome.com/apps/app_identity.html](http://developer.chrome.com/apps/app_identity.html)
 
-For iOS, you need to create a "web" entry in your [API Dashboard](https://code.google.com/apis/console/)
+For iOS, you need to create a "web" entry in your [API Dashboard](https://code.google.com/apis/console/). Put this web `client_id` in your manifest (as shown below), and never the Android one (it is automatically extracted from your APK).
 
 For Android, you need to create an "Android" entry in your [API Dashboard](https://code.google.com/apis/console/)
 
@@ -18,7 +18,7 @@ When using this plugin outside the context of a Mobile Chrome App (app created w
 
     chrome.identity.getAuthToken({
         oauth2: {
-            client_id: 'YOUR_CLIENT_ID',
+            client_id: 'YOUR_WEB_CLIENT_ID',
             scopes: [ 'ARRAY', 'OF', 'SCOPES' ]
         },
         interactive: true
@@ -30,7 +30,7 @@ Alternatively, you can install the org.chromium.runtime plugin and set the value
 
     var manifest = chrome.runtime.setManifest({
       oauth2: {
-        client_id: 'YOUR_CLIENT_ID',
+        client_id: 'YOUR_WEB_CLIENT_ID',
         scopes: [ 'ARRAY', 'OF', 'SCOPES' ]
       }
     });
