@@ -13,9 +13,13 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     rootEl.appendChild(dropdown);
   }
 
-  function getUseNativeAuth() {
-    var useNativeAuthDropdown = chromespec.fgDoc.getElementById('use-native-auth-dropdown');
-    return useNativeAuthDropdown.options[useNativeAuthDropdown.selectedIndex].value;
+  function makeDetails() {
+    var ret = { interactive: true };
+    if (window.cordova) {
+      var useNativeAuthDropdown = chromespec.fgDoc.getElementById('use-native-auth-dropdown');
+      ret.useNativeAuth = useNativeAuthDropdown.options[useNativeAuthDropdown.selectedIndex].value;
+    }
+    return ret;
   }
 
   function hitEndpoint(endpoint, callback) {
@@ -36,17 +40,21 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       xhr.send(null);
     };
 
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken(makeDetails(), onGetAuthTokenSuccess);
   }
 
   addDropdown('(Android) Use native authentication? ', 'use-native-auth-dropdown', { 'yes' : true, 'no' : false });
 
   addButton('Get auth token', function() {
-    var onGetAuthTokenSuccess = function(token) {
-      chromespec.log('Token: ' + token);
+    var callback = function(token) {
+      if (!token) {
+        chromespec.log('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
+      } else {
+        chromespec.log('Token: ' + token);
+      }
     };
 
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken(makeDetails(), callback);
   });
 
   addButton('Remove cached auth token', function() {
@@ -62,7 +70,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onInitialGetAuthTokenSuccess);
+    chrome.identity.getAuthToken(makeDetails(), onInitialGetAuthTokenSuccess);
   });
 
   addButton('Revoke access and refresh tokens', function() {
@@ -88,7 +96,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     }
 
     // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken({ interactive: true, useNativeAuth: getUseNativeAuth() }, onInitialGetAuthTokenSuccess);
+    chrome.identity.getAuthToken(makeDetails(), onInitialGetAuthTokenSuccess);
   });
 
   addButton('Get name via Google\'s User Info API', function() {
@@ -145,7 +153,11 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     var onLaunchWebAuthFlowSuccess = function(url) {
-      chromespec.log('Resulting URL: ' + url);
+      if (!url) {
+        chromespec.log('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
+      } else {
+        chromespec.log('Resulting URL: ' + url);
+      }
     };
 
     chrome.identity.launchWebAuthFlow(webAuthDetails, onLaunchWebAuthFlowSuccess);
@@ -164,7 +176,11 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     var onLaunchWebAuthFlowSuccess = function(url) {
+      if (!url) {
+        chromespec.log('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
+      } else {
         chromespec.log('Resulting URL: ' + url);
+      }
     };
 
     chrome.identity.launchWebAuthFlow(webAuthDetails, onLaunchWebAuthFlowSuccess);

@@ -18,6 +18,11 @@ function proxyProperty(_this, propertyName, writable) {
     Object.defineProperty(_this, propertyName, descriptor);
 }
 
+function safariSupportsBlobXHR(win) {
+    var version = /(\d+)_/.exec(win.navigator.userAgent);
+    return version && parseInt(version[1]) >= 7;
+}
+
 var nativeXHR = window.XMLHttpRequest;
 function chromeXHR() {
     var that=this;
@@ -75,4 +80,6 @@ function chromeXHR() {
     chromeXHR.prototype[elem] = proxyMethod(elem);
 });
 
-exports.XMLHttpRequest = chromeXHR;
+if (!safariSupportsBlobXHR(window)) {
+  exports.XMLHttpRequest = chromeXHR;
+}
