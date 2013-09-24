@@ -16,14 +16,13 @@
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.runtime" />
   <dependency id="org.apache.cordova.inappbrowser" />
+  <dependency id="com.google.playservices" />
 
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />
   </js-module>
 
   <platform name="android">
-    <dependency id="com.google.playservices" />
-
     <source-file src="src/android/ChromeIdentity.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
