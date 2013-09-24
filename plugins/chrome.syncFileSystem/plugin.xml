@@ -21,4 +21,18 @@
   <js-module src="syncFileSystem.js" name="SyncFileSystem">
     <clobbers target="chrome.syncFileSystem" />
   </js-module>
+
+  <platform name="ios">
+    <config-file target="config.xml" parent="/widget">
+      <access origin="https://www.googleapis.com/drive/*" />
+      <access origin="https://www.googleapis.com/upload/drive/*" />
+    </config-file>
+  </platform>
+
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <access origin="https://www.googleapis.com/drive/*" />
+      <access origin="https://www.googleapis.com/upload/drive/*" />
+    </config-file>
+  </platform>
 </plugin>
