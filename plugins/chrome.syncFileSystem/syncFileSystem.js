@@ -3,10 +3,6 @@
 // found in the LICENSE file.
 
 var runtime = require('org.chromium.runtime.runtime');
-var manifest = runtime.getManifest();
-if (!manifest) {
-    throw new Error("Manifest does not exist and was not set.");
-}
 
 //=======
 // Drive
@@ -48,16 +44,6 @@ var SYNC_FILE_SYSTEM_PREFIX = 'sfs';
 var FILE_NOT_FOUND_ERROR = 1;
 var MULTIPLE_FILES_FOUND_ERROR = 2;
 var REQUEST_FAILED_ERROR = 3;
-
-// Numerical constants.
-var INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = 2000;
-var MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = 64000;
-if (manifest.incoming_sync_delay && manifest.incoming_sync_delay.initial && manifest.incoming_sync_delay.maximum) {
-    INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.initial;
-    MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.maximum;
-} else {
-    console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.")
-}
 
 //----------------------------------
 // FileSystem function augmentation
@@ -841,6 +827,20 @@ function getTokenString(callback) {
 //=======================
 
 exports.requestFileSystem = function(callback) {
+    var manifest = runtime.getManifest();
+    if (!manifest) {
+        throw new Error("Manifest does not exist and was not set.");
+    }
+    // Numerical constants.
+    var INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = 2000;
+    var MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = 64000;
+
+    if (manifest.incoming_sync_delay && manifest.incoming_sync_delay.initial && manifest.incoming_sync_delay.maximum) {
+        INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.initial;
+        MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.maximum;
+    } else {
+        console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.")
+    }
     var onRequestFileSystemSuccess = function(fileSystem) {
         // Change the name of the file system.  This is a syncable file system!
         fileSystem.name = "syncable";
