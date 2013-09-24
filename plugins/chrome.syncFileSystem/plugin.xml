@@ -26,6 +26,7 @@
     <config-file target="config.xml" parent="/widget">
       <access origin="https://www.googleapis.com/drive/*" />
       <access origin="https://www.googleapis.com/upload/drive/*" />
+      <access origin="https://*.googleusercontent.com/*" />
     </config-file>
   </platform>
 
@@ -33,6 +34,7 @@
     <config-file target="res/xml/config.xml" parent="/widget">
       <access origin="https://www.googleapis.com/drive/*" />
       <access origin="https://www.googleapis.com/upload/drive/*" />
+      <access origin="https://*.googleusercontent.com/*" />
     </config-file>
   </platform>
 </plugin>
