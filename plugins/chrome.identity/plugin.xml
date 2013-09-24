@@ -13,10 +13,9 @@
 
   <name>Chrome Apps Identity API</name>
 
-  <dependency id="org.chromium.common" />
-  <dependency id="org.chromium.runtime" />
-  <dependency id="org.apache.cordova.inappbrowser" />
-  <dependency id="com.google.playservices" />
+  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
+  <dependency id="org.apache.cordova.core.inappbrowser" url="." subdir="../cordova/cordova-inappbrowser" />
+  <dependency id="com.google.playservices" url="." subdir="../cordova/google-play-services" />
 
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />

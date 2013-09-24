@@ -22,7 +22,7 @@ package __ID__;
 import android.os.Bundle;
 import org.apache.cordova.*;
 
-import com.google.cordova.ChromeChromeClient;
+import org.chromium.ChromeChromeClient;
 
 public class __ACTIVITY__ extends DroidGap
 {

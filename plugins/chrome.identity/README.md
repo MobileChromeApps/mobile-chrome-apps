@@ -37,4 +37,3 @@ Alternatively, you can install the org.chromium.runtime plugin and set the value
 
 ## Playing with Google APIs
 For an API Playground, and to find which scopes are needed for various APIs, use the [APIs Exploror](https://developers.google.com/apis-explorer/). Also consider using the [Google API JavaScript Client](https://code.google.com/p/google-api-javascript-client/) for an easier time.
-
