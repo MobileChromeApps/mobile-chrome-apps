@@ -1,6 +1,8 @@
 # chrome.identity Plugin
 
-This plugin contains an API for doing OAuth2 authentication. On Android, it uses Google Play Services, and on iOS it uses InAppBrowser.
+OAuth2 authentication for Android and iOS. On Android, it uses Google Play Services, and on iOS it uses InAppBrowser.
+
+Status: Stable on Android, alpha on iOS
 
 For how to use the API, refer to docs at: [http://developer.chrome.com/apps/app_identity.html](http://developer.chrome.com/apps/app_identity.html)
 

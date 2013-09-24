@@ -2,6 +2,8 @@
 
 Provides an implementation chrome.storage.local and chrome.storage.sync (but does not actually sync).
 
+Status: Stable
+
 Refer to docs at: [https://developer.chrome.com/apps/storage.html](https://developer.chrome.com/apps/storage.html)
 
 Example usage:
