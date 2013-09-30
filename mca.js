@@ -469,19 +469,25 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         sourceArg === 'spec' && path.join(scriptDir, 'chrome-cordova', 'spec', 'www'),
         sourceArg && path.join(scriptDir, 'mobile-chrome-app-samples', sourceArg, 'www')
       ];
-      for (var i = 0; appDir = dirsToTry[i]; i++) {
-        if (appDir) console.log('Searching for Chrome app source in ' + appDir);
-        if (appDir && fs.existsSync(appDir)) {
-          manifestFile = path.join(appDir, 'manifest.json');
-          if (!fs.existsSync(manifestFile)) {
-            fatal('No manifest.json file found within: ' + appDir);
-          } else {
-            break;
+      var foundManifest = false;
+      for (var i = 0; i < dirsToTry.length; i++) {
+        if (dirsToTry[i]) {
+          appDir = dirsToTry[i];
+          console.log('Searching for Chrome app source in ' + appDir);
+          if (fs.existsSync(appDir)) {
+            manifestFile = path.join(appDir, 'manifest.json');
+            if (fs.existsSync(manifestFile)) {
+              foundManifest = true;
+              break;
+            }
           }
         }
       }
       if (!appDir) {
         fatal('Directory does not exist.');
+      }
+      if (!foundManifest) {
+        fatal('No manifest.json file found');
       }
     }
     callback();
