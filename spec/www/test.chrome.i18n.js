@@ -23,6 +23,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
     });
 
     describe('CSS', function() {
+/* Not yet.
       it('should replace placeholders within CSS', function() {
         testNode = document.createElement('img');
         testNode.className = 'i18n_test';
@@ -35,6 +36,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
         expect(computed.getPropertyValue('direction')).toBe('ltr');
         expect(testNode.offsetWidth).toBe(5);
       });
+*/
 
       it('should not replace placeholders within style attributes', function() {
         testNode = document.createElement('div');
@@ -60,12 +62,13 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
       });
 
       it('should not replace placeholders within Blob URL style tags', function() {
+        var URL_ = window.URL || window.webkitURL;
         var linkNode = document.createElement('link');
         var blob = new Blob(['.asdf { height:1px; width: __MSG_testwidth__; }'], {'type' : 'text/css'});
-        var url = URL.createObjectURL(blob);
+        var url = URL_.createObjectURL(blob);
         this.after(function() {
           linkNode.parentNode.removeChild(linkNode);
-          URL.revokeObjectURL(url);
+          URL_.revokeObjectURL(url);
         });
         linkNode.rel = 'stylesheet';
         linkNode.href = url;
@@ -91,6 +94,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
         }, 1000);
         xhr.send();
       });
+/* Not yet.
       it('should replace placeholders XHR\'d CSS files', function() {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', 'assets/i18n_test.css', true);
@@ -99,6 +103,7 @@ chromeSpec('chrome.i18n', function(runningInBackground) {
         }, 1000);
         xhr.send();
       });
+*/
     });
   }
 
