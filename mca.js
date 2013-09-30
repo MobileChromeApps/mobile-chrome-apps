@@ -515,6 +515,10 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         for (var i = 0; i < manifest.permissions.length; ++i) {
           if (typeof manifest.permissions[i] === "string") {
             if (manifest.permissions[i].indexOf('://') > -1) {
+              // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
+              if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
+                manifest.permissions[i] += "*";
+              }
               whitelist.push(manifest.permissions[i]);
             } else if (manifest.permissions[i] === "<all_urls>") {
               whitelist.push("*");
