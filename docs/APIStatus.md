@@ -4,35 +4,28 @@ See the [reference guide for building Chrome Packaged Apps](http://developer.chr
 
 This list tracks API support on mobile.
 
-_Current as of June 2013_.
+_Current as of Sept 2013_.
 
-## Well supported APIs
+* [alarms](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.alarms)
+    * Fully working on Android.
+    * iOS - alarms will not fire when App is backgrounded
+* [i18n](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.i18n)
+    * JS methods work (`chrome.i18n.getMessage()` and `chrome.i18n.getAcceptLanguages()`)
+    * CSS placeholders not implemented
+* [identity](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.identity)
+    * Fully working on Android.
+    * iOS still a work-in-progress.
+* [notifications](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.notifications)
+    * Android only
+* [socket](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.socket)
+    * Fully working on Android and iOS
+* [storage.local](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
+    * Fully working on Android and iOS
+* [storage.sync](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
+    * Works like storage.local (ie, storage works, but no sync)
+* [syncFileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.syncFileSystem)
+    * Alpha quality on iOS and Android.
 
-* storage.local
-* socket
-    * Multicast sockets are not supported
-* experimental.identity
-* app.runtime
-* app.window
-* events
-
-## Somewhat supported APIs
-
-* alarms
-    * Only work while app is actively running.
-* storage.sync
-    * works like storage.local (ie, storage works, but no sync)
-* syncFileSystem
-    * Only the last_write_win conflict resolution policy is supported
-    * getUsageAndQuota not supported
-    * getFileStatus/getFileStatuses not supported
-    * service status listeners not supported
-* runtime
-    * App lifetimes differ on mobile, events map as well as possible
-    * Anything related to app store or IPC not supported
-* fileSystem
-* i18n
- 
 ## Not yet supported APIs
 
 * bluetooth
@@ -49,7 +42,6 @@ _Current as of June 2013_.
 * types
 * usb
 * webstore
-* experimental.mediaGalleries
 * experimental.record
 * experimental.systemInfo.cpu
 * experimental.systemInfo.display
