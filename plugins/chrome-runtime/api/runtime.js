@@ -86,7 +86,7 @@ exports.getURL = function(subResource) {
 };
 
 exports.reload = function() {
-  location.reload();
+  location="chromeapp.html";
 };
 
 var cachedAppId = null;
