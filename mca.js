@@ -82,7 +82,6 @@ var ACTIVE_PLUGINS = [
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-navigation'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.i18n'),
-    path.join(scriptDir, 'chrome-cordova', 'plugins', 'directoryFinder'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'chrome.storage'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
     path.join(scriptDir, 'chrome-cordova', 'plugins', 'polyfill-xhr-features'),
