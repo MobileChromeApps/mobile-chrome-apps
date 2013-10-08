@@ -468,19 +468,25 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         sourceArg === 'spec' && path.join(scriptDir, 'chrome-cordova', 'spec', 'www'),
         sourceArg && path.join(scriptDir, 'mobile-chrome-app-samples', sourceArg, 'www')
       ];
-      for (var i = 0; appDir = dirsToTry[i]; i++) {
-        if (appDir) console.log('Searching for Chrome app source in ' + appDir);
-        if (appDir && fs.existsSync(appDir)) {
-          manifestFile = path.join(appDir, 'manifest.json');
-          if (!fs.existsSync(manifestFile)) {
-            fatal('No manifest.json file found within: ' + appDir);
-          } else {
-            break;
+      var foundManifest = false;
+      for (var i = 0; i < dirsToTry.length; i++) {
+        if (dirsToTry[i]) {
+          appDir = dirsToTry[i];
+          console.log('Searching for Chrome app source in ' + appDir);
+          if (fs.existsSync(appDir)) {
+            manifestFile = path.join(appDir, 'manifest.json');
+            if (fs.existsSync(manifestFile)) {
+              foundManifest = true;
+              break;
+            }
           }
         }
       }
       if (!appDir) {
         fatal('Directory does not exist.');
+      }
+      if (!foundManifest) {
+        fatal('No manifest.json file found');
       }
     }
     callback();
@@ -508,6 +514,10 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         for (var i = 0; i < manifest.permissions.length; ++i) {
           if (typeof manifest.permissions[i] === "string") {
             if (manifest.permissions[i].indexOf('://') > -1) {
+              // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
+              if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
+                manifest.permissions[i] += "*";
+              }
               whitelist.push(manifest.permissions[i]);
             } else if (manifest.permissions[i] === "<all_urls>") {
               whitelist.push("*");
@@ -707,10 +717,10 @@ function updateAppCommand() {
           if (!err) {
             for (var i=0; i<files.length; i++) {
               var fullName = path.join(betterPath, files[i]);
-              if (files[i] !== files[i].toLowerCase()) {
+              if (files[i] !== files[i].replace('-', '_').toLowerCase()) {
                 stats = fs.statSync(fullName);
                 if (stats.isDirectory()) {
-                  fs.renameSync(fullName, path.join(betterPath, files[i].toLowerCase()));
+                  fs.renameSync(fullName, path.join(betterPath, files[i].replace('-', '_').toLowerCase()));
                 }
               }
             }
