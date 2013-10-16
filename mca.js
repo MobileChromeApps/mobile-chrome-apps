@@ -593,8 +593,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       callback();
     }
 
-    fs.mkdirSync(appName);
-    cordova.config(path.join(origDir, appName), {
+    config_json = {
       lib: {
         android: {
           uri: path.join(scriptDir, 'cordova', 'cordova-android'),
@@ -614,9 +613,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           id: appName
         }
       }
-    });
+    }
 
-    runCmd(['create', appName, appId, appName], function() {
+    runCmd(['create', appName, appId, appName, config_json], function() {
       writeConfigStep(function() {
         runAllCmds(afterAllCommands);
       });
