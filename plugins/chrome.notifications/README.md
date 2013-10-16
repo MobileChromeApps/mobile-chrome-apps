@@ -1,8 +1,11 @@
 # chrome.notifications Plugin
 
-Plugin for showing notifications on Android.
+This plugin allows apps to show notifications in the status bar.
 
-Status: Stable
+## Status
 
-For how to use the API, refer to docs at: [http://developer.chrome.com/apps/notifications.html](http://developer.chrome.com/apps/notifications.html)
+Stable on Android; not supported on iOS.
 
+## Reference
+
+The API reference is [here](http://developer.chrome.com/apps/notifications.html).

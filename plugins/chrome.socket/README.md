@@ -1,8 +1,11 @@
-# chrome.notifications Plugin
+# chrome.socket Plugin
 
-Client and server sockets for Android and iOS.
+This plugin provides client and server sockets for Android and iOS.
 
-Status: Stable
+## Status
 
-For how to use the API, refer to docs at: [http://developer.chrome.com/apps/socket.html](http://developer.chrome.com/apps/socket.html)
+Stable on Android and iOS.
 
+## Reference
+
+The API reference is [here](http://developer.chrome.com/apps/socket.html).

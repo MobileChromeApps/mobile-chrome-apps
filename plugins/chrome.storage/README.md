@@ -1,14 +1,22 @@
 # chrome.storage Plugin
 
-Provides an implementation chrome.storage.local and chrome.storage.sync (but does not actually sync).
+This plugin provides allows apps to use local storage.
 
-Status: Stable
+## Status
 
-Refer to docs at: [https://developer.chrome.com/apps/storage.html](https://developer.chrome.com/apps/storage.html)
+Stable on Android and iOS.
 
-Example usage:
+## Reference
 
-  chrome.storage.local.set({'key':'value'});
-  chrome.storage.local.get('key', function(obj) {
-    alert(obj.key);
-  });
+The API reference is [here](https://developer.chrome.com/apps/storage.html).
+
+## Example Usage
+
+    chrome.storage.local.set({'key' : 'value'});
+    chrome.storage.local.get('key', function(obj) {
+      alert(obj.key);
+    });
+
+## Notes
+
+* Both `chrome.storage.local` and `chrome.storage.sync` are available, but the latter does not actually sync.
