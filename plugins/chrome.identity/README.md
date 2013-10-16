@@ -12,7 +12,7 @@ Stable on Android; alpha on iOS.
 
 The API reference is [here](http://developer.chrome.com/apps/identity.html); a description of how to use the API is [here](http://developer.chrome.com/apps/app_identity.html).
 
-## Registering Your Appication
+## Registering Your Application
 
 To use this plugin, you will need to register your application in the [Google Cloud Console](https://cloud.google.com/console).  Create a project.
 
@@ -58,4 +58,4 @@ When using this plugin outside the context of a Mobile Chrome App, this informat
 
 ## Playing With Google APIs
 
-The [Google APIs Explorer](https://developers.google.com/apis-explorer/) and [Google API JavaScript Client](https://code.google.com/p/google-api-javascript-client/) are both useful tools for determining required scopes and testing various API use cases.
+The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
