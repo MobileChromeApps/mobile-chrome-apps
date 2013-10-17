@@ -740,6 +740,55 @@ function updateAppCommand() {
     };
   }
 
+  function copyIconAssetsStep(platform) {
+    return function(callback) {
+      readManifest('www/manifest.json', function(manifest) {
+        var permissions = [];
+        if (manifest && manifest.icons) {
+          var iconMap = {};
+          if (platform === "android") {
+            iconMap = {
+              "36": [path.join('res','drawable-ldpi','icon.png')],
+              "48": [path.join('res','drawable-mdpi','icon.png')],
+              "72": [path.join('res','drawable-hdpi','icon.png')],
+              "96": [path.join('res','drawable-xhdpi','icon.png'),
+                     path.join('res','drawable','icon.png')],
+            };
+          } else if (platform === "ios") {
+            var cordova = require('cordova');
+            var parser = new cordova.platforms.ios.parser(path.join('platforms','ios'));
+            iconMap = {
+              "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
+              "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
+              "114": [path.join(parser.originalName, 'Resources','icons','icon@2x.png')],
+              "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')]
+            };
+          }
+          if (iconMap) {
+            //console.log('## Copying icons for ' + platform);
+            for (size in iconMap) {
+              if (manifest.icons[size]) {
+                for (var i=0; i < iconMap[size].length; i++) {
+                  //console.log("Copying " + size + "px icon file");
+                  copyFile(path.join('www', manifest.icons["48"]),
+                           path.join('platforms', platform, iconMap[size][i]),
+                           function(err) {
+                             if (err) {
+                               console.log("Error copying " + size + "px icon file");
+                             }
+                           });
+                }
+              } else {
+                //console.log("No " + size + "px icon file declared");
+              }
+            }
+          }
+        }
+        callback();
+      });
+    };
+  }
+
   function createAddJsStep(platform) {
     return function(callback) {
       console.log('## Updating cordova.js for ' + platform);
@@ -751,11 +800,13 @@ function updateAppCommand() {
     eventQueue.push(removeVestigalConfigFile('android'));
     eventQueue.push(moveI18NMessagesDir('android'));
     eventQueue.push(createAddJsStep('android'));
+    eventQueue.push(copyIconAssetsStep('android'));
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
     eventQueue.push(moveI18NMessagesDir('ios'));
     eventQueue.push(createAddJsStep('ios'));
+    eventQueue.push(copyIconAssetsStep('ios'));
   }
 }
 
