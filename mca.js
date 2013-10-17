@@ -593,7 +593,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       callback();
     }
 
-    config_json = {
+    var configJson = {
       lib: {
         android: {
           uri: path.join(scriptDir, 'cordova', 'cordova-android'),
@@ -613,9 +613,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           id: appName
         }
       }
-    }
+    };
 
-    runCmd(['create', appName, appId, appName, config_json], function() {
+    runCmd(['create', appName, appId, appName, configJson], function() {
       writeConfigStep(function() {
         runAllCmds(afterAllCommands);
       });
