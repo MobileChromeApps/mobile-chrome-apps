@@ -770,7 +770,7 @@ function updateAppCommand() {
               if (manifest.icons[size]) {
                 for (var i=0; i < iconMap[size].length; i++) {
                   //console.log("Copying " + size + "px icon file");
-                  copyFile(path.join('www', manifest.icons["48"]),
+                  copyFile(path.join('www', manifest.icons[size]),
                            path.join('platforms', platform, iconMap[size][i]),
                            function(err) {
                              if (err) {
