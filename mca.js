@@ -252,6 +252,21 @@ function waitForKey(opt_prompt, callback) {
   });
 }
 
+function readManifest(manifestFilename, callback) {
+  fs.readFile(manifestFilename, { encoding: 'utf-8' }, function(err, data) {
+    if (err) {
+      fatal('Unable to open manifest ' + manifestFilename + ' for reading.');
+    }
+    try {
+      var manifest = eval('(' + data + ')'); // JSON.parse(data);
+      callback(manifest);
+    } catch (e) {
+      console.log(e);
+      fatal('Unable to parse manifest ' + manifestFilename);
+    }
+  });
+}
+
 /******************************************************************************/
 /******************************************************************************/
 // Tools Check
@@ -499,16 +514,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     if (!manifestFile) {
       return callback();
     }
-    fs.readFile(manifestFile, { encoding: 'utf-8' }, function(err, data) {
-      if (err) {
-        fatal('Unable to open manifest ' + manifestFile + ' for reading.');
-      }
-      try {
-        manifest = eval('(' + data + ')'); // JSON.parse(data);
-      } catch (e) {
-        console.log(e);
-        fatal('Unable to parse manifest ' + manifestFile);
-      }
+    readManifest(manifestFile, function(manifestData) {
+      manifest = manifestData;
       var permissions = [];
       if (manifest && manifest.permissions) {
         for (var i = 0; i < manifest.permissions.length; ++i) {
