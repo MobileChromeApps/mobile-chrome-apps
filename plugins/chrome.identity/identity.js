@@ -47,16 +47,11 @@ exports.getAuthToken = function(details, callback) {
         callback(token);
     };
 
-    if (platformId !== 'android' || details.useNativeAuth === 'false') {
-        // Use web app oauth flow
-        getAuthTokenJS(augmentedCallback, fail, details);
-    } else {
-        // If we are not using chrome.runtime, check for oauth2 args in the details map
-        var oauthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
+    // If we are not using chrome.runtime, check for oauth2 args in the details map
+    var oauthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
 
-        // Use native implementation for logging into google accounts
-        exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oauthDetails]);
-    }
+    // Use native implementation for logging into google accounts
+    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oauthDetails]);
 };
 
 exports.removeCachedAuthToken = function(details, callback) {

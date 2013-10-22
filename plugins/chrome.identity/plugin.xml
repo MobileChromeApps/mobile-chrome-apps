@@ -38,8 +38,14 @@
   </platform>
 
   <platform name="ios">
-    <config-file target="config.xml" parent="/widget">
-      <access origin="https://accounts.google.com/*" />
-    </config-file>
+     <source-file src="src/ios/ChromeIdentity.m" />
+     <header-file src="src/ios/ChromeIdentity.h" />
+
+     <config-file target="config.xml" parent="/widget">
+       <feature name="ChromeIdentity">
+         <param name="ios-package" value="ChromeIdentity"/>
+       </feature>
+       <access origin="https://accounts.google.com/*" />
+     </config-file>
   </platform>
 </plugin>
