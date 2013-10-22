@@ -36,6 +36,21 @@ For iOS, follow the instructions [here](https://developers.google.com/+/mobile/i
 
 **Note:** Skip step 2, part 7; you will instead put your client id in your manifest (as shown in the "Updating Your Manifest" section).
 
+Finally, you'll need to add a little bit of code to your app delegate.  First, an import:
+
+    #import <GooglePlus/GooglePlus.h>
+
+Then, the following message:
+
+    - (BOOL)application: (UIApplication *)application
+                openURL: (NSURL *)url
+      sourceApplication: (NSString *)sourceApplication
+             annotation: (id)annotation {
+        return [GPPURLHandler handleURL:url
+                      sourceApplication:sourceApplication
+                             annotation:annotation];
+    }
+
 ## Updating Your Manifest
 
 Your manifest needs to be updated to include your client id and scopes.  In a Mobile Chrome App (ie. an app created using mca.js), this is done in manifest.json as follows:
