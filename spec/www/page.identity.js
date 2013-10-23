@@ -14,12 +14,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
   }
 
   function makeDetails() {
-    var ret = { interactive: true };
-    if (window.cordova) {
-      var useNativeAuthDropdown = chromespec.fgDoc.getElementById('use-native-auth-dropdown');
-      ret.useNativeAuth = useNativeAuthDropdown.options[useNativeAuthDropdown.selectedIndex].value;
-    }
-    return ret;
+    return { interactive: true };
   }
 
   function hitEndpoint(endpoint, callback) {
@@ -43,8 +38,6 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     chrome.identity.getAuthToken(makeDetails(), onGetAuthTokenSuccess);
   }
 
-  addDropdown('(Android) Use native authentication? ', 'use-native-auth-dropdown', { 'yes' : true, 'no' : false });
-
   addButton('Get auth token', function() {
     var callback = function(token) {
       if (!token) {
@@ -66,7 +59,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       chromespec.log('Removing token ' + token + ' from cache.');
 
       // Remove the token!
-      chrome.identity.removeCachedAuthToken({ token: token, useNativeAuth: getUseNativeAuth() }, onRemoveCachedAuthTokenSuccess);
+      chrome.identity.removeCachedAuthToken({ token: token }, onRemoveCachedAuthTokenSuccess);
     };
 
     // First, we need to get the existing auth token.
