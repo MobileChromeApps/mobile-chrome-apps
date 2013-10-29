@@ -17,6 +17,7 @@
         "page.jasmine.js",
         "page.fileSystem.js",
         "page.identity.js",
+        "page.idle.js",
         "page.notifications.js",
         "page.power.js",
         "page.pushMessaging.js",
