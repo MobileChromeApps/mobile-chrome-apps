@@ -1,4 +1,4 @@
-# chrome.identity Plugin
+# chrome.power Plugin
 
 This plugin provides the ability to override the device's default power management.
 
