@@ -593,8 +593,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       callback();
     }
 
-    fs.mkdirSync(appName);
-    cordova.config(path.join(origDir, appName), {
+    var config_default = {
       lib: {
         android: {
           uri: path.join(scriptDir, 'cordova', 'cordova-android'),
@@ -614,10 +613,14 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           id: appName
         }
       }
-    });
+    };
 
-    runCmd(['create', appName, appId, appName], function() {
-      writeConfigStep(function() {
+    runCmd(['create', appName, appId, appName, config_default], function(err) {
+      if(err)
+        return fatal(err);
+      writeConfigStep(function(err) {
+        if(err)
+           return fatal(err);
         runAllCmds(afterAllCommands);
       });
     });
@@ -646,7 +649,11 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function prepareStep(callback) {
-    runCmd(['prepare'], callback);
+    runCmd(['prepare'], function(err) {
+       if(err)
+          return fatal(err);
+       callback()
+    });
   }
 
   eventQueue.push(validateSourceArgStep);

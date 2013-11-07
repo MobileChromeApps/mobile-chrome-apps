@@ -5,7 +5,7 @@
   "description": "Mobile Chrome Apps command line tool",
   "dependencies": {
     "ncp":"~0.4",
-    "cordova":"~3.0",
+    "cordova":"~3.1",
     "optimist":"~0.5",
     "cryptojs":"~2"
   },

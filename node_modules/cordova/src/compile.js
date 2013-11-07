@@ -16,36 +16,65 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*global require: true, module: true, process: true*/
+/*jslint sloppy: true, white: true, newcap: true */
+
 var cordova_util      = require('./util'),
     path              = require('path'),
-    fs                = require('fs'),
-    shell             = require('shelljs'),
-    et                = require('elementtree'),
+    child_process     = require('child_process'),
     hooker            = require('./hooker'),
     events            = require('./events'),
-    n                 = require('ncallbacks');
+    Q                 = require('q'),
+    os                = require('os');
 
-function shell_out_to_build(projectRoot, platform, options,  error_callback, done) {
-    var cmd = '"' + path.join(projectRoot, 'platforms', platform, 'cordova', 'build') + (options.length ? '" ' + options.join(" ") : '"');
-    events.emit('log', 'Compiling platform "' + platform + '" with command "' + cmd + '" (output to follow)...');
-    shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code > 0) {
-            var err = new Error('An error occurred while building the ' + platform + ' project. ' + output);
-            if (error_callback) error_callback(err);
-            else throw err;
-        } else {
+// Returns a promise.
+function shell_out_to_build(projectRoot, platform, options) {
+    var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'build'),
+        args = options.length ? options : [],
+        d = Q.defer(),
+        errors = "",
+        child;
+
+    if (os.platform() === 'win32') {
+        args = ['/c',cmd].concat(args);
+        cmd = 'cmd';
+    }
+
+    events.emit('log', 'Compiling app on platform "' + platform + '" via command "' + cmd + '" ' + args.join(" "));
+
+    //using spawn instead of exec to avoid errors with stdout on maxBuffer
+    child = child_process.spawn(cmd, args);
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', function (data) {
+        events.emit('verbose', data);
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', function (data) {
+        events.emit('verbose', data);
+        errors = errors + data;
+    });
+
+    child.on('close', function (code) {
+        events.emit('verbose', "child_process.spawn(" + cmd + "," + "[" + args.join(", ") + "]) = " + code);
+        if (code === 0) {
             events.emit('log', 'Platform "' + platform + '" compiled successfully.');
-            if (done) done();
+            d.resolve();
+        } else {
+            d.reject(new Error('An error occurred while building the ' + platform + ' project.' + errors));
         }
     });
+
+    return d.promise;
 }
 
-module.exports = function compile(options, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+// Returns a promise.
+module.exports = function compile(options) {
+    var projectRoot = cordova_util.isCordova(process.cwd()),
+        hooks;
 
-    if (options instanceof Function && callback === undefined) {
-        callback = options;
+    if (!options) {
         options = {
             verbose: false,
             platforms: [],
@@ -55,36 +84,17 @@ module.exports = function compile(options, callback) {
 
     options = cordova_util.preProcessOptions(options);
     if (options.constructor.name === "Error") {
-        if (callback) return callback(options);
-        else throw options;
+        return Q.reject(options);
     }
 
-    var hooks = new hooker(projectRoot);
-    hooks.fire('before_compile', options, function(err) {
-        if (err) {
-            if (callback) callback(err);
-            else throw err;
-        } else {
-            var end = n(options.platforms.length, function() {
-                hooks.fire('after_compile', options, function(err) {
-                    if (err) {
-                        if (callback) callback(err);
-                        else throw err;
-                    } else {
-                        if (callback) callback();
-                    }
-                });
-            });
-
-            // Iterate over each added platform
-            options.platforms.forEach(function(platform) {
-                try {
-                    shell_out_to_build(projectRoot, platform, options.options, callback, end);
-                } catch(e) {
-                    if (callback) callback(e);
-                    else throw e;
-                }
-            });
-        }
+    hooks = new hooker(projectRoot);
+    return hooks.fire('before_compile', options)
+    .then(function() {
+        // Iterate over each added platform
+        return Q.all(options.platforms.map(function(platform) {
+            return shell_out_to_build(projectRoot, platform, options.options);
+        }));
+    }).then(function() {
+        return hooks.fire('after_compile', options);
     });
 };

@@ -281,6 +281,16 @@ describe('config-changes module', function() {
                     expect(spy).not.toHaveBeenCalledWith(path.join(temp, 'res', 'xml', 'plugins.xml'), 'utf-8');
                 });
             });
+            describe('of plist config files', function() {
+                var xcode_add, xcode_rm;
+                it('should write empty string nodes with no whitespace', function() {
+                    shell.cp('-rf', ios_config_xml, temp);
+                    shell.cp('-rf', varplugin, plugins_dir);
+                    configChanges.add_installed_plugin_to_prepare_queue(plugins_dir, 'VariablePlugin', 'ios', {});
+                    configChanges.process(plugins_dir, temp, 'ios');
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
+                });
+            });
             describe('of pbxproject framework files', function() {
                 var xcode_add, xcode_rm;
                 beforeEach(function() {
@@ -288,7 +298,7 @@ describe('config-changes module', function() {
                     shell.cp('-rf', cbplugin, plugins_dir);
                     xcode_add = jasmine.createSpy();
                     xcode_rm = jasmine.createSpy();
-                    spyOn(ios_parser, 'parseIOSProjectFiles').andReturn({
+                    spyOn(ios_parser, 'parseProjectFile').andReturn({
                         xcode:{
                             addFramework:xcode_add,
                             removeFramework:xcode_rm,

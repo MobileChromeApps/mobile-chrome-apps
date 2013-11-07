@@ -16,38 +16,67 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*global require: true, module: true, process: true*/
+/*jslint sloppy: true, white: true, newcap: true */
+
 var cordova_util      = require('./util'),
     path              = require('path'),
-    shell             = require('shelljs'),
-    platforms         = require('../platforms'),
-    platform          = require('./platform'),
+    child_process     = require('child_process'),
     events            = require('./events'),
-    fs                = require('fs'),
-    n                 = require('ncallbacks'),
     hooker            = require('./hooker'),
-    util              = require('util');
+    Q                 = require('q'),
+    DEFAULT_OPTIONS   = ["--emulator"],
+    os                = require('os');
 
-function shell_out_to_emulate(root, platform, options, error_callback, done) {
-    var cmd = '"' + path.join(root, 'platforms', platform, 'cordova', 'run') + '" ' + (options.length ? options.join(" ") : '--emulator');
-    events.emit('log', 'Running on emulator for platform "' + platform + '" via command "' + cmd + '" (output to follow)...');
-    shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code > 0) {
-            var err = new Error('An error occurred while emulating/deploying the ' + platform + ' project.' + output);
-            if (error_callback) return error_callback(err);
-            else throw err;
-        } else {
+// Returns a promise.
+function shell_out_to_emulate(projectRoot, platform, options) {
+    var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'run'),
+        args = options.length ? DEFAULT_OPTIONS.concat(options) : DEFAULT_OPTIONS,
+        d = Q.defer(),
+        errors = "",
+        child;
+
+    if (os.platform() === 'win32') {
+        args = ['/c',cmd].concat(args);
+        cmd = 'cmd';
+    }
+
+    events.emit('log', 'Running on emulator for platform "' + platform + '" via command "' + cmd + '" ' + args.join(" "));
+
+    //using spawn instead of exec to avoid errors with stdout on maxBuffer
+    child = child_process.spawn(cmd, args);
+
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', function (data) {
+        events.emit('verbose', data);
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', function (data) {
+        events.emit('verbose', data);
+        errors = errors + data;
+    });
+
+    child.on('close', function (code) {
+        events.emit('verbose', "child_process.spawn(" + cmd + "," + "[" + args.join(", ") + "]) = " + code);
+        if (code === 0) {
             events.emit('log', 'Platform "' + platform + '" deployed to emulator.');
-            done();
+            d.resolve();
+        } else {
+            d.reject(new Error('An error occurred while emulating/deploying the ' + platform + ' project. ' + errors));
         }
     });
+
+    return d.promise;
 }
 
-module.exports = function emulate (options, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+// Returns a promise.
+module.exports = function emulate(options) {
+    var projectRoot = cordova_util.isCordova(process.cwd()),
+        hooks;
 
-    if (options instanceof Function && callback === undefined) {
-        callback = options;
+    if (!options) {
         options = {
             verbose: false,
             platforms: [],
@@ -57,43 +86,19 @@ module.exports = function emulate (options, callback) {
 
     options = cordova_util.preProcessOptions(options);
     if (options.constructor.name === "Error") {
-        if (callback) return callback(options)
-        else throw options;
+        return Q.reject(options);
     }
 
-    var hooks = new hooker(projectRoot);
-    hooks.fire('before_emulate', options, function(err) {
-        if (err) {
-            if (callback) callback(err);
-            else throw err;
-        } else {
-            var end = n(options.platforms.length, function() {
-                hooks.fire('after_emulate', options, function(err) {
-                    if (err) {
-                        if (callback) callback(err);
-                        else throw err;
-                    } else {
-                        if (callback) callback();
-                    }
-                });
-            });
-
-            // Run a prepare first!
-            require('../cordova').prepare(options.platforms, function(err) {
-                if (err) {
-                    if (callback) callback(err);
-                    else throw err;
-                } else {
-                    options.platforms.forEach(function(platform) {
-                        try {
-                            shell_out_to_emulate(projectRoot, platform, options.options, callback, end);
-                        } catch(e) {
-                            if (callback) callback(e);
-                            else throw e;
-                        }
-                    });
-                }
-            });
-        }
+    hooks = new hooker(projectRoot);
+    return hooks.fire('before_emulate', options)
+    .then(function() {
+        // Run a prepare first!
+        return require('../cordova').raw.prepare(options.platforms);
+    }).then(function() {
+        return Q.all(options.platforms.map(function(platform) {
+            return shell_out_to_emulate(projectRoot, platform, options.options);
+        }));
+    }).then(function() {
+        return hooks.fire('after_emulate', options);
     });
 };

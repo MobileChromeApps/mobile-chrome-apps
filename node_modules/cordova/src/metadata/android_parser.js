@@ -18,12 +18,13 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
-    et            = require('elementtree'),
     xml           = require('../xml-helpers'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),
+    child_process = require('child_process'),
     project_config= require('../config'),
+    Q             = require('q'),
     config_parser = require('../config_parser');
 
 var default_prefs = {
@@ -41,17 +42,19 @@ module.exports = function android_parser(project) {
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
 };
 
-module.exports.check_requirements = function(project_root, callback) {
+// Returns a promise.
+module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking Android requirements...');
     var command = 'android list target';
-    events.emit('log', 'Running "' + command + '" (output to follow)');
-    shell.exec(command, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code != 0) {
-            callback('The command `android` failed. Make sure you have the latest Android SDK installed, and the `android` command (inside the tools/ folder) added to your path. Output: ' + output);
+    events.emit('verbose', 'Running "' + command + '" (output to follow)');
+    var d = Q.defer();
+    child_process.exec(command, function(err, output, stderr) {
+        events.emit('verbose', output);
+        if (err) {
+            d.reject(new Error('The command `android` failed. Make sure you have the latest Android SDK installed, and the `android` command (inside the tools/ folder) added to your path. Output: ' + output));
         } else {
             if (output.indexOf('android-17') == -1) {
-                callback('Please install Android target 17 (the Android 4.2 SDK). Make sure you have the latest Android tools installed as well. Run `android` from your command-line to install/update any missing SDKs or tools.');
+                d.reject(new Error('Please install Android target 17 (the Android 4.2 SDK). Make sure you have the latest Android tools installed as well. Run `android` from your command-line to install/update any missing SDKs or tools.'));
             } else {
                 var custom_path = project_config.has_custom_path(project_root, 'android');
                 var framework_path;
@@ -61,18 +64,21 @@ module.exports.check_requirements = function(project_root, callback) {
                     framework_path = path.join(util.libDirectory, 'android', 'cordova', require('../../platforms').android.version, 'framework');
                 }
                 var cmd = 'android update project -p "' + framework_path  + '" -t android-17';
-                events.emit('log', 'Running "' + cmd + '" (output to follow)...');
-                shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-                    events.emit('log', output);
-                    if (code != 0) {
-                        callback('Error updating the Cordova library to work with your Android environment. Command run: "' + cmd + '", output: ' + output);
+                events.emit('verbose', 'Running "' + cmd + '" (output to follow)...');
+                var d2 = Q.defer();
+                child_process.exec(cmd, function(err, output, stderr) {
+                    events.emit('verbose', output + stderr);
+                    if (err) {
+                        d2.reject(new Error('Error updating the Cordova library to work with your Android environment. Command run: "' + cmd + '", output: ' + output));
                     } else {
-                        callback(false);
+                        d2.resolve();
                     }
                 });
+                d.resolve(d2.promise);
             }
         }
     });
+    return d.promise;
 };
 
 module.exports.prototype = {
@@ -85,7 +91,7 @@ module.exports.prototype = {
         var strings = xml.parseElementtreeSync(this.strings);
         strings.find('string[@name="app_name"]').text = name;
         fs.writeFileSync(this.strings, strings.write({indent: 4}), 'utf-8');
-        events.emit('log', 'Wrote out Android application name to "' + name + '"');
+        events.emit('verbose', 'Wrote out Android application name to "' + name + '"');
 
         var manifest = xml.parseElementtreeSync(this.manifest);
         // Update the version by changing the AndroidManifest android:versionName
@@ -100,7 +106,7 @@ module.exports.prototype = {
 
         // Write out AndroidManifest.xml
         fs.writeFileSync(this.manifest, manifest.write({indent: 4}), 'utf-8');
-        
+
         var orig_pkgDir = path.join(this.path, 'src', path.join.apply(null, orig_pkg.split('.')));
         var orig_java_class = fs.readdirSync(orig_pkgDir).filter(function(f) {return f.indexOf('.svn') == -1;})[0];
         var pkgDir = path.join(this.path, 'src', path.join.apply(null, pkg.split('.')));
@@ -109,45 +115,8 @@ module.exports.prototype = {
         var new_javs = path.join(pkgDir, orig_java_class);
         var javs_contents = fs.readFileSync(orig_javs, 'utf-8');
         javs_contents = javs_contents.replace(/package [\w\.]*;/, 'package ' + pkg + ';');
-        events.emit('log', 'Wrote out Android package name to "' + pkg + '"');
+        events.emit('verbose', 'Wrote out Android package name to "' + pkg + '"');
         fs.writeFileSync(new_javs, javs_contents, 'utf-8');
-
-        // Update whitelist by changing res/xml/config.xml
-        var android_cfg_xml = new util.config_parser(this.android_config);
-        // clean out all existing access elements first
-        android_cfg_xml.access.remove();
-        // add only the ones specified in the app/config.xml file
-        config.access.get().forEach(function(uri) {
-            android_cfg_xml.access.add(uri);
-        });
-
-        // Update content (start page)
-        android_cfg_xml.content(config.content());
-        
-        // Update preferences
-        android_cfg_xml.preference.remove();
-        var prefs = config.preference.get();
-        // write out defaults, unless user has specifically overrode it
-        for (var p in default_prefs) if (default_prefs.hasOwnProperty(p)) {
-            var override = prefs.filter(function(pref) { return pref.name == p; });
-            var value = default_prefs[p];
-            if (override.length) {
-                // override exists
-                value = override[0].value;
-                // remove from prefs list so we dont write it out again below
-                prefs = prefs.filter(function(pref) { return pref.name != p });
-            }
-            android_cfg_xml.preference.add({
-                name:p,
-                value:value
-            });
-        }
-        prefs.forEach(function(pref) {
-            android_cfg_xml.preference.add({
-                name:pref.name,
-                value:pref.value
-            });
-        });
     },
 
     // Returns the platform-specific www directory.
@@ -163,7 +132,8 @@ module.exports.prototype = {
         return this.android_config;
     },
 
-    update_www:function() {
+    // Takes the directory where the lazy-loaded platform can be found.
+    update_www:function(libDir) {
         var projectRoot = util.isCordova(this.path);
         var www = util.projectWww(projectRoot);
         var platformWww = path.join(this.path, 'assets');
@@ -173,13 +143,7 @@ module.exports.prototype = {
         shell.cp('-rf', www, platformWww);
 
         // write out android lib's cordova.js
-        var custom_path = project_config.has_custom_path(projectRoot, 'android');
-        var jsPath;
-        if (custom_path) {
-            jsPath = path.resolve(path.join(custom_path, 'framework', 'assets', 'www', 'cordova.js'));
-        } else {
-            jsPath = path.join(util.libDirectory, 'android', 'cordova', require('../../platforms').android.version, 'framework', 'assets', 'www', 'cordova.js');
-        }
+        var jsPath = path.resolve(path.join(libDir, 'framework', 'assets', 'www', 'cordova.js'));
         fs.writeFileSync(path.join(this.www_dir(), 'cordova.js'), fs.readFileSync(jsPath, 'utf-8'), 'utf-8');
     },
 
@@ -201,21 +165,19 @@ module.exports.prototype = {
         }
     },
 
-    update_project:function(cfg, callback) {
+    // Returns a promise.
+    update_project:function(cfg) {
         var platformWww = path.join(this.path, 'assets');
         try {
             this.update_from_config(cfg);
         } catch(e) {
-            if (callback) callback(e);
-            else throw e;
-            return;
+            return Q.reject(e);
         }
-        this.update_www();
         this.update_overrides();
         this.update_staging();
         // delete any .svn folders copied over
         util.deleteSvnFolders(platformWww);
-        if (callback) callback();
+        return Q();
     }
 };
 

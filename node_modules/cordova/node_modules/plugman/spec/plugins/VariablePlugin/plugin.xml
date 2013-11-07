@@ -43,5 +43,8 @@
             <awesome value="$API_KEY" />
             <cfbundleid>$PACKAGE_NAME</cfbundleid>
         </config-file>
+        <config-file target="*-Info.plist" parent="APluginNode">
+            <string></string>
+        </config-file>
     </platform>
 </plugin>

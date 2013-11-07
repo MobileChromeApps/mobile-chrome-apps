@@ -18,9 +18,10 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
-    et            = require('elementtree'),
     shell         = require('shelljs'),
     util          = require('../util'),
+    Q             = require('q'),
+    child_process = require('child_process'),
     config_parser = require('../config_parser'),
     events        = require('../events'),
     config        = require('../config');
@@ -34,54 +35,39 @@ module.exports = function blackberry_parser(project) {
     this.xml = new util.config_parser(this.config_path);
 };
 
-module.exports.check_requirements = function(project_root, callback) {
+// Returns a promise.
+module.exports.check_requirements = function(project_root) {
     var lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../../platforms').blackberry10.version);
-    shell.exec("\"" + path.join(lib_path, 'bin', 'check_reqs') + "\"", {silent:true, async:true}, function(code, output) {
-        if (code !== 0) {
-            callback(output);
+    var d = Q.defer();
+    child_process.exec("\"" + path.join(lib_path, 'bin', 'check_reqs') + "\"", function(err, output, stderr) {
+        if (err) {
+            d.reject(new Error('Error while checking requirements: ' + output + stderr));
         } else {
-            callback(false);
+            d.resolve();
         }
     });
+    return d.promise;
 };
 
 module.exports.prototype = {
     update_from_config:function(config) {
-        var self = this;
-
         if (config instanceof config_parser) {
         } else throw new Error('update_from_config requires a config_parser object');
-
-        this.xml.name(config.name());
-        events.emit('log', 'Wrote out BlackBerry application name to "' + config.name() + '"');
-        this.xml.packageName(config.packageName());
-        events.emit('log', 'Wrote out BlackBerry package name to "' + config.packageName() + '"');
-        this.xml.version(config.version());
-        events.emit('log', 'Wrote out BlackBerry version to "' + config.version() + '"');
-        this.xml.access.remove();
-        config.access.getAttributes().forEach(function(attribs) {
-            self.xml.access.add(attribs.uri || attribs.origin, attribs.subdomains);
-        });
-        this.xml.preference.remove();
-        config.preference.get().forEach(function (pref) {
-            self.xml.preference.add(pref);
-        });
-        this.xml.content(config.content());
     },
-    update_project:function(cfg, callback) {
+
+    // Returns a promise.
+    update_project:function(cfg) {
         var self = this;
 
         try {
             self.update_from_config(cfg);
         } catch(e) {
-            if (callback) return callback(e);
-            else throw e;
+            return Q.reject(e);
         }
-        self.update_www();
         self.update_overrides();
         self.update_staging();
         util.deleteSvnFolders(this.www_dir());
-        if (callback) callback();
+        return Q();
     },
 
     // Returns the platform-specific www directory.
@@ -97,23 +83,22 @@ module.exports.prototype = {
         return this.config_path;
     },
 
-    update_www:function() {
-        var projectRoot = util.isCordova(this.path);
-        var www = util.projectWww(projectRoot);
-        var platformWww = this.www_dir();
+    update_www:function(libDir) {
+        var projectRoot = util.isCordova(this.path),
+            www = util.projectWww(projectRoot),
+            platformWww = this.www_dir(),
+            platform_cfg_backup = new util.config_parser(this.config_path);
+
 
         // remove the stock www folder
         shell.rm('-rf', this.www_dir());
         // copy over project www assets
         shell.cp('-rf', www, this.path);
         //Re-Write config.xml
-        this.xml.update();
+        platform_cfg_backup.update();
 
-        var custom_path = config.has_custom_path(projectRoot, 'blackberry10');
-        var lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../../platforms').blackberry10.version);
-        if (custom_path) lib_path = custom_path;
         // add cordova.js
-        shell.cp('-f', path.join(lib_path, 'javascript', 'cordova.blackberry10.js'), path.join(this.www_dir(), 'cordova.js'));
+        shell.cp('-f', path.join(libDir, 'javascript', 'cordova.blackberry10.js'), path.join(this.www_dir(), 'cordova.js'));
     },
 
     // update the overrides folder into the www folder

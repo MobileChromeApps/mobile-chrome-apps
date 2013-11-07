@@ -20,9 +20,7 @@
 var path          = require('path'),
     fs            = require('fs'),
     url           = require('url'),
-    shell         = require('shelljs'),
-    events        = require('./events'),
-    util          = require('./util');
+    shell         = require('shelljs');
 
 module.exports = function config(project_root, opts) {
     var json = module.exports.read(project_root);

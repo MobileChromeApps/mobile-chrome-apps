@@ -14,21 +14,24 @@ module.exports = function(project_dir){
         'cordova-blackberry10': 
             { 'platform':'blackberry10', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-wp7': 
-            { 'platform':'wp7', 'scriptSrc': path.join(project_dir,'cordova','version.bat') },
+            { 'platform':'wp7', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-wp8': 
-            { 'platform':'wp8', 'scriptSrc': path.join(project_dir,'cordova','version.bat') },
+            { 'platform':'wp8', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-windows8': 
-            { 'platform':'windows8', 'scriptSrc': path.join(project_dir,'cordova','version.bat') },
-        
-        // TODO: these scripts have not been made!
+            { 'platform':'windows8', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'apple-xcode' : 
-            { 'platform':'ios', 'scriptSrc':  path.join(project_dir,'cordova','apple-xcode-version') },
+            { 'platform':'ios', 'scriptSrc':  path.join(project_dir,'cordova','apple_xcode_version') },
         'apple-ios' : 
-            { 'platform':'ios', 'scriptSrc': path.join(project_dir,'cordova','apple-ios-version') },
-        'blackberry-webworks' : 
-            { 'platform':'blackberry10', 'scriptSrc': path.join(project_dir,'blackberry-webworks-version') },
+            { 'platform':'ios', 'scriptSrc': path.join(project_dir,'cordova','apple_ios_version') },
+        'apple-osx' : 
+            { 'platform':'ios', 'scriptSrc': path.join(project_dir,'cordova','apple_osx_version') },
+        'blackberry-ndk' : 
+            { 'platform':'blackberry10', 'scriptSrc': path.join(project_dir,'cordova','bb10-ndk-version') },
         'android-sdk' : 
-            // will have to parse string output from android list targets
-            { 'platform':'android', 'scriptSrc': path.join(project_dir,'cordova','android-sdk-version') }
+            { 'platform':'android', 'scriptSrc': path.join(project_dir,'cordova','android_sdk_version') },
+        'windows-os' : 
+            { 'platform':'wp7|wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_os_version') },
+        'windows-sdk' : 
+            { 'platform':'wp7|wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_sdk_version') }        
     }
 };

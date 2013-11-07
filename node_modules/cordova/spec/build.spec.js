@@ -22,6 +22,7 @@ var cordova = require('../cordova'),
     path = require('path'),
     fs = require('fs'),
     hooker = require('../src/hooker'),
+    Q = require('q'),
     util = require('../src/util');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
@@ -30,46 +31,58 @@ describe('build command', function() {
     var is_cordova, list_platforms, fire;
     var project_dir = '/some/path';
     var prepare_spy, compile_spy;
+    var result;
+
+    function buildPromise(f) {
+        f.then(function() { result = true; }, function(err) { result = err; });
+    }
+
+    function wrapper(f, post) {
+        runs(function() {
+            buildPromise(f);
+        });
+        waitsFor(function() { return result; }, 'promise never resolved', 500);
+        runs(post);
+    }
+
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
-            cb(false);
-        });
-        prepare_spy = spyOn(cordova, 'prepare').andCallFake(function(platforms, cb) {
-            cb();
-        });
-        compile_spy = spyOn(cordova, 'compile').andCallFake(function(platforms, cb) {
-            cb();
-        });
+        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
+        compile_spy = spyOn(cordova.raw, 'compile').andReturn(Q());
     });
-    describe('failure', function() {
+    describe('failure', function(done) {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
             list_platforms.andReturn([]);
-            expect(function() {
-                cordova.build();
-            }).toThrow('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            runs(function() {
+                buildPromise(cordova.raw.build());
+            });
+            waitsFor(function() { return result; }, 'promise never resolved', 500);
+            runs(function() {
+                expect(result).toEqual(new Error('No platforms added to this project. Please use `cordova platform add <platform>`.'));
+            });
         });
         it('should not run outside of a Cordova-based project', function() {
             is_cordova.andReturn(false);
-            expect(function() {
-                cordova.build();
-            }).toThrow('Current working directory is not a Cordova-based project.');
+            wrapper(cordova.raw.build(), function() {
+                expect(result).toEqual(new Error('Current working directory is not a Cordova-based project.'));
+            });
         });
     });
 
     describe('success', function() {
         it('should run inside a Cordova-based project with at least one added platform and call both prepare and compile', function(done) {
-            cordova.build(['android','ios'], function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []}, jasmine.any(Function));
-                expect(compile_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []}, jasmine.any(Function));
+            cordova.raw.build(['android','ios']).then(function() {
+                expect(prepare_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []});
+                expect(compile_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []});
                 done();
             });
         });
         it('should pass down options', function(done) {
-            cordova.build({platforms: ['android'], options: ['--release']}, function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith({platforms: ['android'], options: ["--release"]}, jasmine.any(Function));
-                expect(compile_spy).toHaveBeenCalledWith({platforms: ['android'], options: ["--release"]}, jasmine.any(Function));
+            cordova.raw.build({platforms: ['android'], options: ['--release']}).then(function() {
+                expect(prepare_spy).toHaveBeenCalledWith({platforms: ['android'], options: ["--release"]});
+                expect(compile_spy).toHaveBeenCalledWith({platforms: ['android'], options: ["--release"]});
                 done();
             });
         });
@@ -77,13 +90,15 @@ describe('build command', function() {
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module', function() {
-                cordova.build(['android', 'ios']);
-                expect(fire).toHaveBeenCalledWith('before_build', {verbose: false, platforms:['android', 'ios'], options: []}, jasmine.any(Function));
+            it('should fire before hooks through the hooker module', function(done) {
+                cordova.raw.build(['android', 'ios']).then(function() {
+                    expect(fire).toHaveBeenCalledWith('before_build', {verbose: false, platforms:['android', 'ios'], options: []});
+                    done();
+                });
             });
             it('should fire after hooks through the hooker module', function(done) {
-                cordova.build('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_build', {verbose: false, platforms:['android'], options: []}, jasmine.any(Function));
+                cordova.raw.build('android').then(function() {
+                     expect(fire).toHaveBeenCalledWith('after_build', {verbose: false, platforms:['android'], options: []});
                      done();
                 });
             });
@@ -92,10 +107,10 @@ describe('build command', function() {
         describe('with no platforms added', function() {
             it('should not fire the hooker', function() {
                 list_platforms.andReturn([]);
-                expect(function() {
-                    cordova.build();
-                }).toThrow();
-                expect(fire).not.toHaveBeenCalled();
+                wrapper(cordova.raw.build(), function() {
+                    expect(result).toEqual(new Error('No platforms added to this project. Please use `cordova platform add <platform>`.'));
+                    expect(fire).not.toHaveBeenCalled();
+                });
             });
         });
     });

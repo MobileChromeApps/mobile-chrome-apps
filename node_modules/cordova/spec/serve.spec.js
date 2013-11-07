@@ -59,10 +59,10 @@ xdescribe('serve command', function() {
         };
 
         beforeEach(function() {
-            cordova.create(tempDir);
+            cordova.raw.create(tempDir);
             process.chdir(tempDir);
-            cordova.platform('add', 'android');
-            cordova.platform('add', 'ios');
+            cordova.raw.platform('add', 'android');
+            cordova.raw.platform('add', 'ios');
 
             // Write testing HTML files into the directory.
             fs.writeFileSync(path.join(tempDir, 'platforms', 'android', 'assets', 'www', 'test.html'), payloads.android);

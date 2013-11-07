@@ -26,13 +26,17 @@ var fs = require('fs')
   , et = require('elementtree');
 
 module.exports = {
-    moveProjFile: function(origFile, projPath, callback) {
+    // Returns a promise.
+    moveProjFile: function(origFile, projPath) {
         var src = path.resolve(projPath, origFile)
           , dest = src.replace('.orig', '');
 
+        var d = Q.defer();
         fs.createReadStream(src)
             .pipe(fs.createWriteStream(dest))
-            .on('close', callback);
+            .on('close', d.resolve)
+            .on('error', d.reject);
+        return d.promise;
     },
 
     // compare two et.XML nodes, see if they match

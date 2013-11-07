@@ -17,18 +17,14 @@
     under the License.
 */
 var cordova_util      = require('./util'),
-    path              = require('path'),
-    fs                = require('fs'),
-    shell             = require('shelljs'),
-    hooker            = require('./hooker'),
-    events            = require('./events'),
-    n                 = require('ncallbacks');
+    Q                 = require('q'),
+    hooker            = require('./hooker');
 
-module.exports = function build(options, callback) {
+// Returns a promise.
+module.exports = function build(options) {
     var projectRoot = cordova_util.isCordova(process.cwd());
 
-    if (options instanceof Function && callback === undefined) {
-        callback = options;
+    if (!options) {
         options = {
             verbose: false,
             platforms: [],
@@ -38,39 +34,17 @@ module.exports = function build(options, callback) {
 
     options = cordova_util.preProcessOptions(options);
     if (options.constructor.name === "Error") {
-        if (callback) return callback(options);
-        else throw options;
+        return Q.reject(options);
     }
 
     // fire build hooks
     var hooks = new hooker(projectRoot);
-    hooks.fire('before_build', options, function(err) {
-        if (err) {
-            if (callback) callback(err);
-            else throw err;
-        } else {
-            require('../cordova').prepare(options, function(err) {
-                if (err) {
-                    if (callback) callback(err);
-                    else throw err;
-                } else {
-                    require('../cordova').compile(options, function(err) {
-                        if (err) {
-                            if (callback) callback(err);
-                            else throw err;
-                        } else {
-                            hooks.fire('after_build', options, function(err) {
-                                if (err) {
-                                    if (callback) callback(err);
-                                    else throw err;
-                                } else {
-                                    if (callback) callback();
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
+    return hooks.fire('before_build', options)
+    .then(function() {
+        return require('../cordova').raw.prepare(options);
+    }).then(function() {
+        return require('../cordova').raw.compile(options);
+    }).then(function() {
+        return hooks.fire('after_build', options);
     });
 };

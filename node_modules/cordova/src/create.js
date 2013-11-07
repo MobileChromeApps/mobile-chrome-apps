@@ -24,6 +24,7 @@ var path          = require('path'),
     events        = require('./events'),
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
+    Q             = require('q'),
     util          = require('./util');
 
 var DEFAULT_NAME = "HelloCordova",
@@ -31,40 +32,23 @@ var DEFAULT_NAME = "HelloCordova",
 
 /**
  * Usage:
- * create(dir) - creates in the specified directory
- * create(dir, name) - as above, but with specified name
- * create(dir, id, name) - you get the gist
+ * @dir - required, directory where the poroject will be created.
+ * @id - app id.
+ * @name - app name.
+ * @cfg - extra config to be saved in .cordova/config.json
  **/
-module.exports = function create (dir, id, name, callback) {
-    var options = [];
-
-    if (arguments.length === 0) {
-        return help();
+// Returns a promise.
+module.exports = function create (dir, id, name, cfg) {
+    if (!dir ) {
+        return Q(help());
     }
 
     // Massage parameters
-    var args = Array.prototype.slice.call(arguments, 0);
-    if (typeof args[args.length-1] == 'function') {
-        callback = args.pop();
-    } else if (typeof callback !== 'function') {
-        callback = undefined;
-    }
-
-    if (args.length === 0) {
-        dir = process.cwd();
-        id = DEFAULT_ID;
-        name = DEFAULT_NAME;
-    } else if (args.length == 1) {
-        id = DEFAULT_ID;
-        name = DEFAULT_NAME;
-    } else if (args.length == 2) {
-        name = DEFAULT_NAME;
-    } else {
-        dir = args.shift();
-        id = args.shift();
-        name = args.shift();
-        options = args;
-    }
+    cfg = cfg || {};
+    id = id || cfg.id || DEFAULT_ID;
+    name = name || cfg.name || DEFAULT_NAME;
+    cfg.id = id;
+    cfg.name = name;
 
     // Make absolute.
     dir = path.resolve(dir);
@@ -73,6 +57,11 @@ module.exports = function create (dir, id, name, callback) {
 
     var dotCordova = path.join(dir, '.cordova');
     var www_dir = path.join(dir, 'www');
+
+    // dir must be either empty or not exist at all.
+    if (fs.existsSync(dir) && fs.readdirSync(dir).length > 0) {
+        return Q.reject(new Error('Path already exists and is not empty: ' + dir));
+    }
 
     // Create basic project structure.
     shell.mkdir('-p', dotCordova);
@@ -109,15 +98,28 @@ module.exports = function create (dir, id, name, callback) {
     shell.mkdir(path.join(hooks, 'before_prepare'));
     shell.mkdir(path.join(hooks, 'before_run'));
 
-    // Write out .cordova/config.json file with a simple json manifest
-    require('../cordova').config(dir, {
-        id:id,
-        name:name
-    });
+    // Write out .cordova/config.json file.
+    var config_json = config(dir, cfg);
 
-    var config_json = config.read(dir);
+    var p;
+    if (config_json.lib && config_json.lib.www) {
+        events.emit('log', 'Using custom www assets ('+config_json.lib.www.id+').');
+        p = lazy_load.custom(config_json.lib.www.uri, config_json.lib.www.id, 'www', config_json.lib.www.version)
+        .then(function(dir) {
+            events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
+            return dir;
+        });
+    } else {
+        // Nope, so use stock cordova-hello-world-app one.
+        events.emit('verbose', 'Using stock cordova hello-world application.');
+        p = lazy_load.cordova('www')
+        .then(function(dir) {
+            events.emit('verbose', 'Copying stock Cordova www assets into "' + www_dir + '"');
+            return dir;
+        });
+    }
 
-    var finalize = function(www_lib) {
+    return p.then(function(www_lib) {
         // Keep going into child "www" folder if exists in stock app package.
         while (fs.existsSync(path.join(www_lib, 'www'))) {
             www_lib = path.join(www_lib, 'www');
@@ -134,32 +136,6 @@ module.exports = function create (dir, id, name, callback) {
         var config = new util.config_parser(configPath);
         config.packageName(id);
         config.name(name);
-        if (callback) callback();
-    };
-
-    // Check if www assets to use was overridden.
-    if (config_json.lib && config_json.lib.www) {
-        events.emit('log', 'Using custom www assets ('+config_json.lib.www.id+').');
-        lazy_load.custom(config_json.lib.www.uri, config_json.lib.www.id, 'www', config_json.lib.www.version, function(err) {
-            if (err) {
-                if (callback) callback(err);
-                else throw err;
-            } else {
-                events.emit('log', 'Copying custom www assets into "' + www_dir + '"');
-                finalize(path.join(util.libDirectory, 'www', config_json.lib.www.id, config_json.lib.www.version));
-            }
-        });
-    } else {
-        // Nope, so use stock cordova-hello-world-app one.
-        events.emit('log', 'Using stock cordova hello-world application.');
-        lazy_load.cordova('www', function(err) {
-            if (err) {
-                if (callback) callback(err);
-                else throw err;
-            } else {
-                events.emit('log', 'Copying stock Cordova www assets into "' + www_dir + '"');
-                finalize(path.join(util.libDirectory, 'www', 'cordova', platforms.www.version));
-            }
-        });
-    }
+        return Q();
+    });
 };

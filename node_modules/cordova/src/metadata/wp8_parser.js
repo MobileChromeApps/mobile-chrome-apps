@@ -22,7 +22,8 @@ var fs            = require('fs'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),
-    events        = require('../events'),
+    child_process = require('child_process'),
+    Q             = require('q'),
     config_parser = require('../config_parser'),
     xml           = require('../xml-helpers'),
     config        = require('../config');
@@ -43,21 +44,24 @@ module.exports = function wp8_parser(project) {
     this.config = new util.config_parser(this.config_path);
 };
 
-module.exports.check_requirements = function(project_root, callback) {
+// Returns a promise.
+module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking wp8 requirements...');
     var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp8.version, 'wp8');
     var custom_path = config.has_custom_path(project_root, 'wp8');
     if (custom_path) lib_path = custom_path;
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
-    events.emit('log', 'Running "' + command + '" (output to follow)');
-    shell.exec(command, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code != 0) {
-            callback(output);
+    events.emit('verbose', 'Running "' + command + '" (output to follow)');
+    var d = Q.defer();
+    child_process.exec(command, function(err, output, stderr) {
+        events.emit('verbose', output);
+        if (err) {
+            d.reject(new Error('Error while checking requirements: ' + output + stderr));
         } else {
-            callback(false);
+            d.resolve();
         }
     });
+    return d.promise;
 };
 
 module.exports.prototype = {
@@ -84,7 +88,7 @@ module.exports.prototype = {
             manifest.find('.//PrimaryToken').attrib.TokenID = name;
             //update name of sln and csproj.
             name = name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); //make it a ligitamate name
-            prev_name = prev_name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); 
+            prev_name = prev_name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_');
             // TODO: might return .sln.user? (generated file)
             var sln_name = fs.readdirSync(this.wp8_proj_dir).filter(function(e) { return e.match(/\.sln$/i); })[0];
             var sln_path = path.join(this.wp8_proj_dir, sln_name);
@@ -132,9 +136,6 @@ module.exports.prototype = {
             fs.writeFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), appCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
          }
 
-         // Update content (start page) element
-         this.config.content(config.content());
-
          //Write out manifest
          fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');
     },
@@ -143,9 +144,18 @@ module.exports.prototype = {
         return path.join(this.wp8_proj_dir, 'www');
     },
     config_xml:function() {
+        return this.config_path;
+    },
+    // copy files from merges directory to actual www dir
+    copy_merges:function(merges_sub_path) {
+        var merges_path = path.join(util.appDir(util.isCordova(this.wp8_proj_dir)), 'merges', merges_sub_path);
+        if (fs.existsSync(merges_path)) {
+            var overrides = path.join(merges_path, '*');
+            shell.cp('-rf', overrides, this.www_dir());
+        }
     },
     // copies the app www folder into the wp8 project's www folder and updates the csproj file.
-    update_www:function() {
+    update_www:function(libDir) {
         var project_root = util.isCordova(this.wp8_proj_dir);
         var project_www = util.projectWww(project_root);
         // remove stock platform assets
@@ -153,18 +163,12 @@ module.exports.prototype = {
         // copy over all app www assets
         shell.cp('-rf', project_www, this.wp8_proj_dir);
 
-        // copy all files from merges directory
-        var merges_path = path.join(util.appDir(project_root), 'merges', 'wp8');
-        if (fs.existsSync(merges_path)) {
-            var overrides = path.join(merges_path, '*');
-            shell.cp('-rf', overrides, this.www_dir());
-        }
+        // copy all files from merges directories (generic first, then specific)
+        this.copy_merges('wp');
+        this.copy_merges('wp8');
 
         // copy over wp8 lib's cordova.js
-        var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp8.version);
-        var custom_path = config.has_custom_path(project_root, 'wp8');
-        if (custom_path) lib_path = custom_path;
-        var cordovajs_path = path.join(lib_path, 'common', 'www', 'cordova.js');
+        var cordovajs_path = path.join(libDir, 'common', 'www', 'cordova.js');
         fs.writeFileSync(path.join(this.www_dir(), 'cordova.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
         this.update_csproj();
     },
@@ -178,7 +182,7 @@ module.exports.prototype = {
             var files = group.findall('Content');
             for (var j = 0, k = files.length; j < k; j++) {
                 var file = files[j];
-                if (file.attrib.Include.substr(0, 3) == 'www' && file.attrib.Include.indexOf('cordova.js') < 0) {
+                if (file.attrib.Include.substr(0, 3) == 'www') {
                     // remove file reference
                     group.remove(0, file);
                     // remove ItemGroup if empty
@@ -237,23 +241,17 @@ module.exports.prototype = {
         }
     },
 
-    // calls the nessesary functions to update the wp8 project 
-    update_project:function(cfg, callback) {
-        //console.log("Updating wp8 project...");
-
+    // calls the nessesary functions to update the wp8 project
+    // Returns a promise.
+    update_project:function(cfg) {
         try {
             this.update_from_config(cfg);
         } catch(e) {
-            if (callback) return callback(e);
-            else throw e;
+            return Q.reject(e);
         }
         // overrides (merges) are handled in update_www()
-        this.update_www();
         this.update_staging();
         util.deleteSvnFolders(this.www_dir());
-
-        //console.log("Done updating.");
-
-        if (callback) callback();
+        return Q();
     }
 };

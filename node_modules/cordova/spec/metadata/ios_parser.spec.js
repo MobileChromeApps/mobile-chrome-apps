@@ -24,6 +24,8 @@ var platforms = require('../../platforms'),
     xcode = require('xcode'),
     ET = require('elementtree'),
     fs = require('fs'),
+    Q = require('q'),
+    child_process = require('child_process'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
     cordova = require('../../cordova');
@@ -32,13 +34,27 @@ describe('ios project parser', function () {
     var proj = path.join('some', 'path');
     var exec, custom, readdir, cfg_parser;
     beforeEach(function() {
-        exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
-            cb(0, '');
+        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
+            if (!cb) cb = opts;
+            cb(null, '', '');
         });
         custom = spyOn(config, 'has_custom_path').andReturn(false);
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.xcodeproj']);
         cfg_parser = spyOn(util, 'config_parser');
     });
+
+    function wrapper(p, done, post) {
+        p.then(post, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    }
+
+    function errorWrapper(p, done, post) {
+        p.then(function() {
+            expect('this call').toBe('fail');
+        }, post).fin(done);
+    }
+
     describe('constructions', function() {
         it('should throw if provided directory does not contain an xcodeproj file', function() {
             readdir.andReturn(['noxcodehere']);
@@ -58,29 +74,29 @@ describe('ios project parser', function () {
     describe('check_requirements', function() {
         it('should fire a callback if there is an error during shelling out', function(done) {
             exec.andCallFake(function(cmd, opts, cb) {
-                cb(50, 'there was an errorz!');
+                if (!cb) cb = opts;
+                cb(50, 'there was an errorz!', '');
             });
-            platforms.ios.parser.check_requirements(proj, function(err) {
+            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
                 expect(err).toContain('there was an errorz!');
-                done();
             });
         });
         it('should fire a callback if the xcodebuild version is less than 4.5.x', function(done) {
             exec.andCallFake(function(cmd, opts, cb) {
-                cb(0, 'version 4.4.9');
+                if (!cb) cb = opts;
+                cb(0, 'version 4.4.9', '');
             });
-            platforms.ios.parser.check_requirements(proj, function(err) {
-                expect(err).toEqual('Xcode version installed is too old. Minimum: >=4.5.x, yours: 4.4.9');
-                done();
+            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
+                expect(err).toEqual(new Error('Xcode version installed is too old. Minimum: >=4.5.x, yours: 4.4.9'));
             });
         });
         it('should not return an error if the xcodebuild version 2 digits and not proper semver (eg: 5.0), but still satisfies the MIN_XCODE_VERSION', function(done) {
             exec.andCallFake(function(cmd, opts, cb) {
-                cb(0, 'version 5.0');
+                if (!cb) cb = opts;
+                cb(0, 'version 5.0', '');
             });
-            platforms.ios.parser.check_requirements(proj, function(err) {
-                expect(err).toBe(false);
-                done();
+            wrapper(platforms.ios.parser.check_requirements(proj), done, function() {
+                expect(1).toBe(1);
             });
         });
     });
@@ -162,77 +178,22 @@ describe('ios project parser', function () {
             it('should update the app name in pbxproj by calling xcode.updateProductName, and move the ios native files to match the new name', function(done) {
                 var test_path = path.join(proj, 'platforms', 'ios', 'test');
                 var testname_path = path.join(proj, 'platforms', 'ios', 'testname');
-                p.update_from_config(cfg, function() {
+                wrapper(p.update_from_config(cfg), done, function() {
                     expect(update_name).toHaveBeenCalledWith('testname');
                     expect(mv).toHaveBeenCalledWith(path.join(test_path, 'test-Info.plist'), path.join(test_path, 'testname-Info.plist'));
                     expect(mv).toHaveBeenCalledWith(path.join(test_path, 'test-Prefix.pch'), path.join(test_path, 'testname-Prefix.pch'));
                     expect(mv).toHaveBeenCalledWith(test_path + '.xcodeproj', testname_path + '.xcodeproj');
                     expect(mv).toHaveBeenCalledWith(test_path, testname_path);
-                    done();
                 });
             });
             it('should write out the app id to info plist as CFBundleIdentifier', function(done) {
-                p.update_from_config(cfg, function() {
+                wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleIdentifier).toEqual('testpkg');
-                    done();
                 });
             });
             it('should write out the app version to info plist as CFBundleVersion', function(done) {
-                p.update_from_config(cfg, function() {
+                wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleVersion).toEqual('one point oh');
-                    done();
-                });
-            });
-            it('should wipe out the ios whitelist every time', function(done) {
-                p.update_from_config(cfg, function() {
-                    expect(cfg_access_rm).toHaveBeenCalled();
-                    done();
-                });
-            });
-            it('should update the whitelist', function(done) {
-                cfg.access.get = function() { return ['one'] };
-                p.update_from_config(cfg, function() {
-                    expect(cfg_access_add).toHaveBeenCalledWith('one');
-                    done();
-                });
-            });
-            it('should update preferences', function(done) {
-                var sample_pref = {name:'pref',value:'yes'};
-                cfg.preference.get = function() { return [sample_pref] };
-                p.update_from_config(cfg, function() {
-                    expect(cfg_pref_add).toHaveBeenCalledWith(sample_pref);
-                    done();
-                });
-            });
-            it('should update the content tag / start page', function(done) {
-                p.update_from_config(cfg, function() {
-                    expect(cfg_content).toHaveBeenCalledWith('index.html');
-                    done();
-                });
-            });
-            it('should wipe out the ios preferences every time', function(done) {
-                p.update_from_config(cfg, function() {
-                    expect(cfg_pref_rm).toHaveBeenCalled();
-                    done();
-                });
-            });
-            it('should write out default preferences every time', function(done) {
-                var sample_pref = {name:'preftwo',value:'false'};
-                cfg.preference.get = function() { return [sample_pref] };
-                p.update_from_config(cfg, function() {
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"KeyboardDisplayRequiresUserAction",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"SuppressesIncrementalRendering",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"UIWebViewBounce",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"TopActivityIndicator",value:"gray"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"EnableLocation",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"EnableViewportScale",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"AutoHideSplashScreen",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"ShowSplashScreenSpinner",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"MediaPlaybackRequiresUserAction",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"AllowInlineMediaPlayback",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"OpenAllWhitelistURLsInWebView",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"BackupWebStorage",value:"cloud"});
-                    done();
                 });
             });
         });
@@ -253,19 +214,13 @@ describe('ios project parser', function () {
         });
         describe('update_www method', function() {
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www();
+                p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh cordova.js from stock cordova lib if no custom lib is specified', function() {
-                p.update_www();
-                expect(cp.mostRecentCall.args[1]).toContain(util.libDirectory);
-            });
-            it('should copy in a fresh cordova.js from custom cordova lib if custom lib is specified', function() {
-                var custom_path = path.join('custom', 'path');
-                custom.andReturn(custom_path);
-                p.update_www();
-                expect(cp.mostRecentCall.args[1]).toContain(custom_path);
+            it('should copy in a fresh cordova.js from given cordova lib', function() {
+                p.update_www('lib/dir');
+                expect(cp.mostRecentCall.args[1]).toContain('lib/dir');
             });
         });
         describe('update_overrides method', function() {
@@ -301,41 +256,43 @@ describe('ios project parser', function () {
         describe('update_project method', function() {
             var config, www, overrides, staging, svn;
             beforeEach(function() {
-                config = spyOn(p, 'update_from_config').andCallFake(function(cfg, cb) { cb() });
+                config = spyOn(p, 'update_from_config').andReturn(Q());
                 www = spyOn(p, 'update_www');
                 overrides = spyOn(p, 'update_overrides');
                 staging = spyOn(p, 'update_staging');
                 svn = spyOn(util, 'deleteSvnFolders');
             });
-            it('should call update_from_config', function() {
-                p.update_project();
-                expect(config).toHaveBeenCalled();
+            it('should call update_from_config', function(done) {
+                wrapper(p.update_project(), done, function() {
+                    expect(config).toHaveBeenCalled();
+                });
             });
             it('should throw if update_from_config errors', function(done) {
-                var err = new Error('uh oh!');
-                config.andCallFake(function(cfg, cb) { cb(err); });
-                p.update_project({}, function(err) {
-                    expect(err).toEqual(err);
-                    done();
+                var e = new Error('uh oh!');
+                config.andReturn(Q.reject(e));
+                errorWrapper(p.update_project({}), done, function(err) {
+                    expect(err).toEqual(e);
                 });
             });
-            it('should call update_www', function(done) {
-                p.update_project({}, function() {
-                    expect(www).toHaveBeenCalled();
-                    done();
+            it('should not call update_www', function(done) {
+                wrapper(p.update_project({}), done, function() {
+                    expect(www).not().toHaveBeenCalled();
                 });
             });
-            it('should call update_overrides', function() {
-                p.update_project();
-                expect(overrides).toHaveBeenCalled();
+            it('should call update_overrides', function(done) {
+                wrapper(p.update_project(), done, function() {
+                    expect(overrides).toHaveBeenCalled();
+                });
             });
-            it('should call update_staging', function() {
-                p.update_project();
-                expect(staging).toHaveBeenCalled();
+            it('should call update_staging', function(done) {
+                wrapper(p.update_project(), done, function() {
+                    expect(staging).toHaveBeenCalled();
+                });
             });
-            it('should call deleteSvnFolders', function() {
-                p.update_project();
-                expect(svn).toHaveBeenCalled();
+            it('should call deleteSvnFolders', function(done) {
+                wrapper(p.update_project(), done, function() {
+                    expect(svn).toHaveBeenCalled();
+                });
             });
         });
     });
