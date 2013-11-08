@@ -32,9 +32,11 @@ This process will yield a client id, but no action is required with it (unlike f
 
 ### iOS
 
-For iOS, follow the instructions [here](https://developers.google.com/+/mobile/ios/getting-started).
+For iOS, first follow the instructions [here](https://developers.google.com/+/mobile/ios/getting-started).
 
 **Note:** Skip step 2, part 7; you will instead put your client id in your manifest (as shown in the "Updating Your Manifest" section).
+
+Next, in Xcode, click on the project in the left sidebar and navigate to the `Build Phases` tab.  In the `Compile Sources` section, remove `OpenInChromeController.m`.
 
 Finally, you'll need to add a little bit of code to your app delegate.  First, an import:
 
