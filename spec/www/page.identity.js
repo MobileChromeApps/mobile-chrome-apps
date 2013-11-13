@@ -8,15 +8,6 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     rootEl.appendChild(button);
   }
 
-  function addDropdown(text, id, values) {
-    var dropdown = chromespec.createDropdown(text, id, values);
-    rootEl.appendChild(dropdown);
-  }
-
-  function makeDetails() {
-    return { interactive: true };
-  }
-
   function hitEndpoint(endpoint, callback) {
     var onGetAuthTokenSuccess = function(token) {
       var xhr = new XMLHttpRequest();
@@ -35,7 +26,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       xhr.send(null);
     };
 
-    chrome.identity.getAuthToken(makeDetails(), onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
   }
 
   addButton('Get auth token', function() {
@@ -47,7 +38,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
       }
     };
 
-    chrome.identity.getAuthToken(makeDetails(), callback);
+    chrome.identity.getAuthToken({ interactive: true }, callback);
   });
 
   addButton('Remove cached auth token', function() {
@@ -63,33 +54,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     };
 
     // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken(makeDetails(), onInitialGetAuthTokenSuccess);
-  });
-
-  addButton('Revoke access and refresh tokens', function() {
-    var onRemoveCachedAuthTokenSuccess = function() {
-      chromespec.log('Token revoked.');
-    };
-
-    var onInitialGetAuthTokenSuccess = function(token) {
-      // Revoke the access token.  The associated refresh token is automatically revoked as well.
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://accounts.google.com/o/oauth2/revoke?token=' + token);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status < 200 || xhr.status > 300) {
-            chromespec.log('Could not revoke token; status ' + xhr.status + '.');
-          } else {
-            // Remove the cached access token.
-            chrome.identity.removeCachedAuthToken({ token: token }, onRemoveCachedAuthTokenSuccess);
-          }
-        }
-      }
-      xhr.send(null);
-    }
-
-    // First, we need to get the existing auth token.
-    chrome.identity.getAuthToken(makeDetails(), onInitialGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
   });
 
   addButton('Get name via Google\'s User Info API', function() {

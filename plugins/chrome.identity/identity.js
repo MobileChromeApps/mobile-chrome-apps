@@ -54,12 +54,8 @@ exports.removeCachedAuthToken = function(details, callback) {
         cachedToken = null;
     }
 
-    // If we're on Android, invalidate the token natively.
-    if (platformId === 'android') {
-        exec(callback, null, 'ChromeIdentity', 'removeCachedAuthToken', [details]);
-    } else {
-        callback();
-    }
+    // Invalidate the token natively.
+    exec(callback, null, 'ChromeIdentity', 'removeCachedAuthToken', [details.token]);
 }
 
 exports.launchWebAuthFlow = function(details, callback) {

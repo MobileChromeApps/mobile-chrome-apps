@@ -40,6 +40,22 @@
     [signIn authenticate];
 }
 
+- (void)removeCachedAuthToken:(CDVInvokedUrlCommand*)command
+{
+    NSString *token = [command argumentAtIndex:0];
+    GTMOAuth2Authentication *authentication = [[GPPSignIn sharedInstance] authentication];
+
+    // If the token to revoke is the same as the one we have cached, trigger a refresh.
+    if ([[authentication accessToken] isEqualToString:token]) {
+        [authentication setAccessToken:nil];
+        [authentication authorizeRequest:nil completionHandler:nil];
+    }
+
+    // Call the callback.
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [[self commandDelegate] sendPluginResult:pluginResult callbackId:[command callbackId]];
+}
+
 #pragma mark GPPSignInDelegate
 
 - (void)finishedWithAuth:(GTMOAuth2Authentication *)auth error:(NSError *) error

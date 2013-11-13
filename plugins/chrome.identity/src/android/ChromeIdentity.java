@@ -221,8 +221,7 @@ public class ChromeIdentity extends CordovaPlugin {
 
     private void invalidateToken(CordovaArgs args, CallbackContext callbackContext) {
         try {
-            JSONObject tokenObject = args.getJSONObject(0);
-            String token = tokenObject.getString("token");
+            String token = args.getString(0);
             Context context = this.cordova.getActivity();
             GoogleAuthUtil.invalidateToken(context, token);
             callbackContext.success();
