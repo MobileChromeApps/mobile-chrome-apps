@@ -18,25 +18,4 @@
 // under the License.
 //
 
-// Set this to 1 to enable timestamp collection via addTs().
-if (0) {
-    var ts = [];
-    addTs = function(name) {
-        ts.push([name, new Date]);
-    }
-    process.on('exit', function() {
-        for (var i = 0; i < ts.length - 1; ++i) {
-          var e1 = ts[i];
-          var e2 = ts[i+1];
-          console.log(e1[0] + ' -> ' + e2[0] + ' = ' + (e2[1] - e1[1]));
-        }
-        console.log('total: ' + (ts[ts.length-1][1] - ts[0][1]));
-    });
-} else {
-    addTs = function() {};
-}
-
-addTs('start');
-var mca = require('./src/mca');
-mca();
-addTs('end');
+require('./src/mca').parseCLI();
