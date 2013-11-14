@@ -9,5 +9,6 @@
     "optimist":"~0.5",
     "cryptojs":"~2"
   },
+  "bin" : { "mca" : "./mca" },
   "license": "Apache version 2.0"
 }
