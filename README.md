@@ -12,6 +12,11 @@ Mobile Chrome Apps is a toolkit for porting [Chrome Packaged Apps](http://develo
 * Publish to the Android Play Store or iOS App Store.
 * Profit!
 
+## Requirements
+
+Android 4.+ (Cordova supports Android 2.2, 2.3, and 4.x).
+iOS (TBA)
+
 ## Documentation
 
 You'll probably want to start with the [Installation Guide](docs/Installation.md).
