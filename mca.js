@@ -648,10 +648,21 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     });
   }
 
+  var welcomeText="\nCongratulations! Your project has been created at: "+
+                  path.join(origDir,appName)+"\n"+
+                  "Be sure to edit only the copy of your application that is in the project www directory:\n"+
+                  path.join(origDir,appName,"www")+" \n"+
+                  "After any edits, remember to run 'cordova prepare'\n"+
+                  "This ensures that any changes are reflected in your mobile application projects\n";
+
   function prepareStep(callback) {
     runCmd(['prepare'], function(err) {
-       if(err)
+       if(err) {
           return fatal(err);
+       }
+       if(commandLineFlags.source) {
+         console.log(welcomeText); 
+       }
        callback()
     });
   }
