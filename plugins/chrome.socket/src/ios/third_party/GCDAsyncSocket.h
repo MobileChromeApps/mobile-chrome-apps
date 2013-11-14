@@ -1072,4 +1072,3 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 - (void)socketDidSecure:(GCDAsyncSocket *)sock;
 
 @end
- 
