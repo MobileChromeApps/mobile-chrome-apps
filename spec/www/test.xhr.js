@@ -64,7 +64,7 @@ chromeSpec('xhr', function(runningInBackground) {
         xhr.onerror = lose;
         xhr.onload = function(e) {
           //if (this.response instanceof Blob) {
-          if (this.response instanceof chromespec.fgWnd.Blob) {
+          if ((this.response instanceof chromespec.fgWnd.Blob) || (this.response instanceof chromespec.bgWnd.Blob)) {
             win();
           } else {
             lose();
