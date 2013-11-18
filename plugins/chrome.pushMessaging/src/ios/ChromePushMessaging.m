@@ -1,3 +1,6 @@
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #import "ChromePushMessaging.h"
 
@@ -8,6 +11,8 @@
 @synthesize callbackId;
 @synthesize notificationCallbackId;
 @synthesize callback;
+@synthesize registrationToken;
+
 
 NSMutableDictionary *pendingMessages;
 
@@ -19,15 +24,12 @@ NSMutableDictionary *pendingMessages;
 
 - (void) getRegistrationId:(CDVInvokedUrlCommand *)command; {
     self.callbackId = command.callbackId;
-    [self successWithMessage:@"setup"];
-}
-
-
-- (void)unregister:(CDVInvokedUrlCommand *)command; {
-    self.callbackId = command.callbackId;
-
-    [[UIApplication sharedApplication] unregisterForRemoteNotifications];
-    [self successWithMessage:@"unregistered"];
+    if(registrationToken) {
+       CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:token];
+    } else {
+       CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Not Registered"];
+    }
+    [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
 }
 
 - (void)fireStartupMessages:(CDVInvokedUrlCommand *)command; {
@@ -42,8 +44,10 @@ NSMutableDictionary *pendingMessages;
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 
-    if (notificationMessage)            // if there is a pending startup notification
-        [self notificationReceived];    // go ahead and process it
+    // check if there is a pending message (probably the message that started the app)
+    // if there is, process it.
+    // note that there can only be one. If you got several, only the last one is still around.
+    if (notificationMessage) [self notificationReceived];
 }
 
 - (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
@@ -52,59 +56,47 @@ NSMutableDictionary *pendingMessages;
                       stringByReplacingOccurrencesOfString:@">" withString:@""]
                      stringByReplacingOccurrencesOfString: @" " withString: @""];
           NSLog(@"Register Msg: %@", token);
-  [self successWithMessage:token];
+
+    // this token needs to be kept and returned to the application so it can be used to send message here
+    registrationToken = token;
+    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:token];
+    [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
 }
 
 - (void)didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-    [self failWithMessage:@"" withError:error];
+    // something bad happened. No messaging is going to happen
+
+    NSString *message = @"Registration failed";
+    NSString *errorMessage = (error) ? [NSString stringWithFormat:@"%@ - %@", message, [error localizedDescription]] : message;
+    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMessage];
 }
 
 - (void)notificationReceived {
-    NSLog(@"Notification received");
 
     if (notificationMessage && self.callback) {
-        NSMutableString *jsonStr = [NSMutableString stringWithString:@"{"];
+       NSString *jsonStr = [self DictionaryToJson :notificationMessage ];
+       NSLog(@"Msg: %@", jsonStr);
+       [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'%@'})", jsonStr]];
 
-        [self parseDictionary:notificationMessage intoJSON:jsonStr];
-        [jsonStr appendFormat:@"foreground:'%d',", 1];
-        [jsonStr appendString:@"}"];
-
-        NSLog(@"Msg: %@", jsonStr);
-
-        [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'%@'})", jsonStr]];
-
-      self.notificationMessage = nil;
+       self.notificationMessage = nil;
     }
 }
 
-// reentrant method to drill down and surface all sub-dictionaries' key/value pairs into the top level json
-- (void)parseDictionary:(NSDictionary *)inDictionary intoJSON:(NSMutableString *)jsonString {
+- (NSString*)DictionaryToJson:(NSDictionary *)inDictionary {
     NSArray *keys = [inDictionary allKeys];
     NSString *key;
+    NSMutableString *jsonString = [NSMutableString stringWithString:@"{"];
 
     for (key in keys) {
         id thisObject = [inDictionary objectForKey:key];
 
         if ([thisObject isKindOfClass:[NSDictionary class]])
-            [self parseDictionary:thisObject intoJSON:jsonString];
+            [jsonString appendString:[self DictionaryToJson:thisObject ]];
         else
             [jsonString appendFormat:@"%@:'%@',", key, [inDictionary objectForKey:key]];
     }
+    [jsonStr appendString:@"}"];
+    return [jsonString];
 }
-
-
-- (void)successWithMessage:(NSString *)message {
-    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:message];
-
-    [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
-}
-
-- (void)failWithMessage:(NSString *)message withError:(NSError *)error {
-    NSString *errorMessage = (error) ? [NSString stringWithFormat:@"%@ - %@", message, [error localizedDescription]] : message;
-    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMessage];
-
-    [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
-}
-
 
 @end

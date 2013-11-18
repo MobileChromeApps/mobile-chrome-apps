@@ -1,9 +1,6 @@
-//
-//  AppDelegate+notification.h
-//  pushtest
-//
-//  Created by Robert Easterday on 10/26/12.
-//
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 //
 
 #import "AppDelegate.h"
@@ -13,7 +10,7 @@
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo;
 - (void)applicationDidBecomeActive:(UIApplication *)application;
-- (id) getCommandInstance:(NSString*)className;
+- (id) getPluginInstance:(NSString*)className;
 
 @property (nonatomic, retain) NSDictionary	*launchNotification;
 

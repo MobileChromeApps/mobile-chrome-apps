@@ -1,10 +1,8 @@
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 //
-//  AppDelegate+notification.m
-//  pushtest
-//
-//  Created by Robert Easterday on 10/26/12.
-//
-//
+// inspired by previous work from Urban Airship and Robert Easterday 
 
 #import "AppDelegate+notification.h"
 #import "ChromePushMessaging.h"
@@ -14,7 +12,7 @@ static char launchNotificationKey;
 
 @implementation AppDelegate (notification)
 
-- (id) getCommandInstance:(NSString*)className
+- (id) getPluginInstance:(NSString*)className
 {
 	return [self.viewController getCommandInstance:className];
 }
@@ -41,58 +39,50 @@ static char launchNotificationKey;
 	return [self swizzled_init];
 }
 
-// This code will be called immediately after application:didFinishLaunchingWithOptions:. We need
-// to process notifications in cold-start situations
+// This will be called immediately after application:didFinishLaunchingWithOptions.
+// If the application was started byt responding to a message alert, the message
+// is in the launch info
 - (void)createNotificationChecker:(NSNotification *)notification
 {
-	if (notification)
-	{
-		NSDictionary *launchOptions = [notification userInfo];
-		if (launchOptions)
-			self.launchNotification = [launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"];
-	}
+  if (notification) {
+     NSDictionary *launchOptions = [notification userInfo];
+     if (launchOptions) {
+       	self.launchNotification = [launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"];
+     }
+  }
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    ChromePushMessaging *pushHandler = [self getCommandInstance:@"ChromePushMessaging"];
+    ChromePushMessaging *pushHandler = [self getPluginInstance:@"ChromePushMessaging"];
     [pushHandler didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-    ChromePushMessaging *pushHandler = [self getCommandInstance:@"ChromePushMessaging"];
+    ChromePushMessaging *pushHandler = [self getPluginInstance:@"ChromePushMessaging"];
     [pushHandler didFailToRegisterForRemoteNotificationsWithError:error];
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    NSLog(@"didReceiveNotification");
     
-    // Get application state for iOS4.x+ devices, otherwise assume active
     UIApplicationState appState = UIApplicationStateActive;
     if ([application respondsToSelector:@selector(applicationState)]) {
         appState = application.applicationState;
     }
     
     if (appState == UIApplicationStateActive) {
-        ChromePushMessaging *pushHandler = [self getCommandInstance:@"ChromePushMessaging"];
+        ChromePushMessaging *pushHandler = [self getPluginInstance:@"ChromePushMessaging"];
         pushHandler.notificationMessage = userInfo;
         [pushHandler notificationReceived];
     } else {
-        //save it for later
+        // this will get noticed later when the app is launched
         self.launchNotification = userInfo;
     }
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    
-    NSLog(@"active");
-    
-    //zero badge
-    application.applicationIconBadgeNumber = 0;
-  
-    // if the launch was due to a notification, promote the message
 
     if (![self.viewController.webView isLoading] && self.launchNotification) {
-        ChromePushMessaging *pushHandler = [self getCommandInstance:@"ChromePushMessaging"];
+        ChromePushMessaging *pushHandler = [self getPluginInstance:@"ChromePushMessaging"];
 		
         pushHandler.notificationMessage = self.launchNotification;
         self.launchNotification = nil;
@@ -100,7 +90,9 @@ static char launchNotificationKey;
     }
 }
 
-// The accessors use an Associative Reference since you can't define a iVar in a category
+// Apple decided that its too likely to get overload collisions, so defining instance variables
+// in a category extension isnt supported. You can do it with Associative Reference
+// 
 
 - (NSMutableArray *)launchNotification
 {
@@ -114,7 +106,7 @@ static char launchNotificationKey;
 
 - (void)dealloc
 {
-    self.launchNotification	= nil; // clear the association and release the object
+    self.launchNotification	= nil;
 }
 
 @end

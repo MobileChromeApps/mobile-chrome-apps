@@ -8,13 +8,12 @@
     NSDictionary *notificationMessage;
     NSString *notificationCallbackId;
     NSString *callback;
-
-    BOOL ready;
 }
 
 @property (nonatomic, copy) NSString *callbackId;
 @property (nonatomic, copy) NSString *notificationCallbackId;
 @property (nonatomic, copy) NSString *callback;
+@property (nonatomic, copy) NSString *registrationToken;
 
 @property (nonatomic, strong) NSDictionary *notificationMessage;
 
