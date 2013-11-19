@@ -59,7 +59,7 @@ var path = require('path');
 // Third-party modules.
 var ncp = require('ncp');
 var optimist = require('optimist');
-var Crypto = require('cryptojs').Crypto
+var Crypto = require('cryptojs').Crypto;
 
 // Globals
 var commandLineFlags = null;
@@ -96,7 +96,7 @@ var PLUGIN_MAP = {
   'notifications': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.notifications')],
   'socket': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.socket')],
   'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
-}
+};
 
 /******************************************************************************/
 /******************************************************************************/
@@ -772,7 +772,7 @@ function parseCommandLine() {
              '\n' +
              'init - Checks for updates to the mobile-chrome-apps repository and ensures the environment is setup correctly.\n' +
              '    Examples:\n' +
-             '        mca.js init.\n' +
+             '        mca init.\n' +
              '\n' +
              'create [--android] [--ios] [--source path] - Creates a new project.\n' +
              '    Flags:\n' +
@@ -780,21 +780,21 @@ function parseCommandLine() {
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
              '        --source=path/to/chromeapp: Create a project based on the given chrome app.\n' +
              '    Examples:\n' +
-             '        mca.js create org.chromium.Demo\n' +
-             '        mca.js create org.chromium.Spec --android --source=chrome-cordova/spec/www\n'
+             '        mca create org.chromium.Demo\n' +
+             '        mca create org.chromium.Spec --android --source=chrome-cordova/spec/www\n' +
+             'Cordova commands will be forwarded directly to cordova.\n' +
+             '    Commands:\n' +
+             '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
+             '    Examples:\n' +
+             '        mca platform add ios\n' +
+             '        mca build ios\n' +
+             '    Run "cordova help" for details.\n'
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
       }).argv;
-  var validCommands = {
-      'create': 1,
-      'init': 1,
-      'update-app': 1 // Secret command used by our prepare hook.
-  };
-  if (commandLineFlags.h || !validCommands[commandLineFlags._[0]]) {
-    if (commandLineFlags._[0]) {
-      fatal('Invalid command: ' + commandLineFlags._[0] + '. Use --help for usage.');
-    }
+
+  if (commandLineFlags.h || !commandLineFlags._[0]) {
     optimist.showHelp();
     exit(1);
   }
@@ -806,6 +806,7 @@ function main() {
   var appId = commandLineFlags._[1] || '';
 
   var commandActions = {
+    // Secret command used by our prepare hook.
     'update-app': function() {
       updateAppCommand();
     },
@@ -820,9 +821,31 @@ function main() {
       createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
     },
   };
-  commandActions[command]();
 
-  pump();
+  // The following commands are forwarded to cordova with all args.
+  var cordovaCommands = {
+    'build': 1,
+    'compile': 1,
+    'emulate': 1,
+    'platform': 1,
+    'platforms': 1,
+    'plugin': 1,
+    'plugins': 1,
+    'prepare': 1,
+    'run': 1
+  };
+
+  if (commandActions.hasOwnProperty(command)) {
+    commandActions[command]();
+    pump();
+  } else if (cordovaCommands[command]) {
+    console.log('Running cordova ' + command);
+    // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
+    var CLI = require('../node_modules/cordova/src/cli');
+    new CLI(process.argv);
+  } else {
+    fatal('Invalid command: ' + command + '. Use --help for usage.');
+  }
 }
 
 if (require.main === module) {
