@@ -725,10 +725,11 @@ function updateAppCommand() {
           if (!err) {
             for (var i=0; i<files.length; i++) {
               var fullName = path.join(betterPath, files[i]);
-              if (files[i] !== files[i].toLowerCase()) {
+              var adjustedFilename= files[i].replace('-', '_').toLowerCase();
+              if (files[i] !== adjustedFilename) {
                 stats = fs.statSync(fullName);
                 if (stats.isDirectory()) {
-                  fs.renameSync(fullName, path.join(betterPath, files[i].toLowerCase()));
+                  fs.renameSync(fullName, path.join(betterPath, adjustedFilename));
                 }
               }
             }
