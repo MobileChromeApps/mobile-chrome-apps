@@ -5,7 +5,7 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.payments"
+    id="com.google.payments"
     version="1.0.0">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
@@ -13,7 +13,13 @@
 
   <name>Chrome Payments API</name>
 
-  <js-module src="chrome.payments.js" name="payments">
-    <clobbers target="chrome.payments" />
+  <js-module src="www/google.payments.js" name="payments">
+    <clobbers target="google.payments" />
   </js-module>
+
+  <platform name="android">
+    <js-module src="www/android/google.payments.js" name="androidPayments">
+      <merges target="google.payments" />
+    </js-module>
+  </platform>
 </plugin>

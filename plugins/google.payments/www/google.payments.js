@@ -2,15 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var exec = require('cordova/exec');
-
 exports.inapp = {
     getSkuDetails: function(skus, success, failure) {
+        throw new Error("In App Purchase not implemented on this platform");
     },
 
     getPurchases: function(success, failure) {
+        throw new Error("In App Purchase not implemented on this platform");
     },
 
     buy: function(options) {
+        throw new Error("In App Purchase not implemented on this platform");
     }
 };
