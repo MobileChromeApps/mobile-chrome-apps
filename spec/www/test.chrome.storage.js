@@ -55,7 +55,7 @@ chromeSpec('chrome.storage', function(runningInBackground) {
     };
 
 // NOTE: (drkemp) in chrome 31, setting a key to undefined does nothing
-// so DivElement and Document will not exist in storage even though you try to set themdrkemp
+// so DivElement and Document will not exist in storage even though you try to set them
     var expected = {
       'int': 1,
       'double': 2.345,

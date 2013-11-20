@@ -26,6 +26,8 @@ function _jsonReplacer(key) {
     if (value && (typeof value == 'object' || typeof value == 'function')) {
         var typeName = Object.prototype.toString.call(value).slice(8, -1);
         if (typeName != 'Array' && typeName != 'Object') {
+            // this is a hack. It will catch DOm things, but also custom classes
+            // if you have a better way to detect native DOM classes...
             if(typeName.slice(0,4)=='HTML'){
                 value=undefined;
             } else {
@@ -119,7 +121,6 @@ StorageArea.prototype.set = function(keyVals, callback) {
     }
     var self = this;
     var param = _scrubValues(keyVals);
-    if(param === undefined) bigfail("unsupported object type",callback);
     var fail = callback && function(err) {
         bigfail(err,callback());
     };
