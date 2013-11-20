@@ -31,7 +31,7 @@ public class ChromeChromeClient extends CordovaChromeClient {
 
     @SuppressLint({ "NewApi", "SetJavaScriptEnabled" })
     public boolean onCreateWindow (WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-    	CordovaActivity act = (CordovaActivity)this.cordova.getActivity();
+        final CordovaActivity act = (CordovaActivity)this.cordova.getActivity();
     	WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
 
     	final WebView newWebView = new WebView(act);
@@ -39,14 +39,27 @@ public class ChromeChromeClient extends CordovaChromeClient {
     	newWebView.setWebViewClient(new WebViewClient(){
     		@Override
     		public WebResourceResponse shouldInterceptRequest(final WebView view, String url) {
-    			if (Config.isUrlWhiteListed(url)) {
+    			WebResourceResponse response;
+                // Works on Android 4.4
+				if (url.endsWith("/cors-window")) {
+					act.runOnUiThread(new Runnable() {
+						public void run() {
+							String payload = "<!doctype html><html><body><script>opener.corsXMLHttpRequest=XMLHttpRequest;opener.onChromeCorsReady();</script></body></html>";
+	    	    			newWebView.loadDataWithBaseURL("file:///hi.html", payload, "text/html", "UTF-8", "file:///hi.html");							
+						}
+					});
+		   			response = new WebResourceResponse(null, null, null);
+    			} else if (Config.isUrlWhiteListed(url)) {
                     Log.d("WhitelistCheck", "Pass: " + url);
-    				return super.shouldInterceptRequest(view, url);
+            		response = super.shouldInterceptRequest(view, url);
+    			} else {
+                    Log.d("WhitelistCheck", "Fail: " + url);
+    			    response = new WebResourceResponse(null, null, null);
     			}
-                Log.d("WhitelistCheck", "Fail: " + url);
-    			return new WebResourceResponse(null, null, null);
+				return response;
     		}
     		@Override
+            // Invoked on Android pre-4.4
     		public boolean shouldOverrideUrlLoading(WebView view, String url) {
     			String payload = "<!doctype html><html><body><script>opener.corsXMLHttpRequest=XMLHttpRequest;opener.onChromeCorsReady();</script></body></html>";
     			newWebView.loadDataWithBaseURL("file:///hi.html", payload, "text/html", "UTF-8", "file:///hi.html");

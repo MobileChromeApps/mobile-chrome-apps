@@ -28,7 +28,7 @@ channel.onCordovaReady.subscribe(function() {
     window.origXMLHttpRequest = XMLHttpRequest;
     if (navigator.userAgent.indexOf("Android") > 0) {
       // On Android, open a background window to handle CORS requests
-      window.constructor.prototype.open.call(window, 'foo', 'bar');
+      window.constructor.prototype.open.call(window, '/cors-window', 'bar');
     } else {
       // On other platforms, continue with initialization
       window.onChromeCorsReady();
