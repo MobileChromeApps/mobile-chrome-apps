@@ -18,7 +18,7 @@ Note: iOS development can only be done on OSX.
 * Ensure that the folder with `android` and `adb` commands are added to your `PATH`.
  * Note, you may have to run the `android` command and install platform-tools before you can add `adb` to your `PATH`.
 * Run the `android` tool, and use it to install the Android 4.2.2 SDK, and the Google Play Services APIs.
-* Update Google Play Services with this command:
+* Update [Google Play Services](http://developer.android.com/google/play-services/setup.html#Install) with this command:
 
         android update lib-project --target "android-17" --path path/to/android/sdk/extras/google/google_play_services/libproject/google-play-services_lib
 
