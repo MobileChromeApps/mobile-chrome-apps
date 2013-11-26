@@ -46,6 +46,20 @@ exports.create = function(name, alarmInfo) {
         alarmInfo = name;
         name = '';
     }
+
+    if ('delayInMinutes' in alarmInfo) {
+        if(alarmInfo.delayInMinutes < .0042) { // about 0.25 seconds
+            console.error('Error during alarms.create: delayInMinutes too small, using .0042');
+            alarmInfo.delayInMinutes = .0042;
+        }
+    }
+    if ('periodInMinutes' in alarmInfo) {
+        if(alarmInfo.periodInMinutes < .0042) { // about 0.25 seconds
+            console.error('Error during alarms.create: periodInMinutes too small, using .0042');
+            alarmInfo.periodInMinutes = .0042;
+        }
+    }
+
     var when;
     if ('when' in alarmInfo) {
         when = alarmInfo.when;
