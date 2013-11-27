@@ -64,7 +64,7 @@ var plist_only_els = platformTag.findall('./plugins-plist');
 
 shell.mkdir('-p', temp);
 shell.cp('-rf', ios_config_xml_project, temp);
-var proj_files = ios.parseIOSProjectFiles(temp);
+var proj_files = ios.parseProjectFile(temp);
 shell.rm('-rf', temp);
 
 function copyArray(arr) {
@@ -92,10 +92,10 @@ describe('ios project handler', function() {
         });
     });
 
-    describe('parseIOSProjectFiles method', function() {
+    describe('parseProjectFile method', function () {
         it('should throw if project is not an xcode project', function() {
             expect(function() {
-                ios.parseIOSProjectFiles(temp);
+                ios.parseProjectFile(temp);
             }).toThrow('does not appear to be an xcode project (no xcode project file)');
         });
         it('should throw if project does not contain an appropriate PhoneGap/Cordova.plist file or config.xml file', function() {
@@ -103,7 +103,7 @@ describe('ios project handler', function() {
             shell.rm(path.join(temp, 'SampleApp', 'config.xml'));
 
             expect(function() {
-                ios.parseIOSProjectFiles(temp);
+                ios.parseProjectFile(temp);
             }).toThrow('could not find PhoneGap/Cordova plist file, or config.xml file.');
         });
     });

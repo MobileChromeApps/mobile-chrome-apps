@@ -22,9 +22,10 @@ var fs            = require('fs'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),
+    child_process = require('child_process'),
     plist         = require('plist'),
     semver        = require('semver'),
-    et            = require('elementtree'),
+    Q             = require('q'),
     config_parser = require('../config_parser'),
     config        = require('../config');
 
@@ -61,35 +62,36 @@ module.exports = function ios_parser(project) {
     this.config = new util.config_parser(this.config_path);
 };
 
-module.exports.check_requirements = function(project_root, callback) {
+// Returns a promise.
+module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking iOS requirements...');
     // Check xcode + version.
     var command = 'xcodebuild -version';
-    events.emit('log', 'Running "' + command + '" (output to follow)');
-    shell.exec(command, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code != 0) {
-            callback('Xcode is (probably) not installed, specifically the command `xcodebuild` is unavailable or erroring out. Output of `'+command+'` is: ' + output);
+    events.emit('verbose', 'Running "' + command + '" (output to follow)');
+    var d = Q.defer();
+    child_process.exec(command, function(err, output, stderr) {
+        events.emit('verbose', output+stderr);
+        if (err) {
+            d.reject(new Error('Xcode is (probably) not installed, specifically the command `xcodebuild` is unavailable or erroring out. Output of `'+command+'` is: ' + output + stderr));
         } else {
             var xc_version = output.split('\n')[0].split(' ')[1];
             if(xc_version.split('.').length === 2){
                 xc_version += '.0';
             }
             if (!semver.satisfies(xc_version, MIN_XCODE_VERSION)) {
-                callback('Xcode version installed is too old. Minimum: ' + MIN_XCODE_VERSION + ', yours: ' + xc_version);
-            } else callback(false);
+                d.reject(new Error('Xcode version installed is too old. Minimum: ' + MIN_XCODE_VERSION + ', yours: ' + xc_version));
+            } else d.resolve();
         }
     });
+    return d.promise;
 };
 
 module.exports.prototype = {
-    update_from_config:function(config, callback) {
+    // Returns a promise.
+    update_from_config:function(config) {
         if (config instanceof config_parser) {
         } else {
-            var err = new Error('update_from_config requires a config_parser object');
-            if (callback) callback(err);
-            else throw err;
-            return;
+            return Q.reject(new Error('update_from_config requires a config_parser object'));
         }
         var name = config.name();
         var pkg = config.packageName();
@@ -105,53 +107,17 @@ module.exports.prototype = {
         var info_contents = plist.build(infoPlist);
         info_contents = info_contents.replace(/<string>[\s\r\n]*<\/string>/g,'<string></string>');
         fs.writeFileSync(plistFile, info_contents, 'utf-8');
-        events.emit('log', 'Wrote out iOS Bundle Identifier to "' + pkg + '"');
-        events.emit('log', 'Wrote out iOS Bundle Version to "' + version + '"');
+        events.emit('verbose', 'Wrote out iOS Bundle Identifier to "' + pkg + '"');
+        events.emit('verbose', 'Wrote out iOS Bundle Version to "' + version + '"');
 
-        // Update whitelist
-        var self = this;
-        this.config.access.remove();
-        config.access.get().forEach(function(uri) {
-            self.config.access.add(uri);
-        });
-
-        // Update content (start page)
-        this.config.content(config.content());
-        
-        // Update preferences
-        this.config.preference.remove();
-        var prefs = config.preference.get();
-        // write out defaults, unless user has specifically overrode it
-        for (var p in default_prefs) if (default_prefs.hasOwnProperty(p)) {
-            var override = prefs.filter(function(pref) { return pref.name == p; });
-            var value = default_prefs[p];
-            if (override.length) {
-                // override exists
-                value = override[0].value;
-                // remove from prefs list so we dont write it out again below
-                prefs = prefs.filter(function(pref) { return pref.name != p });
-            }
-            this.config.preference.add({
-                name:p,
-                value:value
-            });
-        }
-        prefs.forEach(function(pref) {
-            self.config.preference.add({
-                name:pref.name,
-                value:pref.value
-            });
-        });
-        
         if (name != this.originalName) {
             // Update product name inside pbxproj file
             var proj = new xcode.project(this.pbxproj);
             var parser = this;
+            var d = Q.defer();
             proj.parse(function(err,hash) {
                 if (err) {
-                    var err = new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err);
-                    if (callback) callback(err);
-                    else throw err;
+                    d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
                 } else {
                     proj.updateProductName(name);
                     fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
@@ -167,13 +133,14 @@ module.exports.prototype = {
                     var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
                     pbx_contents = pbx_contents.split(old_name).join(name);
                     fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
-                    events.emit('log', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
-                    if (callback) callback();
+                    events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
+                    d.resolve();
                 }
             });
+            return d.promise;
         } else {
-            events.emit('log', 'iOS Product Name has not changed (still "' + this.originalName + '")');
-            if (callback) callback();
+            events.emit('verbose', 'iOS Product Name has not changed (still "' + this.originalName + '")');
+            return Q();
         }
     },
 
@@ -190,7 +157,7 @@ module.exports.prototype = {
         return this.config_path;
     },
 
-    update_www:function() {
+    update_www:function(libDir) {
         var projectRoot = util.isCordova(this.path);
         var www = util.projectWww(projectRoot);
         var project_www = this.www_dir();
@@ -202,11 +169,7 @@ module.exports.prototype = {
         shell.cp('-rf', www, this.path);
 
         // write out proper cordova.js
-        var custom_path = config.has_custom_path(projectRoot, 'ios');
-        var lib_path = path.join(util.libDirectory, 'ios', 'cordova', require('../../platforms').ios.version);
-        if (custom_path) lib_path = custom_path;
-        shell.cp('-f', path.join(lib_path, 'CordovaLib', 'cordova.js'), path.join(project_www, 'cordova.js'));
-
+        shell.cp('-f', path.join(libDir, 'CordovaLib', 'cordova.js'), path.join(project_www, 'cordova.js'));
     },
 
     // update the overrides folder into the www folder
@@ -228,19 +191,14 @@ module.exports.prototype = {
         }
     },
 
-    update_project:function(cfg, callback) {
+    // Returns a promise.
+    update_project:function(cfg) {
         var self = this;
-        this.update_from_config(cfg, function(err) {
-            if (err) {
-                if (callback) callback(err);
-                else throw err;
-            } else {
-                self.update_www();
-                self.update_overrides();
-                self.update_staging();
-                util.deleteSvnFolders(self.www_dir());
-                if (callback) callback();
-            }
+        return this.update_from_config(cfg)
+        .then(function() {
+            self.update_overrides();
+            self.update_staging();
+            util.deleteSvnFolders(self.www_dir());
         });
     }
 };

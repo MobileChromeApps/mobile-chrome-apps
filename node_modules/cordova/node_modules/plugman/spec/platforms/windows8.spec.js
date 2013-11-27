@@ -122,7 +122,8 @@ describe('windows8 project handler', function() {
         describe('of <source-file> elements', function() {
             it('should remove stuff by calling common.removeFile', function(done) {
                 var s = spyOn(common, 'removeFile');
-                install('windows8', temp, dummyplugin, plugins_dir, {}, function() {
+                install('windows8', temp, dummyplugin, plugins_dir, {})
+                .then(function() {
                     var source = copyArray(valid_source);
                     windows8['source-file'].uninstall(source[0], temp, dummy_id, proj_files);
                     expect(s).toHaveBeenCalledWith(temp, path.join('www', 'plugins',  'com.phonegap.plugins.dummyplugin', 'dummer.js'));

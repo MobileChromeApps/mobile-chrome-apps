@@ -21,112 +21,120 @@ var cordova_util = require('./util'),
     shell = require('shelljs'),
     platforms     = require('../platforms'),
     config_parser = require('./config_parser'),
+    hooker        = require('./hooker'),
     fs = require('fs'),
     util = require('util'),
     http = require("http"),
-    url = require("url");
+    url = require("url"),
+    mime = require("mime"),
+    zlib = require("zlib");
 
-function launch_server(www, platform_www, config_xml_path, port) {
-    port = port || 8000;
-
-    // Searches these directories in order looking for the requested file.
-    var searchPath = [platform_www];
-
+function launchServer(projectRoot, port) {
     var server = http.createServer(function(request, response) {
-        var uri = url.parse(request.url).pathname;
-
-        function checkPath(pathIndex) {
-            if (searchPath.length <= pathIndex) {
-                response.writeHead(404, {"Content-Type": "text/plain"});
-                response.write("404 Not Found\n");
-                response.end();
-                return;
-            }
-
-            var filename = path.join(searchPath[pathIndex], uri);
-            if(uri === "/config.xml"){
-                filename = config_xml_path;
-            }
-
-            fs.exists(filename, function(exists) {
-                if(!exists) {
-                    checkPath(pathIndex+1);
-                    return;
-                }
-
-                if (fs.statSync(filename).isDirectory()) filename += path.sep + 'index.html';
-
-                fs.readFile(filename, "binary", function(err, file) {
-                    if(err) {
-                        response.writeHead(500, {"Content-Type": "text/plain"});
-                        response.write(err + "\n");
-                        response.end();
-                        return;
-                    }
-
-                    response.writeHead(200);
-                    response.write(file, "binary");
-                    response.end();
-                });
-            });
+        function do404() {
+            console.log('404 ' + request.url);
+            response.writeHead(404, {"Content-Type": "text/plain"});
+            response.write("404 Not Found\n");
+            response.end();
         }
-        checkPath(0);
-    }).listen(parseInt(''+port, 10));
+        var urlPath = url.parse(request.url).pathname;
+        var firstSegment = /\/(.*?)\//.exec(urlPath);
+        if (!firstSegment) {
+            return do404();
+        }
+        var platformId = firstSegment[1];
+        if (!platforms[platformId]) {
+            return do404();
+        }
+        // Strip the platform out of the path.
+        urlPath = urlPath.slice(platformId.length + 1);
 
-    console.log("Static file server running at\n  => http://localhost:" + port + "/\nCTRL + C to shutdown");
+        var parser = new platforms[platformId].parser(path.join(projectRoot, 'platforms', platformId));
+        var filePath = null;
+
+        if (urlPath == '/config.xml') {
+            filePath = parser.config_xml();
+        } else if (urlPath == '/project.json') {
+            processAddRequest(request, response, platformId, projectRoot);
+            return;
+        } else if (/^\/www\//.test(urlPath)) {
+            filePath = path.join(parser.www_dir(), urlPath.slice(5));
+        } else {
+            return do404();
+        }
+
+        fs.exists(filePath, function(exists) {
+            if (exists) {
+                if (fs.statSync(filePath).isDirectory()) {
+                    console.log('200 ' + request.url);
+                    response.writeHead(200, {"Content-Type": "text/plain"});
+                    response.write("TODO: show a directory listing.\n");
+                    response.end();
+                } else {
+                    var mimeType = mime.lookup(filePath);
+                    var respHeaders = {
+                      'Content-Type': mimeType
+                    };
+                    var readStream = fs.createReadStream(filePath);
+
+                    var acceptEncoding = request.headers['accept-encoding'] || '';
+                    if (acceptEncoding.match(/\bdeflate\b/)) {
+                        respHeaders['content-encoding'] = 'deflate';
+                        readStream = readStream.pipe(zlib.createDeflate());
+                    } else if (acceptEncoding.match(/\bgzip\b/)) {
+                        respHeaders['content-encoding'] = 'gzip';
+                        readStream = readStream.pipe(zlib.createGzip());
+                    }
+                    console.log('200 ' + request.url);
+                    response.writeHead(200, respHeaders);
+                    readStream.pipe(response);
+                }
+            } else {
+                return do404();
+            }
+        });
+
+    }).listen(port);
+
+    console.log("Static file server running at\n  => http://0.0.0.0:" + port + "/\nCTRL + C to shutdown");
     return server;
 }
 
-module.exports = function serve (platform, port) {
-    var returnValue = {};
-
-    module.exports.config(platform, port, function (config) {
-        returnValue.server = launch_server(config.paths[0], config.paths[1], config.config_xml_path, port);
+function processAddRequest(request, response, platformId, projectRoot) {
+    var parser = new platforms[platformId].parser(path.join(projectRoot, 'platforms', platformId));
+    var wwwDir = parser.www_dir();
+    var payload = {
+        'configPath': '/' + platformId + '/config.xml',
+        'wwwPath': '/' + platformId + '/www',
+        'wwwFileList': shell.find(wwwDir)
+            .filter(function(a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a) })
+            .map(function(a) { return a.slice(wwwDir.length); })
+    };
+    console.log('200 ' + request.url);
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
     });
+    response.write(JSON.stringify(payload));
+    response.end();
+}
 
-    // Hack for testing despite its async nature.
-    return returnValue;
-};
-
-module.exports.config = function (platform, port, callback) {
+module.exports = function server(port) {
     var projectRoot = cordova_util.isCordova(process.cwd());
+    port = +port || 8000;
 
     if (!projectRoot) {
         throw new Error('Current working directory is not a Cordova-based project.');
     }
 
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new config_parser(xml);
-
-    // Retrieve the platforms.
-    var platformList = cordova_util.listPlatforms(projectRoot);
-    if (!platform) {
-        throw new Error('You need to specify a platform.');
-    } else if (platformList.length == 0) {
-        throw new Error('No platforms to serve.');
-    } else if (platformList.filter(function(x) { return x == platform }).length == 0) {
-        throw new Error(platform + ' is not an installed platform.');
-    }
-
-    // If we got to this point, the given platform is valid.
-
-    var result = {
-        paths: [],
-        // Config file path
-        config_xml_path : "",
-        // Default port is 8000 if not given. This is also the default of the Python module.
-        port: port || 8000
-    };
-
-    // Top-level www directory.
-    result.paths.push(cordova_util.projectWww(projectRoot));
-
-    var parser = new platforms[platform].parser(path.join(projectRoot, 'platforms', platform));
-
-    // Update the related platform project from the config
-    parser.update_project(cfg, function() {
-        result.paths.push(parser.www_dir());
-        result.config_xml_path = parser.config_xml();
-        callback(result);
+    var hooks = new hooker(projectRoot);
+    return hooks.fire('before_serve')
+    .then(function() {
+        // Run a prepare first!
+        return require('../cordova').raw.prepare([]);
+    }).then(function() {
+        launchServer(projectRoot, port);
+        return hooks.fire('after_serve');
     });
-}
+};
+

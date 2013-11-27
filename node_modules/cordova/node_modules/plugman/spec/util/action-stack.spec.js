@@ -39,15 +39,20 @@ describe('action-stack', function() {
             stack.push(stack.createAction(second_spy, second_args, function(){}, []));
             stack.push(stack.createAction(third_spy, third_args, function(){}, []));
             // process should throw
-            expect(function() {
-                stack.process('android', 'blah');
-            }).toThrow('Uh oh!\n' + process_err);
-            // first two actions should have been called, but not the third
-            expect(first_spy).toHaveBeenCalledWith(first_args[0]);
-            expect(second_spy).toHaveBeenCalledWith(second_args[0]);
-            expect(third_spy).not.toHaveBeenCalledWith(third_args[0]);
-            // first reverter should have been called after second action exploded
-            expect(first_reverter).toHaveBeenCalledWith(first_reverter_args[0]);
+            var error;
+            runs(function() {
+                stack.process('android', 'blah').fail(function(err) { error = err; });
+            });
+            waitsFor(function(){ return error; }, 'process promise never resolved', 500);
+            runs(function() {
+                expect(error).toEqual(new Error('Uh oh!\n' + process_err));
+                // first two actions should have been called, but not the third
+                expect(first_spy).toHaveBeenCalledWith(first_args[0]);
+                expect(second_spy).toHaveBeenCalledWith(second_args[0]);
+                expect(third_spy).not.toHaveBeenCalledWith(third_args[0]);
+                // first reverter should have been called after second action exploded
+                expect(first_reverter).toHaveBeenCalledWith(first_reverter_args[0]);
+            });
         });
     });
 });

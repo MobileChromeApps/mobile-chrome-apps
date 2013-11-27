@@ -24,14 +24,16 @@ var path = require('path')
     , package = require(path.join(__dirname, 'package'))
     , nopt = require('nopt')
     , plugins = require('./src/util/plugins')
+    , Q = require('q')
     , plugman = require('./plugman');
 
-var known_opts = { 'platform' : [ 'ios', 'android', 'blackberry10', 'wp7', 'wp8' , 'windows8' ]
+var known_opts = { 'platform' : [ 'ios', 'android', 'blackberry10', 'wp7', 'wp8' , 'windows8', 'firefoxos' ]
         , 'project' : path
         , 'plugin' : [String, path, url]
         , 'version' : Boolean
         , 'help' : Boolean
         , 'debug' : Boolean
+        , 'silent' : Boolean
         , 'plugins': path
         , 'link': Boolean
         , 'variable' : Array
@@ -60,19 +62,26 @@ process.on('uncaughtException', function(error) {
 
 // Set up appropriate logging based on events
 if (cli_opts.debug) {
-    plugman.on('log', console.log);
+    plugman.on('verbose', console.log);
 }
 
-plugman.on('warn', console.warn);
+if (!cli_opts.silent) {
+    plugman.on('log', console.log);
+    plugman.on('warn', console.warn);
+    plugman.on('results', console.log);
+}
+
 plugman.on('error', console.error);
-plugman.on('results', console.log);
 
 if (cli_opts.version) {
     console.log(package.name + ' version ' + package.version);
 } else if (cli_opts.help) {
     console.log(plugman.help());
 } else if (plugman.commands[cmd]) {
-    plugman.commands[cmd](cli_opts);
+    var result = plugman.commands[cmd](cli_opts);
+    if (result && Q.isPromise(result)) {
+        result.done();
+    }
 } else {
     console.log(plugman.help());
 }

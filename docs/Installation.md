@@ -32,9 +32,10 @@ Note: iOS development can only be done on OSX.
 
         git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
         cd mobile-chrome-apps
-        ./mca.js init
+        ./mca init
 
 * On Windows, remove the "./" prefix from the last line.
+* Optionally, run `npm link` from within mobile-chrome-apps directory to set up a link (batch file on Windows) in the npm bin directory to have `mca` on your PATH.
 
 ## Experiencing Hiccups?
 

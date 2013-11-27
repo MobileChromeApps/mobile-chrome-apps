@@ -18,8 +18,6 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
-    config_parser = require('./config_parser'),
-    plugin_parser = require('./plugin_parser'),
     shell         = require('shelljs');
 
 // Global configuration paths
@@ -28,7 +26,7 @@ var global_config_path = path.join(HOME, '.cordova');
 var lib_path = path.join(global_config_path, 'lib');
 shell.mkdir('-p', lib_path);
 
-module.exports = {
+exports = module.exports = {
     globalConfig:global_config_path,
     libDirectory:lib_path,
     // Runs up the directory chain looking for a .cordova directory.
@@ -52,8 +50,6 @@ module.exports = {
             }
         } else return false;
     },
-    config_parser:config_parser,
-    plugin_parser:plugin_parser,
     // Recursively deletes .svn folders from a target path
     deleteSvnFolders:function(dir) {
         var contents = fs.readdirSync(dir);
@@ -96,44 +92,81 @@ module.exports = {
         return path.join(projectDir, 'www', 'config.xml');
     },
     preProcessOptions: function (inputOptions) {
-        var projectRoot = this.isCordova(process.cwd()),
-            projectPlatforms = this.listPlatforms(projectRoot),
-            DEFAULT_OPTIONS = {
+        var DEFAULT_OPTIONS = {
                 verbose: false,
                 platforms: [],
                 options: []
             },
-            result = inputOptions || DEFAULT_OPTIONS;
+            result = inputOptions || DEFAULT_OPTIONS,
+            projectRoot = this.isCordova(process.cwd());
 
         if (!projectRoot) {
-            result = new Error('Current working directory is not a Cordova-based project.');
-        } else if (projectPlatforms.length === 0) {
-            result = new Error('No platforms added to this project. Please use `cordova platform add <platform>`.');
-        } else {
-            /**
-             * Current Desired Arguments
-             * options: {verbose: boolean, platforms: [String], options: [String]}
-             * Accepted Arguments
-             * platformList: [String] -- assume just a list of platforms
-             * platform: String -- assume this is a platform
-             */
-            if (Array.isArray(inputOptions)) {
-                result = {
-                    verbose: false,
-                    platforms: inputOptions,
-                    options: []
-                };
-            } else if (typeof inputOptions === 'string') {
-                result = {
-                    verbose: false,
-                    platforms: [inputOptions],
-                    options: []
-                };
-            }
-            if (!result.platforms || (result.platforms && result.platforms.length === 0) ) {
-                result.platforms = projectPlatforms;
-            }
+            return new Error('Current working directory is not a Cordova-based project.');
+        }
+        var projectPlatforms = this.listPlatforms(projectRoot);
+        if (projectPlatforms.length === 0) {
+            return new Error('No platforms added to this project. Please use `cordova platform add <platform>`.');
+        }
+        /**
+         * Current Desired Arguments
+         * options: {verbose: boolean, platforms: [String], options: [String]}
+         * Accepted Arguments
+         * platformList: [String] -- assume just a list of platforms
+         * platform: String -- assume this is a platform
+         */
+        if (Array.isArray(inputOptions)) {
+            result = {
+                verbose: false,
+                platforms: inputOptions,
+                options: []
+            };
+        } else if (typeof inputOptions === 'string') {
+            result = {
+                verbose: false,
+                platforms: [inputOptions],
+                options: []
+            };
+        }
+        if (!result.platforms || (result.platforms && result.platforms.length === 0) ) {
+            result.platforms = projectPlatforms;
         }
         return result;
     }
 };
+
+// opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
+// should be created.
+function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
+    var val = null;
+    if (opt_wrap) {
+        module.exports[symbol] = function() {
+            val = val || module.require(modulePath);
+            if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
+                // If args exist and the last one is a function, it's the callback.
+                var args = Array.prototype.slice.call(arguments);
+                var cb = args.pop();
+                val.apply(module.exports, args).done(cb, cb);
+            } else {
+                val.apply(module.exports, arguments).done(null, function(err) { throw err; });
+            }
+        };
+    } else {
+        Object.defineProperty(opt_obj || module.exports, symbol, {
+            get : function() { return val = val || module.require(modulePath); },
+            set : function(v) { val = v; }
+        });
+    }
+
+    // Add the module.raw.foo as well.
+    if(module.exports.raw) {
+        Object.defineProperty(module.exports.raw, symbol, {
+            get : function() { return val = val || module.require(modulePath); },
+            set : function(v) { val = v; }
+        });
+    }
+}
+
+addModuleProperty(module, 'config_parser', './config_parser');
+addModuleProperty(module, 'plugin_parser', './plugin_parser');
+
+exports.addModuleProperty = addModuleProperty;

@@ -1,3 +1,23 @@
+<!--
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+-->
 # cordova-cli
 
 > The command line tool to build, deploy and manage [Cordova](http://cordova.io)-based applications.
@@ -6,12 +26,13 @@
 
 Check out the [Getting Started guides](http://cordova.apache.org/docs/en/edge/guide_getting-started_index.md.html#Getting%20Started%20Guides) for more details on how to work with Cordova sub-projects.
 
-# Supported Platforms
+# Supported Cordova Platforms
 
 - Android
 - BlackBerry 10
 - iOS
 - Windows Phone 7 &amp; 8
+- Windows 8
 
 # Requirements
 
@@ -25,6 +46,8 @@ Check out the [Getting Started guides](http://cordova.apache.org/docs/en/edge/gu
   - [Windows Phone SDK](http://dev.windowsphone.com/en-us/downloadsdk) - **NOTE** This tool will not work unless you have `msbuild` on your __system path__ otherwise Windows Phone support will fail (`msbuild.exe` is generally located in `C:\Windows\Microsoft.NET\Framework\v4.0.30319`).
 
 cordova-cli has been tested on Mas OS X, Linux, Windows 7 and Windows 8.
+
+Note also, that some platforms have OS restrictions.  For example, you cannot build for Windows 8 or Windows Phone 7 & 8 on Mac OS, and you cannot build for iOS in Windows.
 
 # Install
 
@@ -143,7 +166,7 @@ This example shows how to create a project from scratch named KewlApp with iOS a
     cd ~/KewlApp
     cordova platform add ios android
     cordova plugin add http://example.org/Kewlio-1.2.3.tar.gz
-    cordova build 
+    cordova build
 
 The directory structure of KewlApp now looks like this:
 
@@ -199,7 +222,7 @@ When trying to add a platform on a Windows machine if you run into the following
     Checking if platform "android" passes minimum requirements...
     Checking Android requirements...
     Running "android list target" (output to follow)
-    
+
     Error: The command `android` failed. Make sure you have the latest Android SDK installed, and the `android` command (inside the tools/ folder) added t
     o your path. Output:
     at C:\Users\me\AppData\Roaming\npm\node_modules\cordova\src\platform.js:185:42
@@ -214,5 +237,18 @@ run the command "android list target".  If you see:
     'xcopy' is not recognized as an internal or external command,
     operable program or batch file.
 
-at the beginning of the command output, it means you will need to update your Windows Path variable to include xcopy. This location is typically under C:\Windows\System32. 
+at the beginning of the command output, it means you will need to update your Windows Path variable to include xcopy. This location is typically under C:\Windows\System32.
+
+## Windows 8
+
+Windows 8 support does not include the ability to launch/run/emulate, so you will need to open visual studio to see your app live.  You are still able to use the following commands with windows8
+
+- `platform add windows8`
+- `platform remove windows8`
+- `prepare windows8`
+- `compile windows8`
+- `build windows8`
+
+To run your app, you will need to open the .sln in the platforms/windows8 folder using Visual Studio 2012.
+Note also that Visual Studio will inform you to reload the project if you run any of the above commands while the project is loaded.
 

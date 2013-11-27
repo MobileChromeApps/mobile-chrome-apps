@@ -17,17 +17,16 @@
     under the License.
 */
 
-var optimist  = require('optimist'),
-    cordova   = require('../cordova'),
-    plugman   = require('plugman'),
-    platforms = require("../platforms");
-
 module.exports = function CLI(inputArgs) {
-    args = optimist(inputArgs)
+    var optimist  = require('optimist'),
+        cordova   = require('../cordova');
+
+   args = optimist(inputArgs)
         .boolean('d')
         .boolean('verbose')
         .boolean('v')
         .boolean('version')
+        .boolean('silent')
         .argv;
 
     if (args.v || args.version) {
@@ -38,7 +37,8 @@ module.exports = function CLI(inputArgs) {
         opts = {
             platforms: [],
             options: [],
-            verbose: (args.d || args.verbose)
+            verbose: (args.d || args.verbose),
+            silent: args.silent
         },
         cmd;
 
@@ -53,11 +53,23 @@ module.exports = function CLI(inputArgs) {
     });
     cordova.on('results', console.log);
 
-    if (opts.verbose) {
+    if (!opts.silent) {
         cordova.on('log', console.log);
         cordova.on('warn', console.warn);
+        var plugman = require('plugman');
         plugman.on('log', console.log);
         plugman.on('warn', console.warn);
+    } else {
+        // Remove the token.
+        tokens.splice(tokens.indexOf('--silent'), 1);
+    }
+
+
+    if (opts.verbose) {
+        // Add handlers for verbose logging.
+        cordova.on('verbose', console.log);
+        require('plugman').on('verbose', console.log);
+
         //Remove the corresponding token
         if(args.d && args.verbose) {
             tokens.splice(Math.min(tokens.indexOf("-d"), tokens.indexOf("--verbose")), 1);
@@ -66,7 +78,6 @@ module.exports = function CLI(inputArgs) {
         } else if (args.verbose) {
             tokens.splice(tokens.indexOf("--verbose"), 1);
         }
-
     }
 
     cmd = tokens && tokens.length ? tokens.splice(0,1) : undefined;
@@ -74,9 +85,14 @@ module.exports = function CLI(inputArgs) {
         return cordova.help();
     }
 
+    if (cmd === "info") {
+        return cordova.info();
+    }
+
     if (cordova.hasOwnProperty(cmd)) {
         if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
             // Filter all non-platforms into options
+            var platforms = require("../platforms");
             tokens.forEach(function(option, index) {
                 if (platforms.hasOwnProperty(option)) {
                     opts.platforms.push(option);
@@ -84,15 +100,15 @@ module.exports = function CLI(inputArgs) {
                     opts.options.push(option);
                 }
             });
-            cordova[cmd].call(this, opts);
+            cordova.raw[cmd].call(this, opts).done();
         } else if (cmd == 'create' || cmd == 'serve') {
-            cordova[cmd].apply(this, tokens);
+            cordova.raw[cmd].apply(this, tokens).done();
         } else {
             // platform/plugins add/rm [target(s)]
             var invocation = tokens.slice(0,1); // this has the sub-command, i.e. "platform add" or "plugin rm"
             var targets = tokens.slice(1); // this should be an array of targets, be it platforms or plugins
             invocation.push(targets);
-            cordova[cmd].apply(this, invocation);
+            cordova.raw[cmd].apply(this, invocation).done();
         }
     } else {
         throw new Error('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');

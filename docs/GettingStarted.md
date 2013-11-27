@@ -8,7 +8,7 @@ Now that you have installed the Mobile Chrome Apps framework, lets use it to cre
 
 ### Step 1: Create a Project
 
-    path/to/mca.js create com.companyname.YourApp --source=path/to/ChromeApp
+    mca create com.companyname.YourApp --source=path/to/ChromeApp
 
 * Don't create projects inside the `mobile-chrome-apps` directory.
 * `--source` flag is optional, if you leave it out, you will start with a HelloWorld template.

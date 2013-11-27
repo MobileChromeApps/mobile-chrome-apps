@@ -114,14 +114,6 @@ Finalizes plugin installation by making configuration file changes and setting u
 
 ## Registry related actions
 
-Plugman uses an [npmjs.org](http://github.com/isaacs/npmjs.org) based registry to host plugins. The URL can be configured in the `config.js` file at the root of the installation folder.
-
-### `config.js` file
-
-    module.exports = {
-        registry: "http://registry.cordova.io"
-    }
-
 ### `adduser` method
 
 Adds a user account to the registry. Function takes no arguments other than a an optional callback
@@ -145,6 +137,15 @@ unpublishes plugins from the registry. Can unpublish a version by specifying `pl
 Searches plugins in the registry. `search_opts` is an array of keywords
 
     module.exports = function(search_opts, callback) {
+
+### `config` method
+
+Configures registry settings. `params` is an array that describes the action
+    /* 
+    * var params = ['get', 'registry'];
+    * var params = ['set', 'registry', 'http://registry.cordova.io'];
+    * module.exports = function(params, callback) {
+    */
 
 ## Example Plugins
 

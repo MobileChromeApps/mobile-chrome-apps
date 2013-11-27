@@ -29,40 +29,36 @@ var path          = require('path'),
     zlib          = require('zlib'),
     tar           = require('tar'),
     URL           = require('url'),
+    Q             = require('q'),
     util          = require('./util');
 
 module.exports = {
-    cordova:function lazy_load(platform, callback) {
+    // Returns a promise for the path to the lazy-loaded directory.
+    cordova:function lazy_load(platform) {
         if (!(platform in platforms)) {
-            var err = new Error('Cordova library "' + platform + '" not recognized.');
-            if (callback) return callback(err);
-            else throw err;
+            return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
         }
 
         var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
-        module.exports.custom(url, 'cordova', platform, platforms[platform].version, function(err) {
-            if (err) {
-                if (callback) return callback(err);
-                else throw err;
-            } else {
-                if (callback) callback();
-            }
-        });
+        return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
     },
-    custom:function(url, id, platform, version, callback) {
+    // Returns a promise for the path to the lazy-loaded directory.
+    custom:function(url, id, platform, version) {
         var download_dir = (platform == 'wp7' || platform == 'wp8' ? path.join(util.libDirectory, 'wp', id, version) :
                                                                      path.join(util.libDirectory, platform, id, version));
         if (fs.existsSync(download_dir)) {
-            events.emit('log', id + ' library for "' + platform + '" already exists. No need to download. Continuing.');
-            if (callback) return callback();
+            events.emit('verbose', id + ' library for "' + platform + '" already exists. No need to download. Continuing.');
+            return Q(download_dir);
         }
-        hooker.fire('before_library_download', {
+        events.emit('log', 'Downloading ' + id + ' library for ' + platform + '...');
+        return hooker.fire('before_library_download', {
             platform:platform,
             url:url,
             id:id,
             version:version
-        }, function() {
+        }).then(function() {
             var uri = URL.parse(url);
+            var d = Q.defer();
             if (uri.protocol && uri.protocol[1] != ':') { // second part of conditional is for awesome windows support. fuuu windows
                 npm.load(function() {
                     // Check if NPM proxy settings are set. If so, include them in the request() call.
@@ -79,22 +75,33 @@ module.exports = {
                     if (proxy) {
                         request_options.proxy = proxy;
                     }
-                    events.emit('log', 'Requesting ' + JSON.stringify(request_options) + '...');
-                    request.get(request_options, function(err, req, body) { size = body.length; })
-                    .pipe(zlib.createUnzip())
+                    events.emit('verbose', 'Requesting ' + JSON.stringify(request_options) + '...');
+                    var req = request.get(request_options, function(err, res, body) {
+                        if (err) {
+                            shell.rm('-rf', download_dir);
+                            d.reject(err);
+                        } else if (res.statusCode != 200) {
+                            shell.rm('-rf', download_dir);
+                            d.reject(new Error('HTTP error ' + res.statusCode + ' retrieving version ' + version + ' of ' + id + ' for ' + platform));
+                        } else {
+                            size = body.length;
+                        }
+                    });
+
+                    req.pipe(zlib.createUnzip())
                     .pipe(tar.Extract({path:download_dir}))
                     .on('error', function(err) {
                         shell.rm('-rf', download_dir);
-                        if (callback) callback(err);
-                        else throw err;
+                        d.reject(err);
                     })
                     .on('end', function() {
-                        events.emit('log', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
+                        events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
+                        events.emit('log', 'Download complete');
                         var entries = fs.readdirSync(download_dir);
                         var entry = path.join(download_dir, entries[0]);
                         shell.mv('-f', path.join(entry, (platform=='blackberry10'?'blackberry10':''), '*'), download_dir);
                         shell.rm('-rf', entry);
-                        hooker.fire('after_library_download', {
+                        d.resolve(hooker.fire('after_library_download', {
                             platform:platform,
                             url:url,
                             id:id,
@@ -102,36 +109,33 @@ module.exports = {
                             path:download_dir,
                             size:size,
                             symlink:false
-                        }, function() {
-                            if (callback) callback();
-                        });
+                        }));
                     });
                 });
             } else {
-                // local path
-                // symlink instead of copying
-                shell.mkdir('-p', path.join(download_dir, '..'));
-                fs.symlinkSync((uri.protocol && uri.protocol[1] == ':' ? uri.href : uri.path), download_dir, 'dir');
-                hooker.fire('after_library_download', {
+                // Local path.
+                // Do nothing here; users of this code should be using the returned path.
+                download_dir = uri.protocol && uri.protocol[1] == ':' ? uri.href : uri.path;
+                d.resolve(hooker.fire('after_library_download', {
                     platform:platform,
                     url:url,
                     id:id,
                     version:version,
                     path:download_dir,
-                    symlink:true
-                }, function() {
-                    if (callback) callback();
-                });
+                    symlink:false
+                }));
             }
+            return d.promise.then(function() { return download_dir; });
         });
     },
-    based_on_config:function(project_root, platform, callback) {
+    // Returns a promise for the path to the lazy-loaded directory.
+    based_on_config:function(project_root, platform) {
         var custom_path = config.has_custom_path(project_root, platform);
         if (custom_path) {
             var dot_file = config.read(project_root);
-            module.exports.custom(dot_file.lib[platform].uri, dot_file.lib[platform].id, platform, dot_file.lib[platform].version, callback);
+            return module.exports.custom(dot_file.lib[platform].uri, dot_file.lib[platform].id, platform, dot_file.lib[platform].version);
         } else {
-            module.exports.cordova(platform, callback);
+            return module.exports.cordova(platform);
         }
     }
 };

@@ -16,15 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova_events = require('./src/events'),
-    prepare        = require('./src/prepare'),
-    platform       = require('./src/platform'),
-    run            = require('./src/run'),
-    hooker         = require('./src/hooker'),
-    util           = require('./src/util'),
-    path           = require('path'),
-    fs             = require('fs'),
-    compile        = require('./src/compile');
+var cordova_events = require('./src/events');
+var addModuleProperty = require('./src/util').addModuleProperty;
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -34,20 +27,7 @@ var emit = function() {
     cordova_events.emit.apply(cordova_events, arguments);
 };
 
-module.exports = {
-    help:      require('./src/help'),
-    config:    require('./src/config'),
-    create:    require('./src/create'),
-    platform:  platform,
-    platforms: platform,
-    prepare:   prepare,
-    compile:   compile,
-    run:       run,
-    ripple:    require('./src/ripple'),
-    emulate:   require('./src/emulate'),
-    plugin:    require('./src/plugin'),
-    plugins:   require('./src/plugin'),
-    serve:     require('./src/serve'),
+exports = module.exports = {
     on:        function() {
         cordova_events.on.apply(cordova_events, arguments);
     },
@@ -58,5 +38,23 @@ module.exports = {
     },
     emit:      emit,
     trigger:   emit,
-    build:     require('./src/build')
+    raw: {}
 };
+
+addModuleProperty(module, 'prepare', './src/prepare', true);
+addModuleProperty(module, 'build', './src/build', true);
+addModuleProperty(module, 'help', './src/help');
+addModuleProperty(module, 'config', './src/config');
+addModuleProperty(module, 'create', './src/create', true);
+addModuleProperty(module, 'ripple', './src/ripple');
+addModuleProperty(module, 'emulate', './src/emulate', true);
+addModuleProperty(module, 'plugin', './src/plugin', true);
+addModuleProperty(module, 'plugins', './src/plugin', true);
+addModuleProperty(module, 'serve', './src/serve');
+addModuleProperty(module, 'platform', './src/platform', true);
+addModuleProperty(module, 'platforms', './src/platform', true);
+addModuleProperty(module, 'compile', './src/compile', true);
+addModuleProperty(module, 'run', './src/run', true);
+addModuleProperty(module, 'info', './src/info');
+
+

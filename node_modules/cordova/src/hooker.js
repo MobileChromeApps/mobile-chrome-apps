@@ -16,10 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-var shell = require('shelljs'),
-    util  = require('./util'),
+var util  = require('./util'),
     fs    = require('fs'),
+    os    = require('os'),
     events= require('./events'),
+    child_process = require('child_process'),
+    Q     = require('q'),
     path  = require('path');
 
 module.exports = function hooker(root) {
@@ -28,23 +30,17 @@ module.exports = function hooker(root) {
     else this.root = r;
 }
 
-module.exports.fire = function global_fire(hook, opts, callback) {
-    if (arguments.length == 2 && typeof opts == 'function') {
-        callback = opts;
-        opts = {};
-    }
+// Returns a promise.
+module.exports.fire = function global_fire(hook, opts) {
+    opts = opts || {};
     var handlers = events.listeners(hook);
-    execute_handlers_serially(handlers, opts, function() {
-        if (callback) callback();
-    });
+    return execute_handlers_serially(handlers, opts);
 };
 
 module.exports.prototype = {
-    fire:function fire(hook, opts, callback) {
-        if (arguments.length == 2) {
-            callback = opts;
-            opts = {};
-        }
+    // Returns a promise.
+    fire:function fire(hook, opts) {
+        opts = opts || {};
         var self = this;
         var dir = path.join(this.root, '.cordova', 'hooks', hook);
         opts.root = this.root;
@@ -52,61 +48,94 @@ module.exports.prototype = {
         // Fire JS hook for the event
         // These ones need to "serialize" events, that is, each handler attached to the event needs to finish processing (if it "opted in" to the callback) before the next one will fire.
         var handlers = events.listeners(hook);
-        execute_handlers_serially(handlers, opts, function() {
+        return execute_handlers_serially(handlers, opts)
+        .then(function() {
             // Fire script-based hooks
             if (!(fs.existsSync(dir))) {
-                callback(); // hooks directory got axed post-create; ignore.
+                return Q(); // hooks directory got axed post-create; ignore.
             } else {
                 var scripts = fs.readdirSync(dir).filter(function(s) {
                     return s[0] != '.';
                 });
-                execute_scripts_serially(scripts, self.root, dir, function(err) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        callback();
-                    }
-                });
+                return execute_scripts_serially(scripts, self.root, dir);
             }
         });
     }
 }
 
-function execute_scripts_serially(scripts, root, dir, callback) {
+// Returns a promise.
+function execute_scripts_serially(scripts, root, dir) {
     if (scripts.length) {
         var s = scripts.shift();
         var fullpath = path.join(dir, s);
         if (fs.statSync(fullpath).isDirectory()) {
-            execute_scripts_serially(scripts, root, dir, callback); // skip directories if they're in there.
+            events.emit('verbose', 'skipped directory "' + fullpath + '" within hook directory');
+            return execute_scripts_serially(scripts, root, dir); // skip directories if they're in there.
         } else {
             var command = fullpath + ' "' + root + '"';
-            events.emit('log', 'Executing hook "' + command + '" (output to follow)...');
-            shell.exec(command, {silent:true, async:true}, function(code, output) {
-                events.emit('log', output);
-                if (code !== 0) {
-                    callback(new Error('Script "' + fullpath + '" exited with non-zero status code. Aborting. Output: ' + output));
+
+            var hookFd = fs.openSync(fullpath, "r");
+            // this is a modern cluster size. no need to read less
+            var fileData = new Buffer (4096);
+            var octetsRead = fs.readSync(hookFd, fileData, 0, 4096, 0);
+            var fileChunk = fileData.toString();
+
+            var hookCmd, shMatch;
+            var shebangMatch = fileChunk.match(/^#!(\/usr\/bin\/env )?([^\r\n]+)/m);
+            if (octetsRead == 4096 && !fileChunk.match(/[\r\n]/))
+                events.emit('warn', 'shebang is too long for "' + fullpath + '"');
+            if (shebangMatch)
+                hookCmd = shebangMatch[2];
+            if (hookCmd)
+                shMatch = hookCmd.match(/bin\/((ba)?sh)$/)
+            if (shMatch)
+                hookCmd = shMatch[1]
+
+            // according to the http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/wsh_runfromwindowsbasedhost.mspx?mfr=true
+            // win32 cscript natively supports .wsf, .vbs, .js extensions
+            // also, cmd.exe supports .bat files
+            // .ps1 powershell http://technet.microsoft.com/en-us/library/ee176949.aspx
+            var sExt = path.extname(s);
+
+            if (sExt.match(/^.(bat|wsf|vbs|js|ps1)$/)) {
+                if (os.platform() != 'win32' && !hookCmd) {
+                    events.emit('verbose', 'hook file "' + fullpath + '" skipped');
+                    // found windows script, without shebang this script definitely
+                    // will not run on unix
+                    return execute_scripts_serially(scripts, root, dir);
+                }
+            }
+
+            if (os.platform() == 'win32' && hookCmd) {
+                // we have shebang, so try to run this script using correct interpreter
+                command = hookCmd + ' ' + command;
+            }
+
+            events.emit('verbose', 'Executing hook "' + command + '" (output to follow)...');
+            var d = Q.defer();
+            child_process.exec(command, function(err, stdout, stderr) {
+                events.emit('verbose', stdout, stderr);
+                if (err) {
+                    d.reject(new Error('Script "' + fullpath + '" exited with non-zero status code. Aborting. Output: ' + stdout + stderr));
                 } else {
-                    execute_scripts_serially(scripts, root, dir, callback);
+                    d.resolve(execute_scripts_serially(scripts, root, dir));
                 }
             });
+            return d.promise;
         }
     } else {
-        callback();
+        return Q(); // Nothing to do.
     }
 }
 
-function execute_handlers_serially(handlers, opts, callback) {
+// Returns a promise.
+function execute_handlers_serially(handlers, opts) {
     if (handlers.length) {
-        var h = handlers.shift();
-        if (h.length > 1) {
-            h(opts, function() {
-                execute_handlers_serially(handlers, opts, callback);
-            });
-        } else {
-            h(opts);
-            execute_handlers_serially(handlers, opts, callback);
-        }
+        // Chain the handlers in series.
+        return handlers.reduce(function(soFar, f) {
+            return soFar.then(function() { return f(opts) });
+        }, Q());
     } else {
-        callback();
+        return Q(); // Nothing to do.
     }
 }

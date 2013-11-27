@@ -116,7 +116,8 @@ describe('wp7 project handler', function() {
         describe('of <source-file> elements', function() {
             it('should remove stuff by calling common.removeFile', function(done) {
                 var s = spyOn(common, 'removeFile');
-                install('wp7', temp, dummyplugin, plugins_dir, {}, function() {
+                install('wp7', temp, dummyplugin, plugins_dir, {})
+                .then(function() {
                     var source = copyArray(valid_source);
                     wp7['source-file'].uninstall(source[0], temp, dummy_id, proj_files);
                     expect(s).toHaveBeenCalledWith(temp, path.join('Plugins', 'com.phonegap.plugins.dummyplugin', 'DummyPlugin.cs'));

@@ -71,3 +71,10 @@ Manage registry configuration
 
     $ plugman config set registry http://localhost:5984/registry/_design/app/_rewrite
     $ plugman config get registry
+
+Manage owners
+-------------
+
+    $ plugman owner ls org.apache.cordova.core.file 
+    $ plugman owner add username org.apache.cordova.core.file
+    $ plugman owner rm username org.apache.cordova.core.file

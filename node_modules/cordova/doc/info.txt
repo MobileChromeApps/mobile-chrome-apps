@@ -1,0 +1,21 @@
+Useful Information For Submitting Bug Reports and Getting Help
+
+Current Node Version
+
+    %Node
+
+Current Cordova CLI Version
+
+    %Cordova
+
+Current Config.xml
+
+    %Config
+
+Currently Installed Platforms
+
+    %Platforms
+
+Currently Installed Plugins
+
+    %Plugins

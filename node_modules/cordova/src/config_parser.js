@@ -53,7 +53,7 @@ config_parser.prototype = {
             content.attrib.src = src;
             this.update();
         } else {
-            if (content === undefined) {
+            if (!content) {
                 content = new et.Element('content');
                 content.attrib.src = 'index.html';
                 this.doc.getroot().append(content);
@@ -64,6 +64,69 @@ config_parser.prototype = {
     },
     update:function() {
         fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');
+    },
+    merge_with: function (cfg, platform, clobber) {
+        var BLACKLIST = ["platform"],
+            SINGLETONS = ["content", "author"];
+        mergeXml(cfg.doc.getroot(), this.doc.getroot(), platform, clobber);
+        this.update();
+
+        function mergeXml(src, dest, platform, clobber) {
+            if (BLACKLIST.indexOf(src.tag) === -1) {
+                //Handle attributes
+                Object.getOwnPropertyNames(src.attrib).forEach(function (attribute) {
+                    if (clobber || !dest.attrib[attribute]) {
+                        dest.attrib[attribute] = src.attrib[attribute];
+                    }
+                });
+                //Handle text
+                if (src.text && (clobber || !dest.text)) {
+                    dest.text = src.text;
+                }
+                //Handle platform
+                if (platform) {
+                    src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
+                        platformElement.getchildren().forEach(mergeChild);
+                    });
+                }
+
+                //Handle children
+                src.getchildren().forEach(mergeChild);
+
+                function mergeChild (srcChild) {
+                    var srcTag = srcChild.tag,
+                        destChild = new et.Element(srcTag),
+                        foundChild,
+                        query = srcTag + "",
+                        shouldMerge = true;
+
+                    if (BLACKLIST.indexOf(srcTag) === -1) {
+                        if (SINGLETONS.indexOf(srcTag) !== -1) {
+                            foundChild = dest.find(query);
+                            if (foundChild) {
+                                destChild = foundChild;
+                                dest.remove(0, destChild);
+                            }
+                        } else {
+                            //Check for an exact match and if you find one don't add
+                            Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
+                                query += "[@" + attribute + '="' + srcChild.attrib[attribute] + '"]';
+                            });
+                            foundChild = dest.find(query);
+                            if (foundChild) {
+                                //Don't add duplicates
+                                shouldMerge = false;
+                            }
+                        }
+
+                        if (shouldMerge) {
+                            mergeXml(srcChild, destChild, platform, clobber);
+                            dest.append(destChild);
+                        }
+                    }
+                }
+            }
+        }
     }
 };
 
