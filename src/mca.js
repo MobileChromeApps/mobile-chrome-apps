@@ -774,8 +774,8 @@ function updateAppCommand() {
                      path.join('res','drawable','icon.png')],
             };
           } else if (platform === "ios") {
-            var cordova = require('cordova');
-            var parser = new cordova.platforms.ios.parser(path.join('platforms','ios'));
+            var platforms = require('cordova/platforms');
+            var parser = new platforms.ios.parser(path.join('platforms','ios'));
             iconMap = {
               "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
               "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
