@@ -29,7 +29,7 @@ var cordova = require('../cordova'),
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
 describe('emulate command', function() {
-    var is_cordova, list_platforms, fire, result, child, spawn_wrap;
+    var is_cordova, cd_project_root, list_platforms, fire, result, child, spawn_wrap;
     var project_dir = '/some/path';
     var prepare_spy;
     child = {
@@ -73,6 +73,7 @@ describe('emulate command', function() {
 
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());

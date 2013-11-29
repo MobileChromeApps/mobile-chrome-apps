@@ -102,12 +102,13 @@ describe('ios project parser', function () {
     });
 
     describe('instance', function() {
-        var p, cp, rm, is_cordova, write, read;
+        var p, cp, rm, mkdir, is_cordova, write, read;
         var ios_proj = path.join(proj, 'platforms', 'ios');
         beforeEach(function() {
             p = new platforms.ios.parser(ios_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
+            mkdir = spyOn(shell, 'mkdir');
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
@@ -214,13 +215,9 @@ describe('ios project parser', function () {
         });
         describe('update_www method', function() {
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www('lib/dir');
+                p.update_www(path.join('lib','dir'));
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
-            });
-            it('should copy in a fresh cordova.js from given cordova lib', function() {
-                p.update_www('lib/dir');
-                expect(cp.mostRecentCall.args[1]).toContain('lib/dir');
             });
         });
         describe('update_overrides method', function() {

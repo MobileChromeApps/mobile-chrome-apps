@@ -25,12 +25,8 @@ module.exports = function plugin(command, targets) {
         Q             = require('q'),
         events        = require('./events');
 
-    var projectRoot = cordova_util.isCordova(process.cwd()),
+    var projectRoot = cordova_util.cdProjectRoot(),
         err;
-
-    if (!projectRoot) {
-        return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
-    }
 
     if (arguments.length === 0){
         command = 'ls';

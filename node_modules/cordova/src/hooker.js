@@ -37,6 +37,12 @@ module.exports.fire = function global_fire(hook, opts) {
     return execute_handlers_serially(handlers, opts);
 };
 
+function compareNumbers(a, b) {
+    return isNaN (parseInt(a))
+        ? a.toLowerCase().localeCompare(b.toLowerCase ? b.toLowerCase(): b)
+        : parseInt(a) > parseInt(b) ? 1 : parseInt(a) < parseInt(b) ? -1 : 0;
+}
+
 module.exports.prototype = {
     // Returns a promise.
     fire:function fire(hook, opts) {
@@ -54,7 +60,7 @@ module.exports.prototype = {
             if (!(fs.existsSync(dir))) {
                 return Q(); // hooks directory got axed post-create; ignore.
             } else {
-                var scripts = fs.readdirSync(dir).filter(function(s) {
+                var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function(s) {
                     return s[0] != '.';
                 });
                 return execute_scripts_serially(scripts, self.root, dir);

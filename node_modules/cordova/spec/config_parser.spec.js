@@ -95,7 +95,7 @@ describe('config.xml parser', function () {
                 expect(testElements.length).toEqual(1);
                 expect(testElements[0].attrib.testAttrib).toEqual("value");
                 expect(testElements[0].attrib.href).toEqual("http://cordova.io");
-                expect(testElements[0].attrib.email).toEqual("dev@callback.apache.org");
+                expect(testElements[0].attrib.email).toEqual("dev@cordova.apache.org");
                 expect(testElements[0].text).toContain("Apache Cordova Team");
             });
 
@@ -109,7 +109,7 @@ describe('config.xml parser', function () {
                 expect(testElements.length).toEqual(1);
                 expect(testElements[0].attrib.testAttrib).toEqual("value");
                 expect(testElements[0].attrib.href).toEqual("http://www.nowhere.com");
-                expect(testElements[0].attrib.email).toEqual("dev@callback.apache.org");
+                expect(testElements[0].attrib.email).toEqual("dev@cordova.apache.org");
                 expect(testElements[0].text).toEqual("SUPER_AUTHOR");
             });
 

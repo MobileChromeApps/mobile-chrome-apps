@@ -53,6 +53,27 @@ Note also, that some platforms have OS restrictions.  For example, you cannot bu
 
     npm install -g cordova
 
+## Installing from master
+
+You'll need to install both CLI and Plugman from git. Running the npm version of one and master version of the other is likely to end in suffering.
+
+To avoid using sudo, see [Get away from sudo: npm without root](http://justjs.com/posts/npm-link-developing-your-own-npm-modules-without-tears).
+
+Run the following commands:
+
+    git clone https://git-wip-us.apache.org/repos/asf/cordova-plugman.git
+    cd cordova-plugman
+    npm install
+    sudo npm link
+    cd ..
+    git clone https://git-wip-us.apache.org/repos/asf/cordova-cli.git
+    cd cordova-cli
+    npm install
+    sudo npm link
+    npm link plugman
+
+Now the `cordova` and `plugman` in your path are the local git versions. Don't forget to keep them up to date!
+
 # Getting Started
 
 cordova-cli has a single global `create` command that creates new cordova projects into a specified directory. Once you create a project, `cd` into it and you can execute a variety of project-level commands. Completely inspired by git's interface.

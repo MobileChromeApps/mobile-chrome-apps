@@ -83,3 +83,4 @@ Tests are written in [vows][1] and give complete coverage of all APIs.
 [1]: http://vowsjs.org
 
 #### Author: [Charlie Robbins](http://nodejitsu.com)
+#### License: MIT

@@ -52,7 +52,10 @@ var pkginfo = module.exports = function (pmodule, options) {
   //
   // **Setup default options**
   //
-  options = options || { include: [] };
+  options = options || {};
+  
+  // ensure that includes have been defined
+  options.include = options.include || [];
   
   if (args.length > 0) {
     //
@@ -85,8 +88,9 @@ var pkginfo = module.exports = function (pmodule, options) {
 // which contains a `package.json` file. 
 //
 pkginfo.find = function (pmodule, dir) {
-  dir = dir || pmodule.filename;
-  dir = path.dirname(dir); 
+  if (! dir) {
+    dir = path.dirname(pmodule.filename);
+  }
   
   var files = fs.readdirSync(dir);
   
@@ -101,7 +105,7 @@ pkginfo.find = function (pmodule, dir) {
     throw new Error('Cannot find package.json from unspecified directory');
   }
   
-  return pkginfo.find(pmodule, dir);
+  return pkginfo.find(pmodule, path.dirname(dir));
 };
 
 //

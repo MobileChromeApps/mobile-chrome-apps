@@ -19,6 +19,21 @@ function assertProperties (source, target) {
   });
 }
 
+function compareWithExample(targetPath) {
+  var examplePaths = ['package.json'];
+  
+  if (targetPath) {
+    examplePaths.unshift(targetPath);
+  }
+  
+  return function(exposed) {
+    var pkg = fs.readFileSync(path.join.apply(null, [__dirname, '..', 'examples'].concat(examplePaths))).toString(),
+        keys = Object.keys(JSON.parse(pkg));
+    
+    assertProperties(exposed, keys);
+  };
+}
+
 function testExposes (options) {
   return {
     topic: function () {
@@ -56,14 +71,13 @@ vows.describe('pkginfo').addBatch({
       script: 'array-argument.js',
       properties: ['version', 'author']
     }),
+    "and read from a specified directory": testExposes({
+      script: 'target-dir.js',
+      assert: compareWithExample('subdir')
+    }),
     "and passed no arguments": testExposes({
       script: 'all-properties.js',
-      assert: function (exposed) {
-        var pkg = fs.readFileSync(path.join(__dirname, '..', 'examples', 'package.json')).toString(),
-            keys = Object.keys(JSON.parse(pkg));
-        
-        assertProperties(exposed, keys);
-      }
+      assert: compareWithExample()
     })
   }
 }).export(module);

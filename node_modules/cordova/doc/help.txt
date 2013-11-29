@@ -26,9 +26,8 @@ Project-Level Commands
                                                 opening emulator if necessary
     run [PLATFORM...] ......................... deploys app on specified (or all) platform devices, which
                                                 must be properly connected and configured in each SDK
-    serve <PLATFORM> [PORT] ................... runs a local web server for the specified platform's www/
-                                                directory, with optional port number that defaults to 8000.
-                                                (Note: you must edit the native code to reference the server.)
+    serve [PORT] .............................. runs a local web server for www/ assets. Port defaults to 8000.
+                                                Access projects at: http://HOST_IP:PORT/PLATFORM/www
 
 Command-line Flags/Options
 

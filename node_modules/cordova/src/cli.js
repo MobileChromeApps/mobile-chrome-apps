@@ -58,6 +58,7 @@ module.exports = function CLI(inputArgs) {
         cordova.on('warn', console.warn);
         var plugman = require('plugman');
         plugman.on('log', console.log);
+        plugman.on('results', console.log);
         plugman.on('warn', console.warn);
     } else {
         // Remove the token.

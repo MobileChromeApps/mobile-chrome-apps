@@ -4,6 +4,7 @@ npm-dedupe(1) -- Reduce duplication
 ## SYNOPSIS
 
     npm dedupe [package names...]
+    npm ddp [package names...]
 
 ## DESCRIPTION
 
@@ -45,6 +46,10 @@ result in packages getting updated versions, perhaps from the npm
 registry.
 
 This feature is experimental, and may change in future versions.
+
+The `--tag` argument will apply to all of the affected dependencies. If a
+tag with the given name exists, the tagged version is preferred over newer
+versions.
 
 ## SEE ALSO
 

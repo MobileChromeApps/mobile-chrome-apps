@@ -35,6 +35,7 @@ var supported_platforms_paths = supported_platforms.map(function(p) { return pat
 
 describe('prepare command', function() {
     var is_cordova,
+        cd_project_root,
         list_platforms,
         fire,
         config_parser,
@@ -44,9 +45,11 @@ describe('prepare command', function() {
         find_plugins,
         plugman_get_json,
         cp,
+        mkdir,
         load;
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         mock_config_parser = {
@@ -58,6 +61,7 @@ describe('prepare command', function() {
             spyOn(platforms[p], 'parser').andReturn({
                 update_project:parsers[p],
                 update_www: jasmine.createSpy(p + ' update_www'),
+                cordovajs_path: function(libDir) { return 'path/to/cordova.js/in/.cordova/lib';},
                 www_dir:function() { return path.join(project_dir, 'platforms', p, 'www'); },
                 config_xml: function () { return path.join(project_dir, "platforms", p, "www", "config.xml");}
             });
@@ -67,6 +71,7 @@ describe('prepare command', function() {
         plugman_get_json = spyOn(plugman.config_changes, 'get_platform_json').andReturn({});
         load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
         cp = spyOn(shell, 'cp').andReturn(true);
+        mkdir = spyOn(shell, 'mkdir')
     });
 
     describe('failure', function() {

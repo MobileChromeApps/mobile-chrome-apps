@@ -59,7 +59,21 @@ module.exports = function create (dir, id, name, cfg) {
     var www_dir = path.join(dir, 'www');
 
     // dir must be either empty or not exist at all.
-    if (fs.existsSync(dir) && fs.readdirSync(dir).length > 0) {
+
+    // dir must be either empty except for .cordova config file or not exist at all..
+    var sanedircontents = function (d) {
+        var contents = fs.readdirSync(d);
+        if (contents.length == 0) {
+            return true;
+        } else if (contents.length == 1) {
+            if (contents[0] == '.cordova') {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    if (fs.existsSync(dir) && !sanedircontents) {
         return Q.reject(new Error('Path already exists and is not empty: ' + dir));
     }
 

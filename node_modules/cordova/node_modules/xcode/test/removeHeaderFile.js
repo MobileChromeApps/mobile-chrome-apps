@@ -77,8 +77,8 @@ exports.removeHeaderFile = {
         test.equal(fileRefEntry.isa, 'PBXFileReference');
         test.equal(fileRefEntry.fileEncoding, 4);
         test.equal(fileRefEntry.lastKnownFileType, 'sourcecode.c.h');
-        test.equal(fileRefEntry.name, 'file.h');
-        test.equal(fileRefEntry.path, 'file.h');
+        test.equal(fileRefEntry.name, '"file.h"');
+        test.equal(fileRefEntry.path, '"file.h"');
         test.equal(fileRefEntry.sourceTree, '"<group>"');
         
         var deletedFile = proj.removeHeaderFile('Plugins/file.h'),

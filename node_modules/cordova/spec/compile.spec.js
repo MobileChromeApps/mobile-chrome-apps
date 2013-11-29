@@ -31,7 +31,7 @@ var supported_platforms = Object.keys(platforms).filter(function(p) { return p !
 
 
 describe('compile command', function() {
-    var is_cordova, list_platforms, fire, result, child, spawn_wrap;
+    var is_cordova, list_platforms, fire, result, child, spawn_wrap, cd_project_root;
     var project_dir = '/some/path';
     child = {
         on: function(child_event,cb){
@@ -73,6 +73,7 @@ describe('compile command', function() {
     }
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         spyOn(child_process, 'spawn').andReturn(child);

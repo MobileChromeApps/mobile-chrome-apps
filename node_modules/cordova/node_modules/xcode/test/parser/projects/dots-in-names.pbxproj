@@ -1,0 +1,17 @@
+// !$*UTF8*$!
+{
+    isa = PBXProject;
+    attributes = {
+        LastUpgradeCheck = 500;
+        TargetAttributes = {
+            1D6058900D05DD3D006BFB54 = {
+                DevelopmentTeam = 9KM9BSKFZ3;
+                SystemCapabilities = {
+                    com.apple.BackgroundModes = {
+                        enabled = 1;
+                    };
+                };
+            };
+        };
+    };
+}

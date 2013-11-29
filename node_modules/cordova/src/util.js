@@ -50,6 +50,15 @@ exports = module.exports = {
             }
         } else return false;
     },
+    // Cd to project root dir and return its path. Throw if not in a Corodva project.
+    cdProjectRoot: function() {
+        var projectRoot = this.isCordova(process.cwd());
+        if (!projectRoot) {
+            throw new Error('Current working directory is not a Cordova-based project.');
+        }
+        process.chdir(projectRoot);
+        return projectRoot;
+    },
     // Recursively deletes .svn folders from a target path
     deleteSvnFolders:function(dir) {
         var contents = fs.readdirSync(dir);

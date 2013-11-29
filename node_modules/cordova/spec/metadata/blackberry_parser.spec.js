@@ -86,12 +86,13 @@ describe('blackberry10 project parser', function() {
         });
     });
     describe('instance', function() {
-        var p, cp, rm, is_cordova, write, read;
+        var p, cp, rm, mkdir, is_cordova, write, read;
         var bb_proj = path.join(proj, 'platforms', 'blackberry10');
         beforeEach(function() {
             p = new platforms.blackberry10.parser(bb_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
+            mkdir = spyOn(shell, 'mkdir');
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync');
@@ -180,14 +181,10 @@ describe('blackberry10 project parser', function() {
             });
 
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www('lib/dir');
+                p.update_www();
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
                 expect(backup_cfg_parser.update).toHaveBeenCalled();
-            });
-            it('should copy in a fresh cordova.js from given cordova lib', function() {
-                p.update_www(path.join('lib', 'dir'));
-                expect(cp).toHaveBeenCalledWith('-f', path.join('lib', 'dir', 'javascript', 'cordova.blackberry10.js'), path.join(proj, 'platforms', 'blackberry10', 'www', 'cordova.js'));
             });
         });
         describe('update_overrides method', function() {

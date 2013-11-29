@@ -35,7 +35,7 @@ var cordova_util      = require('./util'),
 
 // Returns a promise.
 module.exports = function prepare(options) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.cdProjectRoot();
 
     if (!options) {
         options = {
@@ -81,11 +81,18 @@ module.exports = function prepare(options) {
                         shell.cp("-f", parser.config_xml(), defaults_xml_path);
                     }else{
                         shell.cp("-f",xml,parser.config_xml());
-                    }   
+                    }
+                }
+
+                var platform_www = path.join(platformPath, 'platform_www');
+                // Create platfom_www if project was created with older version.
+                if (!fs.existsSync(platform_www)) {
+                    shell.mkdir(platform_www);
+                    shell.cp(parser.cordovajs_path(libDir), path.join(platform_www, 'cordova.js'));
                 }
 
                 // Replace the existing web assets with the app master versions
-                parser.update_www(libDir);
+                parser.update_www();
 
                 // Call plugman --prepare for this platform. sets up js-modules appropriately.
                 var plugins_dir = path.join(projectRoot, 'plugins');

@@ -29,7 +29,7 @@ var cordova = require('../cordova'),
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
 describe('run command', function() {
-    var is_cordova, list_platforms, fire, child, spawn_wrap;
+    var is_cordova, cd_project_root, list_platforms, fire, child, spawn_wrap;
     var project_dir = '/some/path';
     var prepare_spy;
     child = {
@@ -65,6 +65,7 @@ describe('run command', function() {
 
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
@@ -73,18 +74,20 @@ describe('run command', function() {
     describe('failure', function() {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.andReturn([]);
-            cordova.raw.run().then(function() {
+            Q().then(cordova.raw.run).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(err).toEqual(new Error('No platforms added to this project. Please use `cordova platform add <platform>`.'));
+                expect(err.message).toEqual('No platforms added to this project. Please use `cordova platform add <platform>`.');
             }).fin(done);
         });
         it('should not run outside of a Cordova-based project', function(done) {
+            var msg = 'Dummy message about not being in a cordova dir.';
+            cd_project_root.andThrow(new Error(msg));
             is_cordova.andReturn(false);
-            cordova.raw.run().then(function() {
+            Q().then(cordova.raw.run).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(err).toEqual(new Error('Current working directory is not a Cordova-based project.'));
+                expect(err.message).toEqual(msg);
             }).fin(done);
         });
     });
@@ -101,7 +104,6 @@ describe('run command', function() {
                 expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
 
             }, function(err) {
-                console.log(err);
                 expect(err).toBeUndefined();
             }).fin(done);
         });

@@ -22,7 +22,7 @@ var cordova_util      = require('./util'),
 
 // Returns a promise.
 module.exports = function build(options) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.cdProjectRoot();
 
     if (!options) {
         options = {

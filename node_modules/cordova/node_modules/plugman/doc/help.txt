@@ -10,9 +10,9 @@ Install a plugin
 
 Parameters: 
 
- - <platform>: One of android, ios, blackberry10, wp7 or wp8
+ - platform <platform>: One of android, ios, blackberry10, wp7 or wp8
  - project <directory>: Path reference to a cordova-generated project of the platform you specify
- - plugin <plugin>: One of a path reference to a local copy of a plugin, or a remote https: or git: URL pointing to a cordova plugin
+ - plugin <plugin>: One of a path reference to a local copy of a plugin, or a remote https: or git: URL pointing to a cordova plugin (optionally append #branch:subdir) or a plugin ID from http://plugins.cordova.io
  - variable NAME=VALUE: Some plugins require install-time variables to be defined. These could be things like API keys/tokens or other app-specific variables.
 
 Uninstall a plugin

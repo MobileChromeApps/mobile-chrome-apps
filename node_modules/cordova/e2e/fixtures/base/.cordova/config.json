@@ -1,0 +1,22 @@
+{
+  "id": "org.testing",
+  "name":"TestBase",
+  "lib": {
+    "android": {
+      "uri": "/some/junk/path",
+      "version": "dev",
+      "id": "cordova-android-dev"
+    },
+    "ios": {
+      "uri": "/some/junk/path",
+      "version": "dev",
+      "id": "cordova-ios-dev"
+    },
+    "wp8": {
+      "uri": "/some/junk/path",
+      "version": "dev",
+      "id": "cordova-wp8-dev"
+    }
+  }
+}
+

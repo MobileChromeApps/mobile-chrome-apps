@@ -71,7 +71,7 @@ function shell_out_to_build(projectRoot, platform, options) {
 
 // Returns a promise.
 module.exports = function compile(options) {
-    var projectRoot = cordova_util.isCordova(process.cwd()),
+    var projectRoot = cordova_util.cdProjectRoot(),
         hooks;
 
     if (!options) {

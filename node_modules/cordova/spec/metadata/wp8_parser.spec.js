@@ -96,13 +96,14 @@ describe('wp8 project parser', function() {
     });
 
     describe('instance', function() {
-        var p, cp, rm, is_cordova, write, read, mv;
+        var p, cp, rm, is_cordova, write, read, mv, mkdir;
         var wp8_proj = path.join(proj, 'platforms', 'wp8');
         beforeEach(function() {
             p = new platforms.wp8.parser(wp8_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
+            mkdir = spyOn(shell, 'mkdir');
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
@@ -186,14 +187,9 @@ describe('wp8 project parser', function() {
                 update_csproj = spyOn(p, 'update_csproj');
             });
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www('lib/dir');
+                p.update_www();
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
-            });
-            it('should copy in a fresh cordova.js from given cordova lib', function() {
-                p.update_www('lib/dir');
-                expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
             });
         });
         describe('update_staging method', function() {
@@ -214,6 +210,8 @@ describe('wp8 project parser', function() {
                 www = spyOn(p, 'update_www');
                 staging = spyOn(p, 'update_staging');
                 svn = spyOn(util, 'deleteSvnFolders');
+                csproj = spyOn(p, 'update_csproj');
+                exists.andReturn(false);
             });
             it('should call update_from_config', function(done) {
                 wrapper(p.update_project(), done, function() {

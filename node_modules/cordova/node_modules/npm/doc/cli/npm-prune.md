@@ -4,6 +4,7 @@ npm-prune(1) -- Remove extraneous packages
 ## SYNOPSIS
 
     npm prune [<name> [<name ...]]
+    npm prune [<name> [<name ...]] [--production]
 
 ## DESCRIPTION
 
@@ -14,8 +15,11 @@ removed.
 Extraneous packages are packages that are not listed on the parent
 package's dependencies list.
 
+If the `--production` flag is specified, this command will remove the
+packages specified in your `devDependencies`.
+
 ## SEE ALSO
 
 * npm-rm(1)
-* npm-folders(7)
-* npm-list(1)
+* npm-folders(5)
+* npm-ls(1)
