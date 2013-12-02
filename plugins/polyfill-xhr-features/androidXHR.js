@@ -36,6 +36,38 @@ function proxyProperty(_this, propertyName, writable) {
     Object.defineProperty(_this, propertyName, descriptor);
 }
 
+function proxyProgressEventHandler(_this, eventName, handler) {
+    return function(pe) {
+        new_pe = new ProgressEvent(eventName);
+        new_pe.target = _this;
+        handler.call(_this, new_pe);
+    }
+}
+
+function proxyEventProperty(_this, eventName) {
+    var eventPropertyName = "on" + eventName.toLowerCase();
+    var descriptor = {
+        configurable: true,
+        get: function() {
+            if (_this._activeProxy) {
+                 return _this._activeProxy[propertyName];
+            } else {
+                 return _this._nativeProxy[propertyName];
+            }
+        },
+        set: function(handler) {
+            if (_this._activeProxy) {
+                _this._activeProxy[eventPropertyName]= proxyProgressEventHandler(_this, eventName, handler);
+            } else {
+                _this._nativeProxy[eventPropertyName]= proxyProgressEventHandler(_this, eventName, handler);
+                if (_this._corsProxy)
+                    _this._corsProxy[eventPropertyName]= proxyProgressEventHandler(_this, eventName, handler);
+            }
+        }
+    };
+    Object.defineProperty(_this, eventPropertyName, descriptor);
+}
+
 var nativeXHR = window.XMLHttpRequest;
 function chromeXHR() {
     var that=this;
@@ -44,8 +76,12 @@ function chromeXHR() {
     this._activeProxy = null;
     this._response = null;
     this._overrideResponseType = "";
+    /* Proxy events */
+    ['loadstart','progress','abort','error','load','timeout','loadend'].forEach(function(elem) {
+        proxyEventProperty(that, elem);
+    });
     /* Proxy read/write properties */
-    ['timeout','withCredentials','onreadystatechange','onloadstart','onprogress','onabort','onerror','onload','ontimeout','onloadend'].forEach(function(elem) {
+    ['onreadystatechange','timeout','withCredentials'].forEach(function(elem) {
         proxyProperty(that, elem, true);
     });
     /* Proxy read-only properties */

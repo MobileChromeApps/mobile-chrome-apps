@@ -18,6 +18,26 @@ function proxyProperty(_this, propertyName, writable) {
     Object.defineProperty(_this, propertyName, descriptor);
 }
 
+function proxyProgressEventHandler(_this, eventName, handler) {
+    return function(pe) {
+        new_pe = new ProgressEvent(eventName);
+        new_pe.target = _this;
+        handler.call(_this, new_pe);
+    }
+}
+
+function proxyEventProperty(_this, eventName) {
+    var eventPropertyName = "on" + eventName.toLowerCase();
+    var descriptor = {
+        configurable: true,
+        get: function() { return _this._proxy[eventPropertyName]; },
+        set: function(handler) {
+           _this._proxy[eventPropertyName]= proxyProgressEventHandler(_this, eventName, handler);
+        }
+    };
+    Object.defineProperty(_this, eventPropertyName, descriptor);
+}
+
 function safariSupportsBlobXHR(win) {
     var version = /(\d+)_/.exec(win.navigator.userAgent);
     return version && parseInt(version[1]) >= 7;
@@ -29,8 +49,12 @@ function chromeXHR() {
     this._proxy = new nativeXHR();
     this._response = null;
     this._overrideResponseType = "";
+    /* Proxy events */
+    ['loadstart','progress','abort','error','load','timeout','loadend'].forEach(function(elem) {
+        proxyEventProperty(that, elem);
+    });
     /* Proxy read/write properties */
-    ['timeout','withCredentials','onreadystatechange','onloadstart','onprogress','onabort','onerror','onload','ontimeout','onloadend'].forEach(function(elem) {
+    ['onreadystatechange','timeout','withCredentials'].forEach(function(elem) {
         proxyProperty(that, elem, true);
     });
     /* Proxy read-only properties */
@@ -79,6 +103,9 @@ function chromeXHR() {
 ['open','setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType'].forEach(function(elem) {
     chromeXHR.prototype[elem] = proxyMethod(elem);
 });
+chromeXHR.prototype.addEventListener = function(eventName, handler) {
+  this._proxy.addEventListener(eventName, proxyProgressEventHandler(this, eventName.toLowerCase(), handler));
+}
 
 if (!safariSupportsBlobXHR(window)) {
   exports.XMLHttpRequest = chromeXHR;
