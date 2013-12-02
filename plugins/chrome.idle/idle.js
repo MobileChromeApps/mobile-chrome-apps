@@ -20,8 +20,17 @@ var detectionIntervalInSeconds = 60;
 // This is a timeout used to trigger the idle state.
 var idleTimer = null;
 
+// This tracks the last time a touch event occurred.
+var lastInputDate = new Date();
+
 exports.queryState = function(_detectionIntervalInSeconds, callback) {
-    // TODO(maxw): Implement this!
+    var currentDate = new Date();
+    msSinceLastInput = currentDate.getTime() - lastInputDate.getTime();
+    if (msSinceLastInput >= _detectionIntervalInSeconds * 1000) {
+        callback(STATE_IDLE);
+    } else {
+        callback(STATE_ACTIVE);
+    }
 };
 
 exports.setDetectionInterval = function(_detectionIntervalInSeconds) {
@@ -62,6 +71,7 @@ var changeState = function(state) {
 
 // This function handles a touch event by resetting the idle timer and changing the state.
 var handleTouchEvent = function() {
+    lastInputDate = new Date();
     resetIdleTimer();
     changeState(STATE_ACTIVE);
 }

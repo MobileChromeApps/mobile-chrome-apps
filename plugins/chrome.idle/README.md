@@ -12,5 +12,5 @@ The API reference is [here](http://developer.chrome.com/apps/idle.html).
 
 ## Notes
 
-* The queryState function is not yet supported.
+* The concept of "idle" in this implementation refers to a lack of input to the **app**, not the device.
 
