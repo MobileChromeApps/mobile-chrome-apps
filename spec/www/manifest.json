@@ -52,12 +52,14 @@
   ],
   "default_locale": "fr",
   "oauth2": {
-    "client_id": "429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com",
+    "client_id": "545713885199-6h5bad5od8r86prjv5t2r8oudkivc5ph.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar.readonly",
       "https://www.googleapis.com/auth/drive",
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/youtube.readonly"
+      "https://www.googleapis.com/auth/youtube.readonly",
+      "https://www.googleapis.com/auth/gcm_for_chrome",
+      "https://www.googleapis.com/auth/gcm_for_chrome.readonly"
     ]
   },
   "incoming_sync_delay": {

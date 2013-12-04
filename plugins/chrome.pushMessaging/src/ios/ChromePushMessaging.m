@@ -24,10 +24,9 @@ NSMutableDictionary *pendingMessages;
 
 - (void) getRegistrationId:(CDVInvokedUrlCommand *)command; {
     self.callbackId = command.callbackId;
+    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Not Registered"];
     if(registrationToken) {
-       CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:token];
-    } else {
-       CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Not Registered"];
+       commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:registrationToken];
     }
     [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
 }
@@ -69,6 +68,7 @@ NSMutableDictionary *pendingMessages;
     NSString *message = @"Registration failed";
     NSString *errorMessage = (error) ? [NSString stringWithFormat:@"%@ - %@", message, [error localizedDescription]] : message;
     CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMessage];
+    [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
 }
 
 - (void)notificationReceived {
@@ -95,8 +95,8 @@ NSMutableDictionary *pendingMessages;
         else
             [jsonString appendFormat:@"%@:'%@',", key, [inDictionary objectForKey:key]];
     }
-    [jsonStr appendString:@"}"];
-    return [jsonString];
+    [jsonString appendString:@"}"];
+    return jsonString;
 }
 
 @end
