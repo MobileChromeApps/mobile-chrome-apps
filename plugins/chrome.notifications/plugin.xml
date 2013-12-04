@@ -34,4 +34,18 @@
         <receiver android:name="org.chromium.NotificationReceiver" />
     </config-file>
   </platform>
+
+  <platform name="ios">
+    <js-module src="notifications.js" name="notifications">
+      <clobbers target="chrome.notifications" />
+    </js-module>
+    <source-file src="src/ios/ChromeNotifications.m" />
+    <header-file src="src/ios/ChromeNotifications.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeNotifications">
+        <param name="ios-package" value="ChromeNotifications"/>
+      </feature>
+    </config-file>
+  </platform>
 </plugin>
