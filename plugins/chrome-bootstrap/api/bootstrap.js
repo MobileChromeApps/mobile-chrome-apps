@@ -14,6 +14,10 @@ window.onChromeCorsReady = function() {
   require('org.chromium.bootstrap.mobile.impl').init();
 }
 
+// Temporary fix for LocalFileSystem interface
+window.PERSISTENT = window.PERSISTENT | LocalFileSystem.PERSISTENT;
+window.TEMPORARY = window.TEMPORARY | LocalFileSystem.TEMPORARY;
+
 // Add a deviceready listener that initializes the Chrome wrapper.
 channel.onCordovaReady.subscribe(function() {
   // Delay bootstrap until all deviceready event dependancies fire, minus DOMContentLoaded, since that one is purposely being blocked by bootstrap
@@ -24,7 +28,7 @@ channel.onCordovaReady.subscribe(function() {
     window.origXMLHttpRequest = XMLHttpRequest;
     if (navigator.userAgent.indexOf("Android") > 0) {
       // On Android, open a background window to handle CORS requests
-      window.constructor.prototype.open.call(window, 'foo', 'bar');
+      window.constructor.prototype.open.call(window, '/cors-window', 'bar');
     } else {
       // On other platforms, continue with initialization
       window.onChromeCorsReady();

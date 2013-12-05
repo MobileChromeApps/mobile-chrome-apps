@@ -81,7 +81,7 @@ exports.getURL = function(subResource) {
   if (subResource.charAt(0) == '/') {
     subResource = subResource.slice(1);
   }
-  var prefix = location.protocol + "//" + location.pathname.replace(/[^\/]*$/, '');
+  var prefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, '');
   return prefix + subResource;
 };
 

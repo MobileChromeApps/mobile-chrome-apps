@@ -5,6 +5,14 @@
 var exports = module.exports;
 var exec = cordova.require('cordova/exec');
 
+function bigfail(errorMessage, callback) {
+  return function() {
+    console.log(errorMessage);
+    chrome.runtime.lastError = { 'message': errorMessage };
+    callback && callback();
+  }
+}
+
 function StorageChange(oldValue, newValue) {
     this.oldValue = oldValue;
     this.newValue = newValue;
@@ -18,7 +26,13 @@ function _jsonReplacer(key) {
     if (value && (typeof value == 'object' || typeof value == 'function')) {
         var typeName = Object.prototype.toString.call(value).slice(8, -1);
         if (typeName != 'Array' && typeName != 'Object') {
-            value = {};
+            // this is a hack. It will catch DOm things, but also custom classes
+            // if you have a better way to detect native DOM classes...
+            if(typeName.slice(0,4)=='HTML'){
+                value=undefined;
+            } else {
+                value = {};
+            }
         }
     }
     return value;
@@ -107,8 +121,8 @@ StorageArea.prototype.set = function(keyVals, callback) {
     }
     var self = this;
     var param = _scrubValues(keyVals);
-    var fail = callback && function() {
-        callback(-1);
+    var fail = callback && function(err) {
+        bigfail(err,callback());
     };
     var win;
     if(self._changedEvent && self._changedEvent.hasListeners()) {

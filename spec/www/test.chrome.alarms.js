@@ -3,11 +3,12 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.alarms', function(runningInBackground) {
-  var alarmEarlyTolerance = 30;
-  var alarmLateTolerance = 800;
-  var scheduledEarlyTolerance = 5;
-  var scheduledLateTolerance = 100;
-  var testTimeout = 3000;
+  var alarmEarlyTolerance = 100;
+  var alarmLateTolerance = 1000;
+  var scheduledEarlyTolerance = 100;
+  var scheduledLateTolerance = 1000;
+  var testTimeout = 5000;
+  var testInnerTimeout = 2000;
 
   it('should contain definitions', function() {
     expect(chrome.alarms).toBeDefined();
@@ -60,7 +61,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       });
 
       itWaitsForDone('when set only', function(done) {
-        var expectedFireTime = Date.now() + 10;
+        var expectedFireTime = Date.now() + 250;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
@@ -74,7 +75,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       }, testTimeout);
 
       itWaitsForDone('delayInMinutes set only', function(done) {
-        var expectedFireTime = Date.now() + 15;
+        var expectedFireTime = Date.now() + 250;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
@@ -90,11 +91,11 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           }, 0);
         });
 
-        chrome.alarms.create('myalarm', { delayInMinutes:0.00025 });
+        chrome.alarms.create('myalarm', { delayInMinutes:0.0042 });
       }, testTimeout);
 
       itWaitsForDone('periodInMinutes set only', function(done) {
-        var expectedFireTime = Date.now() + 15;
+        var expectedFireTime = Date.now() + 250;
         var callNumber = 0;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
@@ -102,43 +103,43 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.name).toBe('myalarm');
           expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, scheduledEarlyTolerance, scheduledLateTolerance);
-          expect(alarm.periodInMinutes).toBe(0.00025);
+          expect(alarm.periodInMinutes).toBe(0.0042);
           if (callNumber < 3) {
-            expectedFireTime += 15;
+            expectedFireTime += 250;
           } else {
             chrome.alarms.onAlarm.removeListener(alarmHandler);
             done();
           }
         });
 
-        chrome.alarms.create('myalarm', { periodInMinutes:0.00025 });
+        chrome.alarms.create('myalarm', { periodInMinutes:0.0042 });
       }, testTimeout);
 
       itWaitsForDone('periodInMinutes and delayInMinutes set', function(done) {
         var callNumber = 0;
-        var expectedFireTime = Date.now() + 30;
+        var expectedFireTime = Date.now() + 250;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           callNumber++;
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.name).toBe('myalarm');
           expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, scheduledEarlyTolerance, scheduledLateTolerance);
-          expect(alarm.periodInMinutes).toBe(0.00025);
+          expect(alarm.periodInMinutes).toBe(0.0042);
           if (callNumber < 3) {
-            expectedFireTime += 15;
+            expectedFireTime += 250;
           } else {
             chrome.alarms.onAlarm.removeListener(alarmHandler);
             done();
           }
         });
 
-        chrome.alarms.create('myalarm', { delayInMinutes:0.0005, periodInMinutes:0.00025 });
+        chrome.alarms.create('myalarm', { delayInMinutes:0.0042, periodInMinutes:0.0042 });
       }, testTimeout);
 
       itWaitsForDone('multiple alarms', function(done) {
-        var expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:Date.now() + 10 },
-                               alarm2:{ name:'alarm2', scheduledTime:Date.now() + 15 },
-                               alarm3:{ name:'alarm3', scheduledTime:Date.now() + 20 } };
+        var expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:Date.now() + 250 },
+                               alarm2:{ name:'alarm2', scheduledTime:Date.now() + 350 },
+                               alarm3:{ name:'alarm3', scheduledTime:Date.now() + 450 } };
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(alarm.name).toBe(expectedAlarms[alarm.name].name);
           expect(alarm.scheduledTime).toBeWithinDelta(expectedAlarms[alarm.name].scheduledTime, scheduledEarlyTolerance,
@@ -207,8 +208,8 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       var createAlarms;
 
       beforeEach(function() {
-        var inputAlarmInfo = { alarm1:{ when:Date.now() + 100 }, alarm2:{ delayInMinutes:0.001 },
-                               alarm3:{ periodInMinutes:0.002 } };
+        var inputAlarmInfo = { alarm1:{ when:Date.now() + 1000 }, alarm2:{ delayInMinutes:0.02 },
+                               alarm3:{ periodInMinutes:0.02 } };
         chrome.alarms.clearAll();
         chrome.alarms.getAll(function(alarms) {
           expect(alarms.length).toBe(0);
@@ -238,7 +239,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           expect(nameSpy).toHaveBeenCalledWith('alarm2');
           expect(nameSpy).not.toHaveBeenCalledWith('alarm3');
           done();
-        }, 200);
+        }, testInnerTimeout);
       }, testTimeout);
 
       itWaitsForDone('clear all', function(done) {
@@ -247,7 +248,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         setTimeout(function() {
           expect(nameSpy).not.toHaveBeenCalled();
           done();
-        }, 200 );
+        }, testInnerTimeout );
       }, testTimeout);
       
       itWaitsForDone('clear unknown name', function(done) {
@@ -258,7 +259,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           expect(nameSpy).toHaveBeenCalledWith('alarm2');
           expect(nameSpy).toHaveBeenCalledWith('alarm3');
           done();
-        }, 200);
+        }, testInnerTimeout);
       }, testTimeout);
     });
   });
