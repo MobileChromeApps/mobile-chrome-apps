@@ -1,14 +1,18 @@
-<?xml version='1.0' encoding='utf-8'?>
-<widget id="__APP_ID__" version="__APP_VERSION__" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns     = "http://www.w3.org/ns/widgets"
+        xmlns:cdv = "http://cordova.apache.org/ns/1.0"
+        id        = "__APP_ID__"
+        version   = "__APP_VERSION__">
     <name>__APP_NAME__</name>
+
     <description>
         __DESCRIPTION__
     </description>
+
     <author>
         __AUTHOR__
     </author>
+
     <content src="chrome-extension://__CHROME_APP_ID__/chromeapp.html" />
 __WHITELIST__
-    <preference name="fullscreen" value="true" />
-    <preference name="webviewbounce" value="false" />
 </widget>
