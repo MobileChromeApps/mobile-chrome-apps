@@ -24,9 +24,9 @@ module.exports = function(size) {
 
 /**
  * convert bytes into string.
- * 
+ *
  * @param {Number} b - bytes to convert
- * @return {String}i
+ * @return {String}
  * @api public
  */
 
@@ -35,5 +35,5 @@ function convert (b) {
   if (b >= gb) return (Math.round(b / gb * 100) / 100) + 'gb';
   if (b >= mb) return (Math.round(b / mb * 100) / 100) + 'mb';
   if (b >= kb) return (Math.round(b / kb * 100) / 100) + 'kb';
-  return b;
+  return b + 'b';
 }

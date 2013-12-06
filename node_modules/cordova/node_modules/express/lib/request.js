@@ -29,21 +29,21 @@ var req = exports = module.exports = {
  *
  *     req.get('Content-Type');
  *     // => "text/plain"
- *     
+ *
  *     req.get('content-type');
  *     // => "text/plain"
- *     
+ *
  *     req.get('Something');
  *     // => undefined
  *
  * Aliased as `req.header()`.
  *
  * @param {String} name
- * @return {String} 
+ * @return {String}
  * @api public
  */
 
-req.get = 
+req.get =
 req.header = function(name){
   switch (name = name.toLowerCase()) {
     case 'referer':
@@ -63,11 +63,12 @@ req.header = function(name){
  * The `type` value may be a single mime type string
  * such as "application/json", the extension name
  * such as "json", a comma-delimted list such as "json, html, text/plain",
+ * an argument list such as `"json", "html", "text/plain"`,
  * or an array `["json", "html", "text/plain"]`. When a list
  * or array is given the _best_ match, if any is returned.
  *
  * Examples:
- * 
+ *
  *     // Accept: text/html
  *     req.accepts('html');
  *     // => "html"
@@ -89,6 +90,7 @@ req.header = function(name){
  *
  *     // Accept: text/*;q=.5, application/json
  *     req.accepts(['html', 'json']);
+ *     req.accepts('html', 'json');
  *     req.accepts('html, json');
  *     // => "json"
  *
@@ -98,7 +100,20 @@ req.header = function(name){
  */
 
 req.accepts = function(type){
-  return utils.accepts(type, this.get('Accept'));
+  var args = arguments.length > 1 ? [].slice.apply(arguments) : type;
+  return utils.accepts(args, this.get('Accept'));
+};
+
+/**
+ * Check if the given `encoding` is accepted.
+ *
+ * @param {String} encoding
+ * @return {Boolean}
+ * @api public
+ */
+
+req.acceptsEncoding = function(encoding){
+  return !! ~this.acceptedEncodings.indexOf(encoding);
 };
 
 /**
@@ -113,7 +128,7 @@ req.accepts = function(type){
 req.acceptsCharset = function(charset){
   var accepted = this.acceptedCharsets;
   return accepted.length
-    ? ~accepted.indexOf(charset)
+    ? !! ~accepted.indexOf(charset)
     : true;
 };
 
@@ -129,7 +144,7 @@ req.acceptsCharset = function(charset){
 req.acceptsLanguage = function(lang){
   var accepted = this.acceptedLanguages;
   return accepted.length
-    ? ~accepted.indexOf(lang)
+    ? !! ~accepted.indexOf(lang)
     : true;
 };
 
@@ -158,6 +173,24 @@ req.range = function(size){
   if (!range) return;
   return parseRange(size, range);
 };
+
+/**
+ * Return an array of encodings.
+ *
+ * Examples:
+ *
+ *     ['gzip', 'deflate']
+ *
+ * @return {Array}
+ * @api public
+ */
+
+req.__defineGetter__('acceptedEncodings', function(){
+  var accept = this.get('Accept-Encoding');
+  return accept
+    ? accept.trim().split(/ *, */)
+    : [];
+});
 
 /**
  * Return an array of Accepted media types
@@ -202,7 +235,7 @@ req.__defineGetter__('acceptedLanguages', function(){
   var accept = this.get('Accept-Language');
   return accept
     ? utils
-      .parseQuality(accept)
+      .parseParams(accept)
       .map(function(obj){
         return obj.value;
       })
@@ -226,7 +259,7 @@ req.__defineGetter__('acceptedCharsets', function(){
   var accept = this.get('Accept-Charset');
   return accept
     ? utils
-      .parseQuality(accept)
+      .parseParams(accept)
       .map(function(obj){
         return obj.value;
       })
@@ -245,7 +278,7 @@ req.__defineGetter__('acceptedCharsets', function(){
  * the `connect.bodyParser()` middleware.
  *
  * @param {String} name
- * @param {Mixed} defaultValue
+ * @param {Mixed} [defaultValue]
  * @return {String}
  * @api public
  */
@@ -261,7 +294,7 @@ req.param = function(name, defaultValue){
 };
 
 /**
- * Check if the incoming request contains the "Content-Type" 
+ * Check if the incoming request contains the "Content-Type"
  * header field, and it contains the give mime `type`.
  *
  * Examples:
@@ -271,16 +304,16 @@ req.param = function(name, defaultValue){
  *      req.is('text/html');
  *      req.is('text/*');
  *      // => true
- *     
+ *
  *      // When Content-Type is application/json
  *      req.is('json');
  *      req.is('application/json');
  *      req.is('application/*');
  *      // => true
- *     
+ *
  *      req.is('html');
  *      // => false
- * 
+ *
  * @param {String} type
  * @return {Boolean}
  * @api public
@@ -303,7 +336,7 @@ req.is = function(type){
 
 /**
  * Return the protocol string "http" or "https"
- * when requested with TLS. When the "trust proxy" 
+ * when requested with TLS. When the "trust proxy"
  * setting is enabled the "X-Forwarded-Proto" header
  * field will be trusted. If you're running behind
  * a reverse proxy that supplies https for you this
@@ -315,11 +348,10 @@ req.is = function(type){
 
 req.__defineGetter__('protocol', function(){
   var trustProxy = this.app.get('trust proxy');
-  return this.connection.encrypted
-    ? 'https'
-    : trustProxy
-      ? (this.get('X-Forwarded-Proto') || 'http')
-      : 'http';
+  if (this.connection.encrypted) return 'https';
+  if (!trustProxy) return 'http';
+  var proto = this.get('X-Forwarded-Proto') || 'http';
+  return proto.split(/\s*,\s*/)[0];
 });
 
 /**
@@ -393,25 +425,32 @@ req.__defineGetter__('auth', function(){
   auth = parts[1];
 
   // credentials
-  auth = new Buffer(auth, 'base64').toString().split(':');
-  return { username: auth[0], password: auth[1] };
+  auth = new Buffer(auth, 'base64').toString().match(/^([^:]*):(.*)$/);
+  if (!auth) return;
+  return { username: auth[1], password: auth[2] };
 });
 
 /**
  * Return subdomains as an array.
  *
- * For example "tobi.ferrets.example.com"
- * would provide `["ferrets", "tobi"]`.
+ * Subdomains are the dot-separated parts of the host before the main domain of
+ * the app. By default, the domain of the app is assumed to be the last two
+ * parts of the host. This can be changed by setting "subdomain offset".
+ *
+ * For example, if the domain is "tobi.ferrets.example.com":
+ * If "subdomain offset" is not set, req.subdomains is `["ferrets", "tobi"]`.
+ * If "subdomain offset" is 3, req.subdomains is `["tobi"]`.
  *
  * @return {Array}
  * @api public
  */
 
 req.__defineGetter__('subdomains', function(){
-  return this.get('Host')
+  var offset = this.app.get('subdomain offset');
+  return (this.host || '')
     .split('.')
-    .slice(0, -2)
-    .reverse();
+    .reverse()
+    .slice(offset);
 });
 
 /**
@@ -433,7 +472,11 @@ req.__defineGetter__('path', function(){
  */
 
 req.__defineGetter__('host', function(){
-  return this.get('Host').split(':')[0];
+  var trustProxy = this.app.get('trust proxy');
+  var host = trustProxy && this.get('X-Forwarded-Host');
+  host = host || this.get('Host');
+  if (!host) return;
+  return host.split(':')[0];
 });
 
 /**
