@@ -18,28 +18,27 @@ Note: iOS development can only be done on OSX.
 * Ensure that the folder with `android` and `adb` commands are added to your `PATH`.
  * Note, you may have to run the `android` command and install platform-tools before you can add `adb` to your `PATH`.
 * Run the `android` tool, and use it to install the Android 4.2.2 SDK, and the Google Play Services APIs.
-* Update [Google Play Services](http://developer.android.com/google/play-services/setup.html#Install) with this command:
-
-        android update lib-project --target "android-17" --path path/to/android/sdk/extras/google/google_play_services/libproject/google-play-services_lib
 
 ### node.js
 
-* Install a _recent_ version of [node.js](http://nodejs.org) (Node 0.6.x, which ships with several Linux distributions, is too old)
+* Install a _recent_ version of [node.js](http://nodejs.org) (0.10+).
 
 ## Clone This Repository
 
-* Clone this repository.  Then run `mca.js init` to have it auto-install its dependencies.
+* Clone this repository.  Then run `./mca init` to have it auto-install its dependencies.
 
         git clone git://github.com/MobileChromeApps/mobile-chrome-apps.git
         cd mobile-chrome-apps
         ./mca init
+        # Optionally, to add global mca command into PATH:
+        npm link
 
 * On Windows, remove the "./" prefix from the last line.
-* Optionally, run `npm link` from within mobile-chrome-apps directory to set up a link (batch file on Windows) in the npm bin directory to have `mca` on your PATH.
+* The `npm link` step is optional, but will add `mca` command to a global PATH if you have npm (node package manager) set up correctly.
 
 ## Experiencing Hiccups?
 
-Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
+Please reach out to us at [mobile-chrome-apps@googlegroups.com](mailto:mobile-chrome-apps@googlegroups.com).
 
 ## Completed Successfully?
 

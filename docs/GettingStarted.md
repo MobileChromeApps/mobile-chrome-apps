@@ -8,11 +8,17 @@ Now that you have installed the Mobile Chrome Apps framework, lets use it to cre
 
 ### Step 1: Create a Project
 
-    mca create com.companyname.YourApp --source=path/to/ChromeApp
+Starting from scratch:
 
-* Don't create projects inside the `mobile-chrome-apps` directory.
-* `--source` flag is optional, if you leave it out, you will start with a HelloWorld template.
-* Currently, `--source` will create a _copy_ of your chrome app, so any changes will need to be synchronized manually.  (We do plan to support symlinks eventually.)
+    mca create com.companyname.YourApp
+
+Importing an existing desktop chrome app:
+
+    mca create com.companyname.YourApp --source=path/to/existing/ChromeApp
+
+* Currently, `--source` will create a _copy_ of your chrome app, so any changes will need to be synchronized manually.
+  * Support for symlinks is coming shortly.
+* Note: Don't create projects inside the `mobile-chrome-apps` directory, since that is a git repo which mca command will auto-update.
 
 ### Step 2: Open the Native App Template
 
@@ -30,8 +36,8 @@ The easiest way to build your app is through an IDE.
 * open Eclipse
 * From the menu, `File` -> `Import`
 * Chose `Android` > `Existing Android Code Into Workspace`.
-* Import `path/to/YourApp/platforms/android`.
-* Add the Google Play Services library [as outlined here](http://developer.android.com/google/play-services/setup.html).
+* Import from the path you just created with `mca`.
+    * You should expect to have two projects to import, one of which is `*-CordovaLib`
 
 ### Step 3: Build and run
 
@@ -56,7 +62,7 @@ You should be all set to build and run, but there are a few things to watch for.
 
 Your HTML, CSS and JS files live within the `www` directory.
 
-_Every time_ you change them, you _must_ run `./cordova prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
+_Every time_ you change them, you _must_ run `./mca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
 
 ## Experiencing Hiccups?

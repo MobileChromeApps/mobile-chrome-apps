@@ -7,22 +7,26 @@ This list tracks API support on mobile.
 _Current as of Sept 2013_.
 
 * [alarms](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.alarms)
-    * Fully working on Android.
-    * iOS - alarms will not fire when App is backgrounded
+    * Working on Android and iOS.
+    * Caveat: on iOS alarms only fire when app is active (foreground).
+* [fileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.fileSystem)
+    * Working on Android and iOS.
 * [i18n](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.i18n)
     * JS methods work (`chrome.i18n.getMessage()` and `chrome.i18n.getAcceptLanguages()`)
     * CSS placeholders not implemented
 * [identity](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.identity)
-    * Fully working on Android.
-    * iOS still a work-in-progress.
+    * Working on Android and iOS
+* [idle](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.idle)
+    * Working on Android and iOS.
 * [notifications](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.notifications)
-    * Android only
+    * Working on Android only
+* [power](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.power)
+    * Working on Android and iOS.
 * [socket](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.socket)
-    * Fully working on Android and iOS
-* [storage.local](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
-    * Fully working on Android and iOS
-* [storage.sync](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
-    * Works like storage.local (ie, storage works, but no sync)
+    * Working on Android and iOS
+* [storage](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
+    * local storage Working on Android and iOS
+    * sync storage does not sync, but works like storage.local
 * [syncFileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.syncFileSystem)
     * Alpha quality on iOS and Android.
 
@@ -31,11 +35,9 @@ _Current as of Sept 2013_.
 * bluetooth
 * commands
 * contextMenus
-* idle
 * mediaGalleries
 * notifications
 * permissions
-* power
 * pushMessaging
 * serial
 * tts
