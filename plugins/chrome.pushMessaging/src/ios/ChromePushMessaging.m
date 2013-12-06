@@ -73,30 +73,17 @@ NSMutableDictionary *pendingMessages;
 
 - (void)notificationReceived {
 
-    if (notificationMessage && self.callback) {
-       NSString *jsonStr = [self DictionaryToJson :notificationMessage ];
+    if (notificationMessage ) {
+       NSError *error;
+       NSData *jsonData = [NSJSONSerialization dataWithJSONObject:notificationMessage options:0 error:&error];
+       NSString *jsonStr = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
        NSLog(@"Msg: %@", jsonStr);
-       [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'%@'})", jsonStr]];
+       [self writeJavascript: [NSString stringWithFormat:@"chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'%@'})", jsonStr]];
 
        self.notificationMessage = nil;
     }
 }
 
-- (NSString*)DictionaryToJson:(NSDictionary *)inDictionary {
-    NSArray *keys = [inDictionary allKeys];
-    NSString *key;
-    NSMutableString *jsonString = [NSMutableString stringWithString:@"{"];
-
-    for (key in keys) {
-        id thisObject = [inDictionary objectForKey:key];
-
-        if ([thisObject isKindOfClass:[NSDictionary class]])
-            [jsonString appendString:[self DictionaryToJson:thisObject ]];
-        else
-            [jsonString appendFormat:@"%@:'%@',", key, [inDictionary objectForKey:key]];
-    }
-    [jsonString appendString:@"}"];
-    return jsonString;
-}
 
 @end
