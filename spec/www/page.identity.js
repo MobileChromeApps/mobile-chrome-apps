@@ -57,6 +57,22 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
     chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
   });
 
+  addButton('Revoke auth token', function() {
+    var onRevokeAuthTokenSuccess = function() {
+      chromespec.log('Token revoked.');
+    };
+
+    var onInitialGetAuthTokenSuccess = function(token) {
+      chromespec.log('Revoking token ' + token + '.');
+
+      // Revoke the token!
+      chrome.identity.revokeAuthToken({ token: token }, onRevokeAuthTokenSuccess);
+    };
+
+    // First, we need to get the existing auth token.
+    chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
+  });
+
   addButton('Get name via Google\'s User Info API', function() {
     hitEndpoint('https://www.googleapis.com/oauth2/v3/userinfo', function(response) {
       chromespec.log('Name: ' + response.name);
