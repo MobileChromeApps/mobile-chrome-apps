@@ -100,13 +100,14 @@ function chromeXHR() {
     });
 }
 /* Proxy methods */
-['open','setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType'].forEach(function(elem) {
+['open','setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType', 'addEventListener', 'removeEventListener'].forEach(function(elem) {
     chromeXHR.prototype[elem] = proxyMethod(elem);
 });
 chromeXHR.prototype.addEventListener = function(eventName, handler) {
   this._proxy.addEventListener(eventName, proxyProgressEventHandler(this, eventName.toLowerCase(), handler));
 }
 
+// Support was added in iOS7.
 if (!safariSupportsBlobXHR(window)) {
   exports.XMLHttpRequest = chromeXHR;
 }

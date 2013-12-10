@@ -129,7 +129,7 @@ function chromeXHR() {
     });
 }
 /* Proxy methods */
-['setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType'].forEach(function(elem) {
+['setRequestHeader','send','abort','getResponseHeader','getAllResponseHeaders','overrideMimeType', 'addEventListener', 'removeEventListener'].forEach(function(elem) {
     chromeXHR.prototype[elem] = proxyMethod(elem);
 });
 
