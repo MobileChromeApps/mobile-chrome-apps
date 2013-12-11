@@ -15,5 +15,15 @@
 
   <platform name="ios">
     <framework src="src/ios/GooglePlus.framework" custom="true" />
+    <framework src="AssetsLibrary.framework" />
+    <framework src="Foundation.framework" />
+    <framework src="CoreLocation.framework" />
+    <framework src="CoreMotion.framework" />
+    <framework src="CoreGraphics.framework" />
+    <framework src="CoreText.framework" />
+    <framework src="MediaPlayer.framework" />
+    <framework src="Security.framework" />
+    <framework src="SystemConfiguration.framework" />
+    <framework src="UIKit.framework" />
   </platform>
 </plugin>
