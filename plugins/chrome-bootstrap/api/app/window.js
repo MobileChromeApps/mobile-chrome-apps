@@ -78,6 +78,9 @@ function evalScripts(rootNode, afterFunc) {
       script.parentNode.replaceChild(replacement, script);
     } else {
       // Skip over inline scripts.
+      console.warn('Refused to execute inline script because it violates the following Content Security Policy directive: "default-src \'self\' chrome-extension-resource:"');
+      console.warn('Script contents:');
+      console.warn(script.textContent.slice(0, 100) + (script.textContent.length > 100 ? '<truncated>' : ''));
       onLoadCallback();
     }
   }
