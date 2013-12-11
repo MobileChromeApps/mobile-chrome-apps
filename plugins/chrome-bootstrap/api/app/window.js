@@ -67,7 +67,9 @@ function evalScripts(rootNode, afterFunc) {
     }
   }
   for (var i = 0, script; script = scripts[i]; ++i) {
-    if (script.src) {
+    if (script.type && !/text\/javascript/i.exec(script.type)) {
+      onLoadCallback();
+    } else if (script.src) {
       var replacement = doc.createElement('script');
       copyAttributes(script, replacement);
       replacement.onload = onLoadCallback;
