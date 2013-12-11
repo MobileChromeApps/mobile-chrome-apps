@@ -92,11 +92,6 @@ static void initialize_whitlist_dict() {
     return request;
 }
 
-+ (BOOL)requestIsCacheEquivalent:(NSURLRequest*)requestA toRequest:(NSURLRequest*)requestB
-{
-    return [[[requestA URL] resourceSpecifier] isEqualToString:[[requestB URL] resourceSpecifier]];
-}
-
 - (void)startLoading
 {
     NSURL *url = [[self request] URL];
@@ -109,7 +104,7 @@ static void initialize_whitlist_dict() {
         NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
         FILE *fp = fopen([path UTF8String], "r");
         if (fp) {
-            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
+            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{@"Cache-Control": @"no-cache"}];
             [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 
             char buf[32768];
