@@ -31,10 +31,10 @@
 
 // This class is used to check if Google Chrome is installed in the system and
 // to open a URL in Google Chrome either with or without a callback URL.
-@interface OpenInChromeController : NSObject
+@interface MCAOpenInChromeController : NSObject
 
-// Returns a shared instance of the OpenInChromeController.
-+ (OpenInChromeController *)sharedInstance;
+// Returns a shared instance of the MCAOpenInChromeController.
++ (MCAOpenInChromeController *)sharedInstance;
 
 // Returns YES if Google Chrome is installed in the user's system.
 - (BOOL)isChromeInstalled;

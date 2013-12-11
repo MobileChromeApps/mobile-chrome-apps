@@ -36,8 +36,6 @@ For iOS, first follow the instructions [here](https://developers.google.com/+/mo
 
 **Note:** Skip step 2, part 7; you will instead put your client id in your manifest (as shown in the "Updating Your Manifest" section).
 
-Next, in Xcode, click on the project in the left sidebar and navigate to the `Build Phases` tab.  In the `Compile Sources` section, remove `OpenInChromeController.m`.
-
 ## Updating Your Manifest
 
 Your manifest needs to be updated to include your client id and scopes.  In a Mobile Chrome App (ie. an app created using mca.js), this is done in manifest.json as follows:
