@@ -19,8 +19,6 @@
       <feature name="ChromeNavigation">
         <param name="android-package" value="org.chromium.ChromeNavigation"/>
         <param name="onload" value="true"/>
-        <url-filter value="http://" />
-        <url-filter value="https://" />
       </feature>
     </config-file>
   </platform>
