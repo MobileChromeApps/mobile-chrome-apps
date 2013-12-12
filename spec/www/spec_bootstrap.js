@@ -152,6 +152,7 @@ window.runningInBg = true;
       var wnd = w.contentWindow;
       chromespec.fgWnd = wnd;
       chromespec.fgDoc = wnd.document;
+      log('Foreground URL = ' + wnd.location.href);
       wnd.onload = onUiWindowLoad;
       wnd.jasmine = window.jasmine;
       wnd.chromespec = chromespec;
@@ -206,6 +207,7 @@ window.runningInBg = true;
   }
 
   log('App started. ID = ' + chrome.runtime.id);
+  log('Background URL = ' + location.href);
   chrome.app.runtime.onLaunched.addListener(startUpLogic);
 
   chromespec.changePage = changePage;
