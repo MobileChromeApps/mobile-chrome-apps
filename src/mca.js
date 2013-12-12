@@ -26,7 +26,6 @@
 /******************************************************************************/
 /******************************************************************************/
 
-if (typeof WScript != 'undefined') {
 function wscriptWrapper() {
   var shell = WScript.CreateObject("WScript.Shell");
   var args = [];
@@ -44,7 +43,8 @@ function wscriptWrapper() {
   }
   WScript.Quit(ret);
 }
-wscriptWrapper();
+if (typeof WScript != 'undefined') {
+  wscriptWrapper();
 }
 
 /******************************************************************************/
@@ -605,7 +605,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       if (isWindows) {
         fs.writeFileSync('mca.cmd', '"' + process.argv[0] + '" "' + path.join(mcaRoot, 'mca') + '" %*');
       } else {
-        fs.symlinkSync(path.join(mcaRoot, 'mca'), 'mca')
+        fs.symlinkSync(path.join(mcaRoot, 'mca'), 'mca');
       }
       callback();
     }
