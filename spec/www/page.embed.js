@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 chromespec.registerSubPage('chrome.embed', function(rootEl) {
+  var wURL = window.URL || window.webkitURL;
+
   function addButton(name, func) {
     var button = chromespec.createButton(name, func);
     rootEl.appendChild(button);
@@ -15,7 +17,7 @@ chromespec.registerSubPage('chrome.embed', function(rootEl) {
     xhr.onload = function(e) {
       var doc = chromespec.fgDoc;
       var img = doc.createElement('img');
-      img.src = window.webkitURL.createObjectURL(this.response);
+      img.src = wURL.createObjectURL(this.response);
       doc.getElementById('page-container').appendChild(img);
     };
     xhr.send();
@@ -28,7 +30,7 @@ chromespec.registerSubPage('chrome.embed', function(rootEl) {
     xhr.addEventListener('load', function(e) {
       var doc = chromespec.fgDoc;
       var img = doc.createElement('img');
-      img.src = window.webkitURL.createObjectURL(this.response);
+      img.src = wURL.createObjectURL(this.response);
       doc.getElementById('page-container').appendChild(img);
     });
     xhr.send();
