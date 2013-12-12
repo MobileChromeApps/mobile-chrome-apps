@@ -50,9 +50,9 @@ function proxyEventProperty(_this, eventName) {
         configurable: true,
         get: function() {
             if (_this._activeProxy) {
-                 return _this._activeProxy[propertyName];
+                 return _this._activeProxy[eventPropertyName];
             } else {
-                 return _this._nativeProxy[propertyName];
+                 return _this._nativeProxy[eventPropertyName];
             }
         },
         set: function(handler) {
