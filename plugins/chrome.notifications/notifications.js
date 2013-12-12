@@ -9,7 +9,7 @@ var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
 var bootstrap = null;
 try {
-    bootstrap = require('org.chromium-app-bootstrap.bootstrap');
+    bootstrap = require('org.chromium.bootstrap');
 } catch (e) { }
 
 var notifications = Object.create(null);
