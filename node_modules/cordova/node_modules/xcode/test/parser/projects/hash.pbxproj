@@ -1,9 +1,0 @@
-// !$*UTF8*$!
-{
-    archiveVersion = 1;
-    classes = {
-    };
-    objectVersion = 45;
-    nonObject = 29B97313FDCFA39411CA2CEF;
-    rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
-}
