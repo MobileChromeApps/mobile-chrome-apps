@@ -60,6 +60,7 @@ var path = require('path');
 var ncp = require('ncp');
 var optimist = require('optimist');
 var Crypto = require('cryptojs').Crypto;
+var et = require('elementtree');
 
 // Globals
 var commandLineFlags = null;
@@ -265,6 +266,58 @@ function readManifest(manifestFilename, callback) {
       fatal('Unable to parse manifest ' + manifestFilename);
     }
   });
+}
+
+function mapAppKeyToAppId(key) {
+  var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
+               '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
+  return (Crypto.SHA256(new Buffer(key, 'base64'))
+          .substr(0,32)
+          .replace(/[a-f0-9]/g, function(char) {
+             return mpdec[char];
+          }));
+}
+
+function parseManifest(manifest, callback) {
+  var permissions = [],
+      chromeAppId,
+      whitelist = [],
+      plugins = [],
+      i;
+  if (manifest && manifest.permissions) {
+    for (i = 0; i < manifest.permissions.length; ++i) {
+      if (typeof manifest.permissions[i] === "string") {
+        if (manifest.permissions[i].indexOf('://') > -1) {
+          // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
+          if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
+            manifest.permissions[i] += "*";
+          }
+          whitelist.push(manifest.permissions[i]);
+        } else if (manifest.permissions[i] === "<all_urls>") {
+          whitelist.push("*");
+        } else {
+          permissions.push(manifest.permissions[i]);
+        }
+      } else {
+        permissions = permissions.concat(Object.keys(manifest.permissions[i]));
+      }
+    }
+  }
+  for (i = 0; i < permissions.length; i++) {
+    var pluginsForPermission = PLUGIN_MAP[permissions[i]];
+    if (pluginsForPermission) {
+      for (var j = 0; j < pluginsForPermission.length; ++j) {
+        plugins.push(pluginsForPermission[j]);
+      }
+    }
+  }
+  if (manifest.key) {
+    chromeAppId = mapAppKeyToAppId(manifest.key);
+  } else {
+    // All zeroes -- should we use rand() here instead?
+    chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  }
+  callback(chromeAppId, whitelist, plugins);
 }
 
 /******************************************************************************/
@@ -515,52 +568,16 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       return callback();
     }
     readManifest(manifestFile, function(manifestData) {
-      manifest = manifestData;
-      var permissions = [];
-      if (manifest && manifest.permissions) {
-        for (var i = 0; i < manifest.permissions.length; ++i) {
-          if (typeof manifest.permissions[i] === "string") {
-            if (manifest.permissions[i].indexOf('://') > -1) {
-              // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
-              if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
-                manifest.permissions[i] += "*";
-              }
-              whitelist.push(manifest.permissions[i]);
-            } else if (manifest.permissions[i] === "<all_urls>") {
-              whitelist.push("*");
-            } else {
-              permissions.push(manifest.permissions[i]);
-            }
-          } else {
-            permissions = permissions.concat(Object.keys(manifest.permissions[i]));
-          }
+      parseManifest(manifestData, function(chromeAppIdFromManifest, whitelistFromManifest, plugins) {
+        // Set globals
+        manifest = manifestData;
+        chromeAppId = chromeAppIdFromManifest;
+        whitelist = whitelistFromManifest;
+        for (var j = 0; j < plugins.length; ++j) {
+          ACTIVE_PLUGINS.push(plugins[j]);
         }
-      }
-      for (var i = 0; i < permissions.length; i++) {
-        var plugins = PLUGIN_MAP[permissions[i]];
-        if (plugins) {
-          for (var j = 0; j < plugins.length; ++j) {
-            ACTIVE_PLUGINS.push(plugins[j]);
-          }
-        }
-      }
-      if (manifest.key) {
-        // stub for testing
-        function mapAppKeyToAppId(key) {
-          var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
-                       '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
-          return (Crypto.SHA256(new Buffer(key, 'base64'))
-                  .substr(0,32)
-                  .replace(/[a-f0-9]/g, function(char) {
-                     return mpdec[char];
-                  }));
-        }
-        chromeAppId = mapAppKeyToAppId(manifest.key);
-      } else {
-        // All zeroes -- should we use rand() here instead?
-        chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-      }
-      callback();
+        callback();
+      });
     });
   }
 
@@ -594,10 +611,13 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }
 
     function afterAllCommands() {
-      // Create a script that runs update.js.
+      // Create scripts that update the cordova app on prepare
       if (isWindows) {
+        fs.writeFileSync('.cordova/hooks/before_prepare/mca-scan-manifest.cmd', 'cd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" scan-manifest');
         fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'cd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" update-app');
       } else {
+        fs.writeFileSync('.cordova/hooks/before_prepare/mca-scan-manifest.sh', '#!/bin/sh\ncd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" scan-manifest');
+        fs.chmodSync('.cordova/hooks/before_prepare/mca-scan-manifest.sh', '777');
         fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\ncd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" update-app');
         fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
       }
@@ -694,6 +714,60 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 /******************************************************************************/
 /******************************************************************************/
 // Update App
+
+function scanManifestCommand(appId) {
+  /* Pre-create, pre-prepare manifest check and project munger */
+  function readManifestStep(callback) {
+    var manifestFile = path.join('www', 'manifest.json');
+    if (!fs.existsSync(manifestFile)) {
+      return callback();
+    }
+    readManifest(manifestFile, function(manifest) {
+      parseManifest(manifest, function(chromeAppId, whitelist, plugins) {
+        console.log("Writing config.xml");
+        fs.readFile(path.join('www', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+          if (err) {
+            console.log(err);
+          } else {
+            var tree = et.parse(data);
+
+            var widget = tree.getroot();
+            if (widget.tag == 'widget') {
+              widget.attrib.id = appId;
+              widget.attrib.version = manifest.version;
+            }
+
+            var name = tree.findall('./name');
+            if (name.length) name[0].text = manifest.name;
+
+            var description = tree.findall('./description');
+            if (description.length) description[0].text = manifest.description;
+
+            var author = tree.findall('./author');
+            if (author.length) author[0].text = manifest.author;
+
+            var content = tree.findall('./content');
+            if (content.length) content[0].attrib.src = "chrome-extension://" + chromeAppId + "/chromeapp.html";
+
+            var access = widget.findall('access');
+            access.forEach(function(elem, index) {
+              /* The useless '0' parameter here will be removed with elementtree 0.1.6 */
+              widget.remove(0, elem);
+            });
+            whitelist.forEach(function(pattern, index) {
+              var tag = et.SubElement(widget, 'access');
+              tag.attrib.origin = pattern;
+            });
+
+            var configfile = et.tostring(tree.getroot());
+            fs.writeFile(path.join('www', 'config.xml'), configfile, callback);
+          }
+        });
+      });
+    });
+  }
+  eventQueue.push(readManifestStep);
+}
 
 function updateAppCommand() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
@@ -875,6 +949,9 @@ function main() {
 
   var commandActions = {
     // Secret command used by our prepare hook.
+    'scan-manifest': function() {
+      scanManifestCommand(appId);
+    },
     'update-app': function() {
       updateAppCommand();
     },
