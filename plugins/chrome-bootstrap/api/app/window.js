@@ -4,6 +4,7 @@
 
 var Event = require('org.chromium.common.events');
 var mobile = require('org.chromium.bootstrap.mobile.impl');
+var runtime = require('org.chromium.runtime.runtime');
 var ChromeExtensionURLs = require('org.chromium.bootstrap.helpers.ChromeExtensionURLs');
 
 // The AppWindow created by chrome.app.window.create.
@@ -89,17 +90,15 @@ function evalScripts(rootNode, afterFunc) {
 }
 
 function rewritePage(pageContent, filePath) {
-  var fgBody = mobile.fgWindow.document.body;
+  history.replaceState(null, null, runtime.getURL(filePath));
+
+  var fgBody = document.body;
   var fgHead = fgBody.previousElementSibling;
 
   // fgHead.innerHTML causes a DOMException on Android 2.3.
   while (fgHead.lastChild) {
     fgHead.removeChild(fgHead.lastChild);
   }
-
-  mobile.fgWindow.history &&
-    mobile.fgWindow.history.replaceState &&
-      mobile.fgWindow.history.replaceState(null, null, filePath);
 
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {
@@ -146,17 +145,16 @@ exports.create = function(filePath, options, callback) {
     return;
   }
   createdAppWindow = new AppWindow();
-  var xhr = new origXMLHttpRequest();
+  // Use background page's XHR so that relative URLs are relative to it.
+  var xhr = new mobile.bgWindow.XMLHttpRequest();
   xhr.open('GET', filePath, true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-      // Call the callback before the page contents loads.
-      if (callback) {
-        callback(createdAppWindow);
-      }
-      var pageContent = xhr.responseText || 'Page load failed.';
-      rewritePage(pageContent, filePath);
+  xhr.onloadend = function() {
+    // Call the callback before the page contents loads.
+    if (callback) {
+      callback(createdAppWindow);
     }
+    var pageContent = xhr.responseText || 'Page load failed.';
+    rewritePage(pageContent, filePath);
   };
   xhr.send();
 };

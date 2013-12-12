@@ -46,11 +46,10 @@ exports.onSuspendCanceled.addListener = function(f) {
 
 exports.getManifest = function() {
   if (typeof manifestJson == 'undefined') {
-    // May need to use origXMLHttpRequest here to access file w/o whitelist
-    var xhr = new (window.origXMLHttpRequest || XMLHttpRequest)();
+    var xhr = new XMLHttpRequest();
     xhr.open('GET', 'manifest.json', false /* sync */);
     xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
+    if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
       // Don't use JSON.parse, since it fails on comments.
       manifestJson = eval('(' + xhr.responseText + ')');
     } else {
@@ -85,8 +84,10 @@ exports.getURL = function(subResource) {
   return 'chrome-extension://' + getAppId() + '/' + subResource;
 };
 
+var origLocation = location.href;
 exports.reload = function() {
-  location="chromeapp.html";
+  history.replaceState(null, null, origLocation);
+  location.reload();
 };
 
 var cachedAppId = null;

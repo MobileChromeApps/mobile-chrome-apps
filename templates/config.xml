@@ -13,6 +13,7 @@
         __AUTHOR__
     </author>
 
-    <content src="chrome-extension://__CHROME_APP_ID__/chromeapp.html" />
+    <preference name="chrome-app-id" value="__CHROME_APP_ID__" />
+    <content src="chromeapp.html" />
 __WHITELIST__
 </widget>

@@ -16,15 +16,6 @@
 @interface ChromeURLProtocol : NSURLProtocol
 @end
 
-@interface ChromeAppCORSURLProtocol : NSURLProtocol {
-    NSURLConnection *proxyConnection;
-    NSString *originalOrigin;
-    NSString *CORSRequestHeaders;
-    NSString *CORSRequestMethod;
-    BOOL isRequestAuthenticated;
-}
-@end
-
 static NSMutableDictionary *whitelists;
 
 static ChromeURLProtocol *outstandingDelayRequest;
@@ -44,7 +35,6 @@ static void initialize_whitlist_dict() {
 {
     self = [super initWithWebView:theWebView];
     if (self) {
-        [NSURLProtocol registerClass:[ChromeAppCORSURLProtocol class]];
         [NSURLProtocol registerClass:[ChromeURLProtocol class]];
 
         pathPrefix = [[NSBundle mainBundle] pathForResource:@"chromeapp.html" ofType:@"" inDirectory:@"www"];
@@ -131,74 +121,3 @@ static void initialize_whitlist_dict() {
 
 @end
 
-#pragma mark ChromeAppCORSURLProtocol
-
-@implementation ChromeAppCORSURLProtocol
-
-+ (BOOL)canInitWithRequest:(NSURLRequest*)request
-{
-    NSURL* url = [request URL];
-    if ([[[url scheme] lowercaseString] isEqualToString:@"http"] || [[[url scheme] lowercaseString] isEqualToString:@"https"]) {
-        if ([[request valueForHTTPHeaderField:@"Origin"] length] > 0) {
-            CDVPlugin *plugin = [whitelists valueForKey:@"plugin"];
-            return [plugin.commandDelegate URLIsWhitelisted:url];
-        }
-    }
-    return NO;
-}
-
-+ (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
-{
-    return request;
-}
-
-- (void)startLoading
-{
-    NSMutableURLRequest* newRequest = [[self request] mutableCopy];
-    originalOrigin = [[self request] valueForHTTPHeaderField:@"Origin"];
-    isRequestAuthenticated = [[self request] valueForHTTPHeaderField:@"Authorization"] != nil;
-    CORSRequestHeaders = [[self request] valueForHTTPHeaderField:@"Access-Control-Request-Headers"];
-    CORSRequestMethod = [[self request] valueForHTTPHeaderField:@"Access-Control-Request-Method"];
-    [newRequest setValue:nil forHTTPHeaderField:@"Origin"];
-    proxyConnection = [[NSURLConnection alloc] initWithRequest:newRequest delegate:self];
-}
-
-- (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response
-{
-    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-        NSHTTPURLResponse *hresponse = (NSHTTPURLResponse *)response;
-        NSMutableDictionary *headers = [[hresponse allHeaderFields] mutableCopy];
-        if (isRequestAuthenticated || [headers valueForKey:@"WWW-Authenticate"] != nil ||
-        CORSRequestHeaders != nil) {
-            [headers setValue:originalOrigin forKey:@"Access-Control-Allow-Origin"];
-            [headers setValue:@"true" forKey:@"Access-Control-Allow-Credentials"];
-            if (CORSRequestHeaders != nil) {
-                [headers setValue:CORSRequestHeaders forKey:@"Access-Control-Allow-Headers"];
-            }
-            if (CORSRequestMethod != nil) {
-              [headers setValue:CORSRequestMethod forKey:@"Access-Control-Allow-Methods"];
-            }
-        } else {
-            [headers setValue:@"*" forKey:@"Access-Control-Allow-Origin"];
-        }
-        NSHTTPURLResponse *newResponse = [[NSHTTPURLResponse alloc]initWithURL:[hresponse URL] statusCode:[hresponse statusCode] HTTPVersion:@"HTTP/1.1" headerFields:headers];
-        [[self client] URLProtocol:self didReceiveResponse:newResponse cacheStoragePolicy:NSURLCacheStorageAllowed];
-    }
-}
-
-- (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
-{
-    [[self client] URLProtocol:self didLoadData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection*)connection
-{
-    [[self client] URLProtocolDidFinishLoading:self];
-}
-
-- (void)stopLoading
-{
-    proxyConnection = nil;
-}
-
-@end

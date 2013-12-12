@@ -41,7 +41,8 @@ exports.bgInit = function(bgWnd) {
   require('cordova/modulemapper').mapModules(bgWnd.window);
 
   bgWnd.navigator = navigator;
-  bgWnd.XMLHttpRequest = XMLHttpRequest;
+  // Need this to have XHR proxies work, but will break relative URLs if fgWnd and bgWnd are at different paths.
+  // bgWnd.XMLHttpRequest = XMLHttpRequest;
   bgWnd.chrome = createBgChrome();
   exports.fgWindow.opener = exports.bgWindow;
 
@@ -100,6 +101,9 @@ exports.bgInit = function(bgWnd) {
 
     });
   });
+
+
+  bgWnd.history.replaceState(null, null, runtime.getURL('_generated_background_page.html'));
 
   var scripts = manifestJson.app.background.scripts;
   var toWrite = '';
