@@ -94,7 +94,10 @@ var PLUGIN_MAP = {
   'fileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
                  path.join(mcaRoot, 'chrome-cordova', 'plugins', 'fileChooser')],
   'identity': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'idle': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.idle')],
   'notifications': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.notifications')],
+  'power': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.power')],
+  'pushMessaging': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.pushMessaging')],
   'socket': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.socket')],
   'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
 };
