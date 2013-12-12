@@ -90,8 +90,6 @@ function evalScripts(rootNode, afterFunc) {
 }
 
 function rewritePage(pageContent, filePath) {
-  history.replaceState(null, null, runtime.getURL(filePath));
-
   var fgBody = document.body;
   var fgHead = fgBody.previousElementSibling;
 
@@ -148,7 +146,10 @@ exports.create = function(filePath, options, callback) {
   // Use background page's XHR so that relative URLs are relative to it.
   var xhr = new mobile.bgWindow.XMLHttpRequest();
   xhr.open('GET', filePath, true);
-  xhr.onloadend = function() {
+  // Android pre KK doesn't support onloadend.
+  xhr.onload = xhr.onerror = function() {
+    // Change the page URL before the callback.
+    history.replaceState(null, null, runtime.getURL(filePath));
     // Call the callback before the page contents loads.
     if (callback) {
       callback(createdAppWindow);

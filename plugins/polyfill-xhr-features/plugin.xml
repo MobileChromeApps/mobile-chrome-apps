@@ -13,12 +13,6 @@
 
   <name>XHR with additional features</name>
 
-  <platform name="android">
-    <js-module src="androidXHR.js" name="xhr-polyfill">
-      <merges target="window" />
-    </js-module>
-  </platform>
-
   <platform name="ios">
     <js-module src="iosXHR.js" name="xhr-polyfill">
       <merges target="window" />

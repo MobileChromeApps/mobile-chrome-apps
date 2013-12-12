@@ -22,12 +22,6 @@ channel.onCordovaReady.subscribe(function() {
   channel.join(function() {
     // Save the original XHR object; we may need it during bootstrap
     window.origXMLHttpRequest = XMLHttpRequest;
-    if (navigator.userAgent.indexOf("Android") > 0) {
-      // On Android, open a background window to handle CORS requests
-      window.constructor.prototype.open.call(window, '/cors-window', 'bar');
-    } else {
-      // On other platforms, continue with initialization
-      window.onChromeCorsReady();
-    }
+    window.onChromeCorsReady();
   }, channelsToWaitFor);
 });
