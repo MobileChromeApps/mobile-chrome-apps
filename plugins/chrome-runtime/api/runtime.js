@@ -76,13 +76,13 @@ exports.getBackgroundPage = function(callback) {
   }, 0);
 };
 
+// Returns a URL relative to the root of the project.
 exports.getURL = function(subResource) {
   argscheck.checkArgs('s', 'chrome.runtime.getURL', arguments);
   if (subResource.charAt(0) == '/') {
     subResource = subResource.slice(1);
   }
-  var prefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, '');
-  return prefix + subResource;
+  return 'chrome-extension://' + getAppId() + '/' + subResource;
 };
 
 exports.reload = function() {
