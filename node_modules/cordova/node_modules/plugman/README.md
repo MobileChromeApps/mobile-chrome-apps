@@ -25,14 +25,19 @@ You must have `git` on your PATH to be able to install plugins directly from rem
 ## Supported Platforms
 
 * iOS
+* Amazon Fire OS
 * Android
 * BlackBerry 10
 * Windows Phone (7+8)
 
 ## Command Line Usage
+    plugman help
 
-    plugman install --platform <ios|android|blackberry10|wp7|wp8> --project <directory> --plugin <name|url|path> [--plugins_dir <directory>] [--www <directory>] [--variable <name>=<value> [--variable <name>=<value> ...]]
-    plugman uninstall --platform <ios|android|blackberr10|wp7|wp8> --project <directory> --plugin <id> [--www <directory>] [--plugins_dir <directory>]
+* Displays all available plugman commands
+
+
+    plugman install --platform <ios|amazon-fireos|android|blackberry10|wp7|wp8> --project <directory> --plugin <name|url|path> [--plugins_dir <directory>] [--www <directory>] [--variable <name>=<value> [--variable <name>=<value> ...]]
+    plugman uninstall --platform <ios|amazon-fireos|android|blackberr10|wp7|wp8> --project <directory> --plugin <id> [--www <directory>] [--plugins_dir <directory>]
 
 * Using minimum parameters, installs a plugin into a cordova project. You must specify a platform and cordova project location for that platform. You also must specify a plugin, with the different `--plugin` parameter forms being:
   * `name`: The directory name where the plugin contents exist. This must be an existing directory under the `--plugins_dir` path (see below for more info) or a plugin in the Cordova registry.
@@ -40,13 +45,25 @@ You must have `git` on your PATH to be able to install plugins directly from rem
   * `path`: A path to a directory containing a valid plugin which includes a `plugin.xml` file. This path's contents will be copied into the `--plugins_dir`.
 * `--uninstall`: Uninstalls an already-`--install`'ed plugin from a cordova project. Specify the plugin ID.
 
-Other parameters: 
+Other parameters:
 
 * `--plugins_dir` defaults to `<project>/cordova/plugins`, but can be any directory containing a subdirectory for each fetched plugin.
 * `--www` defaults to the project's `www` folder location, but can be any directory that is to be used as cordova project application web assets.
 * `--variable` allows to specify certain variables at install time, necessary for certain plugins requiring API keys or other custom, user-defined parameters. Please see the [plugin specification](plugin_spec.md) for more information.
 
+
+    plugman search <plugin keywords>
+
+* Search the [Plugin registry](http://plugins.cordova.io) for plugin id's that match the given space separated list of keywords.
+
+
+    plugman config set registry <url-to-registry>
+    plugman config get registry
+
+* Get or set the URL of the current plugin registry that plugman is using. Generally you should leave this set at http://registry.cordova.io unless you want to use a third party plugin registry.
+
 ## Node Module Usage
+This section details how to consume Plugman as a node module and is only for Cordova tool authors and other hackers. You should not need to read this section if you are just using Plugman to manage a Cordova project.
 
     node
     > require('plugman')
@@ -65,12 +82,12 @@ Other parameters:
 
 Installs a plugin into a specified cordova project of a specified platform.
 
- * `platform`: one of `android`, `ios`, `blackberry10`, `wp7` or `wp8`
+ * `platform`: one of `amazon-fireos`, `android`, `ios`, `blackberry10`, `wp7` or `wp8`
  * `project_dir`: path to an instance of the above specified platform's cordova project
  * `id`: a string representing the `id` of the plugin, a path to a cordova plugin with a valid `plugin.xml` file, or an `https://` or `git://` url to a git repository of a valid cordova plugin or a plugin published to the Cordova registry
  * `plugins_dir`: path to directory where plugins will be stored, defaults to `<project_dir>/cordova/plugins`
  * `subdir`: subdirectory within the plugin directory to consider as plugin directory root, defaults to `.`
- * `cli_variables`: an object mapping cordova plugin specification variable namess (see [plugin specification](plugin_spec.md)) to values 
+ * `cli_variables`: an object mapping cordova plugin specification variable namess (see [plugin specification](plugin_spec.md)) to values
  * `www_dir`: path to directory where web assets are to be copied to, defaults to the specified project directory's `www` dir (dependent on platform)
  * `callback`: callback to invoke once complete. If specified, will pass in an error object as a first parameter if the action failed. If not and an error occurs, `plugman` will throw the error
 
@@ -80,12 +97,12 @@ Installs a plugin into a specified cordova project of a specified platform.
 
 Uninstalls a previously-installed cordova plugin from a specified cordova project of a specified platform.
 
- * `platform`: one of `android`, `ios`, `blackberry10`, `wp7` or `wp8`
+ * `platform`: one of `amazon-fireos`, `android`, `ios`, `blackberry10`, `wp7` or `wp8`
  * `project_dir`: path to an instance of the above specified platform's cordova project
  * `id`: a string representing the `id` of the plugin
  * `plugins_dir`: path to directory where plugins are stored, defaults to `<project_dir>/cordova/plugins`
  * `subdir`: subdirectory within the plugin directory to consider as plugin directory root, defaults to `.`
- * `cli_variables`: an object mapping cordova plugin specification variable namess (see [plugin specification](plugin_spec.md)) to values 
+ * `cli_variables`: an object mapping cordova plugin specification variable namess (see [plugin specification](plugin_spec.md)) to values
  * `www_dir`: path to directory where web assets are to be copied to, defaults to the specified project directory's `www` dir (dependent on platform)
  * `callback`: callback to invoke once complete. If specified, will pass in an error object as a first parameter if the action failed. If not and an error occurs, `plugman` will throw the error
 
@@ -109,7 +126,7 @@ Finalizes plugin installation by making configuration file changes and setting u
     module.exports = function handlePrepare(project_dir, platform, plugins_dir) {
 
  * `project_dir`: path to an instance of the above specified platform's cordova project
- * `platform`: one of `android`, `ios`, `blackberry10`, `wp7` or `wp8`
+ * `platform`: one of `amazon-fireos`, `android`, `ios`, `blackberry10`, `wp7` or `wp8`
  * `plugins_dir`: path housing all plugins used in this project
 
 ## Registry related actions
@@ -141,7 +158,7 @@ Searches plugins in the registry. `search_opts` is an array of keywords
 ### `config` method
 
 Configures registry settings. `params` is an array that describes the action
-    /* 
+    /*
     * var params = ['get', 'registry'];
     * var params = ['set', 'registry', 'http://registry.cordova.io'];
     * module.exports = function(params, callback) {

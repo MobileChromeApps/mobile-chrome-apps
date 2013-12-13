@@ -224,8 +224,11 @@ describe('windows8 project parser', function() {
             var config, www, overrides, staging, svn;
             beforeEach(function() {
                 config = spyOn(parser, 'update_from_config');
+                www = spyOn(parser, 'update_www');
+                www = spyOn(parser, 'update_jsproj');
                 staging = spyOn(parser, 'update_staging');
                 svn = spyOn(util, 'deleteSvnFolders');
+                exists.andReturn(false);
             });
             it('should call update_from_config', function() {
                 parser.update_project();
@@ -238,13 +241,15 @@ describe('windows8 project parser', function() {
                     expect(err).toEqual(err);
                 });
             });
-            it('should call update_staging', function() {
-                parser.update_project();
-                expect(staging).toHaveBeenCalled();
+            it('should call update_staging', function(done) {
+                wrapper(parser.update_project(), done, function() {
+                    expect(staging).toHaveBeenCalled();
+                });
             });
-            it('should call deleteSvnFolders', function() {
-                parser.update_project();
-                expect(svn).toHaveBeenCalled();
+            it('should call deleteSvnFolders', function(done) {
+                wrapper(parser.update_project(), done, function() {
+                    expect(svn).toHaveBeenCalled();
+                });
             });
         });
     });

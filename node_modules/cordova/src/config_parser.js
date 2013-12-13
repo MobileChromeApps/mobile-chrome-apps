@@ -22,7 +22,11 @@ var et = require('elementtree'),
 
 function config_parser(path) {
     this.path = path;
-    this.doc = xml.parseElementtreeSync(path);
+    try {
+        this.doc = xml.parseElementtreeSync(path);
+    } catch (e) {
+        throw new Error("Parsing "+path+" failed:\n"+e.message);
+    }
     this.access = new access(this);
     this.preference = new preference(this);
 }

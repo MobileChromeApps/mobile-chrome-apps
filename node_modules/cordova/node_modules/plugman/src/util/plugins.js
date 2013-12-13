@@ -40,11 +40,11 @@ module.exports = {
 
         shell.rm('-rf', tmp_dir);
 
-        var cmd = util.format('git clone "%s" "%s"', plugin_git_url, path.basename(tmp_dir));
+        var cmd = util.format('git clone "%s" "%s"', plugin_git_url, tmp_dir);
         require('../../plugman').emit('verbose', 'Fetching plugin via git-clone command: ' + cmd);
         var d = Q.defer();
 
-        child_process.exec(cmd, { cwd: path.dirname(tmp_dir) }, function(err, stdout, stderr) {
+        child_process.exec(cmd, function(err, stdout, stderr) {
             if (err) {
                 d.reject(err);
             } else {

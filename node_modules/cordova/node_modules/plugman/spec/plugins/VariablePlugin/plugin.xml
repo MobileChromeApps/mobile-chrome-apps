@@ -36,6 +36,15 @@
 		</config-file>
 		
     </platform>
+    
+    <!-- amazon fireos -->
+    <platform name="amazon-fireos">
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+            <poop name="GoogleMapsApiKey" value="$API_KEY" />
+            <package>$PACKAGE_NAME</package>
+		</config-file>
+		
+    </platform>
 
     <!-- ios -->
     <platform name="ios">

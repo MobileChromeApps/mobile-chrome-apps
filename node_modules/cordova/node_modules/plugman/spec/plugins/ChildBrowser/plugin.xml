@@ -105,6 +105,7 @@
         <framework src="libsqlite3.dylib" />
         <framework src="social.framework" weak="true" />
         <framework src="music.framework" weak="rabbit" />
+        <framework src="Custom.framework" custom="true" />
     </platform>
     <!-- wp7 -->
     <platform name="wp7">

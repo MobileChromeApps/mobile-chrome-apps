@@ -22,7 +22,8 @@
 var path  = require('path'),
     build = require('./build'),
     emulator = require('./emulator'),
-    device   = require('./device');
+    device   = require('./device'),
+    ROOT = path.join(__dirname, '..', '..');
 
 /*
  * Runs the application on a device if availible.
@@ -110,7 +111,7 @@ var path  = require('path'),
 }
 
 module.exports.help = function() {
-    console.log('Usage: ' + path.relative(process.cwd(), args[0]) + ' [options]');
+    console.log('Usage: ' + path.relative(process.cwd(), path.join(ROOT, 'cordova', 'run')) + ' [options]');
     console.log('Build options :');
     console.log('    --debug : Builds project in debug mode');
     console.log('    --release : Builds project in release mode');

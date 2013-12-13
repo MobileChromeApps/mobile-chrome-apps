@@ -71,35 +71,6 @@ describe('ios project parser', function () {
             }).not.toThrow();
         });
     });
-    describe('check_requirements', function() {
-        it('should fire a callback if there is an error during shelling out', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(50, 'there was an errorz!', '');
-            });
-            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('there was an errorz!');
-            });
-        });
-        it('should fire a callback if the xcodebuild version is less than 4.5.x', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(0, 'version 4.4.9', '');
-            });
-            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
-                expect(err).toEqual(new Error('Xcode version installed is too old. Minimum: >=4.5.x, yours: 4.4.9'));
-            });
-        });
-        it('should not return an error if the xcodebuild version 2 digits and not proper semver (eg: 5.0), but still satisfies the MIN_XCODE_VERSION', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(0, 'version 5.0', '');
-            });
-            wrapper(platforms.ios.parser.check_requirements(proj), done, function() {
-                expect(1).toBe(1);
-            });
-        });
-    });
 
     describe('instance', function() {
         var p, cp, rm, mkdir, is_cordova, write, read;

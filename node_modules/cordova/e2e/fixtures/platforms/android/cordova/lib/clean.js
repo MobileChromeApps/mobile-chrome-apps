@@ -37,7 +37,7 @@ module.exports.run = function() {
 }
 
 module.exports.help = function() {
-    console.log('Usage: ' + path.relative(process.cwd(), process.argv[1]));
+    console.log('Usage: ' + path.relative(process.cwd(), path.join(ROOT, 'cordova', 'clean')));
     console.log('Cleans the project directory.');
     process.exit(0);
 }

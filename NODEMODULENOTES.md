@@ -1,11 +1,11 @@
 
-##Managing the size of node\_nodules:
-Before checking in node\_modules, the directory should be cleaned to reduce its size.
+##Managing the size of `node_nodules`:
+Before checking in `node_modules`, the directory should be cleaned to reduce its size.
 The following commands remove tests and ripple, then clear out any duplicated modules.
-This reduces the size of node\_modules from ~56M to ~21M
+This reduces the size of `node_modules` from ~56M to ~21M
 
-    find . -type d -iname tests -exec rm -rf {} \;
-    find . -type d -iname test -exec rm -rf {} \;
-    find . -type d -iname ripple-emulator -exec rm -rf {} \;
     npm dedupe
+    find node_modules -type d -iname tests -exec rm -rf {} \;
+    find node_modules -type d -iname test -exec rm -rf {} \;
+    find node_modules -type d -iname ripple-emulator -exec rm -rf {} \;
 

@@ -44,6 +44,9 @@ module.exports = function create (dir, id, name, cfg) {
     }
 
     // Massage parameters
+    if (typeof cfg == 'string') {
+        cfg = JSON.parse(cfg);
+    }
     cfg = cfg || {};
     id = id || cfg.id || DEFAULT_ID;
     name = name || cfg.name || DEFAULT_NAME;

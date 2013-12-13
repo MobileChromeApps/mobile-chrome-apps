@@ -7,7 +7,7 @@ var helpers = require('./helpers'),
     events = require('../src/events'),
     cordova = require('../cordova');
 
-var tmpDir = helpers.tmpDir();
+var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
 var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
 var pluginId = 'org.apache.cordova.fakeplugin1';
@@ -20,7 +20,7 @@ describe('plugin end-to-end', function() {
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', project);
+        shell.rm('-rf', tmpDir);
     });
 
     // The flow tested is: ls, add, ls, rm, ls.

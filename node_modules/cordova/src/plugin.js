@@ -87,7 +87,7 @@ module.exports = function plugin(command, targets) {
                         return plugman.raw.fetch(target, pluginsDir, {})
                     })
                     .fail(function(err) {
-                        return Q.reject(new Error('Error fetching plugin: ' + err));
+                        return Q.reject(new Error('Fetching plugin failed: ' + err));
                     })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
