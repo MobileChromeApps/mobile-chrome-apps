@@ -206,7 +206,6 @@ RAL.Heap.prototype = {
     return value;
   }
 };
-
 /**
  * Sanitises a file path.
  */
@@ -225,7 +224,6 @@ RAL.Sanitiser = (function() {
   };
 
 })();
-
 /**
  * Parses cache headers so that we can respect them.
  */
@@ -296,7 +294,6 @@ RAL.CacheParser = (function() {
   };
 
 })();
-
 /**
  * FileSystem API wrapper. Makes extensive use of
  * the FileSystem code from Eric Bidelman.
@@ -564,7 +561,6 @@ RAL.FileSystem = (function() {
     removeDir: removeDir
   };
 })();
-
 /**
  * Represents the internal log of all files that
  * have been cached for offline use.
@@ -698,7 +694,6 @@ RAL.FileManifest = (function() {
   };
 
 })();
-
 /**
  * Prototype for all remote files
  */
@@ -954,7 +949,6 @@ RAL.RemoteFile.prototype = {
     this.element.addEventListener(evtName, callback, useCapture);
   }
 };
-
 /**
  * Represents a remote image.
  * @param {object} options The configuration options.
@@ -1032,6 +1026,7 @@ RAL.RemoteImage.prototype.showImage = function(evt) {
     var width = this.width || image.naturalWidth;
     var height = this.height || image.naturalHeight;
 
+    this.element.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     this.element.style.width = width + 'px';
     this.element.style.height = height + 'px';
     this.element.style.backgroundImage = 'url(' + imageSrc + ')';
@@ -1047,7 +1042,6 @@ RAL.RemoteImage.prototype.showImage = function(evt) {
   image.onload = imageLoaded.bind(this);
   image.src = imageSrc;
 };
-
 /**
  * Loads the remote files
  */
@@ -1122,10 +1116,10 @@ RAL.Loader = (function() {
       // attempt to load the file
       var xhr = new XMLHttpRequest();
 
-      xhr.responseType = type;
       xhr.onerror = callbacks.onError.bind(this, callbackFail);
       xhr.onload = callbacks.onLoad.bind(this, source, callbackSuccess, callbackFail);
       xhr.open('GET', source, true);
+      xhr.responseType = type;
       xhr.send();
 
       // register our interest in the connection
@@ -1155,7 +1149,6 @@ RAL.Loader = (function() {
   };
 
 })();
-
 /**
  * Tracks the online / offline nature of the
  * browser so we can abort and reschedule any
@@ -1226,7 +1219,6 @@ RAL.NetworkMonitor = (function() {
   };
 
 })();
-
 /**
  * Represents the load queue for assets.
  */
