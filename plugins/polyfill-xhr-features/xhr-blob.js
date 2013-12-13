@@ -2,6 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+
+// Support was added in iOS7.
+var xhr = new XMLHttpRequest();
+xhr.open('GET', '', false);
+xhr.responseType = 'blob';
+if (xhr.responseType == 'blob') {
+    return;
+}
+
 function proxyMethod(methodName) {
     return function() {
         this._proxy[methodName].apply(this._proxy, arguments);
@@ -36,11 +45,6 @@ function proxyEventProperty(_this, eventName) {
         }
     };
     Object.defineProperty(_this, eventPropertyName, descriptor);
-}
-
-function safariSupportsBlobXHR(win) {
-    var version = /(\d+)_/.exec(win.navigator.userAgent);
-    return version && parseInt(version[1]) >= 7;
 }
 
 var nativeXHR = window.XMLHttpRequest;
@@ -107,7 +111,4 @@ chromeXHR.prototype.addEventListener = function(eventName, handler) {
   this._proxy.addEventListener(eventName, proxyProgressEventHandler(this, eventName.toLowerCase(), handler));
 }
 
-// Support was added in iOS7.
-if (!safariSupportsBlobXHR(window)) {
-  exports.XMLHttpRequest = chromeXHR;
-}
+exports.XMLHttpRequest = chromeXHR;

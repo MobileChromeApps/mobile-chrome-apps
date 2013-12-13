@@ -11,11 +11,9 @@
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
-  <name>XHR with additional features</name>
+  <name>XHR Blob Response Type Polyfill</name>
 
-  <platform name="ios">
-    <js-module src="iosXHR.js" name="xhr-polyfill">
-      <merges target="window" />
-    </js-module>
-  </platform>
+  <js-module src="xhr-blob.js" name="xhr-blob">
+    <merges target="window" />
+  </js-module>
 </plugin>

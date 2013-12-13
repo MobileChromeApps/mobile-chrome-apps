@@ -2,7 +2,7 @@ xhr-blob
 ========
 
 A Cordova plugin which provides Blob return type support for XHMHttpRequest in
-mobile Safari.
+iOS (pre iOS7) and Android (pre-KitKat)
 
 ##Overview
 
@@ -10,8 +10,6 @@ This plugin adds support for a return type of 'blob' for browsers which do not
 support it. If an XMLHttpRequest's returnType property is set to 'blob', it
 will be set internally to 'arraybuffer', and a blob will be constructed when
 the response is examined.
-
-##Installation
 
 ##Usage
 
