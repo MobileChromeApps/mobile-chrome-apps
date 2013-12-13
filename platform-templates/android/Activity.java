@@ -22,8 +22,6 @@ package __ID__;
 import android.os.Bundle;
 import org.apache.cordova.*;
 
-import org.chromium.ChromeChromeClient;
-
 public class __ACTIVITY__ extends CordovaActivity
 {
     @Override
@@ -33,11 +31,5 @@ public class __ACTIVITY__ extends CordovaActivity
         super.init();
         // Set by <content src="index.html" /> in config.xml
         super.loadUrl(Config.getStartUrl());
-        //super.loadUrl("file:///android_asset/www/index.html")
-    }
-    
-    protected CordovaChromeClient makeChromeClient(CordovaWebView webView) {
-    	return new ChromeChromeClient(this, webView);
     }
 }
-

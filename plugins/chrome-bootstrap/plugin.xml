@@ -33,11 +33,10 @@
   <asset src="www/chromebgpage.html" target="chromebgpage.html" />
   <asset src="www/chromeappstyles.css" target="chromeappstyles.css" />
 
-  <!-- Convert 'chrome-extension://' urls -->
   <platform name="android">
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />
+    <!-- Convert 'chrome-extension://' urls -->
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/org/chromium" />
-    <source-file src="src/android/ChromeChromeClient.java" target-dir="src/org/chromium" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
 
