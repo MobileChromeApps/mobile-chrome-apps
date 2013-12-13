@@ -5,7 +5,6 @@
 package org.chromium;
 
 import android.content.Intent;
-
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -64,7 +63,7 @@ public class FileChooser extends CordovaPlugin {
      * @param intent            An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        this.callbackContext.success(intent.getData().toString());
+        this.callbackContext.success(intent != null ? intent.getData().toString() : null);
     }
 
     private static String getIntentType(JSONArray mimeTypes) throws JSONException {
