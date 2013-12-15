@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 exports.inapp = {
+    platform: cordova.platformId,
     getSkuDetails: function(skus, success, failure) {
         throw new Error("In App Purchase not implemented on this platform");
     },
