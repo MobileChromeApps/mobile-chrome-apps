@@ -41,6 +41,12 @@ describe('prepare', function() {
         prepare(temp, 'android', plugins_dir);
         expect(write).toHaveBeenCalledWith(js, jasmine.any(String), 'utf-8');
     });
+    it('should create cordova_plugins.js file in a custom www directory', function() {
+        var custom_www = path.join(temp, 'assets', 'custom_www'),
+            js = path.join(temp, 'assets', 'custom_www', 'cordova_plugins.js');
+        prepare(temp, 'android', plugins_dir, custom_www);
+        expect(write).toHaveBeenCalledWith(js, jasmine.any(String), 'utf-8');
+    });
     describe('handling of js-modules', function() {
         var read, child_one;
         beforeEach(function() {

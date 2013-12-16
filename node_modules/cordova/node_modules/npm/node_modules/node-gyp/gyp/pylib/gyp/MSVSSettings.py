@@ -834,13 +834,8 @@ _Moved(_link, 'UseLibraryDependencyInputs', 'ProjectReference', _boolean)
 # MSVS options not found in MSBuild.
 _MSVSOnly(_link, 'OptimizeForWindows98', _newly_boolean)
 _MSVSOnly(_link, 'UseUnicodeResponseFiles', _boolean)
-# These settings generate correctly in the MSVS output files when using
-# e.g. DelayLoadDLLs! or AdditionalDependencies! to exclude files from
-# configuration entries, but result in spurious artifacts which can be
-# safely ignored here.  See crbug.com/246570
+# TODO(jeanluc) I don't think these are genuine settings but byproducts of Gyp.
 _MSVSOnly(_link, 'AdditionalLibraryDirectories_excluded', _folder_list)
-_MSVSOnly(_link, 'DelayLoadDLLs_excluded', _file_list)
-_MSVSOnly(_link, 'AdditionalDependencies_excluded', _file_list)
 
 # MSBuild options not found in MSVS.
 _MSBuildOnly(_link, 'BuildingInIDE', _boolean)

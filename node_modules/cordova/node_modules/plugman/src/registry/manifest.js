@@ -1,7 +1,20 @@
 var xml_helpers = require('../util/xml-helpers'),
     path = require('path'),
     Q = require('q'),
-    fs = require('fs');
+    fs = require('fs'),
+    whitelist = require('./whitelist');
+
+function validateName(name) {
+    if(!name.match(/^(\w+\.){2,}.*$/)) {
+      return false;
+    }
+
+    if(name.match(/org.apache.cordova\..*/) && whitelist.indexOf(name) === -1) {
+      return false;
+    }
+
+    return true;
+}
 
 // Java world big-up!
 // Returns a promise.
@@ -31,8 +44,8 @@ function generatePackageJsonFromPluginXml(plugin_path) {
 
     if(!name) return Q.reject(new Error('`name` is required'));
 
-    if(!name.match(/^(\w+\.){2,}.*$/))
-        return Q.reject(new Error('`name` has to follow com.domain.plugin format'));
+    if(!validateName(name))
+        return Q.reject(new Error('`name` is invalid. It has to follow the reverse domain `com.domain.plugin` format'));
     
     package_json.name = name.toLowerCase();
 

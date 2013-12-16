@@ -22,13 +22,14 @@ var util  = require('./util'),
     events= require('./events'),
     child_process = require('child_process'),
     Q     = require('q'),
-    path  = require('path');
+    path  = require('path'),
+    _ = require('lodash');
 
 module.exports = function hooker(root) {
     var r = util.isCordova(root);
     if (!r) throw new Error('Not a Cordova project, can\'t use hooks.');
     else this.root = r;
-}
+};
 
 // Returns a promise.
 module.exports.fire = function global_fire(hook, opts) {
@@ -63,20 +64,21 @@ module.exports.prototype = {
                 var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function(s) {
                     return s[0] != '.';
                 });
-                return execute_scripts_serially(scripts, self.root, dir);
+                return execute_scripts_serially(scripts, self.root, dir, opts);
             }
         });
     }
-}
+};
 
 // Returns a promise.
-function execute_scripts_serially(scripts, root, dir) {
+function execute_scripts_serially(scripts, root, dir, opts) {
+    opts = opts || {};
     if (scripts.length) {
         var s = scripts.shift();
         var fullpath = path.join(dir, s);
         if (fs.statSync(fullpath).isDirectory()) {
             events.emit('verbose', 'skipped directory "' + fullpath + '" within hook directory');
-            return execute_scripts_serially(scripts, root, dir); // skip directories if they're in there.
+            return execute_scripts_serially(scripts, root, dir, opts); // skip directories if they're in there.
         } else {
             var command = fullpath + ' "' + root + '"';
 
@@ -108,7 +110,7 @@ function execute_scripts_serially(scripts, root, dir) {
                     events.emit('verbose', 'hook file "' + fullpath + '" skipped');
                     // found windows script, without shebang this script definitely
                     // will not run on unix
-                    return execute_scripts_serially(scripts, root, dir);
+                    return execute_scripts_serially(scripts, root, dir, opts);
                 }
             }
 
@@ -117,14 +119,22 @@ function execute_scripts_serially(scripts, root, dir) {
                 command = hookCmd + ' ' + command;
             }
 
+            var execOpts = {cwd: root};
+            execOpts.env = _.extend({}, process.env);
+            execOpts.env.CORDOVA_VERSION = require('../package').version;
+            execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';
+            execOpts.env.CORDOVA_PLUGINS = opts.plugins?opts.plugins.join():'';
+            execOpts.env.CORDOVA_HOOK = fullpath;
+            execOpts.env.CORDOVA_CMDLINE = process.argv.join(' ');
+
             events.emit('verbose', 'Executing hook "' + command + '" (output to follow)...');
             var d = Q.defer();
-            child_process.exec(command, function(err, stdout, stderr) {
+            child_process.exec(command, execOpts, function(err, stdout, stderr) {
                 events.emit('verbose', stdout, stderr);
                 if (err) {
                     d.reject(new Error('Script "' + fullpath + '" exited with non-zero status code. Aborting. Output: ' + stdout + stderr));
                 } else {
-                    d.resolve(execute_scripts_serially(scripts, root, dir));
+                    d.resolve(execute_scripts_serially(scripts, root, dir, opts));
                 }
             });
             return d.promise;

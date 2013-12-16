@@ -26,7 +26,7 @@ function getPackageInfo(args) {
     var d = Q.defer();
     http.get(settings.registry + '/' + name + '/' + version, function(res) {
          if(res.statusCode != 200) {
-             d.reject(new Error('error: Could not fetch package information for '+name));
+             d.reject(new Error('Failed to fetch package information for '+name));
          } else {
              var info = '';
              res.on('data', function(chunk) {

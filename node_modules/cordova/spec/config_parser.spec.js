@@ -21,7 +21,7 @@ var path = require('path'),
     shell = require('shelljs'),
     config_parser = require('../src/config_parser'),
     et = require('elementtree'),
-    xml = path.join(__dirname, '..', 'templates', 'config.xml'),
+    xml = path.join(__dirname, 'test-config.xml'),
     util = require('../src/util'),
     xml_contents = fs.readFileSync(xml, 'utf-8');
 

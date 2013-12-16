@@ -26,7 +26,6 @@
 /******************************************************************************/
 /******************************************************************************/
 
-if (typeof WScript != 'undefined') {
 function wscriptWrapper() {
   var shell = WScript.CreateObject("WScript.Shell");
   var args = [];
@@ -44,7 +43,8 @@ function wscriptWrapper() {
   }
   WScript.Quit(ret);
 }
-wscriptWrapper();
+if (typeof WScript != 'undefined') {
+  wscriptWrapper();
 }
 
 /******************************************************************************/
@@ -93,7 +93,10 @@ var PLUGIN_MAP = {
   'fileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
                  path.join(mcaRoot, 'chrome-cordova', 'plugins', 'fileChooser')],
   'identity': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.identity')],
+  'idle': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.idle')],
   'notifications': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.notifications')],
+  'power': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.power')],
+  'pushMessaging': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.pushMessaging')],
   'socket': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.socket')],
   'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
 };
@@ -605,7 +608,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       if (isWindows) {
         fs.writeFileSync('mca.cmd', '"' + process.argv[0] + '" "' + path.join(mcaRoot, 'mca') + '" %*');
       } else {
-        fs.symlinkSync(path.join(mcaRoot, 'mca'), 'mca')
+        fs.symlinkSync(path.join(mcaRoot, 'mca'), 'mca');
       }
       callback();
     }

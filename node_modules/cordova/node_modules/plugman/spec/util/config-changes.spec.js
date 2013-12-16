@@ -214,6 +214,7 @@ describe('config-changes module', function() {
                 expect(munge['framework']['libsqlite3.dylib']['false']).toBeDefined();
                 expect(munge['framework']['social.framework']['true']).toBeDefined();
                 expect(munge['framework']['music.framework']['false']).toBeDefined();
+                expect(munge['framework']['Custom.framework']).not.toBeDefined();
             });
         });
     });
@@ -313,6 +314,7 @@ describe('config-changes module', function() {
                     expect(xcode_add).toHaveBeenCalledWith('libsqlite3.dylib', {weak:false});
                     expect(xcode_add).toHaveBeenCalledWith('social.framework', {weak:true});
                     expect(xcode_add).toHaveBeenCalledWith('music.framework', {weak:false});
+                    expect(xcode_add).not.toHaveBeenCalledWith('Custom.framework');
                 });
             });
             describe('of <plugins-plist> elements', function() {

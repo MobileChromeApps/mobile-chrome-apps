@@ -70,18 +70,6 @@ describe('android project parser', function() {
         });
     });
 
-    describe('check_requirements', function() {
-        it('should fire a callback if there is an error during shelling out', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(50, 'there was an errorz!', '');
-            });
-            errorWrapper(platforms.android.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('there was an errorz!');
-            });
-        });
-    });
-
     describe('instance', function() {
         var p, cp, rm, mkdir, is_cordova, write, read;
         var android_proj = path.join(proj, 'platforms', 'android');

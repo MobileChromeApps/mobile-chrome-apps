@@ -41,7 +41,7 @@ var crossConcat = function(a, b, delimiter){
     return result;
 };
 
-var tmpDir = helpers.tmpDir();
+var tmpDir = helpers.tmpDir('create_test');
 var appName = 'TestCreate';
 var appId = 'io.cordova.' + appName.toLocaleLowerCase();
 var project = path.join(tmpDir, appName);
@@ -63,7 +63,7 @@ describe('create end-to-end', function() {
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', project);
+        shell.rm('-rf', tmpDir);
     });
 
     var results;

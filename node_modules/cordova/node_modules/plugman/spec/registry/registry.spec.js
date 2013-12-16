@@ -12,7 +12,7 @@ describe('registry', function() {
         var pluginDir, packageJson, tmp_plugin, tmp_plugin_xml, tmp_package_json;
         beforeEach(function() {
             pluginDir = __dirname + '/../plugins/EnginePlugin';
-            tmp_plugin = os.tmpdir() + 'plugin';
+            tmp_plugin = path.join(os.tmpdir(), 'plugin');
             tmp_plugin_xml = path.join(tmp_plugin, 'plugin.xml');
             tmp_package_json = path.join(tmp_plugin, 'package.json');
             shell.cp('-R', pluginDir+"/*", tmp_plugin);
@@ -32,6 +32,18 @@ describe('registry', function() {
         });
         it('should raise an error if name does not follow com.domain.* format', function() {
             var xmlData = fs.readFileSync(tmp_plugin_xml).toString().replace('id="com.cordova.engine"', 'id="engine"');
+            fs.writeFileSync(tmp_plugin_xml, xmlData);
+            manifest.generatePackageJsonFromPluginXml(tmp_plugin);
+            expect(!fs.existsSync(tmp_package_json));
+        });
+        it('should generate a package.json if name uses org.apache.cordova.* for a whitlisted plugin', function() {
+            var xmlData = fs.readFileSync(tmp_plugin_xml).toString().replace('id="com.cordova.engine"', 'id="org.apache.cordova.camera"');
+            fs.writeFileSync(tmp_plugin_xml, xmlData);
+            manifest.generatePackageJsonFromPluginXml(tmp_plugin);
+            expect(!fs.existsSync(tmp_package_json));
+        });
+        it('should raise an error if name uses org.apache.cordova.* for a non-whitlisted plugin', function() {
+            var xmlData = fs.readFileSync(tmp_plugin_xml).toString().replace('id="com.cordova.engine"', 'id="org.apache.cordova.myinvalidplugin"');
             fs.writeFileSync(tmp_plugin_xml, xmlData);
             manifest.generatePackageJsonFromPluginXml(tmp_plugin);
             expect(!fs.existsSync(tmp_package_json));

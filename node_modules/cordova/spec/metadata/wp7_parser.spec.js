@@ -181,6 +181,11 @@ describe('wp7 project parser', function() {
                 expect(p.staging_dir()).toEqual(path.join(wp7_proj, '.staging', 'www'));
             });
         });
+        describe('config_xml method', function() {
+            it('should return the location of the config.xml', function() {
+                expect(p.config_xml()).toEqual(path.join(wp7_proj, 'config.xml'));
+            });
+        });
         describe('update_www method', function() {
             var update_csproj;
             beforeEach(function() {

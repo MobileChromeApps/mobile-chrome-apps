@@ -10,7 +10,7 @@ var helpers = require('./helpers'),
     events = require('../src/events'),
     cordova = require('../cordova');
 
-var tmpDir = helpers.tmpDir();
+var tmpDir = helpers.tmpDir('platform_test');
 var project = path.join(tmpDir, 'project');
 
 var platformParser = platforms[helpers.testPlatform].parser;

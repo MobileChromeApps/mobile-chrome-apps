@@ -7,7 +7,8 @@
     "ncp":"~0.4",
     "cordova":">=3.2",
     "optimist":"~0.5",
-    "cryptojs":"~2"
+    "cryptojs":"~2",
+    "elementtree": "0.1.5"
   },
   "bin" : { "mca" : "./mca" },
   "license": "Apache version 2.0"
