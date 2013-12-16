@@ -1,75 +1,67 @@
 # Getting Started with Mobile Chrome Apps
 
-Please read the [Installation Guide](Installation.md) first.
-
-## The initial import of your Chrome Packaged App
-
-Now that you have installed the Mobile Chrome Apps framework, lets use it to create your first App.
+Please make sure you have completed the [Installation Guide](Installation.md) first.
 
 ### Step 1: Create a Project
 
-Starting from scratch:
+    mca create com.companyname.YourApp [--source=...]
 
-    mca create com.companyname.YourApp
+* Using the `--source` flag will import an already existing chrome app (by creating a _copy_).
 
-Importing an existing desktop chrome app:
+### Step 2: Building and Running your application
 
-    mca create com.companyname.YourApp --source=path/to/existing/ChromeApp
+You can build and run your application either:
+* Option A: from the command line, using the `mca` tool, or
+* Option B: by using an IDE, like `Eclipse` or `Xcode`.
 
-* Currently, `--source` will create a _copy_ of your chrome app, so any changes will need to be synchronized manually.
-  * Support for symlinks is coming shortly.
-* Note: Don't create projects inside the `mobile-chrome-apps` directory, since that is a git repo which mca command will auto-update.
+Both options are described below.
 
-### Step 2: Open the Native App Template
+Note that you must use the command line `mca` tool with either option (specifics are described in Step 3, below).  The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application's native bits.
 
-The easiest way to build your app is through an IDE.
+### Step 2, Option A: Using the command line
+
+[Coming Soon]
+
+* `mca build`
+* `mca emulate`
+* `mca run`
+
+### Step 2, Option B: Using an IDE
 
 #### iOS
 
-* Open xcode:
+* In Xcode, open the `xcodeproj` file from within the `platforms/ios/` directory.
+  * From the command line:
 
         cd YourApp
         open platforms/ios/*.xcodeproj
-
-#### Android
-
-* open Eclipse
-* From the menu, `File` -> `Import`
-* Chose `Android` > `Existing Android Code Into Workspace`.
-* Import from the path you just created with `mca`.
-    * You should expect to have two projects to import, one of which is `*-CordovaLib`
-
-### Step 3: Build and run
-
-You should be all set to build and run, but there are a few things to watch for.
-
-#### iOS
 
 * Make sure you are building the right target.
   * In the top left (beside Run&Stop buttons) there is a dropdown to select target project and device.  Ensure that `YourApp` is selected and _not_ `CordovaLib`.
 
 #### Android
 
-* You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time.
+* In Eclipse, select `File` -> `Import`
+* Chose `Android` > `Existing Android Code Into Workspace`.
+* Import from the path you just created with `mca`.
+    * You should expect to have two projects to import, one of which is `*-CordovaLib`
+* You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time automatically.
 * You will need to manage your devices/emulators the first time as well.
+
+### Step 3: Making changes to your App
+
+Your HTML, CSS and JS files live within the `www` directory.
+
+_Every time_ you change them, you _must_ run `mca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
 ### Step 4: Icons, splash screen, settings, etc
 
 [Coming soon]
 
-
-## Important!: Making Changes to your App
-
-Your HTML, CSS and JS files live within the `www` directory.
-
-_Every time_ you change them, you _must_ run `./mca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
-
-
 ## Experiencing Hiccups?
 
 Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
 
+## Done?
 
-## Completed Successfully?
-
-Now read the [API Status document](APIStatus.md).
+Read the [API Status document](APIStatus.md).
