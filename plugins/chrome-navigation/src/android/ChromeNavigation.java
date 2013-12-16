@@ -13,9 +13,12 @@ public class ChromeNavigation extends CordovaPlugin {
 
     @Override
     public boolean onOverrideUrlLoading(String url) {
-        Intent systemBrowserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        cordova.getActivity().startActivity(systemBrowserIntent);
-        return true;
+        if (url.startsWith("http:") || url.startsWith("https:")) {
+            Intent systemBrowserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            cordova.getActivity().startActivity(systemBrowserIntent);
+            return true;
+        }
+        return false;
     }
 
 }
