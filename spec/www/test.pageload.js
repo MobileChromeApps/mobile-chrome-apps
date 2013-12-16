@@ -46,6 +46,9 @@ chromeSpec('pageload', function(runningInBackground) {
       it('should properly resolve root-relative script URL', function() {
         expect(scriptExec9).toBe(9);
       });
+      it('should have platform CSS applied', function() {
+        expect(window.getComputedStyle(document.body)['WebkitUserSelect']).toBe('none');
+      });
     });
   }
 });
