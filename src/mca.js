@@ -451,9 +451,9 @@ function initCommand() {
 // Create App
 
 function createCommand(appId, addAndroidPlatform, addIosPlatform) {
-  var match = /[a-z]+\.[a-z][a-z0-9]*\.([a-z][a-z0-9]*)/i.exec(appId);
+  var match = /[a-z]+\.[a-z][a-z0-9_]*\.([a-z][a-z0-9_]*)/i.exec(appId);
   if (!match) {
-    fatal('App Name must follow the pattern: com.company.id');
+    fatal('App Name must be a valid Java package name and follow the pattern: com.company.id');
   }
   var appName = match[1];
   var appDir = null;
