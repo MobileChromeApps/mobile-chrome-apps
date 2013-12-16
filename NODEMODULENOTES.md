@@ -1,4 +1,3 @@
-
 ##Managing the size of `node_nodules`:
 Before checking in `node_modules`, the directory should be cleaned to reduce its size.
 The following commands remove tests and ripple, then clear out any duplicated modules.
