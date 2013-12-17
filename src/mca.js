@@ -82,7 +82,6 @@ var ACTIVE_PLUGINS = [
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-navigation'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.i18n'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.storage'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-xhr-features'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-blob-constructor')
@@ -98,7 +97,9 @@ var PLUGIN_MAP = {
   'power': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.power')],
   'pushMessaging': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.pushMessaging')],
   'socket': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.socket')],
-  'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')]
+  'storage': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.storage')],
+  'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')],
+  'unlimitedStorage': []
 };
 
 /******************************************************************************/
