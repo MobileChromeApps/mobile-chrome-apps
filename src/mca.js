@@ -614,18 +614,15 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
     function afterAllCommands() {
       // Create a script that runs update.js.
-      if (isWindows) {
-        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'mca update-app');
-      } else {
-        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\n./mca update-app');
-        fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
-      }
+      fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'mca update-app');
+      fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ./mca update-app');
+      fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
       // Create a convenience link to MCA
-      if (isWindows) {
-        fs.writeFileSync('mca.cmd', '"' + process.argv[0] + '" "' + path.join(mcaRoot, 'mca') + '" %*');
-      } else {
-        fs.symlinkSync(path.join(mcaRoot, 'mca'), 'mca');
-      }
+      var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
+      var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
+      fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\n"' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
+      fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
+      fs.chmodSync('mca', '777');
       callback();
     }
 

@@ -70,9 +70,36 @@ module.exports.prototype = {
     }
 };
 
+function extractSheBangInterpreter(fullpath) {
+    var hookFd = fs.openSync(fullpath, "r");
+    try {
+        // this is a modern cluster size. no need to read less
+        var fileData = new Buffer (4096);
+        var octetsRead = fs.readSync(hookFd, fileData, 0, 4096, 0);
+        var fileChunk = fileData.toString();
+    } finally {
+        fs.closeSync(hookFd);
+    }
+
+    var hookCmd, shMatch;
+    // Filter out /usr/bin/env so that "/usr/bin/env node" works like "node".
+    var shebangMatch = fileChunk.match(/^#!(?:\/usr\/bin\/env )?([^\r\n]+)/m);
+    if (octetsRead == 4096 && !fileChunk.match(/[\r\n]/))
+        events.emit('warn', 'shebang is too long for "' + fullpath + '"');
+    if (shebangMatch)
+        hookCmd = shebangMatch[1];
+    // Likewise, make /usr/bin/bash work like "bash".
+    if (hookCmd)
+        shMatch = hookCmd.match(/bin\/((?:ba)?sh)$/)
+    if (shMatch)
+        hookCmd = shMatch[1]
+    return hookCmd;
+}
+
 // Returns a promise.
 function execute_scripts_serially(scripts, root, dir, opts) {
     opts = opts || {};
+    var isWindows = os.platform().slice(0, 3) === 'win';
     if (scripts.length) {
         var s = scripts.shift();
         var fullpath = path.join(dir, s);
@@ -80,43 +107,14 @@ function execute_scripts_serially(scripts, root, dir, opts) {
             events.emit('verbose', 'skipped directory "' + fullpath + '" within hook directory');
             return execute_scripts_serially(scripts, root, dir, opts); // skip directories if they're in there.
         } else {
-            var command = fullpath + ' "' + root + '"';
-
-            var hookFd = fs.openSync(fullpath, "r");
-            // this is a modern cluster size. no need to read less
-            var fileData = new Buffer (4096);
-            var octetsRead = fs.readSync(hookFd, fileData, 0, 4096, 0);
-            var fileChunk = fileData.toString();
-
-            var hookCmd, shMatch;
-            var shebangMatch = fileChunk.match(/^#!(\/usr\/bin\/env )?([^\r\n]+)/m);
-            if (octetsRead == 4096 && !fileChunk.match(/[\r\n]/))
-                events.emit('warn', 'shebang is too long for "' + fullpath + '"');
-            if (shebangMatch)
-                hookCmd = shebangMatch[2];
-            if (hookCmd)
-                shMatch = hookCmd.match(/bin\/((ba)?sh)$/)
-            if (shMatch)
-                hookCmd = shMatch[1]
-
-            // according to the http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/wsh_runfromwindowsbasedhost.mspx?mfr=true
-            // win32 cscript natively supports .wsf, .vbs, .js extensions
-            // also, cmd.exe supports .bat files
-            // .ps1 powershell http://technet.microsoft.com/en-us/library/ee176949.aspx
-            var sExt = path.extname(s);
-
-            if (sExt.match(/^.(bat|wsf|vbs|js|ps1)$/)) {
-                if (os.platform() != 'win32' && !hookCmd) {
-                    events.emit('verbose', 'hook file "' + fullpath + '" skipped');
-                    // found windows script, without shebang this script definitely
-                    // will not run on unix
-                    return execute_scripts_serially(scripts, root, dir, opts);
-                }
-            }
-
-            if (os.platform() == 'win32' && hookCmd) {
+            var command = '"' + fullpath + '" "' + root + '"';
+            if (os.platform().slice(0, 3) == 'win') {
+                // TODO: Make shebang sniffing a setting (not everyone will want this).
+                var interpreter = extractSheBangInterpreter(fullpath);
                 // we have shebang, so try to run this script using correct interpreter
-                command = hookCmd + ' ' + command;
+                if (interpreter) {
+                    command = '"' + interpreter + '" ' + command;
+                }
             }
 
             var execOpts = {cwd: root};
@@ -127,14 +125,20 @@ function execute_scripts_serially(scripts, root, dir, opts) {
             execOpts.env.CORDOVA_HOOK = fullpath;
             execOpts.env.CORDOVA_CMDLINE = process.argv.join(' ');
 
-            events.emit('verbose', 'Executing hook "' + command + '" (output to follow)...');
+            events.emit('verbose', 'Executing hook "' + command + '"');
             var d = Q.defer();
             child_process.exec(command, execOpts, function(err, stdout, stderr) {
-                events.emit('verbose', stdout, stderr);
-                if (err) {
-                    d.reject(new Error('Script "' + fullpath + '" exited with non-zero status code. Aborting. Output: ' + stdout + stderr));
-                } else {
+                // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
+                if (!isWindows && err && err.code === 126) {
+                    events.emit('verbose', 'skipped non-executable file: "' + fullpath);
                     d.resolve(execute_scripts_serially(scripts, root, dir, opts));
+                } else {
+                    events.emit('verbose', stdout, stderr);
+                    if (err) {
+                        d.reject(new Error('Script "' + fullpath + '" exited with status code ' + err.code + '. Aborting. Output: \n' + stdout + '\n' + stderr));
+                    } else {
+                        d.resolve(execute_scripts_serially(scripts, root, dir, opts));
+                    }
                 }
             });
             return d.promise;

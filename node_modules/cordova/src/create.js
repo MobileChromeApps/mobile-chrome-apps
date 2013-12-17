@@ -75,8 +75,8 @@ module.exports = function create (dir, id, name, cfg) {
         }
         return false;
     }
-    
-    if (fs.existsSync(dir) && !sanedircontents) {
+
+    if (fs.existsSync(dir) && !sanedircontents(dir)) {
         return Q.reject(new Error('Path already exists and is not empty: ' + dir));
     }
 
