@@ -615,9 +615,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     function afterAllCommands() {
       // Create a script that runs update.js.
       if (isWindows) {
-        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'cd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" update-app');
+        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'mca update-app');
       } else {
-        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\ncd "' + process.cwd() + '"\n"' + process.argv[0] + '" "' + path.join(mcaRoot, scriptName) + '" update-app');
+        fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\n./mca update-app');
         fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
       }
       // Create a convenience link to MCA
