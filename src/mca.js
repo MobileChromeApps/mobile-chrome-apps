@@ -478,7 +478,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var cordova = require('cordova');
 
   function runCmd(cmd, callback) {
-    console.log(cmd.join(' '));
+    // Hack to remove the obj passed to the cordova create command.
+    console.log(cmd.join(' ').replace('[object Object]', ''));
     cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
   }
 
