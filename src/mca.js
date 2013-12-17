@@ -75,7 +75,7 @@ var hasXcode = false;
 /******************************************************************************/
 /******************************************************************************/
 
-var ACTIVE_PLUGINS = [
+var DEFAULT_PLUGINS = [
     path.join(mcaRoot, 'cordova', 'cordova-plugin-file'),
     path.join(mcaRoot, 'cordova', 'cordova-plugin-inappbrowser'),
     path.join(mcaRoot, 'cordova', 'cordova-plugin-network-information'),
@@ -474,6 +474,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var manifest = null;
 
   var whitelist = [];
+  var permissions = [];
   var chromeAppId;
 
   var cordova = require('cordova');
@@ -533,7 +534,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }
     readManifest(manifestFile, function(manifestData) {
       manifest = manifestData;
-      var permissions = [];
       if (manifest && manifest.permissions) {
         for (var i = 0; i < manifest.permissions.length; ++i) {
           if (typeof manifest.permissions[i] === "string") {
@@ -550,14 +550,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
             }
           } else {
             permissions = permissions.concat(Object.keys(manifest.permissions[i]));
-          }
-        }
-      }
-      for (var i = 0; i < permissions.length; i++) {
-        var plugins = PLUGIN_MAP[permissions[i]];
-        if (plugins) {
-          for (var j = 0; j < plugins.length; ++j) {
-            ACTIVE_PLUGINS.push(plugins[j]);
           }
         }
       }
@@ -594,9 +586,19 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    ACTIVE_PLUGINS.forEach(function(pluginPath) {
+    DEFAULT_PLUGINS.forEach(function(pluginPath) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
+    for (var i = 0; i < permissions.length; i++) {
+      var pluginPaths = PLUGIN_MAP[permissions[i]];
+      if (pluginPaths) {
+        for (var j = 0; j < pluginPaths.length; ++j) {
+          cmds.push(['plugin', 'add', pluginPaths[j]]);
+        }
+      } else {
+        console.warn('Unsupported manifest permission encountered: ' + permissions[i] + ' (skipping)');
+      }
+    }
 
     function runAllCmds(callback) {
       chdir(path.join(origDir, appName));
@@ -686,7 +688,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
                   path.join(origDir,appName)+"\n"+
                   "Be sure to edit only the copy of your application that is in the project www directory:\n"+
                   path.join(origDir,appName,"www")+" \n"+
-                  "After any edits, remember to run 'cordova prepare'\n"+
+                  "After any edits, remember to run 'mca prepare'\n"+
                   "This ensures that any changes are reflected in your mobile application projects\n";
 
   function prepareStep(callback) {
@@ -779,7 +781,6 @@ function updateAppCommand() {
   function copyIconAssetsStep(platform) {
     return function(callback) {
       readManifest('www/manifest.json', function(manifest) {
-        var permissions = [];
         if (manifest && manifest.icons) {
           var iconMap = {};
           if (platform === "android") {
