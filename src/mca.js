@@ -129,6 +129,18 @@ function fatal(msg) {
   exit(1);
 }
 
+function colorizeConsole() {
+  var origWarn = console.warn;
+  console.warn = function() {
+    var msg = [].slice.call(arguments).join(' ');
+    origWarn.call(console, '\x1B[33m' + msg + '\x1B[39m');
+  };
+  console.error = function() {
+    var msg = [].slice.call(arguments).join(' ');
+    origWarn.call(console, '\x1B[31m' + msg + '\x1B[39m');
+  };
+}
+
 function exec(cmd, onSuccess, opt_onError, opt_silent) {
   var onError = opt_onError || function(e) {
     fatal('command failed: ' + cmd + '\n' + e);
@@ -872,6 +884,7 @@ function parseCommandLine() {
 }
 
 function main() {
+  colorizeConsole();
   parseCommandLine();
   var command = commandLineFlags._[0];
   var appId = commandLineFlags._[1] || '';
