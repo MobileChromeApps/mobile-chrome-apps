@@ -384,15 +384,15 @@ function promptIfNeedsUpdate() {
       if (!needsUpdate)
         return callback();
 
-      console.log('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
+      console.warn('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
       waitForKey('Continue anyway? [y/n] ', function(key) {
         if (key.toLowerCase() !== 'y')
           return exit(1);
         callback();
       });
     }, function(error) {
-      console.log("Could not check repo for updates:");
-      console.error(error.toString());
+      console.warn("Could not check repo for updates:");
+      console.warn(error.toString());
       callback();
     }, true);
   });
@@ -441,7 +441,7 @@ function initCommand() {
     process.chdir(mcaRoot);
     exec('git submodule update --init --recursive', callback, function(error) {
       console.log("Could not update submodules:");
-      console.error(error.toString());
+      console.warn(error.toString());
       console.log("Continuing without update.");
       callback();
     });
@@ -887,10 +887,12 @@ function parseCommandLine() {
 }
 
 function main() {
-  colorizeConsole();
   parseCommandLine();
   var command = commandLineFlags._[0];
   var appId = commandLineFlags._[1] || '';
+
+  // Colorize after parseCommandLine to avoid --help being printed in red.
+  colorizeConsole();
 
   var commandActions = {
     // Secret command used by our prepare hook.
