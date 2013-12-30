@@ -72,6 +72,10 @@ module.exports = function plugin(command, targets) {
 
     switch(command) {
         case 'add':
+            if (!targets || !targets.length) {
+                return Q.reject(new Error('No plugin specified. Please specify a plugin to add. See "plugin search".'));
+            }
+
             return hooks.fire('before_plugin_add', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
@@ -126,12 +130,15 @@ module.exports = function plugin(command, targets) {
             break;
         case 'rm':
         case 'remove':
+            if (!targets || !targets.length) {
+                return Q.reject(new Error('No plugin specified. Please specify a plugin to remove. See "plugin list".'));
+            }
             return hooks.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                        return Q.reject(new Error('Plugin "' + target + '" not added to project.'));
+                        return Q.reject(new Error('Plugin "' + target + '" is not present in the project. See "plugin list".'));
                     }
 
                     var targetPath = path.join(pluginPath, target);

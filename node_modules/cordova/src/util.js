@@ -31,28 +31,39 @@ exports = module.exports = {
     libDirectory:lib_path,
     // Runs up the directory chain looking for a .cordova directory.
     // IF it is found we are in a Cordova project.
-    // If not.. we're not. HOME directory doesnt count.
-    // HOMEDRIVE is used to catch when we've backed up to the root drive in windows (i.e C:\)
+    // Omit argument to use CWD.
     isCordova: function isCordova(dir) {
-        if (dir && dir != process.env['HOMEDRIVE'] + path.sep) {
+        if (!dir) {
+            // Prefer PWD over cwd so that symlinked dirs within your PWD work correctly (CB-5687).
+            var pwd = process.env.PWD;
+            var cwd = process.cwd();
+            if (pwd && pwd != cwd) {
+                return this.isCordova(pwd) || this.isCordova(cwd);
+            }
+            return this.isCordova(cwd);
+        }
+        for (var i = 0; i < 1000; ++i) {
+            // The .cordova within the HOME directory doesnt count.
             if (dir == HOME) {
                 return false;
-            } else {
-                var contents = fs.readdirSync(dir);
-                if (contents && contents.length && (contents.indexOf('.cordova') > -1)) {
-                    return dir;
-                } else {
-                    var parent = path.join(dir, '..');
-                    if (parent && parent.length > 1) {
-                        return isCordova(parent);
-                    } else return false;
-                }
             }
-        } else return false;
+            if (fs.existsSync(path.join(dir, '.cordova'))) {
+                return dir;
+            } else {
+                var parentDir = path.normalize(path.join(dir, '..'));
+                // Detect fs root.
+                if (parentDir == dir) {
+                    return false;
+                }
+                dir = parentDir;
+            }
+        }
+        console.error('Hit an unhandled case in util.isCordova');
+        return false;
     },
     // Cd to project root dir and return its path. Throw if not in a Corodva project.
     cdProjectRoot: function() {
-        var projectRoot = this.isCordova(process.cwd());
+        var projectRoot = this.isCordova();
         if (!projectRoot) {
             throw new Error('Current working directory is not a Cordova-based project.');
         }
@@ -107,7 +118,7 @@ exports = module.exports = {
                 options: []
             },
             result = inputOptions || DEFAULT_OPTIONS,
-            projectRoot = this.isCordova(process.cwd());
+            projectRoot = this.isCordova();
 
         if (!projectRoot) {
             return new Error('Current working directory is not a Cordova-based project.');

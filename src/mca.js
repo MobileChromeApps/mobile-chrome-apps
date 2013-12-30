@@ -637,8 +637,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         ios: {
           uri: path.join(mcaRoot, 'cordova', 'cordova-ios'),
           version: "mca",
-          id: "cordova-mca",
-          template: path.join(mcaRoot, 'chrome-cordova', 'platform-templates', 'ios'),
+          id: "cordova-mca"
         },
         www: {
           uri: appDir,

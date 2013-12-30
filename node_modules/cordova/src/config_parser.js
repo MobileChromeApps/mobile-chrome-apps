@@ -27,6 +27,11 @@ function config_parser(path) {
     } catch (e) {
         throw new Error("Parsing "+path+" failed:\n"+e.message);
     }
+    var r = this.doc.getroot();
+    var xmlns ='http://www.w3.org/ns/widgets';
+    if((r.tag !== 'widget') || !r.attrib || (r.attrib.xmlns !== xmlns)) {
+        throw new Error("This file does not seem to be a cordova config.xml file: " + path);
+    }
     this.access = new access(this);
     this.preference = new preference(this);
 }

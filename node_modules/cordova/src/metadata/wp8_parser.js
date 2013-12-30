@@ -237,7 +237,7 @@ module.exports.prototype = {
             else if(stat.isFile()) {
                 results.push(path.join(name, folder_dir[item]));
             }
-            // else { it is a FIFO, or a Socket or something ... } 
+            // else { it is a FIFO, or a Socket or something ... }
         }
         return results;
     },

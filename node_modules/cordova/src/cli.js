@@ -17,36 +17,50 @@
     under the License.
 */
 
+var path = require('path'),
+    optimist, // required in try-catch below to print a nice error message if it's not installed.
+    _;
+
 module.exports = function CLI(inputArgs) {
     try {
-        var optimist  = require('optimist');
+        optimist = require('optimist');
+        _ = require('lodash');
     } catch (e) {
         console.error("Please run npm install from this directory:\n\t" +
-                      require('path').dirname(__dirname));
+                      path.dirname(__dirname));
         process.exit(2);
     }
     var cordova   = require('../cordova');
 
-    args = optimist(inputArgs)
+    // If no inputArgs given, use process.argv.
+    var tokens;
+    if (inputArgs) {
+        tokens = inputArgs.slice(2);
+    } else {
+        tokens = process.argv.slice(2);
+    }
+
+    var args = optimist(tokens)
         .boolean('d')
         .boolean('verbose')
         .boolean('v')
         .boolean('version')
         .boolean('silent')
+        .string('src')
+        .alias('src', 'source')
+        .string('link')
         .argv;
 
     if (args.v || args.version) {
         return console.log(require('../package').version);
     }
 
-    var tokens = inputArgs.slice(2),
-        opts = {
+    var opts = {
             platforms: [],
             options: [],
             verbose: (args.d || args.verbose),
             silent: args.silent
-        },
-        cmd;
+        };
 
     cordova.on('results', console.log);
 
@@ -78,37 +92,60 @@ module.exports = function CLI(inputArgs) {
         }
     }
 
-    cmd = tokens && tokens.length ? tokens.splice(0,1) : undefined;
+    var cmd = tokens && tokens.length ? tokens.splice(0,1) : undefined;
     if (cmd === undefined) {
         return cordova.help();
+    }
+
+    if (!cordova.hasOwnProperty(cmd)) {
+        throw new Error('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');
     }
 
     if (cmd === "info") {
         return cordova.info();
     }
 
-    if (cordova.hasOwnProperty(cmd)) {
-        if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
-            // Filter all non-platforms into options
-            var platforms = require("../platforms");
-            tokens.forEach(function(option, index) {
-                if (platforms.hasOwnProperty(option)) {
-                    opts.platforms.push(option);
-                } else {
-                    opts.options.push(option);
-                }
-            });
-            cordova.raw[cmd].call(this, opts).done();
-        } else if (cmd == 'create' || cmd == 'serve') {
-            cordova.raw[cmd].apply(this, tokens).done();
-        } else {
-            // platform/plugins add/rm [target(s)]
-            var invocation = tokens.slice(0,1); // this has the sub-command, i.e. "platform add" or "plugin rm"
-            var targets = tokens.slice(1); // this should be an array of targets, be it platforms or plugins
-            invocation.push(targets);
-            cordova.raw[cmd].apply(this, invocation).done();
+    if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
+        // Filter all non-platforms into options
+        var platforms = require("../platforms");
+        tokens.forEach(function(option, index) {
+            if (platforms.hasOwnProperty(option)) {
+                opts.platforms.push(option);
+            } else {
+                opts.options.push(option);
+            }
+        });
+        cordova.raw[cmd].call(this, opts).done();
+    } else if (cmd == 'serve') {
+        cordova.raw[cmd].apply(this, tokens).done();
+    } else if (cmd == 'create') {
+        var cfg = {};
+        // If we got a forth parameter, consider it to be JSON to init the config.
+        if (args._[4]) {
+            cfg = JSON.parse(args._[4]);
         }
+        var customWww = args.src || args.link;
+        if (customWww) {
+            if (customWww.indexOf(':') != -1) {
+                throw new Error('Only local paths for custom www assets are supported.');
+            }
+            if (customWww.substr(0,1) === '~') {  // resolve tilde in a naive way.
+                customWww = path.join(process.env.HOME,  customWww.substr(1));
+            }
+            customWww = path.resolve(customWww);
+            var wwwCfg = {uri: customWww};
+            if (args.link) {
+                wwwCfg.link = true;
+            }
+            _.merge(cfg, {lib: {www: wwwCfg}} );
+        }
+        // create(dir, id, name, cfg)
+        cordova.raw[cmd].call(this, args._[1], args._[2], args._[3], cfg).done();
     } else {
-        throw new Error('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');
+        // platform/plugins add/rm [target(s)]
+        var invocation = tokens.slice(0,1); // this has the sub-command, i.e. "platform add" or "plugin rm"
+        var targets = tokens.slice(1); // this should be an array of targets, be it platforms or plugins
+        invocation.push(targets);
+        cordova.raw[cmd].apply(this, invocation).done();
     }
-}
+};
