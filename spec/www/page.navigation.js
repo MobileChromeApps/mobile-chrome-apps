@@ -4,24 +4,29 @@
 
 chromespec.registerSubPage('chrome-navigation', function(rootEl) {
   rootEl.innerHTML =
-      '<a href="http://www.google.com">www.google.com</a><br><br>' +
-      '<a href="http://www.google.com" target="_blank">www.google.com (target=_blank)</a><br><br>' +
-      '<a href="http://www.google.com" target="_system">www.google.com (target=_system)</a><br><br>' +
-      '<a href="http://www.google.com" target="_self">www.google.com (target=_self)</a><br><br>' +
-      '<a href="#foo">#foo</a> (shouldn\'t navigate)<br><br>' +
-      '<a href="#bar">#bar</a> (shouldn\'t navigate)<br><br>';
+      '<center><b>Should be no-ops:</b><br><br>' +
+      '<a href="http://www.google.com">plain link</a><br><br>' +
+      '<a href="http://www.google.com" target="_self">link target=_self</a><br><br>' +
+      '<a href="#foo">#foo</a><br><br>' +
+      '<a href="#bar">#bar</a><br><br>' +
+      '<b>Should open in Browser</b><br><br>' +
+      '<a href="http://www.google.com" target="_blank">link target=_blank</a><br><br>' +
+      '<a href="http://www.google.com" target="_system">link target=_system</a><br><br>' +
+      '<a href="http://www.google.com" target="foo">link target=foo</a><br><br>' +
+      '<b>Other</b><br><br>';
+
   function addButton(name, func) {
     var button = chromespec.createButton(name, func);
     rootEl.appendChild(button);
   }
 
-  addButton('Set location = google.com', function() {
+  addButton('location = google.com (no-op)', function() {
     location = 'http://www.google.com';
   });
-  addButton('location.replace(google.com)', function() {
+  addButton('location.replace() (no-op)', function() {
     location.replace('http://www.google.com');
   });
-  addButton('window.open(google.com)', function() {
+  addButton('window.open() (open browser)', function() {
     window.open('http://www.google.com');
   });
 });
