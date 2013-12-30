@@ -81,26 +81,27 @@ exports.bgInit = function(bgWnd) {
     storage.internal.set({'version': version, 'shutdownClean': false}, function() {
       // Add some additional startup events if the app was not shut down properly
       // last time, or if it has been upgraded, or if it has just been intstalled.
-      if (restart) {
-        bootstrap.onBackgroundPageLoaded.subscribe(function() {
-          app_runtime.onRestarted.fire();
-        });
-      }
-      if (installDetails) {
-        bootstrap.onBackgroundPageLoaded.subscribe(function() {
-          runtime.onInstalled.fire(installDetails);
-        });
-      }
-
-      // If launching for UI, fire onLaunched event
       bootstrap.onBackgroundPageLoaded.subscribe(function() {
+        if (restart) {
+          app_runtime.onRestarted.fire();
+        }
+        if (installDetails) {
+          runtime.onInstalled.fire(installDetails);
+        }
+        // If launching for UI, fire onLaunched event
         exec(function(data) {
           if (data) {
             app_runtime.onLaunched.fire();
           }
+          // Log a warning if no window is created after a bit of a grace period.
+          setTimeout(function() {
+            var app_window = require('org.chromium.bootstrap.app.window');
+            if (!app_window.current()) {
+              console.warn('No page loaded because chrome.app.window.create() was never called.');
+            }
+          }, 500);
         }, null, "ChromeBootstrap", "doesNeedLaunch", []);
       });
-
     });
   });
 
