@@ -4,6 +4,7 @@
 
 var Event = require('org.chromium.common.events');
 var mobile = require('org.chromium.bootstrap.mobile.impl');
+var runtime = require('org.chromium.runtime.runtime');
 var ChromeExtensionURLs = require('org.chromium.bootstrap.helpers.ChromeExtensionURLs');
 
 // The AppWindow created by chrome.app.window.create.
@@ -67,7 +68,9 @@ function evalScripts(rootNode, afterFunc) {
     }
   }
   for (var i = 0, script; script = scripts[i]; ++i) {
-    if (script.src) {
+    if (script.type && !/text\/javascript/i.exec(script.type)) {
+      onLoadCallback();
+    } else if (script.src) {
       var replacement = doc.createElement('script');
       copyAttributes(script, replacement);
       replacement.onload = onLoadCallback;
@@ -76,6 +79,9 @@ function evalScripts(rootNode, afterFunc) {
       script.parentNode.replaceChild(replacement, script);
     } else {
       // Skip over inline scripts.
+      console.warn('Refused to execute inline script because it violates the following Content Security Policy directive: "default-src \'self\' chrome-extension-resource:"');
+      console.warn('Script contents:');
+      console.warn(script.textContent.slice(0, 100) + (script.textContent.length > 100 ? '<truncated>' : ''));
       onLoadCallback();
     }
   }
@@ -84,17 +90,13 @@ function evalScripts(rootNode, afterFunc) {
 }
 
 function rewritePage(pageContent, filePath) {
-  var fgBody = mobile.fgWindow.document.body;
+  var fgBody = document.body;
   var fgHead = fgBody.previousElementSibling;
 
   // fgHead.innerHTML causes a DOMException on Android 2.3.
   while (fgHead.lastChild) {
     fgHead.removeChild(fgHead.lastChild);
   }
-
-  mobile.fgWindow.history &&
-    mobile.fgWindow.history.replaceState &&
-      mobile.fgWindow.history.replaceState(null, null, filePath);
 
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {
@@ -141,17 +143,19 @@ exports.create = function(filePath, options, callback) {
     return;
   }
   createdAppWindow = new AppWindow();
-  var xhr = new origXMLHttpRequest();
+  // Use background page's XHR so that relative URLs are relative to it.
+  var xhr = new mobile.bgWindow.XMLHttpRequest();
   xhr.open('GET', filePath, true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-      // Call the callback before the page contents loads.
-      if (callback) {
-        callback(createdAppWindow);
-      }
-      var pageContent = xhr.responseText || 'Page load failed.';
-      rewritePage(pageContent, filePath);
+  // Android pre KK doesn't support onloadend.
+  xhr.onload = xhr.onerror = function() {
+    // Change the page URL before the callback.
+    history.replaceState(null, null, runtime.getURL(filePath));
+    // Call the callback before the page contents loads.
+    if (callback) {
+      callback(createdAppWindow);
     }
+    var pageContent = xhr.responseText || 'Page load failed.';
+    rewritePage(pageContent, filePath);
   };
   xhr.send();
 };

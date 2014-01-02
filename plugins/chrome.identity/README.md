@@ -32,11 +32,12 @@ This process will yield a client id, but no action is required with it (unlike f
 
 ### iOS
 
-For iOS, first follow the instructions [here](https://developers.google.com/+/mobile/ios/getting-started).
+For iOS, first follow **Step 1** of the instructions [here](https://developers.google.com/+/mobile/ios/getting-started#step_1_creating_the_apis_console_project).
 
-**Note:** Skip step 2, part 7; you will instead put your client id in your manifest (as shown in the "Updating Your Manifest" section).
+**Note:** If you change your app's bundle identifier at any time, you will need to correspondingly update the bundle identifier in the following places:
 
-Next, in Xcode, click on the project in the left sidebar and navigate to the `Build Phases` tab.  In the `Compile Sources` section, remove `OpenInChromeController.m`.
+* the [Google Cloud Console](https://cloud.google.com/console), under "APIs & Auth" > "Registered Apps", and
+* your app's URL types in Xcode (located in the app's *Info* tab).
 
 ## Updating Your Manifest
 
@@ -63,3 +64,4 @@ When using this plugin outside the context of a Mobile Chrome App, this informat
 ## Playing With Google APIs
 
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
+

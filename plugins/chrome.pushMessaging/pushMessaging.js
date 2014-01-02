@@ -39,7 +39,11 @@ exports.getChannelId = function(interactive, callback) {
   });
   
   var win = function(registrationId) {
-    result['registrationId'] = registrationId;
+    if(require('cordova/platform').id == "ios"){
+      result['deviceToken'] = registrationId;
+    } else {
+      result['registrationId'] = registrationId;
+    }
     checkToIssueCallback();
   }
   exec(win, checkToIssueCallback, 'ChromePushMessaging', 'getRegistrationId', [ chrome.runtime.getManifest().senderId ]);

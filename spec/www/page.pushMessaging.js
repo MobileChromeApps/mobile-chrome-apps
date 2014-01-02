@@ -2,13 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Chrome app GCM credentials.
-var clientId = '429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com';
-var clientSecret = 'Q_Jk5GKsGcA-Dp9GcqMKRnAP';
-var refreshToken = '1/8SBtOiPJYTKAMWmYlmrMZ4Xk0B_Z3c_86peQETRCzjM';
-
-// Android GCM credentials.
-var serverApiKey = 'AIzaSyC75_iRkHOwMm1nnMrP8iv6BZRIvzQvKDQ';
 
 // We store the channel and registration ids.
 var pushMessagingIds;
@@ -18,7 +11,13 @@ chrome.pushMessaging.onMessage.addListener(function(message) {
   chromespec.log('Push message arrived. Subchannel: ' + message.subchannelId + ', message: "' + JSON.parse(message.payload).message + '"');
 });
 
+
+
 chromespec.registerSubPage('chrome.pushMessaging', function(rootEl) {
+  chromespec.log('This test requires a physical device (not an emulator)');
+  chromespec.log('Please ensure that oauth2 is configured for chrome.identity');
+  chromespec.log('See the README for details');
+
   function addButton(name, func) {
     var button = chromespec.createButton(name, func);
     rootEl.appendChild(button);
@@ -27,8 +26,9 @@ chromespec.registerSubPage('chrome.pushMessaging', function(rootEl) {
   addButton('Get Channel Id', function() {
     var onGetChannelIdSuccess = function(channelId) {
       pushMessagingIds = channelId;
-      chromespec.log('Channel id: ' + pushMessagingIds.channelId);
-      chromespec.log('Registration id: ' + pushMessagingIds.registrationId);
+      chromespec.log('Chrome Channel id: ' + pushMessagingIds.channelId);
+      chromespec.log('Android Registration id: ' + pushMessagingIds.registrationId);
+      chromespec.log('APNS Device Token: ' + pushMessagingIds.deviceToken);
     };
 
     chrome.pushMessaging.getChannelId(true /* interactive */, onGetChannelIdSuccess);

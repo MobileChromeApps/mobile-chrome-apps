@@ -19,15 +19,13 @@
       <feature name="ChromeNavigation">
         <param name="android-package" value="org.chromium.ChromeNavigation"/>
         <param name="onload" value="true"/>
-        <url-filter value="http://" />
-        <url-filter value="https://" />
       </feature>
     </config-file>
   </platform>
 
   <platform name="ios">
-    <source-file src="src/ios/OpenInChromeController.m" />
-    <header-file src="src/ios/OpenInChromeController.h" />
+    <source-file src="src/ios/MCAOpenInChromeController.m" />
+    <header-file src="src/ios/MCAOpenInChromeController.h" />
     <source-file src="src/ios/ChromeNavigation.m" />
     <header-file src="src/ios/ChromeNavigation.h" />
     <config-file target="config.xml" parent="/widget">

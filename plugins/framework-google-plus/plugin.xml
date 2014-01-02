@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.frameworks.googleplus"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Google Plus iOS Framework Plugin</name>
+
+  <platform name="ios">
+    <framework src="src/ios/GooglePlus.framework" custom="true" />
+    <framework src="AssetsLibrary.framework" />
+    <framework src="Foundation.framework" />
+    <framework src="CoreLocation.framework" />
+    <framework src="CoreMotion.framework" />
+    <framework src="CoreGraphics.framework" />
+    <framework src="CoreText.framework" />
+    <framework src="MediaPlayer.framework" />
+    <framework src="Security.framework" />
+    <framework src="SystemConfiguration.framework" />
+    <framework src="UIKit.framework" />
+  </platform>
+</plugin>

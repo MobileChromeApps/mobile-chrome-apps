@@ -15,7 +15,7 @@
   <script src="pageloadtest_helpers/script_order_test5.js"></script>
   <script src="pageloadtest_helpers/script_order_test6.js"></script>
   <script src="pageloadtest_helpers/script_order_test7.js"></script>
-  <script src="lib/ral.min.js"></script>
+  <script src="third_party/RAL.concat.js"></script>
   </head>
   <script id="dont-forget2"></script>
   <body testattr=foo>
@@ -23,6 +23,7 @@
     <script src="/pageloadtest_helpers/script_order_test9.js"></script>
     <script src="asdf:::"></script><!-- test that invalid tags are skipped over -->
     <script type=foo>Some data</script>
+    <script type=foo src=foo></script>
     <script id="dont-execute">shouldNotExecute=1</script>
     <div style="display:none" id="i18n-html-test">__MSG_description__</div>
   </body>

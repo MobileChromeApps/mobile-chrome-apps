@@ -58,6 +58,28 @@ exports.removeCachedAuthToken = function(details, callback) {
     exec(callback, null, 'ChromeIdentity', 'removeCachedAuthToken', [details.token]);
 }
 
+exports.revokeAuthToken = function(details, callback) {
+    // If a token has been passed, revoke it and remove it from the cache.
+    // If not, call the callback with an error.
+    if (details && details.token) {
+        // Revoke the token!
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://accounts.google.com/o/oauth2/revoke?token=' + details.token);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                if (xhr.status < 200 || xhr.status > 300) {
+                    console.log('Could not revoke token; status ' + xhr.status + '.');
+                } else {
+                    exports.removeCachedAuthToken({ token: details.token }, callback);
+                }
+            }
+        }
+        xhr.send(null);
+    } else {
+        return callbackWithError('No token to revoke.', callback);
+    }
+}
+
 exports.launchWebAuthFlow = function(details, callback) {
     if (typeof callback !== 'function') {
         return callbackWithError('Callback function required');

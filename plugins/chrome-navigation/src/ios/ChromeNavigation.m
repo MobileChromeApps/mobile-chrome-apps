@@ -6,7 +6,7 @@
 
 #import <Cordova/CDVViewController.h>
 
-#import "OpenInChromeController.h"
+#import "MCAOpenInChromeController.h"
 
 #pragma mark ChromeNavigation
 
@@ -15,7 +15,7 @@
 - (BOOL)shouldOverrideLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType
 {
     if(navigationType == UIWebViewNavigationTypeLinkClicked) {
-        OpenInChromeController *openInController_ = [[OpenInChromeController alloc] init];
+        MCAOpenInChromeController *openInController_ = [[MCAOpenInChromeController alloc] init];
         if ([openInController_ isChromeInstalled]) {
             [openInController_ openInChrome:[request URL] ];
         } else {
