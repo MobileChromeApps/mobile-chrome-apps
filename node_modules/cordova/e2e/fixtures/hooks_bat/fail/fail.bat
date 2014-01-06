@@ -1,2 +1,0 @@
-@ECHO OFF
-EXIT /B 1
