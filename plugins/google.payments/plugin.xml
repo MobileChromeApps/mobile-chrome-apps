@@ -21,5 +21,27 @@
     <js-module src="www/android/google.payments.js" name="androidPayments">
       <merges target="google.payments" />
     </js-module>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="com.android.vending.BILLING" />
+    </config-file>
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="InAppBillingV3">
+        <param name="android-package" value="com.google.payments.InAppBillingV3"/>
+      </feature>
+    </config-file>
+
+    <source-file src="src/android/InAppBillingV3.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Base64.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Base64DecoderException.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabException.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabHelper.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabResult.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Inventory.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Purchase.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Security.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/SkuDetails.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
   </platform>
 </plugin>
