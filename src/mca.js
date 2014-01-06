@@ -865,7 +865,7 @@ function parseCommandLine() {
           desc: 'Show usage message.'
       }).argv;
 
-  if (commandLineFlags.h || !commandLineFlags._[0]) {
+  if (commandLineFlags.h || !commandLineFlags._[0] || commandLineFlags._[0] == 'help') {
     optimist.showHelp();
     exit(1);
   }
