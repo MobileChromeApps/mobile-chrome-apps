@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -73,6 +74,10 @@ public class IabHelper {
     // Is debug logging enabled?
     boolean mDebugLog = false;
     String mDebugTag = "IabHelper";
+
+    // Can we skip the online purchase verification?
+    // (Only allowed if the app is debuggable)
+	private boolean mSkipPurchaseVerification = false;
 
     // Is setup done?
     boolean mSetupDone = false;
@@ -178,6 +183,10 @@ public class IabHelper {
     public void enableDebugLogging(boolean enable) {
         checkNotDisposed();
         mDebugLog = enable;
+    }
+
+    public void setSkipPurchaseVerification(boolean shouldSkipPurchaseVerification) {
+        mSkipPurchaseVerification = shouldSkipPurchaseVerification;
     }
 
     /**
@@ -474,15 +483,19 @@ public class IabHelper {
             try {
                 purchase = new Purchase(mPurchasingItemType, purchaseData, dataSignature);
                 String sku = purchase.getSku();
-
+                // Only allow purchase verification to be skipped if we are debuggable
+                boolean skipPurchaseVerification = (this.mSkipPurchaseVerification  &&
+                            ((mContext.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0));
                 // Verify signature
-                if (!Security.verifyPurchase(mSignatureBase64, purchaseData, dataSignature)) {
-                    logError("Purchase signature verification FAILED for sku " + sku);
-                    result = new IabResult(IABHELPER_VERIFICATION_FAILED, "Signature verification failed for sku " + sku);
-                    if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, purchase);
-                    return true;
+                if (!skipPurchaseVerification) {
+                    if (!Security.verifyPurchase(mSignatureBase64, purchaseData, dataSignature)) {
+                        logError("Purchase signature verification FAILED for sku " + sku);
+                        result = new IabResult(IABHELPER_VERIFICATION_FAILED, "Signature verification failed for sku " + sku);
+                        if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, purchase);
+                        return true;
+                    }
+                    logDebug("Purchase signature successfully verified.");
                 }
-                logDebug("Purchase signature successfully verified.");
             }
             catch (JSONException e) {
                 logError("Failed to parse purchase data.");
@@ -835,6 +848,9 @@ public class IabHelper {
         logDebug("Querying owned items, item type: " + itemType);
         logDebug("Package name: " + mContext.getPackageName());
         boolean verificationFailed = false;
+        // Only allow purchase verification to be skipped if we are debuggable
+        boolean skipPurchaseVerification = (this.mSkipPurchaseVerification  &&
+                    ((mContext.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0));
         String continueToken = null;
 
         do {
@@ -866,7 +882,7 @@ public class IabHelper {
                 String purchaseData = purchaseDataList.get(i);
                 String signature = signatureList.get(i);
                 String sku = ownedSkus.get(i);
-                if (Security.verifyPurchase(mSignatureBase64, purchaseData, signature)) {
+                if (skipPurchaseVerification || Security.verifyPurchase(mSignatureBase64, purchaseData, signature)) {
                     logDebug("Sku is owned: " + sku);
                     Purchase purchase = new Purchase(itemType, purchaseData, signature);
 
