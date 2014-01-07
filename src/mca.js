@@ -738,6 +738,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 // Update App
 
 function prePrepareCommand() {
+  var cordova = require('cordova');
+  var plugins = [];
+
   /* Pre-create, pre-prepare manifest check and project munger */
   function readManifestStep(callback) {
     var manifestFile = path.join('www', 'manifest.json');
@@ -745,7 +748,8 @@ function prePrepareCommand() {
       return callback();
     }
     readManifest(manifestFile, function(manifest) {
-      parseManifest(manifest, function(chromeAppId, whitelist, plugins) {
+      parseManifest(manifest, function(chromeAppId, whitelist, pluginsFromManifest) {
+        plugins = pluginsFromManifest;
         console.log("Writing config.xml");
         fs.readFile(path.join('www', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
           if (err) {
@@ -787,7 +791,18 @@ function prePrepareCommand() {
       });
     });
   }
+
+  function installPluginsStep(callback) {
+    console.log("Updating plugins");
+    var cmds = [];
+    plugins.forEach(function(pluginPath) {
+      cmds.push(['plugin', 'add', pluginPath]);
+    });
+    runAllCmds(cordova, cmds, callback);
+  }
+
   eventQueue.push(readManifestStep);
+  eventQueue.push(installPluginsStep);
 }
 
 function updateAppCommand() {
