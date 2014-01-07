@@ -2,19 +2,18 @@
 
 Mobile Chrome Apps is a toolkit for porting [Chrome Packaged Apps](http://developer.chrome.com/apps) to Android and iOS hybrid web applications, through [Apache Cordova](http://cordova.apache.org/).
 
-## 30 Second Summary
+## Overview
 
-* You're excited about Chrome Packaged App for Windows, OSX, Linux, and ChromeOS.  Sweet!
-* You've discovered this toolkit for creating Android & iOS hybrid native apps with chrome app polyfills.
-* Follow our Guide (below) to Import your existing chrome app (or start fresh).
-* ???? 
-  * (modify for mobile design, fix bugs, work-around limitations, and test)
+* You're excited about [Chrome Packaged Apps](http://developer.chrome.com/apps) for Windows, OSX, Linux, and ChromeOS. Sweet!
+* You've discovered this toolkit for porting a Chrome Packaged App to Android & iOS as native apps.
+* Follow our guide (below) to import your existing app (or start fresh).
+* You test out your app on devices & make mobile-specific UX enhancements.
 * Publish to the Android Play Store or iOS App Store.
 * Profit!
 
 ## Requirements
 
-Android 4.x and iOS 6+.
+Android 4.x+, iOS 6+.
 
 ## Documentation
 
@@ -22,7 +21,7 @@ You'll probably want to start with the [Installation Guide](docs/Installation.md
 
 Follow that up with the [Getting Started Guide](docs/GettingStarted.md).
 
-See our somewhat up to date [API Status Page](docs/APIStatus.md).
+See what APIs are supported on the [API Status Page](docs/APIStatus.md).
 
 Find all our documentation in the [`docs/`](docs/) directory.
 
