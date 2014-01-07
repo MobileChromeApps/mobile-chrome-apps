@@ -283,6 +283,60 @@ function readManifest(manifestFilename, callback) {
   });
 }
 
+function mapAppKeyToAppId(key) {
+  var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
+               '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
+  return (Crypto.SHA256(new Buffer(key, 'base64'))
+          .substr(0,32)
+          .replace(/[a-f0-9]/g, function(char) {
+             return mpdec[char];
+          }));
+}
+
+function parseManifest(manifest, callback) {
+  var permissions = [],
+      chromeAppId,
+      whitelist = [],
+      plugins = [],
+      i;
+  if (manifest && manifest.permissions) {
+    for (i = 0; i < manifest.permissions.length; ++i) {
+      if (typeof manifest.permissions[i] === "string") {
+        if (manifest.permissions[i].indexOf('://') > -1) {
+          // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
+          if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
+            manifest.permissions[i] += "*";
+          }
+          whitelist.push(manifest.permissions[i]);
+        } else if (manifest.permissions[i] === "<all_urls>") {
+          whitelist.push("*");
+        } else {
+          permissions.push(manifest.permissions[i]);
+        }
+      } else {
+        permissions = permissions.concat(Object.keys(manifest.permissions[i]));
+      }
+    }
+  }
+  for (i = 0; i < permissions.length; i++) {
+    var pluginsForPermission = PLUGIN_MAP[permissions[i]];
+    if (pluginsForPermission) {
+      for (var j = 0; j < pluginsForPermission.length; ++j) {
+        plugins.push(pluginsForPermission[j]);
+      }
+    } else {
+      console.warn('Unsupported manifest permission encountered: ' + permissions[i] + ' (skipping)');
+    }
+  }
+  if (manifest.key) {
+    chromeAppId = mapAppKeyToAppId(manifest.key);
+  } else {
+    // All zeroes -- should we use rand() here instead?
+    chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  }
+  callback(chromeAppId, whitelist, plugins);
+}
+
 /******************************************************************************/
 /******************************************************************************/
 // Tools Check
@@ -474,7 +528,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var manifest = null;
 
   var whitelist = [];
-  var permissions = [];
+  var plugins = [];
   var chromeAppId;
 
   var cordova = require('cordova');
@@ -533,43 +587,14 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       return callback();
     }
     readManifest(manifestFile, function(manifestData) {
-      manifest = manifestData;
-      if (manifest && manifest.permissions) {
-        for (var i = 0; i < manifest.permissions.length; ++i) {
-          if (typeof manifest.permissions[i] === "string") {
-            if (manifest.permissions[i].indexOf('://') > -1) {
-              // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
-              if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
-                manifest.permissions[i] += "*";
-              }
-              whitelist.push(manifest.permissions[i]);
-            } else if (manifest.permissions[i] === "<all_urls>") {
-              whitelist.push("*");
-            } else {
-              permissions.push(manifest.permissions[i]);
-            }
-          } else {
-            permissions = permissions.concat(Object.keys(manifest.permissions[i]));
-          }
-        }
-      }
-      if (manifest.key) {
-        // stub for testing
-        function mapAppKeyToAppId(key) {
-          var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
-                       '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
-          return (Crypto.SHA256(new Buffer(key, 'base64'))
-                  .substr(0,32)
-                  .replace(/[a-f0-9]/g, function(char) {
-                     return mpdec[char];
-                  }));
-        }
-        chromeAppId = mapAppKeyToAppId(manifest.key);
-      } else {
-        // All zeroes -- should we use rand() here instead?
-        chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-      }
-      callback();
+      parseManifest(manifestData, function(chromeAppIdFromManifest, whitelistFromManifest, pluginsFromManifest) {
+        // Set globals
+        manifest = manifestData;
+        chromeAppId = chromeAppIdFromManifest;
+        whitelist = whitelistFromManifest;
+        plugins = pluginsFromManifest;
+        callback();
+      });
     });
   }
 
@@ -589,16 +614,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     DEFAULT_PLUGINS.forEach(function(pluginPath) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
-    for (var i = 0; i < permissions.length; i++) {
-      var pluginPaths = PLUGIN_MAP[permissions[i]];
-      if (pluginPaths) {
-        for (var j = 0; j < pluginPaths.length; ++j) {
-          cmds.push(['plugin', 'add', pluginPaths[j]]);
-        }
-      } else {
-        console.warn('Unsupported manifest permission encountered: ' + permissions[i] + ' (skipping)');
-      }
-    }
+    plugins.forEach(function(pluginPath) {
+      cmds.push(['plugin', 'add', pluginPath]);
+    });
 
     function runAllCmds(callback) {
       chdir(path.join(origDir, appName));
