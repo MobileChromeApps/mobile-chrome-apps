@@ -514,6 +514,26 @@ function initCommand() {
   eventQueue.push(cleanup);
 }
 
+function runCmd(cordova, cmd, callback) {
+  // Hack to remove the obj passed to the cordova create command.
+  console.log(cmd.join(' ').replace('[object Object]', ''));
+  cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
+}
+
+function runAllCmds(cordova, commands, callback) {
+  if (commands.length === 0) {
+    return callback();
+  }
+  var curCmd = commands[0],
+      moreCommands = commands.slice(1);
+  runCmd(cordova, curCmd, function(err) {
+    if (err)
+      return fatal(err);
+    runAllCmds(cordova, moreCommands, callback);
+  });
+}
+
+
 /******************************************************************************/
 /******************************************************************************/
 // Create App
@@ -533,12 +553,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var chromeAppId;
 
   var cordova = require('cordova');
-
-  function runCmd(cmd, callback) {
-    // Hack to remove the obj passed to the cordova create command.
-    console.log(cmd.join(' ').replace('[object Object]', ''));
-    cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
-  }
 
   function resolveTilde(string) {
     // TODO: implement better
@@ -619,18 +633,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
 
-    function runAllCmds(callback) {
-      chdir(path.join(origDir, appName));
-      var curCmd = cmds.shift();
-      if (!curCmd)
-        return callback();
-      runCmd(curCmd, function(err) {
-        if (err)
-          return fatal(err);
-        runAllCmds(callback);
-      });
-    }
-
     function afterAllCommands() {
       // Create scripts that update the cordova app on prepare
       fs.writeFileSync('.cordova/hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
@@ -677,7 +679,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       writeConfigStep(function(err) {
         if(err)
            return fatal(err);
-        runAllCmds(afterAllCommands);
+        chdir(path.join(origDir, appName));
+        runAllCmds(cordova, cmds, afterAllCommands);
       });
     });
   }
