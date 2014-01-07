@@ -60,6 +60,7 @@ var path = require('path');
 var ncp = require('ncp');
 var optimist = require('optimist');
 var Crypto = require('cryptojs').Crypto;
+var et = require('elementtree');
 
 // Globals
 var commandLineFlags = null;
@@ -631,10 +632,15 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }
 
     function afterAllCommands() {
-      // Create a script that runs update.js.
+      // Create scripts that update the cordova app on prepare
+      fs.writeFileSync('.cordova/hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
+      fs.writeFileSync('.cordova/hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ./mca pre-prepare');
+      fs.chmodSync('.cordova/hooks/before_prepare/mca-pre-prepare.sh', '777');
+
       fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'mca update-app');
       fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ./mca update-app');
       fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
+
       // Create a convenience link to MCA
       var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
       var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
@@ -727,6 +733,59 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 /******************************************************************************/
 /******************************************************************************/
 // Update App
+
+function prePrepareCommand() {
+  /* Pre-create, pre-prepare manifest check and project munger */
+  function readManifestStep(callback) {
+    var manifestFile = path.join('www', 'manifest.json');
+    if (!fs.existsSync(manifestFile)) {
+      return callback();
+    }
+    readManifest(manifestFile, function(manifest) {
+      parseManifest(manifest, function(chromeAppId, whitelist, plugins) {
+        console.log("Writing config.xml");
+        fs.readFile(path.join('www', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+          if (err) {
+            console.log(err);
+          } else {
+            var tree = et.parse(data);
+
+            var widget = tree.getroot();
+            if (widget.tag == 'widget') {
+              widget.attrib.version = manifest.version;
+            }
+
+            var name = tree.findall('./name');
+            if (name.length) name[0].text = manifest.name;
+
+            var description = tree.findall('./description');
+            if (description.length) description[0].text = manifest.description;
+
+            var author = tree.findall('./author');
+            if (author.length) author[0].text = manifest.author;
+
+            var content = tree.findall('./content');
+            if (content.length) content[0].attrib.src = "chrome-extension://" + chromeAppId + "/chromeapp.html";
+
+            var access = widget.findall('access');
+            access.forEach(function(elem, index) {
+              /* The useless '0' parameter here will be removed with elementtree 0.1.6 */
+              widget.remove(0, elem);
+            });
+            whitelist.forEach(function(pattern, index) {
+              var tag = et.SubElement(widget, 'access');
+              tag.attrib.origin = pattern;
+            });
+
+            var configfile = et.tostring(tree.getroot(), {indent: 4});
+            fs.writeFile(path.join('www', 'config.xml'), configfile, callback);
+          }
+        });
+      });
+    });
+  }
+  eventQueue.push(readManifestStep);
+}
 
 function updateAppCommand() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
@@ -910,6 +969,9 @@ function main() {
 
   var commandActions = {
     // Secret command used by our prepare hook.
+    'pre-prepare': function() {
+      prePrepareCommand();
+    },
     'update-app': function() {
       updateAppCommand();
     },
