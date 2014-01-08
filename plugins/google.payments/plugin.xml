@@ -44,4 +44,10 @@
     <source-file src="src/android/SkuDetails.java" target-dir="src/com/google/payments" />
     <source-file src="src/android/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
   </platform>
+
+  <platform name="ios">
+    <js-module src="www/ios/google.payments.js" name="iosPayments">
+      <merges target="google.payments" />
+    </js-module>
+  </platform>
 </plugin>
