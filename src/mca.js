@@ -774,7 +774,7 @@ function prePrepareCommand() {
             if (author.length) author[0].text = manifest.author;
 
             var content = tree.findall('./content');
-            if (content.length) content[0].attrib.src = "chrome-extension://" + chromeAppId + "/chromeapp.html";
+            if (content.length) content[0].attrib.src = "chromeapp.html";
 
             var access = widget.findall('access');
             access.forEach(function(elem, index) {
