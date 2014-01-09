@@ -514,6 +514,9 @@ function initCommand() {
   eventQueue.push(cleanup);
 }
 
+/******************************************************************************/
+/******************************************************************************/
+
 function runCmd(cordova, cmd, callback) {
   // Hack to remove the obj passed to the cordova create command.
   console.log(cmd.join(' ').replace('[object Object]', ''));
@@ -673,7 +676,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       }
     };
 
-    runCmd(['create', appName, appId, appName, config_default], function(err) {
+    runCmd(cordova, ['create', appName, appId, appName, config_default], function(err) {
       if(err)
         return fatal(err);
       writeConfigStep(function(err) {
@@ -715,7 +718,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
                   "This ensures that any changes are reflected in your mobile application projects\n";
 
   function prepareStep(callback) {
-    runCmd(['prepare'], function(err) {
+    runCmd(cordova, ['prepare'], function(err) {
        if(err) {
           return fatal(err);
        }
