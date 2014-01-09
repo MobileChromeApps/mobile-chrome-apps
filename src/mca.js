@@ -425,7 +425,7 @@ function toolsCheck() {
 
 function ensureHasRunInit() {
   eventQueue.push(function(callback) {
-    if (!fs.existsSync(path.join(mcaRoot, 'cordova/cordova-js/pkg/cordova.ios.js')))
+    if (!fs.existsSync(path.join(mcaRoot, 'chrome-cordova/README.md')))
       return fatal('Please run \'' + scriptName + ' init\' first');
     callback();
   });
@@ -457,15 +457,6 @@ function promptIfNeedsUpdate() {
 /******************************************************************************/
 /******************************************************************************/
 // Init
-
-function buildCordovaJsStep(callback) {
-  console.log('## Building cordova-js');
-  process.chdir(path.join(mcaRoot, 'cordova', 'cordova-js'));
-  var packager = require(path.join(mcaRoot, 'cordova', 'cordova-js', 'build', 'packager'));
-  packager.generate('ios', undefined, function() {
-    packager.generate('android', undefined, callback);
-  });
-}
 
 function initCommand() {
   function checkGit(callback) {
@@ -510,7 +501,6 @@ function initCommand() {
   eventQueue.push(checkGit);
   eventQueue.push(checkOutSelf);
   eventQueue.push(checkOutSubModules);
-  eventQueue.push(buildCordovaJsStep);
   eventQueue.push(cleanup);
 }
 
@@ -731,7 +721,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
   eventQueue.push(validateSourceArgStep);
   eventQueue.push(readManifestStep);
-  eventQueue.push(buildCordovaJsStep);
   eventQueue.push(createStep);
   eventQueue.push(prepareStep);
 }
@@ -920,23 +909,14 @@ function updateAppCommand() {
     };
   }
 
-  function createAddJsStep(platform) {
-    return function(callback) {
-      console.log('## Updating cordova.js for ' + platform);
-      copyFile(path.join(mcaRoot, 'cordova', 'cordova-js', 'pkg', 'cordova.' + platform + '.js'), path.join(assetDirForPlatform(platform), 'cordova.js'), callback);
-    };
-  }
-
   if (hasAndroid) {
     eventQueue.push(removeVestigalConfigFile('android'));
     eventQueue.push(moveI18NMessagesDir('android'));
-    eventQueue.push(createAddJsStep('android'));
     eventQueue.push(copyIconAssetsStep('android'));
   }
   if (hasIos) {
     eventQueue.push(removeVestigalConfigFile('ios'));
     eventQueue.push(moveI18NMessagesDir('ios'));
-    eventQueue.push(createAddJsStep('ios'));
     eventQueue.push(copyIconAssetsStep('ios'));
   }
 }
