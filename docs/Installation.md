@@ -26,10 +26,10 @@ Note: iOS development can only be done on OS X.
 For Mac / Linux:
 * Using `nvm` to install node has advantages
 
-    curl https://raw.github.com/creationix/nvm/master/install.sh | sh
-    source ~/.bash_profile
-    nvm install 0.10
-    nvm alias default 0.10
+        curl https://raw.github.com/creationix/nvm/master/install.sh | sh
+        source ~/.bash_profile
+        nvm install 0.10
+        nvm alias default 0.10
 
 
 ## Clone This Repository
