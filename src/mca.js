@@ -661,7 +661,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           uri: path.join(mcaRoot, 'cordova', 'cordova-android'),
           version: "mca",
           id: "cordova-mca",
-          template: path.join(mcaRoot, 'chrome-cordova', 'platform-templates', 'android'),
+          template: path.join(mcaRoot, 'templates', 'platform-android'),
         },
         ios: {
           uri: path.join(mcaRoot, 'cordova', 'cordova-ios'),
@@ -690,7 +690,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
   function writeConfigStep(callback) {
     console.log("Writing config.xml");
-    fs.readFile(path.join(mcaRoot, 'chrome-cordova', 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+    fs.readFile(path.join(mcaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
       if (err) {
         console.log(err);
       } else {
