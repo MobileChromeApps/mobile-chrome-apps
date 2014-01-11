@@ -566,12 +566,11 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   function validateSourceArgStep(callback) {
     var sourceArg = commandLineFlags.source;
     if (!sourceArg) {
-      appDir = path.join(mcaRoot, 'mobile-chrome-app-samples', 'helloworld', 'www');
+      appDir = path.join(mcaRoot, 'templates', 'default-app');
     } else {
       var dirsToTry = [
         sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
-        sourceArg === 'spec' && path.join(mcaRoot, 'chrome-cordova', 'spec', 'www'),
-        sourceArg && path.join(mcaRoot, 'mobile-chrome-app-samples', sourceArg, 'www')
+        sourceArg === 'spec' && path.join(mcaRoot, 'chrome-cordova', 'spec', 'www')
       ];
       var foundManifest = false;
       for (var i = 0; i < dirsToTry.length; i++) {
