@@ -80,6 +80,8 @@ var DEFAULT_PLUGINS = [
     path.join(mcaRoot, 'cordova', 'cordova-plugin-file'),
     path.join(mcaRoot, 'cordova', 'cordova-plugin-inappbrowser'),
     path.join(mcaRoot, 'cordova', 'cordova-plugin-network-information'),
+    path.join(mcaRoot, 'cordova', 'cordova-plugins', 'keyboard'),
+    path.join(mcaRoot, 'cordova', 'cordova-plugins', 'statusbar'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-navigation'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
     path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.i18n'),

@@ -28,3 +28,6 @@
 [submodule "cordova/google-play-services"]
 	path = cordova/google-play-services
 	url = https://github.com/MobileChromeApps/google-play-services.git
+[submodule "cordova/cordova-plugins"]
+	path = cordova/cordova-plugins
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugins.git
