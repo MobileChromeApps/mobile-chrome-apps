@@ -485,12 +485,20 @@ function initCommand() {
     console.log('## Updating git submodules');
 
     process.chdir(mcaRoot);
-    exec('git submodule update --init --recursive', callback, function(error) {
+
+    var error = function(error) {
       console.log("Could not update submodules:");
       console.warn(error.toString());
       console.log("Continuing without update.");
       callback();
-    });
+    }
+    exec('git submodule status', function(stdout) {
+      var isFirstInit = stdout.split('\n').some(function(s) { return s[0] == '-'; });
+      if (isFirstInit) {
+        console.warn('The next step may take a while the first time.');
+      }
+      exec('git submodule update --init --recursive', callback, error);
+    }, error);
   }
 
   function cleanup(callback) {
