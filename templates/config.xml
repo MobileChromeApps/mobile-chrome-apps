@@ -13,6 +13,8 @@
         __AUTHOR__
     </author>
 
+    <preference name="KeyboardShrinksView" value="true" />
+
     <preference name="chrome-app-id" value="__CHROME_APP_ID__" />
     <content src="chromeapp.html" />
 __WHITELIST__
