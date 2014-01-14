@@ -63,6 +63,7 @@ var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
 
 // Globals
+var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
 var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
@@ -439,7 +440,7 @@ function ensureHasRunInit() {
   });
 }
 
-function promptIfNeedsUpdate() {
+function promptIfNeedsGitUpdate() {
   eventQueue.push(function(callback) {
     process.chdir(mcaRoot);
     exec('git pull --rebase --dry-run', function(stdout, stderr) {
@@ -514,9 +515,13 @@ function initCommand() {
     callback();
   }
 
-  eventQueue.push(checkGit);
-  eventQueue.push(checkOutSelf);
-  eventQueue.push(checkOutSubModules);
+  if (isGitRepo) {
+    eventQueue.push(checkGit);
+    eventQueue.push(checkOutSelf);
+    eventQueue.push(checkOutSubModules);
+  } else {
+    console.log('"mca init" is not necessary for npm installs');
+  }
   eventQueue.push(cleanup);
 }
 
@@ -647,19 +652,21 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       fs.mkdirSync('hooks/after_prepare');
 
       fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
-      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ./mca pre-prepare');
+      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca pre-prepare');
       fs.chmodSync('hooks/before_prepare/mca-pre-prepare.sh', '777');
 
       fs.writeFileSync('hooks/after_prepare/mca-update.cmd', 'mca update-app');
-      fs.writeFileSync('hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ./mca update-app');
+      fs.writeFileSync('hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca update-app');
       fs.chmodSync('hooks/after_prepare/mca-update.sh', '777');
 
       // Create a convenience link to MCA
-      var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
-      var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
-      fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\n"' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
-      fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
-      fs.chmodSync('mca', '777');
+      if (isGitRepo) {
+        var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
+        var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
+        fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\n"' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
+        fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
+        fs.chmodSync('mca', '777');
+      }
       callback();
     }
 
@@ -1000,7 +1007,9 @@ function main() {
     },
     'create': function() {
       ensureHasRunInit();
-      promptIfNeedsUpdate();
+      if (isGitRepo) {
+        promptIfNeedsGitUpdate();
+      }
       toolsCheck();
       createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
     },
