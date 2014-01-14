@@ -3,13 +3,35 @@
   "author": "Mobile Chrome Apps (Cordova) Team at Google",
   "version": "0.1.0",
   "description": "Mobile Chrome Apps command line tool",
+  "bin" : { "mca" : "./mca" },
+  "license": "Apache version 2.0",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
+  },
   "dependencies": {
     "ncp":"~0.4",
-    "cordova":">=3.2",
+    "cordova":">=3.3",
     "optimist":"~0.5",
     "cryptojs":"~2",
     "elementtree": "0.1.5"
   },
-  "bin" : { "mca" : "./mca" },
-  "license": "Apache version 2.0"
+  "bundledDependencies": [
+    "ncp",
+    "cordova",
+    "optimist",
+    "cryptojs",
+    "elementtree"
+  ],
+  "files": [
+    "README.md",
+    "RELEASENOTES.md",
+    "chrome-cordova/README.md",
+    "chrome-cordova/plugins",
+    "cordova",
+    "docs",
+    "mca",
+    "src",
+    "templates"
+  ]
 }

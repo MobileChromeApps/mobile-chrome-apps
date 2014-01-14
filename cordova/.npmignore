@@ -1,0 +1,8 @@
+cordova-android/test
+cordova-android/framework/res/layout
+cordova-android/framework/res/drawable*
+cordova-android/bin/templates/project/assets/www/*/
+cordova-ios/CordovaLibTests
+cordova-ios/bin/templates/project/www/*/
+cordova-plugins/android-legacy-websql
+cordova-plugins/websql
