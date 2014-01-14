@@ -408,9 +408,9 @@ function toolsCheck() {
   function checkAtLeastOneTool(callback) {
     if (!hasAndroidPlatform && !hasXcode) {
       if (process.platform == 'darwin') {
-        fatal('No usable build environment could be found. Please install either XCode or the\nAndroid SDK (with the Android 4.2.2 platform and Google APIs) and try again.');
+        fatal('No usable build environment could be found. Please install either XCode or the Android SDK and try again.');
       } else {
-        fatal('No usable build environment could be found. Please install the Android SDK (with\nthe Android 4.2.2 platform and Google APIs), make sure that android is on your\npath, and try again.');
+        fatal('No usable build environment could be found. Please install the Android SDK, make sure that android is on your PATH, and try again.');
       }
     }
     callback();
