@@ -13,4 +13,3 @@ chromespec.registerJasmineTest('chrome.storage');
 chromespec.registerJasmineTest('chrome.socket');
 chromespec.registerJasmineTest('pageload');
 chromespec.registerJasmineTest('xhr');
-chromespec.registerJasmineTest('symlinks');
