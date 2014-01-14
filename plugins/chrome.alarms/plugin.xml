@@ -13,8 +13,8 @@
 
   <name>Chrome Apps Alarms API</name>
 
-  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="org.chromium.storage" url="." subdir="plugins/chrome.storage" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.storage" />
 
   <js-module src="alarms.js" name="Alarms">
     <clobbers target="chrome.alarms" />

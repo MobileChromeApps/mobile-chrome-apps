@@ -13,12 +13,12 @@
 
   <name>Chrome Apps Identity API</name>
 
-  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="org.chromium.runtime" url="." subdir="plugins/chrome-runtime" />
-  <dependency id="org.apache.cordova.inappbrowser" url="." subdir="../cordova/cordova-plugin-inappbrowser" />
-  <dependency id="com.google.playservices" url="." subdir="../cordova/google-play-services" />
-  <dependency id="org.chromium.frameworks.googleopensource" url="." subdir="plugins/framework-google-open-source" />
-  <dependency id="org.chromium.frameworks.googleplus" url="." subdir="plugins/framework-google-plus" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.apache.cordova.inappbrowser" />
+  <dependency id="com.google.playservices" />
+  <dependency id="org.chromium.frameworks.googleopensource" />
+  <dependency id="org.chromium.frameworks.googleplus" />
 
   <js-module src="identity.js" name="Identity">
     <clobbers target="chrome.identity" />
