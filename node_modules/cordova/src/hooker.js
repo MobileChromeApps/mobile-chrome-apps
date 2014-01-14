@@ -23,7 +23,7 @@ var util  = require('./util'),
     child_process = require('child_process'),
     Q     = require('q'),
     path  = require('path'),
-    _ = require('lodash');
+    _ = require('underscore');
 
 module.exports = function hooker(root) {
     var r = util.isCordova(root);
@@ -47,25 +47,28 @@ function compareNumbers(a, b) {
 module.exports.prototype = {
     // Returns a promise.
     fire:function fire(hook, opts) {
+        var root = this.root;
         opts = opts || {};
-        var self = this;
-        var dir = path.join(this.root, '.cordova', 'hooks', hook);
-        opts.root = this.root;
+        opts.root = root;
 
+        function fireHooksInDir(dir) {
+            if (!(fs.existsSync(dir))) {
+                return Q();
+            } else {
+                var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function(s) {
+                    return s[0] != '.';
+                });
+                return execute_scripts_serially(scripts, root, dir, opts);
+            }
+        }
         // Fire JS hook for the event
         // These ones need to "serialize" events, that is, each handler attached to the event needs to finish processing (if it "opted in" to the callback) before the next one will fire.
         var handlers = events.listeners(hook);
         return execute_handlers_serially(handlers, opts)
         .then(function() {
-            // Fire script-based hooks
-            if (!(fs.existsSync(dir))) {
-                return Q(); // hooks directory got axed post-create; ignore.
-            } else {
-                var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function(s) {
-                    return s[0] != '.';
-                });
-                return execute_scripts_serially(scripts, self.root, dir, opts);
-            }
+            return fireHooksInDir(path.join(root, '.cordova', 'hooks', hook));
+        }).then(function() {
+            return fireHooksInDir(path.join(root, 'hooks', hook));
         });
     }
 };

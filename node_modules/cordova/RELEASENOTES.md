@@ -18,7 +18,24 @@
 # under the License.
 #
 -->
-# Cordova-cli changelog
+# Cordova-cli Release Notes
+
+## 3.3.0-0.1.0
+* CB-5347 Handle dangling platform symlink in cordova platform add
+* Added deprecation notice about wp7
+* updated plugman version to 0.17.0
+* CB-5573 relies on stderr content and error codes to detect a problem with xcode installation.
+* CB-4382 Pass cli arguments to project-level hooks
+* CB-5362 blackberry parser: support local cordova-blackberry
+* CB-5345 Add pre_package event for windows8 parser.
+
+## 3.2.0-0.4.0
+
+* Make sure errors during prepare are reported
+* CB-5031 Add CLI help text for platform update and plugin search
+* CB-5298 Remove redundant requirements check for iOS and Android. The bin/create scripts check.
+* windows8. fixes version number parsing logic
+* CB-4472 Remove <preference> from template config.xml
 
 ## 3.2.0-0.3.0
 

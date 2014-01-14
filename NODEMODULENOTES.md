@@ -7,4 +7,5 @@ This reduces the size of `node_modules` from ~56M to ~21M
     find node_modules -type d -iname tests -exec rm -rf {} \;
     find node_modules -type d -iname test -exec rm -rf {} \;
     find node_modules -type d -iname ripple-emulator -exec rm -rf {} \;
+    git add --all node_modules
 

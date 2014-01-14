@@ -4,11 +4,14 @@ Synopsis
 
 Global Commands
 
-    create <PATH> [ID [NAME [CONFIG]]] ....... creates a cordova project in the specified PATH, with
+    create <PATH> [ID [NAME [CONFIG]]] ....... creates a Cordova project in the specified PATH, with
                                                ID reverse-domain-style package name - used in <widget id>
                                                NAME is a human readable field
                                                CONFIG is a json string whose key/values will be included
                                                in [PATH]/.codova/config.json
+                  [--src|source=<PATH>] ...... use custom www assets instead of the stock Cordova hello-world.
+                  [--link=<PATH>] ............ symlink to custom www assets without creating a copy.
+
     help ..................................... shows this syntax summary
 
     info ..................................... print out useful information helpful for submitting bug
@@ -19,7 +22,7 @@ Project-Level Commands
 
     platform(s) [{add|remove|rm} <PLATFORM>] .. add or remove a specified PLATFORM, OR
                 [{list|ls}] ................... list all installed and available platforms
-                [{update|up} <PLATFORM>] ...... update the version of cordova used for a specific
+                [{update|up} <PLATFORM>] ...... update the version of Cordova used for a specific
                                                 PLATFORM; use after updating the CLI.
 
     plugin(s) [{add|remove|rm} <PATH|URI>] .... add or remove a plugin from the specified PATH or URI, OR

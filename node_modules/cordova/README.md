@@ -130,23 +130,27 @@ Now the `cordova` and `plugman` in your path are the local git versions. Don't f
 A Cordova application built with `cordova-cli` will have the following directory structure:
 
     myApp/
-    |--.cordova/
+    |-- config.xml
+    |-- hooks/
     |-- merges/
     | | |-- android/
     | | |-- blackberry10/
     | | `-- ios/
     |-- www/
-    | `-- config.xml
     |-- platforms/
     | |-- android/
     | |-- blackberry10/
     | `-- ios/
     `-- plugins/
 
-## .cordova/
-This directory identifies a tree as a cordova project. Simple configuration information is stored in here (such as BlackBerry environment variables).
+## hooks/
+This directory may contains scripts used to customize cordova commands. This
+directory used to exist at `.cordova/hooks`, but has now been moved to the
+project root. Any scripts you add to these directories will be executed before
+and after the commands corresponding to the directory name. Useful for
+integrating your own build systems or integrating with version control systems.
 
-Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find this project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a cordova project directory (same as `git`).
+Refer to [templates/hooks-README.md](templates/hooks-README.md) for more information.
 
 ## merges/
 Platform-specific web assets (HTML, CSS and JavaScript files) are contained within appropriate subfolders in this directory. These are deployed during a `prepare` to the appropriate native directory.  Files placed under `merges/` will override matching files in the `www/` folder for the relevant platform. A quick example, assuming a project structure of:
@@ -190,7 +194,7 @@ There are two types of hooks: project-specific ones and module-level ones. Both 
 
 ## Project-specific Hooks
 
-These are located under the `.cordova/hooks` directory in the root of your cordova project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
+These are located under the `hooks` directory in the root of your cordova project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
 
 ### Examples
 
@@ -216,7 +220,7 @@ This example shows how to create a project from scratch named KewlApp with iOS a
 The directory structure of KewlApp now looks like this:
 
     KewlApp/
-    |-- .cordova/
+    |-- hooks/
     |-- merges/
     | |-- android/
     | `-- ios/
