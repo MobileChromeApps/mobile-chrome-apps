@@ -76,32 +76,38 @@ var hasXcode = false;
 /******************************************************************************/
 /******************************************************************************/
 
+var PLUGIN_SEARCH_PATH = [
+    path.join(mcaRoot, 'cordova'),
+    path.join(mcaRoot, 'cordova', 'cordova-plugins'),
+    path.join(mcaRoot, 'chrome-cordova', 'plugins'),
+];
+
 var DEFAULT_PLUGINS = [
-    path.join(mcaRoot, 'cordova', 'cordova-plugin-file'),
-    path.join(mcaRoot, 'cordova', 'cordova-plugin-inappbrowser'),
-    path.join(mcaRoot, 'cordova', 'cordova-plugin-network-information'),
-    path.join(mcaRoot, 'cordova', 'cordova-plugins', 'keyboard'),
-    path.join(mcaRoot, 'cordova', 'cordova-plugins', 'statusbar'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-navigation'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome-bootstrap'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.i18n'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-CustomEvent'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-xhr-features'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins', 'polyfill-blob-constructor')
+    'org.apache.cordova.file',
+    'org.apache.cordova.inappbrowser',
+    'org.apache.cordova.network-information',
+    'org.apache.cordova.keyboard',
+    'org.apache.cordova.statusbar',
+    'org.chromium.navigation',
+    'org.chromium.bootstrap',
+    'org.chromium.i18n',
+    'org.chromium.polyfill.CustomEvent',
+    'org.chromium.polyfill.xhr_features',
+    'org.chromium.polyfill.blob_constructor',
 ];
 
 var PLUGIN_MAP = {
-  'alarms': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.alarms')],
-  'fileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.fileSystem'),
-                 path.join(mcaRoot, 'chrome-cordova', 'plugins', 'fileChooser')],
-  'identity': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.identity')],
-  'idle': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.idle')],
-  'notifications': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.notifications')],
-  'power': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.power')],
-  'pushMessaging': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.pushMessaging')],
-  'socket': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.socket')],
-  'storage': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.storage')],
-  'syncFileSystem': [path.join(mcaRoot, 'chrome-cordova', 'plugins', 'chrome.syncFileSystem')],
+  'alarms': ['org.chromium.alarms'],
+  'fileSystem': ['org.chromium.fileSystem',
+                 'org.chromium.FileChooser'],
+  'identity': ['org.chromium.identity'],
+  'idle': ['org.chromium.idle'],
+  'notifications': ['org.chromium.notifications'],
+  'power': ['org.chromium.power'],
+  'pushMessaging': ['org.chromium.pushMessaging'],
+  'socket': ['org.chromium.socket'],
+  'storage': ['org.chromium.storage'],
+  'syncFileSystem': ['org.chromium.syncFileSystem'],
   'unlimitedStorage': []
 };
 
@@ -628,8 +634,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    DEFAULT_PLUGINS.forEach(function(pluginPath) {
-      cmds.push(['plugin', 'add', pluginPath]);
+    DEFAULT_PLUGINS.forEach(function(pluginID) {
+      cmds.push(['plugin', 'add', pluginID]);
     });
     plugins.forEach(function(pluginPath) {
       cmds.push(['plugin', 'add', pluginPath]);
@@ -658,6 +664,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     }
 
     var config_default = {
+      plugin_search_path: PLUGIN_SEARCH_PATH,
       lib: {
         android: {
           uri: path.join(mcaRoot, 'cordova', 'cordova-android'),
@@ -1010,7 +1017,8 @@ function main() {
     'plugin': 1,
     'plugins': 1,
     'prepare': 1,
-    'run': 1
+    'run': 1,
+    'serve': 1
   };
 
   if (commandActions.hasOwnProperty(command)) {
