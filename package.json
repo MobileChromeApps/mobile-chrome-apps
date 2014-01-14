@@ -1,7 +1,7 @@
 {
   "name": "jaawegx",
   "author": "Mobile Chrome Apps (Cordova) Team at Google",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Mobile Chrome Apps command line tool",
   "bin" : { "mca" : "./mca" },
   "license": "Apache version 2.0",
@@ -17,11 +17,7 @@
     "elementtree": "0.1.5"
   },
   "bundledDependencies": [
-    "ncp",
-    "cordova",
-    "optimist",
-    "cryptojs",
-    "elementtree"
+    "cordova"
   ],
   "files": [
     "README.md",
