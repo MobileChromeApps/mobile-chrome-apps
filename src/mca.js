@@ -557,8 +557,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   if (!match) {
     fatal('App Name must be a valid Java package name and follow the pattern: com.company.id');
   }
-  var appName = match[1];
-  var appDir = null;
+  var destAppDir = match[1];
+  var srcAppDir = null;
   var manifestFile = null;
   var manifest = null;
 
@@ -577,7 +577,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   function validateSourceArgStep(callback) {
     var sourceArg = commandLineFlags.source;
     if (!sourceArg) {
-      appDir = path.join(mcaRoot, 'templates', 'default-app');
+      srcAppDir = path.join(mcaRoot, 'templates', 'default-app');
+      manifestFile = path.join(srcAppDir, 'manifest.json');
     } else {
       var dirsToTry = [
         sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
@@ -586,10 +587,10 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       var foundManifest = false;
       for (var i = 0; i < dirsToTry.length; i++) {
         if (dirsToTry[i]) {
-          appDir = dirsToTry[i];
-          console.log('Searching for Chrome app source in ' + appDir);
-          if (fs.existsSync(appDir)) {
-            manifestFile = path.join(appDir, 'manifest.json');
+          srcAppDir = dirsToTry[i];
+          console.log('Searching for Chrome app source in ' + srcAppDir);
+          if (fs.existsSync(srcAppDir)) {
+            manifestFile = path.join(srcAppDir, 'manifest.json');
             if (fs.existsSync(manifestFile)) {
               foundManifest = true;
               break;
@@ -597,7 +598,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           }
         }
       }
-      if (!appDir) {
+      if (!srcAppDir) {
         fatal('Directory does not exist.');
       }
       if (!foundManifest) {
@@ -608,12 +609,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function readManifestStep(callback) {
-    /* If we have reached this point and manifestFile is set, then it is the
-     * name of a readable manifest file.
-     */
-    if (!manifestFile) {
-      return callback();
-    }
     readManifest(manifestFile, function(manifestData) {
       parseManifest(manifestData, function(chromeAppIdFromManifest, whitelistFromManifest, pluginsFromManifest) {
         // Set globals
@@ -684,20 +679,20 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           id: "cordova-mca"
         },
         www: {
-          uri: appDir,
+          uri: srcAppDir,
           version: "mca",
-          id: appName
+          id: manifest.name
         }
       }
     };
 
-    runCmd(cordova, ['create', appName, appId, appName, config_default], function(err) {
+    runCmd(cordova, ['create', destAppDir, appId, manifest.name, config_default], function(err) {
       if(err)
         return fatal(err);
       writeConfigStep(function(err) {
         if(err)
            return fatal(err);
-        chdir(path.join(origDir, appName));
+        chdir(path.join(origDir, destAppDir));
         runAllCmds(cordova, cmds, afterAllCommands);
       });
     });
@@ -709,30 +704,25 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       if (err) {
         console.log(err);
       } else {
-        var whitelistXML = "";
-        for (var i = 0; i < whitelist.length; i++) {
-          whitelistXML = whitelistXML + "    <access origin=\"" + whitelist[i] + "\" />\n";
-        }
-      var configfile = data.replace(/__APP_NAME__/, (manifest && manifest.name) || appName)
-          .replace(/__APP_ID__/, appId)
-          .replace(/__APP_VERSION__/, (manifest && manifest.version) || "0.0.1")
-          .replace(/__CHROME_APP_ID__/, chromeAppId)
-          .replace(/__DESCRIPTION__/, (manifest && manifest.description) || "Plain text description of this app")
-          .replace(/__AUTHOR__/, (manifest && manifest.author) || "Author name and email")
-          .replace(/__WHITELIST__/, whitelistXML);
-      fs.writeFile(path.join(appName, 'www', 'config.xml'), configfile, callback);
+        var configfile = data.replace(/__APP_NAME__/, manifest.name)
+            .replace(/__APP_ID__/, appId)
+            .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
+            .replace(/__CHROME_APP_ID__/, chromeAppId)
+            .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
+            .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
+        fs.writeFile(path.join(destAppDir, 'config.xml'), configfile, callback);
       }
     });
   }
 
-  var welcomeText="\nCongratulations! Your project has been created at: "+
-                  path.join(origDir,appName)+"\n"+
-                  "Be sure to edit only the copy of your application that is in the project www directory:\n"+
-                  path.join(origDir,appName,"www")+" \n"+
-                  "After any edits, remember to run 'mca prepare'\n"+
-                  "This ensures that any changes are reflected in your mobile application projects\n";
-
   function prepareStep(callback) {
+    var welcomeText="\nCongratulations! Your project has been created at: "+
+                    path.join(origDir,destAppDir)+"\n"+
+                    "Be sure to edit only the copy of your application that is in the project www directory:\n"+
+                    path.join(origDir, destAppDir, 'www')+" \n"+
+                    "After any edits, remember to run 'mca prepare'\n"+
+                    "This ensures that any changes are reflected in your mobile application projects\n";
+
     runCmd(cordova, ['prepare'], function(err) {
        if(err) {
           return fatal(err);
@@ -768,7 +758,7 @@ function prePrepareCommand() {
       parseManifest(manifest, function(chromeAppId, whitelist, pluginsFromManifest) {
         plugins = pluginsFromManifest;
         console.log("Writing config.xml");
-        fs.readFile(path.join('www', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+        fs.readFile('config.xml', {encoding: 'utf-8'}, function(err, data) {
           if (err) {
             console.log(err);
           } else {
@@ -802,7 +792,7 @@ function prePrepareCommand() {
             });
 
             var configfile = et.tostring(tree.getroot(), {indent: 4});
-            fs.writeFile(path.join('www', 'config.xml'), configfile, callback);
+            fs.writeFile('config.xml', configfile, callback);
           }
         });
       });
@@ -835,17 +825,6 @@ function updateAppCommand() {
       return path.join('platforms', platform, 'assets','www');
     }
     return path.join('platforms', platform, 'www');
-  }
-
-  function removeVestigalConfigFile(platform) {
-    return function(callback) {
-      var badPath = path.join(assetDirForPlatform(platform), 'config.xml');
-      if (fs.existsSync(badPath)) {
-        console.log('## Removing unnecessary files for ' + platform);
-        fs.unlinkSync(badPath);
-      }
-      callback();
-    };
   }
 
   /* Android asset packager ignores, by default, directories beginning with
@@ -935,12 +914,10 @@ function updateAppCommand() {
   }
 
   if (hasAndroid) {
-    eventQueue.push(removeVestigalConfigFile('android'));
     eventQueue.push(moveI18NMessagesDir('android'));
     eventQueue.push(copyIconAssetsStep('android'));
   }
   if (hasIos) {
-    eventQueue.push(removeVestigalConfigFile('ios'));
     eventQueue.push(moveI18NMessagesDir('ios'));
     eventQueue.push(copyIconAssetsStep('ios'));
   }

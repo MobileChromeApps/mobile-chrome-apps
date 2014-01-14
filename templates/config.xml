@@ -15,5 +15,4 @@
 
     <preference name="chrome-app-id" value="__CHROME_APP_ID__" />
     <content src="chromeapp.html" />
-__WHITELIST__
 </widget>
