@@ -518,8 +518,6 @@ function initCommand() {
     eventQueue.push(checkGit);
     eventQueue.push(checkOutSelf);
     eventQueue.push(checkOutSubModules);
-  } else {
-    console.log('"mca init" is not necessary for npm installs');
   }
   eventQueue.push(cleanup);
 }
