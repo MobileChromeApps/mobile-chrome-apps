@@ -96,6 +96,7 @@ static NSString* stringFromData(NSData* data) {
                 theSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
             } else {
                 theSocket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+                [theSocket enableBroadcast:true error:nil];
             }
         } else {
             [theSocket setDelegate:self];
