@@ -16,11 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-/**
-  The top line of this file will allow this script to be run as
-  a UNIX shell script, as well as being a valid Node.js program.
- */
-
 if [[ -e npm_deleted_git_ignores ]]; then
   for f in $(cat npm_deleted_git_ignores); do
     (
