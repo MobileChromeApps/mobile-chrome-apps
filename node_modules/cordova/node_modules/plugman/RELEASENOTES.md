@@ -1,6 +1,23 @@
 # Changelog
 
-## 0.14.0
+## 0.17.0 (Dec 11, 2013)
+* CB-5579 Add support for --www param for install, uninstall, prepare commands.
+
+## 0.16.0 (Dec 5, 2013)
+* Added amazon-fireos platform.
+* Added ubuntu platform
+* CB-5034 Document registry functions in plugman
+* CB-5584 Fix git clone of not working on windows.
+* CB-5238 Add support for <framework src="..." custom="true" />
+* CB-5367 Reject non-whitelisted org.apache.cordova plugins
+* Write plugin metadata (ID and version) into cordova_plugins.js
+
+## 0.15.0 (Nov 8, 2013)
+* CB-4994 Update xcode dependency to parse Xcode 5 capabilities.
+* CB-5091 Use cwd option rather than shell.cd when cloning plugin repos
+* CB-4872 Updated default engine names to include windows scripts
+
+## 0.14.0 (Oct 28, 2013)
 
 * CB-5192 Plugman engine check fails on Windows
 * [CB-5184] Fix uninstall logic being too aggressive

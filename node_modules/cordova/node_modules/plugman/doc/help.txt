@@ -28,6 +28,8 @@ Optional parameters
 
  - www <directory>: www assets for the plugin will be installed into this directory. Default is to install into the standard www directory for the platform specified
  - plugins_dir <directory>: a copy of the plugin will be stored in this directory. Default is to install into the <project directory>/plugins folder
+ - searchpath <directory>: a directory to look in for a plugin with the provided ID before looking on http://plugins.cordova.io
+   Use the searchpath flag multiple times to specify several directories (searched in order). The search is not recursive and will only look one level down.
 
 Optional flags
 --------------

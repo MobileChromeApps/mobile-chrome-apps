@@ -46,7 +46,6 @@ addModuleProperty(module, 'build', './src/build', true);
 addModuleProperty(module, 'help', './src/help');
 addModuleProperty(module, 'config', './src/config');
 addModuleProperty(module, 'create', './src/create', true);
-addModuleProperty(module, 'ripple', './src/ripple');
 addModuleProperty(module, 'emulate', './src/emulate', true);
 addModuleProperty(module, 'plugin', './src/plugin', true);
 addModuleProperty(module, 'plugins', './src/plugin', true);

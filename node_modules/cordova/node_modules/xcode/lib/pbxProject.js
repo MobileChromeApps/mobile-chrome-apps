@@ -181,9 +181,8 @@ pbxProject.prototype.removeResourceFile = function (path, opt) {
     return file;
 }
 
-pbxProject.prototype.addFramework = function (path, opt) {
-    var file = new pbxFile(path, opt);
-
+pbxProject.prototype.addFramework = function (fpath, opt) {
+    var file = new pbxFile(fpath, opt);
     // catch duplicates
     if (this.hasFile(file.path)) return false;
 
@@ -194,17 +193,25 @@ pbxProject.prototype.addFramework = function (path, opt) {
     this.addToPbxFileReferenceSection(file);    // PBXFileReference
     this.addToFrameworksPbxGroup(file);         // PBXGroup
     this.addToPbxFrameworksBuildPhase(file);    // PBXFrameworksBuildPhase
+    
+    if(opt && opt.customFramework == true) {
+      this.addToFrameworkSearchPaths(file);
+    }
 
     return file;
 }
 
-pbxProject.prototype.removeFramework = function (path, opt) {
-    var file = new pbxFile(path, opt);
+pbxProject.prototype.removeFramework = function (fpath, opt) {
+    var file = new pbxFile(fpath, opt);
 
     this.removeFromPbxBuildFileSection(file);        // PBXBuildFile
     this.removeFromPbxFileReferenceSection(file);    // PBXFileReference
     this.removeFromFrameworksPbxGroup(file);         // PBXGroup
     this.removeFromPbxFrameworksBuildPhase(file);    // PBXFrameworksBuildPhase
+    
+    if(opt && opt.customFramework) {
+      this.removeFromFrameworkSearchPaths(path.dirname(fpath));
+    }
 
     return file;
 }
@@ -443,6 +450,54 @@ pbxProject.prototype.updateProductName = function(name) {
     propReplace(config, 'PRODUCT_NAME', '"' + name + '"');
 }
 
+pbxProject.prototype.removeFromFrameworkSearchPaths = function (file) {
+    var configurations = nonComments(this.pbxXCBuildConfigurationSection()),
+        INHERITED = '"$(inherited)"',
+        SEARCH_PATHS = 'FRAMEWORK_SEARCH_PATHS',
+        config, buildSettings, searchPaths;
+    var new_path = searchPathForFile(file, this);
+
+    for (config in configurations) {
+        buildSettings = configurations[config].buildSettings;
+
+        if (unquote(buildSettings['PRODUCT_NAME']) != this.productName)
+            continue;
+
+        searchPaths = buildSettings[SEARCH_PATHS];
+
+        if (searchPaths) {
+            var matches = searchPaths.filter(function(p) {
+                return p.indexOf(new_path) > -1;
+            });
+            matches.forEach(function(m) {
+                var idx = searchPaths.indexOf(m);
+                searchPaths.splice(idx, 1);
+            });
+        }
+
+    }
+}
+
+pbxProject.prototype.addToFrameworkSearchPaths = function (file) {
+    var configurations = nonComments(this.pbxXCBuildConfigurationSection()),
+        INHERITED = '"$(inherited)"',
+        config, buildSettings, searchPaths;
+
+    for (config in configurations) {
+        buildSettings = configurations[config].buildSettings;
+
+        if (unquote(buildSettings['PRODUCT_NAME']) != this.productName)
+            continue;
+
+        if (!buildSettings['FRAMEWORK_SEARCH_PATHS']
+                || buildSettings['FRAMEWORK_SEARCH_PATHS'] === INHERITED) {
+            buildSettings['FRAMEWORK_SEARCH_PATHS'] = [INHERITED];
+        }
+
+        buildSettings['FRAMEWORK_SEARCH_PATHS'].push(searchPathForFile(file, this));
+    }
+}
+
 pbxProject.prototype.removeFromLibrarySearchPaths = function (file) {
     var configurations = nonComments(this.pbxXCBuildConfigurationSection()),
         INHERITED = '"$(inherited)"',
@@ -552,10 +607,8 @@ pbxProject.prototype.__defineGetter__("productName", function () {
 pbxProject.prototype.hasFile = function (filePath) {
     var files = nonComments(this.pbxFileReferenceSection()),
         file, id;
-
     for (id in files) {
         file = files[id];
-
         if (file.path == filePath || file.path == ('"' + filePath + '"')) {
             return true;
         }
@@ -655,6 +708,15 @@ function correctForResourcesPath(file, project) {
     return file;
 }
 
+function correctForFrameworksPath(file, project) {
+    var r_resources_dir = /^Frameworks\//;
+
+    if (project.pbxGroupByName('Frameworks').path)
+        file.path = file.path.replace(r_resources_dir, '');
+
+    return file;
+}
+
 function searchPathForFile(file, proj) {
     var plugins = proj.pbxGroupByName('Plugins')
         pluginsPath = plugins ? plugins.path : null,
@@ -668,6 +730,8 @@ function searchPathForFile(file, proj) {
 
     if (file.plugin && pluginsPath) {
         return '"\\"$(SRCROOT)/' + unquote(pluginsPath) + '\\""';
+    } else if (file.customFramework && file.dirname) {
+        return '"' + file.dirname + '"'
     } else {
         return '"\\"$(SRCROOT)/' + proj.productName + fileDir + '\\""';
     }

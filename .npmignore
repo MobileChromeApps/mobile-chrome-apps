@@ -1,0 +1,2 @@
+# Most ignores are in cordova/.npmignore due to:
+# https://github.com/npm/npm/issues/4479

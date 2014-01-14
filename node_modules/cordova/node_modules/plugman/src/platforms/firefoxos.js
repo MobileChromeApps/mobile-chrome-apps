@@ -19,5 +19,12 @@ module.exports = {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.removeFile(project_dir, dest);
         }
+    },
+    "resource-file":{
+        install:function(el, plugin_dir, project_dir) {
+            require('../../plugman').emit('verbose', 'resource-file is not supported for Firefox OS');
+        },
+        uninstall:function(el, project_dir) {
+        }
     }
 };

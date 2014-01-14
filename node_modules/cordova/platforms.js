@@ -53,7 +53,7 @@ module.exports = {
     'blackberry10' : {
         parser : './src/metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.3.0',
+        version: '3.3.1',
         subdirectory: 'blackberry10'
     },
     'www':{

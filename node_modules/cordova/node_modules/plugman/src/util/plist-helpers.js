@@ -20,7 +20,7 @@
 // contains PLIST utility functions
 
 var et = require('elementtree'),
-    plist = require('plist');
+    plist = require('plist-with-patches');
  
 // adds node to doc at selector
 module.exports = {

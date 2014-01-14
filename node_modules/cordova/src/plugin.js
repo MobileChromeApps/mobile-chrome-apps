@@ -18,22 +18,37 @@
 */
 
 // Returns a promise.
-module.exports = function plugin(command, targets) {
+module.exports = function plugin(command, targets, opts) {
     var cordova_util  = require('./util'),
         path          = require('path'),
         hooker        = require('./hooker'),
+        config        = require('./config'),
         Q             = require('q'),
         events        = require('./events');
 
     var projectRoot = cordova_util.cdProjectRoot(),
         err;
 
-    if (arguments.length === 0){
-        command = 'ls';
-        targets = [];
-    } else {
+    // Dance with all the possible call signatures we've come up over the time. They can be:
+    // 1. plugin() -> list the plugins
+    // 2. plugin(command, Array of targets, maybe opts object)
+    // 3. plugin(command, target1, target2, target3 ... )
+    // The targets are not really targets, they can be a mixture of plugins and options to be passed to plugman.
+
+    command = command || 'ls';
+    targets = targets || [];
+    opts = opts || {};
+    if ( opts.length ) {
+        // This is the case with multiple targes as separate arguments and opts is not opts but another target.
         targets = Array.prototype.slice.call(arguments, 1);
+        opts = {};
     }
+    if ( !Array.isArray(targets) ) {
+        // This means we had a single target given as string.
+        targets = [targets];
+    }
+    opts.options = [];
+    opts.plugins = [];
 
     var hooks = new hooker(projectRoot);
     var platformList = cordova_util.listPlatforms(projectRoot);
@@ -49,14 +64,6 @@ module.exports = function plugin(command, targets) {
             targets = [];
         }
     }
-
-    var opts = {
-        plugins: [],
-        options: []
-    };
-
-    if (targets.length == 1 && Array.isArray(targets[0]))
-        targets = targets[0];
 
     //Split targets between plugins and options
     //Assume everything after a token with a '-' is an option
@@ -76,6 +83,8 @@ module.exports = function plugin(command, targets) {
                 return Q.reject(new Error('No plugin specified. Please specify a plugin to add. See "plugin search".'));
             }
 
+            var config_json = config(projectRoot, {});
+
             return hooks.fire('before_plugin_add', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
@@ -88,7 +97,7 @@ module.exports = function plugin(command, targets) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
                         var plugman = require('plugman');
-                        return plugman.raw.fetch(target, pluginsDir, {})
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: opts.searchpath || config_json.plugin_search_path });
                     })
                     .fail(function(err) {
                         return Q.reject(new Error('Fetching plugin failed: ' + err));

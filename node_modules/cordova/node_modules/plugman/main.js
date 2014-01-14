@@ -38,6 +38,7 @@ var known_opts = { 'platform' : [ 'ios', 'android', 'amazon-fireos', 'blackberry
         , 'link': Boolean
         , 'variable' : Array
         , 'www': path
+        , 'searchpath' : [path, Array]
 }, shortHands = { 'var' : ['--variable'], 'v': ['--version'], 'h': ['--help'] };
 
 var cli_opts = nopt(known_opts, shortHands);
