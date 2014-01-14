@@ -952,17 +952,19 @@ function parseCommandLine() {
           alias: 'help',
           desc: 'Show usage message.'
       }).argv;
-
-  if (commandLineFlags.h || !commandLineFlags._[0] || commandLineFlags._[0] == 'help') {
-    optimist.showHelp();
-    exit(1);
-  }
 }
 
 function main() {
   parseCommandLine();
   var command = commandLineFlags._[0];
   var appId = commandLineFlags._[1] || '';
+
+  if (commandLineFlags.version) {
+    command = 'version';
+  }
+  if (commandLineFlags.h || !command) {
+    command = 'help';
+  }
 
   // Colorize after parseCommandLine to avoid --help being printed in red.
   colorizeConsole();
@@ -987,6 +989,15 @@ function main() {
       toolsCheck();
       createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
     },
+    'version': function() {
+      ensureHasRunInit();
+      promptIfNeedsUpdate();
+      toolsCheck();
+      console.log('Hello');
+    },
+    'help': function() {
+      optimist.showHelp();
+    }
   };
 
   // The following commands are forwarded to cordova with all args.
