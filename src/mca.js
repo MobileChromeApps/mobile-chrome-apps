@@ -637,13 +637,16 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
     function afterAllCommands() {
       // Create scripts that update the cordova app on prepare
-      fs.writeFileSync('.cordova/hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
-      fs.writeFileSync('.cordova/hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ./mca pre-prepare');
-      fs.chmodSync('.cordova/hooks/before_prepare/mca-pre-prepare.sh', '777');
+      fs.mkdirSync('hooks/before_prepare');
+      fs.mkdirSync('hooks/after_prepare');
 
-      fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.cmd', 'mca update-app');
-      fs.writeFileSync('.cordova/hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ./mca update-app');
-      fs.chmodSync('.cordova/hooks/after_prepare/mca-update.sh', '777');
+      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
+      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ./mca pre-prepare');
+      fs.chmodSync('hooks/before_prepare/mca-pre-prepare.sh', '777');
+
+      fs.writeFileSync('hooks/after_prepare/mca-update.cmd', 'mca update-app');
+      fs.writeFileSync('hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ./mca update-app');
+      fs.chmodSync('hooks/after_prepare/mca-update.sh', '777');
 
       // Create a convenience link to MCA
       var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
