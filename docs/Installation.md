@@ -8,11 +8,10 @@ Version 0.10.0+ is required.
 
 Windows:
 * Available from [nodejs.org](http://nodejs.org).
-* But we recommend installation via [nodist](https://github.com/marcelklehr/nodist).
 
 OS X & Linux:
 * Available from [nodejs.org](http://nodejs.org).
-* But we recommend installation via [nvm](https://github.com/creationix/nvm).
+* To avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm).
   * Quick instructions:
 
         curl https://raw.github.com/creationix/nvm/master/install.sh | sh

@@ -168,40 +168,6 @@ function exec(cmd, onSuccess, opt_onError, opt_silent) {
   });
 }
 
-function spawn(cmd, args, onSuccess, opt_onError, opt_silent) {
-  var onError = opt_onError || function(e) {
-    fatal('command failed: ' + cmd + '\n' + e);
-  };
-  if (!opt_silent) {
-    console.log('Spawning: ' + cmd + ' ' + args.join(' '));
-  }
-  var p = childProcess.spawn(cmd, args);
-
-  p.stdout.on('data', function (data) {
-    process.stdout.write(data);
-  });
-  p.stderr.on('data', function (data) {
-    process.stderr.write(data);
-  });
-
-  process.stdin.resume();
-  try {
-    // This fails if the process is a spawned child (likely a node bug);
-    process.stdin.setRawMode(true);
-  } catch (e) {
-  }
-  process.stdin.setEncoding('utf8');
-  process.stdin.on('data', forward);
-  p.on('close', function (code) {
-    process.stdin.removeListener('data', forward);
-    process.stdin.pause();
-    onSuccess();
-  });
-  function forward(data) {
-    p.stdin.write(data);
-  }
-}
-
 function chdir(d) {
   d = path.resolve(mcaRoot, d);
   if (process.cwd() != d) {
@@ -643,13 +609,22 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       fs.mkdirSync('hooks/before_prepare');
       fs.mkdirSync('hooks/after_prepare');
 
-      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
-      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca pre-prepare');
-      fs.chmodSync('hooks/before_prepare/mca-pre-prepare.sh', '777');
-
-      fs.writeFileSync('hooks/after_prepare/mca-update.cmd', 'mca update-app');
-      fs.writeFileSync('hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca update-app');
-      fs.chmodSync('hooks/after_prepare/mca-update.sh', '777');
+      function writeHook(path, mcaArg) {
+        var contents = [
+            '#!/usr/bin/env node',
+            'var child_process = require("child_process");',
+            'var fs = require("fs");',
+            'var isWin = process.platform.slice(0, 3) === "win";',
+            'var cmd = isWin ? "mca.cmd" : "mca";',
+            'if (!isWin && fs.existsSync(cmd)) { cmd = "./" + cmd }',
+            'var p = child_process.spawn(cmd, ["' + mcaArg + '"], { stdio:"inherit" });',
+            'p.on("close", function(code) { process.exit(code); });',
+            ];
+        fs.writeFileSync(path, contents.join('\n'));
+        fs.chmodSync(path, '777');
+      }
+      writeHook('hooks/before_prepare/mca-pre-prepare.js', 'pre-prepare');
+      writeHook('hooks/after_prepare/mca-post-prepare.js', 'update-app');
 
       // Create a convenience link to MCA
       if (isGitRepo) {
@@ -929,7 +904,7 @@ function parseCommandLine() {
              '\n' +
              'Valid Commands:\n' +
              '\n' +
-             'init - Checks for updates to the mobile-chrome-apps repository and ensures the environment is setup correctly.\n' +
+             'init - Ensures that your environment is setup correctly.\n' +
              '    Examples:\n' +
              '        mca init.\n' +
              '\n' +
@@ -951,6 +926,9 @@ function parseCommandLine() {
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
+      }).options('v', {
+          alias: 'version',
+          desc: 'Show version.'
       }).argv;
 }
 
@@ -959,7 +937,7 @@ function main() {
   var command = commandLineFlags._[0];
   var appId = commandLineFlags._[1] || '';
 
-  if (commandLineFlags.version) {
+  if (commandLineFlags.v) {
     command = 'version';
   }
   if (commandLineFlags.h || !command) {
@@ -990,10 +968,9 @@ function main() {
       createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
     },
     'version': function() {
-      ensureHasRunInit();
-      promptIfNeedsUpdate();
+      var package = require('../package');
+      console.log(package.version);
       toolsCheck();
-      console.log('Hello');
     },
     'help': function() {
       optimist.showHelp();
