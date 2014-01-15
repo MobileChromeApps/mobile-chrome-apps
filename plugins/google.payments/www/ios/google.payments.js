@@ -42,7 +42,38 @@ var loadedItemSet = {};
 
 exports.inapp = {
     getSkuDetails: function(skus, success, failure) {
-        console.log('getSkuDetails');
+        // Initialize StoreKit, if necessary.
+        initializeStoreKit();
+
+        // Load the products to retrieve their information.
+        window.storekit.load(skus, function(validProducts, invalidProductIds) {
+            // Record the data for each valid product.
+            var skuDetails = [];
+            if (validProducts.length) {
+                validProducts.forEach(function (i, product) {
+                    // Add the valid product to the set of loaded items.
+                    loadedItemSet[product.id] = true;
+                    console.log("Loaded product: " + product.id);
+
+                    // Add the item details to the list.
+                    var item = {};
+                    item.productId = product.id;
+                    item.title = product.title
+                    item.description = product.description;
+                    item.price = product.price;
+                    item.type = 0;
+                    skuDetails.push(item);
+                });
+            }
+            // Log all invalid products.
+            if (invalidProductIds.length) {
+                invalidProductIds.forEach(function (i, val) {
+                    console.log("Invalid product id: " + val);
+                });
+            }
+            // Pass the valid product details to the success callback.
+            success(skuDetails);
+        });
     },
 
     getPurchases: function(success, failure) {
