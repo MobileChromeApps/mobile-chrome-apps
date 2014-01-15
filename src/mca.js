@@ -688,20 +688,19 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function prepareStep(callback) {
-    var welcomeText="\nCongratulations! Your project has been created at: "+
-                    path.join(origDir,destAppDir)+"\n"+
-                    "Be sure to edit only the copy of your application that is in the project www directory:\n"+
-                    path.join(origDir, destAppDir, 'www')+" \n"+
-                    "After any edits, remember to run 'mca prepare'\n"+
-                    "This ensures that any changes are reflected in your mobile application projects\n";
+    var welcomeText = "Done!\n" +
+                      "\n" +
+                      "Your project has been created, with web assets residing inside the `www` folder:\n" +
+                      "\n" +
+                      "    " + path.join(origDir, destAppDir, 'www') + "\n" +
+                      "\n" +
+                      "Remember to run `mca prepare` after making changes (full instructions: http://goo.gl/9S89rn).";
 
     runCmd(cordova, ['prepare'], function(err) {
        if(err) {
           return fatal(err);
        }
-       if(commandLineFlags.source) {
-         console.log(welcomeText);
-       }
+       console.log(welcomeText);
        callback()
     });
   }
