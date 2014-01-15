@@ -30,23 +30,12 @@ document.addEventListener('deviceready', function() {
         },
         error: function (errno, errtext) {
             console.log('Failed: ' + errtext);
-        },
-        ready: function () {
-            var productIds = [
-                "com.google.mcaspec.knowledgeofcake", 
-                "com.google.mcaspec.physicalediblecake"
-            ];
-            window.storekit.load(productIds, function(validProducts, invalidProductIds) {
-                validProducts.forEach(function(val) {
-                    console.log("id: " + val.id + " title: " + val.title + " val: " + val.description + " price: " + val.price);
-                });
-                if(invalidProductIds.length) {
-                    console.log("Invalid Product IDs: " + JSON.stringify(invalidProductIds));
-                }
-            });
         }
     });
 });
+
+// TODO(maxw): Consider storing this in local storage and preloading all previously-loaded items.
+var loadedItemSet = {};
 
 exports.inapp = {
     getSkuDetails: function(skus, success, failure) {
@@ -58,11 +47,45 @@ exports.inapp = {
     },
 
     buy: function(options) {
-        console.log('buy');
-        window.storekit.options.purchase = function(transactionId, productId) {
-            options.success();
-        };
-        window.storekit.purchase(options.sku, 1);
+        // We need to record whether the product to buy is valid.
+        // This will be set to false if it's discovered that the given sku is invalid.
+        var isValidProduct = true;
+
+        // This function actually purchases the item.
+        var purchaseItem = function() {
+            // If the product is valid, buy it!
+            if (isValidProduct) {
+                // Set the purchase callback.
+                window.storekit.options.purchase = function(transactionId, productId) {
+                    options.success();
+                };
+
+                // Purchase the item!
+                window.storekit.purchase(options.sku, 1);
+            }
+        }
+
+        // First, we may need to load the item from the Apple Store.
+        var sku = options.sku;
+        if (!Object.prototype.hasOwnProperty.call(loadedItemSet, sku)) {
+            var productIds = [sku];
+            window.storekit.load(productIds, function(validProducts, invalidProductIds) {
+                // If the product is valid, add it to the set of loaded items and purchase it.
+                if (validProducts.length) {
+                    loadedItemSet[sku] = true;
+                    console.log("Loaded product: " + validProducts[0].id);
+                    purchaseItem();
+                }
+                // If the product is invalid, note that.
+                if (invalidProductIds.length) {
+                    isValidProduct = false;
+                    console.log("Invalid product: " + invalidProductIds[0]);
+                }
+            });
+        } else {
+            // If the item has already been previously loaded, we're safe to purchase it.
+            purchaseItem();
+        }
     }
 };
 
