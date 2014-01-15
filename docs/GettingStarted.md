@@ -54,14 +54,10 @@ Your HTML, CSS and JS files live within the `www` directory.
 
 _Every time_ you change them, you _must_ run `mca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
-### Step 4: Icons, splash screen, settings, etc
-
-[Coming soon]
-
 ## Experiencing Hiccups?
 
 Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
 
 ## Done?
 
-Read the [API Status document](APIStatus.md).
+Check out some [next steps](NextSteps.md), or read the [API Status document](APIStatus.md).
