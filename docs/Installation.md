@@ -47,6 +47,12 @@ iOS development can only be done on OS X.
 * To update it later on:
   * Quick instructions: `npm update -g mobile-chrome-apps`
 
+## Step 3: Confirm everything is installed correctly
+
+Run this command from the command line:
+
+    mca checkenv
+
 ### Experiencing Hiccups?
 
 Please reach out to us at [mobile-chrome-apps@googlegroups.com](mailto:mobile-chrome-apps@googlegroups.com).

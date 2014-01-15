@@ -959,6 +959,9 @@ function main() {
       toolsCheck();
       initCommand();
     },
+    'checkenv': function() {
+      toolsCheck();
+    },
     'create': function() {
       ensureHasRunInit();
       if (isGitRepo) {
@@ -970,10 +973,9 @@ function main() {
     'version': function() {
       var package = require('../package');
       console.log(package.version);
-      toolsCheck();
     },
     'help': function() {
-      optimist.showHelp();
+      optimist.showHelp(console.log);
     }
   };
 
