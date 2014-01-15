@@ -934,7 +934,7 @@ function parseCommandLine() {
              '\n' +
              'Valid Commands:\n' +
              '\n' +
-             'init - Checks for updates to the mobile-chrome-apps repository and ensures the environment is setup correctly.\n' +
+             'init - Ensures that your environment is setup correctly.\n' +
              '    Examples:\n' +
              '        mca init.\n' +
              '\n' +
@@ -956,8 +956,16 @@ function parseCommandLine() {
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
+      }).options('v', {
+          alias: 'version',
+          desc: 'Show version.'
       }).argv;
 
+  if (commandLineFlags.v) {
+    var package = require('../package');
+    console.log(package.version);
+    exit(0);
+  }
   if (commandLineFlags.h || !commandLineFlags._[0] || commandLineFlags._[0] == 'help') {
     optimist.showHelp();
     exit(1);
