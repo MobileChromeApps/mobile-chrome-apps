@@ -5,34 +5,37 @@
 var exec = require('cordova/exec'),
     iab = require('cc.fovea.plugins.inapppurchase.InAppPurchase'),
     Event = require('org.chromium.common.events'),
-    billingAvailable;
+    billingAvailable,
+    storeKitInitialized = false;
 
 exports.onBillingAvailable = new Event('onBillingAvailable');
 exports.onBillingUnavailable = new Event('onBillingUnavailable');
 exports.billingAvailable = true;
  
-document.addEventListener('deviceready', function() {
-    // Initialize listeners.
-    window.storekit.init({
-        debug: true, /* Because we like to see logs on the console */
-
-        purchase: function (transactionId, productId) {
-            console.log('purchased: ' + productId);
-        },
-        restore: function (transactionId, productId) {
-            console.log('restored: ' + productId);
-        },
-        restoreCompleted: function () {
-           console.log('all restore complete');
-        },
-        restoreFailed: function (errCode) {
-            console.log('restore failed: ' + errCode);
-        },
-        error: function (errno, errtext) {
-            console.log('Failed: ' + errtext);
-        }
-    });
-});
+function initializeStoreKit() {
+    // Initialize StoreKit if we haven't already.
+    if (!storeKitInitialized) {
+        window.storekit.init({
+            debug: true,
+            purchase: function(transactionId, productId) {
+                console.log('Purchased: ' + productId);
+            },
+            restore: function(transactionId, productId) {
+                console.log('Restored: ' + productId);
+            },
+            restoreCompleted: function() {
+               console.log('All restores complete.');
+            },
+            restoreFailed: function(errCode) {
+                console.log('Restore failed with error: ' + errCode);
+            },
+            error: function(errno, errtext) {
+                console.log('Error: ' + errtext);
+            }
+        });
+        storeKitInitialized = true;
+    }
+}
 
 // TODO(maxw): Consider storing this in local storage and preloading all previously-loaded items.
 var loadedItemSet = {};
@@ -47,6 +50,9 @@ exports.inapp = {
     },
 
     buy: function(options) {
+        // Initialize StoreKit, if necessary.
+        initializeStoreKit();
+
         // We need to record whether the product to buy is valid.
         // This will be set to false if it's discovered that the given sku is invalid.
         var isValidProduct = true;
