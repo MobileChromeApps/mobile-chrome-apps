@@ -643,13 +643,18 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       fs.mkdirSync('hooks/before_prepare');
       fs.mkdirSync('hooks/after_prepare');
 
-      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.cmd', 'mca pre-prepare');
-      fs.writeFileSync('hooks/before_prepare/mca-pre-prepare.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca pre-prepare');
-      fs.chmodSync('hooks/before_prepare/mca-pre-prepare.sh', '777');
-
-      fs.writeFileSync('hooks/after_prepare/mca-update.cmd', 'mca update-app');
-      fs.writeFileSync('hooks/after_prepare/mca-update.sh', '#!/bin/sh\nexec ' + (isGitRepo ? './' : '') + 'mca update-app');
-      fs.chmodSync('hooks/after_prepare/mca-update.sh', '777');
+      function writeHook(path, cmd) {
+        var contents = [
+            '#!/usr/bin/env node',
+            'var spawn = require("child_process").spawn;',
+            'var p = spawn("' + (isGitRepo ? './mca' : 'mca') + '", ["' + cmd + '"], { stdio:"inherit" });',
+            'p.on("close", function(code) { process.exit(code); });',
+            ];
+        fs.writeFileSync(path, contents.join('\n'));
+        fs.chmodSync(path, '777');
+      }
+      writeHook('hooks/before_prepare/mca-pre-prepare.js', 'pre-prepare');
+      writeHook('hooks/after_prepare/mca-post-prepare.js', 'update-app');
 
       // Create a convenience link to MCA
       if (isGitRepo) {
