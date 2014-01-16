@@ -4,6 +4,23 @@
 
 var Event = require('org.chromium.common.events');
 
+var INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
+    MERCHANT_ERROR = "MERCHANT_ERROR",
+    PURCHASE_CANCELLED = "PURCHASE_CANCELLED";
+
+function createError(errorType, errorCode, errorText, message) {
+    return {
+        response: {
+            errorType: errorType,
+            details: {
+                errorCode: errorCode,
+                errorText: errorText,
+                message: message
+            }
+        }
+    };
+}
+
 exports.onBillingAvailable = new Event('onBillingAvailable');
 exports.onBillingUnavailable = new Event('onBillingUnavailable');
 exports.billingAvailable = false;
@@ -11,37 +28,25 @@ exports.billingAvailable = false;
 exports.inapp = {
     platform: cordova.platformId,
     getSkuDetails: function(skus, success, failure) {
-        throw new Error("getSkuDetails is not supported on this platform.");
+        var error = createError(INTERNAL_SERVER_ERROR, null, null, "getSkuDetails is not supported on this platform.");
+        failure(error);
     },
 
     getPurchases: function(success, failure) {
-        throw new Error("getPurchases is not supported on this platform.");
+        var error = createError(INTERNAL_SERVER_ERROR, null, null, "getPurchases is not supported on this platform.");
+        failure(error);
     },
 
     buy: function(options) {
         // If billing is unavailable, throw an error.
         if (!exports.billingAvailable) {
-            var error = {
-                response: {
-                    errorType: "MERCHANT_ERROR",
-                    details: {
-                        message: "Billing is unavailable."
-                    }
-                }
-            };
+            var error = createError(MERCHANT_ERROR, null, null, "Billing is unavailable.");
             options.failure(error);
         }
 
         // If no SKU is provided, throw an error.
         if (!options.sku) {
-            var error = {
-                response: {
-                    errorType: "MERCHANT_ERROR",
-                    details: {
-                        message: "No SKU provided for purchase."
-                    }
-                }
-            };
+            var error = createError(MERCHANT_ERROR, null, null, "No SKU provided for purchase.");
             options.failure(error);
         }
 
@@ -51,7 +56,8 @@ exports.inapp = {
         } else if (exports.inapp.platform === "ios") {
             exports.inapp.buyIos(options);
         } else {
-            throw new Error("buy is not supported on this platform.");
+            var error = createError(INTERNAL_SERVER_ERROR, null, null, "buy is not supported on this platform.");
+            options.failure(error);
         }
     }
 };

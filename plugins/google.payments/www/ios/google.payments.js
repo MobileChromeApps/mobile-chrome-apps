@@ -5,6 +5,24 @@
 var exec = require('cordova/exec'),
     iab = require('cc.fovea.plugins.inapppurchase.InAppPurchase');
 
+// TODO(maxw): Put these (and the createError function) in one place.
+var INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
+    MERCHANT_ERROR = "MERCHANT_ERROR",
+    PURCHASE_CANCELLED = "PURCHASE_CANCELLED";
+
+function createError(errorType, errorCode, errorText, message) {
+    return {
+        response: {
+            errorType: errorType,
+            details: {
+                errorCode: errorCode,
+                errorText: errorText,
+                message: message
+            }
+        }
+    };
+}
+
 // TODO(maxw): Consider storing this in local storage and preloading all previously-loaded items.
 var loadedItemSet = {};
 
@@ -41,10 +59,6 @@ exports.inapp = {
         });
     },
 
-    getPurchases: function(success, failure) {
-        console.log('getPurchases');
-    },
-
     buyIos: function(options) {
         // We need to record whether the product to buy is valid.
         // This will be set to false if it's discovered that the given sku is invalid.
@@ -57,6 +71,13 @@ exports.inapp = {
                 // Set the purchase callback.
                 window.storekit.options.purchase = function(transactionId, productId) {
                     options.success();
+                };
+
+                // Set the error callback.
+                // TODO(maxw): Change this back to a default?
+                window.storekit.options.error = function(errorCode, errorText) {
+                    var error = createError(PURCHASE_CANCELLED, errorCode, errorText, "The purchase has failed or been cancelled.");
+                    options.failure(error);
                 };
 
                 // Purchase the item!
@@ -105,10 +126,11 @@ document.addEventListener('deviceready', function(ev) {
             console.log('Restore failed with error: ' + errCode);
         },
         error: function(errno, errtext) {
+            // TODO(maxw): Convert these errors into general errors (eg. MERCHANT_ERROR, INTERNAL_SERVER_ERROR).
             console.log('Error: ' + errtext);
         },
         ready: function() {
-            console.log("Billing initialized.");
+            console.log("Billing initialized");
             google.payments.billingAvailable = true;
             google.payments.onBillingAvailable.fire();
         }
