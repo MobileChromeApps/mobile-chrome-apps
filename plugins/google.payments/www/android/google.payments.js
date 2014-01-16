@@ -2,9 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var exec = require('cordova/exec'),
-    Event = require('org.chromium.common.events'),
-    billingAvailable;
+var exec = require('cordova/exec');
 
 // Return code constants
 var OK = 0,
@@ -23,10 +21,7 @@ var errorTypes = {};
 errorTypes[ITEM_ALREADY_OWNED] = "ITEM_ALREADY_OWNED";
 errorTypes[ITEM_NOT_OWNED] = "ITEM_NOT_OWNED";
 errorTypes[USER_CANCELLED] = "PURCHASE_CANCELLED";
-    
-exports.onBillingAvailable = new Event('onBillingAvailable');
-exports.onBillingUnavailable = new Event('onBillingUnavailable');
-exports.billingAvailable = false;
+
 exports.inapp = {
     getSkuDetails: function(skus, success, failure) {
         if (!(skus instanceof Array)) {
@@ -43,7 +38,7 @@ exports.inapp = {
         exec(success, failure, "InAppBillingV3", "getAvailableProducts", []);
     },
 
-    buy: function(options) {
+    buyAndroid: function(options) {
         var purchaseSuccess = function(purchaseDetails) {
                 var result = {
                     request: {
@@ -83,12 +78,13 @@ exports.inapp = {
 
 document.addEventListener('deviceready', function(ev) {
     exec(function() {
-        console.log("Billing initialized");
-        exports.billingAvailable = true;
-        exports.onBillingAvailable.fire();
+        console.log("Billing initialized.");
+        google.payments.billingAvailable = true;
+        google.payments.onBillingAvailable.fire();
     }, function() {
-        console.log("Error initializing billing");
-        exports.billingAvailable = false;
-        exports.onBillingUnavailable.fire();
+        console.log("Error initializing billing.");
+        google.payments.billingAvailable = false;
+        google.payments.onBillingUnavailable.fire();
     }, "InAppBillingV3", "init", []);
 });
+

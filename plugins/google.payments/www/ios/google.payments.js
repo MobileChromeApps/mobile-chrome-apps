@@ -3,12 +3,7 @@
 // found in the LICENSE file.
 
 var exec = require('cordova/exec'),
-    iab = require('cc.fovea.plugins.inapppurchase.InAppPurchase'),
-    Event = require('org.chromium.common.events');
-
-exports.onBillingAvailable = new Event('onBillingAvailable');
-exports.onBillingUnavailable = new Event('onBillingUnavailable');
-exports.billingAvailable = false;
+    iab = require('cc.fovea.plugins.inapppurchase.InAppPurchase');
 
 // TODO(maxw): Consider storing this in local storage and preloading all previously-loaded items.
 var loadedItemSet = {};
@@ -50,7 +45,7 @@ exports.inapp = {
         console.log('getPurchases');
     },
 
-    buy: function(options) {
+    buyIos: function(options) {
         // We need to record whether the product to buy is valid.
         // This will be set to false if it's discovered that the given sku is invalid.
         var isValidProduct = true;
@@ -113,9 +108,9 @@ document.addEventListener('deviceready', function(ev) {
             console.log('Error: ' + errtext);
         },
         ready: function() {
-            console.log("Billing initialized");
-            exports.billingAvailable = true;
-            exports.onBillingAvailable.fire();
+            console.log("Billing initialized.");
+            google.payments.billingAvailable = true;
+            google.payments.onBillingAvailable.fire();
         }
     });
 });
