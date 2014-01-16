@@ -1,4 +1,4 @@
-# Installion Guide
+# Installation Guide
 
 ## Step 1: Dependencies
 
