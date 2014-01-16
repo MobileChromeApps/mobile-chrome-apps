@@ -30,6 +30,7 @@ var optimist = require('optimist');
 var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
 var shelljs = require('shelljs');
+var cordova = require('cordova');
 
 // Globals
 var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
@@ -45,12 +46,6 @@ var hasXcode = false;
 
 /******************************************************************************/
 /******************************************************************************/
-
-var PLUGIN_SEARCH_PATH = [
-    path.join(mcaRoot, 'cordova'),
-    path.join(mcaRoot, 'cordova', 'cordova-plugins'),
-    path.join(mcaRoot, 'chrome-cordova', 'plugins'),
-];
 
 var DEFAULT_PLUGINS = [
     'org.apache.cordova.file',
@@ -79,6 +74,22 @@ var PLUGIN_MAP = {
   'storage': ['org.chromium.storage'],
   'syncFileSystem': ['org.chromium.syncFileSystem'],
   'unlimitedStorage': []
+};
+
+var CORDOVA_CONFIG_JSON = {
+  plugin_search_path: [
+      path.join(mcaRoot, 'cordova'),
+      path.join(mcaRoot, 'cordova', 'cordova-plugins'),
+      path.join(mcaRoot, 'chrome-cordova', 'plugins'),
+      ],
+  lib: {
+    android: {
+      uri: path.join(mcaRoot, 'cordova', 'cordova-android')
+    },
+    ios: {
+      uri: path.join(mcaRoot, 'cordova', 'cordova-ios')
+    }
+  }
 };
 
 /******************************************************************************/
@@ -460,22 +471,22 @@ function initCommand() {
 /******************************************************************************/
 /******************************************************************************/
 
-function runCmd(cordova, cmd, callback) {
+function runCmd(cmd, callback) {
   // Hack to remove the obj passed to the cordova create command.
   console.log(cmd.join(' ').replace('[object Object]', ''));
   cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
 }
 
-function runAllCmds(cordova, commands, callback) {
+function runAllCmds(commands, callback) {
   if (commands.length === 0) {
     return callback();
   }
   var curCmd = commands[0],
       moreCommands = commands.slice(1);
-  runCmd(cordova, curCmd, function(err) {
+  runCmd(curCmd, function(err) {
     if (err)
       return fatal(err);
-    runAllCmds(cordova, moreCommands, callback);
+    runAllCmds(moreCommands, callback);
   });
 }
 
@@ -497,8 +508,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   var whitelist = [];
   var plugins = [];
   var chromeAppId;
-
-  var cordova = require('cordova');
 
   function resolveTilde(string) {
     // TODO: implement better
@@ -606,35 +615,17 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       callback();
     }
 
-    var config_default = {
-      plugin_search_path: PLUGIN_SEARCH_PATH,
-      lib: {
-        android: {
-          uri: path.join(mcaRoot, 'cordova', 'cordova-android'),
-          version: "mca",
-          id: "cordova-mca"
-        },
-        ios: {
-          uri: path.join(mcaRoot, 'cordova', 'cordova-ios'),
-          version: "mca",
-          id: "cordova-mca"
-        },
-        www: {
-          uri: srcAppDir,
-          version: "mca",
-          id: manifest.name
-        }
-      }
-    };
+    var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
+    config_default.lib.www = { uri: srcAppDir };
 
-    runCmd(cordova, ['create', destAppDir, appId, manifest.name, config_default], function(err) {
+    runCmd(['create', destAppDir, appId, manifest.name, config_default], function(err) {
       if(err)
         return fatal(err);
       writeConfigStep(function(err) {
         if(err)
            return fatal(err);
         chdir(path.join(origDir, destAppDir));
-        runAllCmds(cordova, cmds, afterAllCommands);
+        runAllCmds(cmds, afterAllCommands);
       });
     });
   }
@@ -665,7 +656,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
                       "\n" +
                       "Remember to run `mca prepare` after making changes (full instructions: http://goo.gl/9S89rn).";
 
-    runCmd(cordova, ['prepare'], function(err) {
+    runCmd(['prepare'], function(err) {
        if(err) {
           return fatal(err);
        }
@@ -685,7 +676,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 // Update App
 
 function prePrepareCommand() {
-  var cordova = require('cordova');
   var plugins = [];
 
   /* Pre-create, pre-prepare manifest check and project munger */
@@ -745,7 +735,7 @@ function prePrepareCommand() {
     plugins.forEach(function(pluginPath) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
-    runAllCmds(cordova, cmds, callback);
+    runAllCmds(cmds, callback);
   }
 
   eventQueue.push(readManifestStep);
@@ -894,6 +884,9 @@ function parseCommandLine() {
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
+      }).options('d', {
+          alias: 'verbose',
+          desc: 'Enable verbose logging.'
       }).options('v', {
           alias: 'version',
           desc: 'Show version.'
@@ -942,6 +935,8 @@ function main() {
   // TODO: Add env detection to Cordova.
   fixEnv();
 
+  cordova.config.setAutoPersist(false);
+
   var commandActions = {
     // Secret command used by our prepare hook.
     'pre-prepare': function() {
@@ -989,10 +984,18 @@ function main() {
   };
 
   if (commandActions.hasOwnProperty(command)) {
+    if (commandLineFlags.d) {
+      cordova.on('verbose', console.log);
+      require('plugman').on('verbose', console.log);
+    }
     commandActions[command]();
     pump();
   } else if (cordovaCommands[command]) {
     console.log('Running cordova ' + command);
+    var projectRoot = cordova.findProjectRoot();
+    if (projectRoot) {
+      cordova.config(projectRoot, CORDOVA_CONFIG_JSON);
+    }
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
     var CLI = require('../node_modules/cordova/src/cli');
     new CLI(process.argv);
