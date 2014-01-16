@@ -22,27 +22,45 @@ var path          = require('path'),
     url           = require('url'),
     shell         = require('shelljs');
 
+// Map of project_root -> JSON
+var configCache = {};
+var autoPersist = true;
+
 function config(project_root, opts) {
     var json = config.read(project_root);
-    Object.keys(opts).forEach(function(p) {
+    for (var p in opts) {
         json[p] = opts[p];
-    });
-    return config.write(project_root, json);
+    }
+    if (autoPersist) {
+        config.write(project_root, json);
+    } else {
+        configCache[project_root] = JSON.stringify(json);
+    }
+    return json;
+};
+
+config.setAutoPersist = function(value) {
+    autoPersist = value;
 };
 
 config.read = function get_config(project_root) {
-    var configPath = path.join(project_root, '.cordova', 'config.json');
-    if (!fs.existsSync(configPath)) {
-        return {};
-    } else {
-        var data = fs.readFileSync(configPath, 'utf-8');
-        return JSON.parse(data);
+    var data = configCache[project_root];
+    if (data === undefined) {
+        var configPath = path.join(project_root, '.cordova', 'config.json');
+        if (!fs.existsSync(configPath)) {
+            data = '{}';
+        } else {
+            data = fs.readFileSync(configPath, 'utf-8');
+        }
     }
+    configCache[project_root] = data;
+    return JSON.parse(data);
 };
 
 config.write = function set_config(project_root, json) {
     var configPath = path.join(project_root, '.cordova', 'config.json');
     var contents = JSON.stringify(json, null, 4);
+    configCache[project_root] = contents;
     // Don't write the file for an empty config.
     if (contents != '{}' || fs.existsSync(configPath)) {
         shell.mkdir('-p', path.join(project_root, '.cordova'));

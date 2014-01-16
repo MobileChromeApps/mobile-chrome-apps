@@ -132,7 +132,9 @@ module.exports = function platform(command, targets) {
                     // Call the platform's update script.
                     var script = path.join(libDir, 'bin', 'update');
                     var d = Q.defer();
-                    child_process.exec(script + ' "' + platformPath + '"', function(err, stdout, stderr) {
+                    var cmd = script + ' "' + platformPath + '"';
+                    events.emit('verbose', 'Running command:' + cmd);
+                    child_process.exec(cmd, function(err, stdout, stderr) {
                         if (err) {
                             d.reject(new Error('Update script failed: ' + err + stderr));
                         } else {

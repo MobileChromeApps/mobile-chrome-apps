@@ -17,7 +17,7 @@
     under the License.
 */
 var cordova_events = require('./src/events');
-var addModuleProperty = require('./src/util').addModuleProperty;
+var cordova_util = require('./src/util');
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -41,6 +41,11 @@ exports = module.exports = {
     raw: {}
 };
 
+exports.findProjectRoot = function(opt_startDir) {
+    return cordova_util.isCordova(opt_startDir);
+}
+
+var addModuleProperty = cordova_util.addModuleProperty;
 addModuleProperty(module, 'prepare', './src/prepare', true);
 addModuleProperty(module, 'build', './src/build', true);
 addModuleProperty(module, 'help', './src/help');
