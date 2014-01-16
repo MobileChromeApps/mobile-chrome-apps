@@ -11,7 +11,6 @@ var shell   = require('shelljs'),
 // possible options: link, subdir, git_ref, client, expected_id
 // Returns a promise.
 module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
-    require('../plugman').emit('log', 'Fetching plugin from "' + plugin_src + '"...');
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 
@@ -43,6 +42,7 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
 
     // If it looks like a network URL, git clone it.
     if ( uri.protocol && uri.protocol != 'file:' && !plugin_src.match(/^\w+:\\/)) {
+        require('../plugman').emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
         if (options.link) {
             return Q.reject(new Error('--link is not supported for git URLs'));
         } else {
@@ -80,11 +80,13 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
             // If there is no such local path, it's a plugin id.
             // First look for it in the local search path (if provided).
             var local_dir = findLocalPlugin(plugin_src, options.searchpath);
-            if(local_dir) {
+            if (local_dir) {
                 p = Q(local_dir);
+                require('../plugman').emit('log', 'Found plugin "' + plugin_src + '" at: ' + local_dir);
             } else {
                 // If not found in local search path, fetch from the registry.
                 linkable = false;
+                require('../plugman').emit('log', 'Fetching plugin "' + plugin_src + '" via plugin registry');
                 p = registry.fetch([plugin_src], options.client);
             }
         }

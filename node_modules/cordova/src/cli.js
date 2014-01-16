@@ -138,7 +138,8 @@ module.exports = function CLI(inputArgs) {
             if (args.link) {
                 wwwCfg.link = true;
             }
-            _.merge(cfg, {lib: {www: wwwCfg}} );
+            cfg.lib = cfg.lib || {};
+            cfg.lib.www = wwwCfg;
         }
         // create(dir, id, name, cfg)
         cordova.raw[cmd].call(this, args._[1], args._[2], args._[3], cfg).done();

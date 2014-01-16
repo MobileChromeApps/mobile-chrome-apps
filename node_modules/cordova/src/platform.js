@@ -111,9 +111,17 @@ module.exports = function platform(command, targets) {
                 return Q.reject(new Error('Platform update can only be executed on one platform at a time.'));
             } else {
                 var plat = targets[0];
+                var platformPath = path.join(projectRoot, 'platforms', plat);
                 var installed_platforms = cordova_util.listPlatforms(projectRoot);
                 if (installed_platforms.indexOf(plat) < 0) {
                     return Q.reject(new Error('Platform "' + plat + '" is not installed. See "platform list".'));
+                }
+
+                function copyCordovaJs() {
+                    var parser = new platforms[plat].parser(platformPath);
+                    var platform_www = path.join(platformPath, 'platform_www');
+                    shell.mkdir('-p', platform_www);
+                    shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
                 }
 
                 // First, lazy_load the latest version.
@@ -121,12 +129,15 @@ module.exports = function platform(command, targets) {
                 .then(function() {
                     return lazy_load.based_on_config(projectRoot, plat);
                 }).then(function(libDir) {
+                    // Call the platform's update script.
                     var script = path.join(libDir, 'bin', 'update');
                     var d = Q.defer();
-                    child_process.exec(script + ' "' + path.join(projectRoot, 'platforms', plat) + '"', function(err, stdout, stderr) {
+                    child_process.exec(script + ' "' + platformPath + '"', function(err, stdout, stderr) {
                         if (err) {
                             d.reject(new Error('Update script failed: ' + err + stderr));
                         } else {
+                            // Copy the new cordova.js from www -> platform_www.
+                            copyCordovaJs();
                             events.emit('log', plat + ' updated to ' + platforms[plat].version);
                             d.resolve();
                         }

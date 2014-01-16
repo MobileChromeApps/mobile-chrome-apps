@@ -309,7 +309,8 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
                             is_top_level: false,
                             subdir: dep_subdir,
                             git_ref: dep_git_ref,
-                            expected_id: dep_plugin_id
+                            expected_id: dep_plugin_id,
+                            searchpath: options.searchpath
                         };
 
                         // CB-4770: registry fetching

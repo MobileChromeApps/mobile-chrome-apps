@@ -84,6 +84,7 @@ module.exports = function plugin(command, targets, opts) {
             }
 
             var config_json = config(projectRoot, {});
+            var searchPath = opts.searchpath || config_json.plugin_search_path;
 
             return hooks.fire('before_plugin_add', opts)
             .then(function() {
@@ -97,7 +98,7 @@ module.exports = function plugin(command, targets, opts) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
                         var plugman = require('plugman');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: opts.searchpath || config_json.plugin_search_path });
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath});
                     })
                     .fail(function(err) {
                         return Q.reject(new Error('Fetching plugin failed: ' + err));
@@ -111,7 +112,8 @@ module.exports = function plugin(command, targets, opts) {
                                     parser = new platforms[platform].parser(platformRoot),
                                     options = {
                                         www_dir: parser.staging_dir(),
-                                        cli_variables: {}
+                                        cli_variables: {},
+                                        searchpath: searchPath
                                     },
                                     tokens,
                                     key,

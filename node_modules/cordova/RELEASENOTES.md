@@ -20,6 +20,18 @@
 -->
 # Cordova-cli Release Notes
 
+## 3.3.1-0.2.0 (Jan 15, 2014)
+* CB-5006 Add --searchpath to "plugin add" so that installing by ID will search local paths before hitting the registry.
+* CB-4153 Add --src & --link to cordova create.
+* CB-5687 Make cordova commands work when CWD is inside of a symlink'ed www/
+* CB-4910 Default config.xml to the root instead of within www/
+* CB-5764 Move hooks/ to top-level instead of under .cordova
+* CB-5763 Don't create .cordova/ by default
+* CB-4871 Reduced package size significantly.
+* CB-4976 Don't use ~/.cordova/lib for local directory
+* CB-5777 Fix "platform update" not updating cordova.js
+* CB-5728 Files in merges must remain intact when removing platform
+
 ## 3.3.0-0.1.0
 * CB-5347 Handle dangling platform symlink in cordova platform add
 * Added deprecation notice about wp7
@@ -190,3 +202,4 @@ Important note: This version targets Cordova version 3.1.0-rc1.
 
 - Plugins are now installed serially across all installed platforms, rather than in parallel. This avoids race conditions in dependency installation. [CB-4184](https://issues.apache.org/jira/browse/CB-4184)
 - (WP8) All files from project www dir are now copied into the binary, not the top-level www. This means merges and plugin assets are correctly handled.
+

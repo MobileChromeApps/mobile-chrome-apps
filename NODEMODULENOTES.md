@@ -4,5 +4,5 @@ The following commands remove tests.
 
     find node_modules -type d -iname tests -exec rm -rf {} \;
     find node_modules -type d -iname test -exec rm -rf {} \;
-    git add --all node_modules
+    git add --all node_modules/cordova
 
