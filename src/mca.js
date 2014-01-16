@@ -29,6 +29,7 @@ var ncp = require('ncp');
 var optimist = require('optimist');
 var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
+var shelljs = require('shelljs');
 
 // Globals
 var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
@@ -899,6 +900,30 @@ function parseCommandLine() {
       }).argv;
 }
 
+function fixEnv() {
+  if (isWindows) {
+    // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
+    var javacInPath = !shelljs.which('javac');
+    var hasJavaHome = !!process.env['JAVA_HOME'];
+    if (hasJavaHome && !javacInPath) {
+      process.env['PATH'] += ';' + process.env['JAVA_HOME'] + '\\bin';
+    } else if (!hasJavaHome || !javacInPath) {
+      var firstJdkDir =
+          shelljs.ls(process.env['ProgramFiles'] + '\\java\\jdk*')[0] ||
+          shelljs.ls('C:\\Program Files\\java\\jdk*')[0] ||
+          shelljs.ls('C:\\Program Files (x86)\\java\\jdk*')[0];
+      if (firstJdkDir) {
+        if (!javacInPath) {
+          process.env['PATH'] += ';' + firstJdkDir + '\\bin';
+        }
+        if (!hasJavaHome) {
+          process.env['JAVA_HOME'] = firstJdkDir;
+        }
+      }
+    }
+  }
+}
+
 function main() {
   parseCommandLine();
   var command = commandLineFlags._[0];
@@ -913,6 +938,9 @@ function main() {
 
   // Colorize after parseCommandLine to avoid --help being printed in red.
   colorizeConsole();
+
+  // TODO: Add env detection to Cordova.
+  fixEnv();
 
   var commandActions = {
     // Secret command used by our prepare hook.
