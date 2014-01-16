@@ -18,38 +18,6 @@
   under the License.
  */
 
-/**
-  The top line of this file will allow this script to be run as
-  a UNIX shell script, as well as being a valid Node.js program.
- */
-
-/******************************************************************************/
-/******************************************************************************/
-
-function wscriptWrapper() {
-  var shell = WScript.CreateObject("WScript.Shell");
-  var args = [];
-  for (var i = 0; i < WScript.Arguments.Length; ++i) {
-    args.push('"' + WScript.Arguments.Item(i) + '"');
-  }
-  var ret;
-  try {
-    // Don't worry about passing along arguments here. It's stricly a double-click convenience.
-    var cmd = 'cmd /c node "' + WScript.ScriptFullName + '" ' + args.join(' ') + ' --pause_on_exit';
-    ret = shell.Run(cmd, 1, true);
-  } catch (e) {
-    shell.Popup('NodeJS is not installed. Please install it from http://nodejs.org');
-    ret = 1;
-  }
-  WScript.Quit(ret);
-}
-if (typeof WScript != 'undefined') {
-  wscriptWrapper();
-}
-
-/******************************************************************************/
-/******************************************************************************/
-
 // System modules.
 var childProcess = require('child_process');
 var fs = require('fs');
