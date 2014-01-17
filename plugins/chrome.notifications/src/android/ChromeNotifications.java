@@ -24,6 +24,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.IntentCompat;
 import android.text.Html;
 import android.util.Log;
 
@@ -125,7 +127,7 @@ public class ChromeNotifications extends CordovaPlugin {
         if (webView == null) {
             // In this case the main activity has been closed and will need to be started up again in order to execute
             // the appropriate event handler.
-            Intent intent = Intent.makeMainActivity(componentName);
+            Intent intent = IntentCompat.makeMainActivity(componentName);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra(NOTIFICATION_ACTION_LABEL, eventInfo.action);
             intent.putExtra(NOTIFICATION_ID_LABEL, eventInfo.notificationId);
@@ -202,7 +204,7 @@ public class ChromeNotifications extends CordovaPlugin {
         if (smallIconId == 0) {
             smallIconId = resources.getIdentifier("icon", "drawable", cordova.getActivity().getPackageName());
         }
-        Notification.Builder builder = new Notification.Builder(cordova.getActivity())
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getActivity())
             .setSmallIcon(smallIconId)
             .setContentTitle(options.getString("title"))
             .setContentText(options.getString("message"))
@@ -225,14 +227,14 @@ public class ChromeNotifications extends CordovaPlugin {
         String type = options.getString("type");
         Notification notification;
         if ("image".equals(type)) {
-            Notification.BigPictureStyle bigPictureStyle = new Notification.BigPictureStyle(builder);
+            NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle(builder);
             String bigImageUrl = options.optString("imageUrl");
             if (!bigImageUrl.isEmpty()) {
                 bigPictureStyle.bigPicture(makeBitmap(bigImageUrl, 0, 0));
             }
             notification = bigPictureStyle.build();
         } else if ("list".equals(type)) {
-            Notification.InboxStyle inboxStyle = new Notification.InboxStyle(builder);
+            NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle(builder);
             JSONArray items = options.optJSONArray("items");
             if (items != null) {
                 for (int i = 0; i < items.length(); i++) {
@@ -307,3 +309,4 @@ public class ChromeNotifications extends CordovaPlugin {
         pendingEvents.clear();
     }
 }
+
