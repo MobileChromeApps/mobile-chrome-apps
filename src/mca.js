@@ -516,7 +516,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     return string
   }
   function validateSourceArgStep(callback) {
-    var sourceArg = commandLineFlags.template || commandLineFlags.link;
+    var sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
     if (!sourceArg) {
       srcAppDir = path.join(mcaRoot, 'templates', 'default-app');
       manifestFile = path.join(srcAppDir, 'manifest.json');
@@ -617,7 +617,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
-    if (commandLineFlags.link) {
+    if (commandLineFlags['link-to']) {
       config_default.lib.www.link = true;
     }
 
@@ -653,9 +653,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   function prepareStep(callback) {
     var wwwPath = path.join(origDir, destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
-    if (commandLineFlags.link) {
+    if (commandLineFlags['link-to']) {
       welcomeText += 'Your project has been created, with the following symlink:\n' +
-                     wwwPath + ' --> ' + path.resolve(commandLineFlags.link) + '\n\n';
+                     wwwPath + ' --> ' + path.resolve(commandLineFlags['link-to']) + '\n\n';
     } else {
       welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
                      wwwPath + '\n\n';
@@ -872,15 +872,15 @@ function parseCommandLine() {
              '    Examples:\n' +
              '        mca init.\n' +
              '\n' +
-             'create [--android] [--ios] [--template path | --link path] - Creates a new project.\n' +
+             'create [--android] [--ios] [--copy-from=path | --link-to=path] - Creates a new project.\n' +
              '    Flags:\n' +
              '        --android: Add the Android platform (default if android SDK is detected).\n' +
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
-             '        --template=path/to/chromeapp: Create a project based on the given Chrome App.\n' +
-             '        --link=path/to/chromeapp: Create a project that symlinks to the given Chrome App.\n' +
+             '        --copy-from=path/to/app: Create a project based on the given Chrome App.\n' +
+             '        --link-to=path/to/app: Create a project that symlinks to the given Chrome App.\n' +
              '    Examples:\n' +
              '        mca create org.chromium.Demo\n' +
-             '        mca create org.chromium.Spec --android --template=chrome-cordova/spec/www\n' +
+             '        mca create org.chromium.Spec --android --link-to=path/to/app\n' +
              'Cordova commands will be forwarded directly to cordova.\n' +
              '    Commands:\n' +
              '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
