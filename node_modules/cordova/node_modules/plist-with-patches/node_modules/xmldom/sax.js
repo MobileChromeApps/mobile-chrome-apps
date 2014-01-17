@@ -115,7 +115,7 @@ function parse(source,defaultNSMapCopy,entityMap,domBuilder,errorHandler){
 		default:
 			if(i<0){
 				if(!source.substr(start).match(/^\s*$/)){
-					errorHandler.error('source code out of document root');
+					domBuilder.allText(source);
 				}
 				return;
 			}else{

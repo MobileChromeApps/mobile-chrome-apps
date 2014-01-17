@@ -84,6 +84,12 @@ DOMHandler.prototype = {
         	this.document.documentURI = this.locator.systemId;
     	}
 	},
+	allText:function(source) {
+		var doc = this.document;
+	    var el = doc.createTextNode(source);
+	    appendElement(this, el);
+	    this.currentElement = el;
+	},
 	startElement:function(namespaceURI, localName, qName, attrs) {
 		var doc = this.document;
 	    var el = doc.createElementNS(namespaceURI, qName||localName);
