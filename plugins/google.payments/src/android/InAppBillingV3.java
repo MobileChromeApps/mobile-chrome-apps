@@ -112,32 +112,35 @@ public class InAppBillingV3 extends CordovaPlugin {
 		initializeBillingHelper();
 	}
 
-	protected JSONObject makeError(int resultCode) {
-		return makeError(resultCode, null, (JSONObject)null);
+	protected JSONObject makeError(String message) {
+		return makeError(message, null, null, null);
 	}
 
-	protected JSONObject makeError(int resultCode, String message) {
-		return makeError(resultCode, message, (JSONObject)null);
+	protected JSONObject makeError(String message, Integer resultCode) {
+		return makeError(message, resultCode, null, null);
 	}
 
-	protected JSONObject makeError(int resultCode, String message, IabResult result) {
-		JSONObject extra = new JSONObject();
-		try {
-			extra.put("response", result.getResponse());
-			extra.put("message", result.getMessage());
-		} catch (JSONException e) {}
-		return makeError(resultCode, message, extra);
+	protected JSONObject makeError(String message, Integer resultCode, IabResult result) {
+		return makeError(message, resultCode, result.getMessage(), result.getResponse());
 	}
 
-	protected JSONObject makeError(int resultCode, String message, JSONObject extra) {
+	protected JSONObject makeError(String message, Integer resultCode, String text, Integer response) {
+        if (message != null) {
+            Log.d(TAG, "Error: " + message);
+        }
 		JSONObject error = new JSONObject();
 		try {
-			error.put("code", resultCode);
+            if (resultCode != null) {
+    			error.put("code", (int)resultCode);
+            }
 			if (message != null) {
 				error.put("message", message);
 			}
-			if (extra != null) {
-				error.put("extra", extra);
+			if (text != null) {
+				error.put("text", text);
+			}
+			if (response != null) {
+				error.put("response", response);
 			}
 		} catch (JSONException e) {}
 		return error;
@@ -163,14 +166,12 @@ public class InAppBillingV3 extends CordovaPlugin {
 			callbackContext.success();
 		}
 		if (iabHelper == null) {
-			Log.d(TAG, "Billing cannot be initialized");
-			callbackContext.error(makeError(UNABLE_TO_INITIALIZE));
+			callbackContext.error(makeError("Billing cannot be initialized", UNABLE_TO_INITIALIZE));
 		}
 		iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
 			public void onIabSetupFinished(IabResult result) {
 				if (!result.isSuccess()) {
-					Log.d(TAG, "Unable to initialize billing: " + result.toString());
-					callbackContext.error(makeError(UNABLE_TO_INITIALIZE));
+					callbackContext.error(makeError("Unable to initialize billing: " + result.toString(), UNABLE_TO_INITIALIZE, result));
 				} else {         
 					Log.d(TAG, "Billing initialized");
 					billingInitialized = true;
@@ -186,12 +187,11 @@ public class InAppBillingV3 extends CordovaPlugin {
 		try {
 			sku = args.getString(0);
 		} catch (JSONException e) {
-			callbackContext.error(makeError(INVALID_ARGUMENTS, "Invalid SKU"));
+			callbackContext.error(makeError("Invalid SKU", INVALID_ARGUMENTS));
 			return false;
 		}
 		if (iabHelper == null || !billingInitialized) {
-			Log.d(TAG, "Billing is not initialized");
-			callbackContext.error(makeError(BILLING_NOT_INITIALIZED, "Billing is not initialized"));
+			callbackContext.error(makeError("Billing is not initialized", BILLING_NOT_INITIALIZED));
 			return false;
 		}
 		final Activity cordovaActivity = this.cordova.getActivity();
@@ -204,15 +204,15 @@ public class InAppBillingV3 extends CordovaPlugin {
 					// TODO: Add way more info to this
 					int response = result.getResponse();
 					if (response == IabHelper.IABHELPER_BAD_RESPONSE || response == IabHelper.IABHELPER_UNKNOWN_ERROR) {
-						callbackContext.error(makeError(BAD_RESPONSE_FROM_SERVER, "Could not complete purchase", result));
+						callbackContext.error(makeError("Could not complete purchase", BAD_RESPONSE_FROM_SERVER, result));
 					}
 					if (response == IabHelper.IABHELPER_VERIFICATION_FAILED) {
-						callbackContext.error(makeError(BAD_RESPONSE_FROM_SERVER, "Could not complete purchase", result));
+						callbackContext.error(makeError("Could not complete purchase", BAD_RESPONSE_FROM_SERVER, result));
 					}
 					if (response == IabHelper.IABHELPER_USER_CANCELLED) {
-						callbackContext.error(makeError(USER_CANCELLED, "Purchase Cancelled", result));
+						callbackContext.error(makeError("Purchase Cancelled", USER_CANCELLED, result));
 					}
-					callbackContext.error(makeError(UNKNOWN_ERROR, "Error completing purchase", result));
+					callbackContext.error(makeError("Error completing purchase", UNKNOWN_ERROR, result));
 				} else {
 					purchaseMap.put(purchase.getToken(), purchase);
 					try {
@@ -240,23 +240,22 @@ public class InAppBillingV3 extends CordovaPlugin {
 			String purchaseToken = args.getString(0);
 			purchase = getPurchase(purchaseToken);
 		} catch (JSONException e) {
-			callbackContext.error(makeError(INVALID_ARGUMENTS, "Unable to parse purchase token"));
+			callbackContext.error(makeError("Unable to parse purchase token", INVALID_ARGUMENTS));
 			return false;
 		}
 		if (purchase == null) {
-			callbackContext.error(makeError(INVALID_ARGUMENTS, "Unrecognized purchase token"));
+			callbackContext.error(makeError("Unrecognized purchase token", INVALID_ARGUMENTS));
 			return false;
 		}
 		if (iabHelper == null || !billingInitialized) {
-			Log.d(TAG, "Billing is not initialized");
-			callbackContext.error(makeError(BILLING_NOT_INITIALIZED, "Billing is not initialized"));
+			callbackContext.error(makeError("Billing is not initialized", BILLING_NOT_INITIALIZED));
 			return false;
 		}
 		iabHelper.consumeAsync(purchase, new OnConsumeFinishedListener() {
 			public void onConsumeFinished(Purchase purchase, IabResult result) {
 				if (result.isFailure()) {
 					// TODO: Add way more info to this
-					callbackContext.error(makeError(CONSUME_FAILED, "Error consuming purchase", result));
+					callbackContext.error(makeError("Error consuming purchase", CONSUME_FAILED, result));
 				} else {
 					try {
 						JSONObject pluginResponse = new JSONObject();
@@ -278,12 +277,11 @@ public class InAppBillingV3 extends CordovaPlugin {
 				moreSkus.add(args.getString(i));
 			}
 		} catch (JSONException e) {
-			callbackContext.error(makeError(INVALID_ARGUMENTS, "Invalid SKU"));
+			callbackContext.error(makeError("Invalid SKU", INVALID_ARGUMENTS));
 			return false;
 		}
 		if (iabHelper == null || !billingInitialized) {
-			Log.d(TAG, "Billing is not initialized");
-			callbackContext.error(makeError(BILLING_NOT_INITIALIZED, "Billing is not initialized"));
+			callbackContext.error(makeError("Billing is not initialized", BILLING_NOT_INITIALIZED));
 			return false;
 		}
 		iabHelper.queryInventoryAsync(true, moreSkus, new IabHelper.QueryInventoryFinishedListener() {
