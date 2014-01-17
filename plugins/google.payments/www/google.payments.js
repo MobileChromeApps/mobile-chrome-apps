@@ -13,8 +13,11 @@ function createError(errorType, errorCode, errorText, message) {
         response: {
             errorType: errorType,
             details: {
+                /* The internal error code, if any, from the underlying store */
                 errorCode: errorCode,
+                /* The text associated with the error from the underlying store */
                 errorText: errorText,
+                /* Explanatory message about where and when the error occurred */
                 message: message
             }
         }
@@ -38,15 +41,16 @@ exports.inapp = {
     },
 
     buy: function(options) {
+        var error;
         // If billing is unavailable, throw an error.
         if (!exports.billingAvailable) {
-            var error = createError(MERCHANT_ERROR, null, null, "Billing is unavailable.");
+            error = createError(MERCHANT_ERROR, null, null, "Billing is unavailable.");
             options.failure(error);
         }
 
         // If no SKU is provided, throw an error.
         if (!options.sku) {
-            var error = createError(MERCHANT_ERROR, null, null, "No SKU provided for purchase.");
+            error = createError(MERCHANT_ERROR, null, null, "No SKU provided for purchase.");
             options.failure(error);
         }
 
@@ -56,7 +60,7 @@ exports.inapp = {
         } else if (exports.inapp.platform === "ios") {
             exports.inapp.buyIos(options);
         } else {
-            var error = createError(INTERNAL_SERVER_ERROR, null, null, "buy is not supported on this platform.");
+            error = createError(INTERNAL_SERVER_ERROR, null, null, "buy is not supported on this platform.");
             options.failure(error);
         }
     }
