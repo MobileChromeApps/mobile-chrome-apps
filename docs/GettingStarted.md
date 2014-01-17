@@ -4,9 +4,10 @@ Please make sure you have completed the [Installation Guide](Installation.md) fi
 
 ### Step 1: Create a Project
 
-    mca create com.companyname.YourApp [--source=...]
+    mca create com.companyname.YourApp [--link-to=<path>|--copy-from=<path>]
 
-* Using the `--source` flag will import an already existing chrome app (by creating a _copy_).
+* The `--link-to` flag will import your existing chrome app by _symlink_.
+* The `--copy-from` flag will import your existing chrome app by _copy_.
 
 ### Step 2: Building and Running your application
 
