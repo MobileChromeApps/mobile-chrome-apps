@@ -18,9 +18,12 @@ var OK = 0,
     ITEM_NOT_OWNED = -10,
     CONSUME_FAILED = -11;
 var errorTypes = {};
-errorTypes[ITEM_ALREADY_OWNED] = "ITEM_ALREADY_OWNED";
-errorTypes[ITEM_NOT_OWNED] = "ITEM_NOT_OWNED";
+errorTypes[ITEM_ALREADY_OWNED] = "MERCHANT_ERROR";
+errorTypes[ITEM_NOT_OWNED] = "INTERNAL_SERVER_ERROR";
 errorTypes[USER_CANCELLED] = "PURCHASE_CANCELLED";
+errorTypes[UNKNOWN_ERROR] = "INTERNAL_SERVER_ERROR";
+errorTypes[VERIFICATION_FAILED] = "INTERNAL_SERVER_ERROR";
+errorTypes[ITEM_UNAVAILABLE] = "INTERNAL_SERVER_ERROR";
 
 exports.inapp = {
     getSkuDetails: function(skus, success, failure) {

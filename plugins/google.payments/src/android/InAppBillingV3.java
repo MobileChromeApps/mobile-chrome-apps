@@ -206,13 +206,18 @@ public class InAppBillingV3 extends CordovaPlugin {
 					if (response == IabHelper.IABHELPER_BAD_RESPONSE || response == IabHelper.IABHELPER_UNKNOWN_ERROR) {
 						callbackContext.error(makeError("Could not complete purchase", BAD_RESPONSE_FROM_SERVER, result));
 					}
-					if (response == IabHelper.IABHELPER_VERIFICATION_FAILED) {
+					else if (response == IabHelper.IABHELPER_VERIFICATION_FAILED) {
 						callbackContext.error(makeError("Could not complete purchase", BAD_RESPONSE_FROM_SERVER, result));
 					}
-					if (response == IabHelper.IABHELPER_USER_CANCELLED) {
+					else if (response == IabHelper.IABHELPER_USER_CANCELLED) {
 						callbackContext.error(makeError("Purchase Cancelled", USER_CANCELLED, result));
 					}
-					callbackContext.error(makeError("Error completing purchase", UNKNOWN_ERROR, result));
+                    else if (response == IabHelper.BILLING_RESPONSE_RESULT_ITEM_ALREADY_OWNED) {
+						callbackContext.error(makeError("Item already owned", ITEM_ALREADY_OWNED, result));
+                    }
+					else {
+                        callbackContext.error(makeError("Error completing purchase: " + response, UNKNOWN_ERROR, result));
+                    }
 				} else {
 					purchaseMap.put(purchase.getToken(), purchase);
 					try {
@@ -255,7 +260,12 @@ public class InAppBillingV3 extends CordovaPlugin {
 			public void onConsumeFinished(Purchase purchase, IabResult result) {
 				if (result.isFailure()) {
 					// TODO: Add way more info to this
-					callbackContext.error(makeError("Error consuming purchase", CONSUME_FAILED, result));
+					int response = result.getResponse();
+                    if (response = BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED) {
+					    callbackContext.error(makeError("Error consuming purchase", ITEM_NOT_OWNED, result));
+                    } else {
+					    callbackContext.error(makeError("Error consuming purchase", CONSUME_FAILED, result));
+                    }
 				} else {
 					try {
 						JSONObject pluginResponse = new JSONObject();
