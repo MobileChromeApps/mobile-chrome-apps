@@ -606,9 +606,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
       // Create a convenience link to MCA
       if (isGitRepo) {
-        var mcaPath = path.relative('.', path.join(mcaRoot, 'mca'));
+        var mcaPath = path.relative('.', path.join(mcaRoot, 'src', 'mca.js'));
         var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
-        fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\n"' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
+        fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\nnode "' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
         fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
         fs.chmodSync('mca', '777');
       }
@@ -655,7 +655,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     var welcomeText = 'Done!\n\n';
     if (commandLineFlags['link-to']) {
       welcomeText += 'Your project has been created, with the following symlink:\n' +
-                     wwwPath + ' --> ' + path.resolve(commandLineFlags['link-to']) + '\n\n';
+                     wwwPath + ' --> ' + path.resolve(origDir, commandLineFlags['link-to']) + '\n\n';
     } else {
       welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
                      wwwPath + '\n\n';
