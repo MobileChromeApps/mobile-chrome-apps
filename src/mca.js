@@ -935,8 +935,6 @@ function main() {
   // TODO: Add env detection to Cordova.
   fixEnv();
 
-  cordova.config.setAutoPersist(false);
-
   var commandActions = {
     // Secret command used by our prepare hook.
     'pre-prepare': function() {
@@ -983,6 +981,11 @@ function main() {
     'serve': 1
   };
 
+  cordova.config.setAutoPersist(false);
+  var projectRoot = cordova.findProjectRoot();
+  if (projectRoot) {
+    cordova.config(projectRoot, CORDOVA_CONFIG_JSON);
+  }
   if (commandActions.hasOwnProperty(command)) {
     if (commandLineFlags.d) {
       cordova.on('verbose', console.log);
@@ -992,10 +995,6 @@ function main() {
     pump();
   } else if (cordovaCommands[command]) {
     console.log('Running cordova ' + command);
-    var projectRoot = cordova.findProjectRoot();
-    if (projectRoot) {
-      cordova.config(projectRoot, CORDOVA_CONFIG_JSON);
-    }
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
     var CLI = require('../node_modules/cordova/src/cli');
     new CLI(process.argv);
