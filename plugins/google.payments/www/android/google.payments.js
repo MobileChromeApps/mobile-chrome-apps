@@ -59,8 +59,14 @@ exports.inapp = {
                 var result = {
                     response: {
                         errorType: errorTypes[err.code] || "UNKNOWN_ERROR",
-                        code: err.code,
-                        message: err.message
+                        details: {
+                            /* Explanatory message about where and when the error occurred */
+                            message: err.message,
+                            /* The internal error code, if any, from the underlying store */
+                            errorCode: err.code,
+                            /* The text associated with the error from the underlying store */
+                            errorText: err.text
+                        }
                     }
                 };
                 options.failure(result);
