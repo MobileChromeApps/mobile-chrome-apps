@@ -6,8 +6,9 @@ Please make sure you have completed the [Installation Guide](Installation.md) fi
 
     mca create com.companyname.YourApp [--link-to=<path>|--copy-from=<path>]
 
-* The `--link-to` flag will import your existing chrome app by _symlink_.
-* The `--copy-from` flag will import your existing chrome app by _copy_.
+* You may pass one of `--link-to` or `--copy-from` to build your existing chrome app for mobile.
+* The `--link-to` flag will share your existing chrome app code by _symlink_.
+* The `--copy-from` flag will import your existing chrome app code by _copy_.
 
 ### Step 2: Building and Running your application
 
