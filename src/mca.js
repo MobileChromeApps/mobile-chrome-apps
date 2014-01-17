@@ -516,7 +516,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
     return string
   }
   function validateSourceArgStep(callback) {
-    var sourceArg = commandLineFlags.source;
+    var sourceArg = commandLineFlags.template || commandLineFlags.link;
     if (!sourceArg) {
       srcAppDir = path.join(mcaRoot, 'templates', 'default-app');
       manifestFile = path.join(srcAppDir, 'manifest.json');
@@ -617,6 +617,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
+    if (commandLineFlags.link) {
+      config_default.lib.www.link = true;
+    }
 
     runCmd(['create', destAppDir, appId, manifest.name, config_default], function(err) {
       if(err)
@@ -648,13 +651,16 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function prepareStep(callback) {
-    var welcomeText = "Done!\n" +
-                      "\n" +
-                      "Your project has been created, with web assets residing inside the `www` folder:\n" +
-                      "\n" +
-                      "    " + path.join(origDir, destAppDir, 'www') + "\n" +
-                      "\n" +
-                      "Remember to run `mca prepare` after making changes (full instructions: http://goo.gl/9S89rn).";
+    var wwwPath = path.join(origDir, destAppDir, 'www');
+    var welcomeText = 'Done!\n\n';
+    if (commandLineFlags.link) {
+      welcomeText += 'Your project has been created, with the following symlink:\n' +
+                     wwwPath + ' --> ' + path.resolve(commandLineFlags.link) + '\n\n';
+    } else {
+      welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
+                     wwwPath + '\n\n';
+    }
+    welcomeText += 'Remember to run `mca prepare` after making changes (full instructions: http://goo.gl/9S89rn).';
 
     runCmd(['prepare'], function(err) {
        if(err) {
@@ -866,14 +872,15 @@ function parseCommandLine() {
              '    Examples:\n' +
              '        mca init.\n' +
              '\n' +
-             'create [--android] [--ios] [--source path] - Creates a new project.\n' +
+             'create [--android] [--ios] [--template path | --link path] - Creates a new project.\n' +
              '    Flags:\n' +
              '        --android: Add the Android platform (default if android SDK is detected).\n' +
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
-             '        --source=path/to/chromeapp: Create a project based on the given chrome app.\n' +
+             '        --template=path/to/chromeapp: Create a project based on the given Chrome App.\n' +
+             '        --link=path/to/chromeapp: Create a project that symlinks to the given Chrome App.\n' +
              '    Examples:\n' +
              '        mca create org.chromium.Demo\n' +
-             '        mca create org.chromium.Spec --android --source=chrome-cordova/spec/www\n' +
+             '        mca create org.chromium.Spec --android --template=chrome-cordova/spec/www\n' +
              'Cordova commands will be forwarded directly to cordova.\n' +
              '    Commands:\n' +
              '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
