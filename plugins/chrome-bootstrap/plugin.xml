@@ -29,9 +29,9 @@
   </js-module>
 
   <!-- Integration files -->
-  <asset src="www/chromeapp.html" target="chromeapp.html" />
-  <asset src="www/chromebgpage.html" target="chromebgpage.html" />
-  <asset src="www/chromeappstyles.css" target="chromeappstyles.css" />
+  <asset src="www/chromeapp.html" target="plugins/org.chromium.bootstrap/chromeapp.html" />
+  <asset src="www/chromebgpage.html" target="plugins/org.chromium.bootstrap/chromebgpage.html" />
+  <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
 
   <platform name="android">
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />

@@ -47,7 +47,9 @@ exports.onSuspendCanceled.addListener = function(f) {
 exports.getManifest = function() {
   if (typeof manifestJson == 'undefined') {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'manifest.json', false /* sync */);
+    // This is a bit fragile - determine path by whether chromeapp.html is in the URL.
+    var path = /chromeapp\.html$/.exec(location.href) ? '../../manifest.json' : 'manifest.json';
+    xhr.open('GET', path, false);
     xhr.send(null);
     if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
       // Don't use JSON.parse, since it fails on comments.

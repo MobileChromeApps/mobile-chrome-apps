@@ -125,7 +125,7 @@ function rewritePage(pageContent, filePath) {
     var headHtml = pageContent.slice(startIndex, endIndex);
     pageContent = pageContent.slice(endIndex);
 
-    fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="chromeappstyles.css">');
+    fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="plugins/org.chromium.bootstrap/chromeappstyles.css">');
     var baseUrl = filePath.replace(/\/.*?$/, '');
     if (baseUrl != filePath) {
       fgHead.insertAdjacentHTML('beforeend', '<base href="' + encodeURIComponent(baseUrl) + '/">\n');
@@ -143,13 +143,17 @@ exports.create = function(filePath, options, callback) {
     return;
   }
   createdAppWindow = new AppWindow();
+
+  var anchorEl = mobile.bgWindow.document.createElement('a');
+  anchorEl.href = filePath;
+  var resolvedUrl = anchorEl.href;
   // Use background page's XHR so that relative URLs are relative to it.
-  var xhr = new mobile.bgWindow.XMLHttpRequest();
-  xhr.open('GET', filePath, true);
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', resolvedUrl, true);
   // Android pre KK doesn't support onloadend.
   xhr.onload = xhr.onerror = function() {
     // Change the page URL before the callback.
-    history.replaceState(null, null, runtime.getURL(filePath));
+    history.replaceState(null, null, resolvedUrl);
     // Call the callback before the page contents loads.
     if (callback) {
       callback(createdAppWindow);
