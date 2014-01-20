@@ -18,5 +18,5 @@
     <preference name="StatusBarBackgroundColor" value="#000000" />
 
     <preference name="chrome-app-id" value="__CHROME_APP_ID__" />
-    <content src="chromeapp.html" />
+    <content src="plugins/org.chromium.bootstrap/chromeapp.html" />
 </widget>
