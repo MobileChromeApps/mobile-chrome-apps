@@ -1,6 +1,6 @@
 # chrome.payments Plugin
 
-This plugin provides in-app payments and billing functions for Android and iOS. It uses the Google Wallet for Digital Goods API, but interfaces directly to the Google Play Store (for Android) and iOS App Store (foriOS).
+This plugin provides in-app payments and billing functions for Android and iOS. It uses the Google Wallet for Digital Goods API, but interfaces directly to the Google Play Store (for Android) and iOS App Store (for iOS).
 
 ## Status
 
@@ -22,25 +22,27 @@ For Android, you will need to add a key to your application's manifest file.
 
     "play_store_key": <Base64-encoded public key from the Google Play Store>
 
-The required public key can be obtained from the Google Play Store once you have uploaded your app (it does nnot need to be published; just uploaded). From the "Services & APIs" panel for your app, copy the string labeled "Your license key for this application".
+The required public key can be obtained from the Google Play Store once you have uploaded your app (it does not need to be published; just uploaded). From the "Services & APIs" panel for your app, copy the string labeled "Your license key for this application".
 
 ## Usage
 
-### Determining when billing is available
+### Determining When Billing is Available
 
-Mobile applications are not guaranteed to have access to in-app billing services. Billing may be unavailable for many reasons, from misconfiguration to explicit denial: the owner of the device may not have a store accont, or may have removed in-app-purchase privileges, for a guest or child's account.
+Mobile applications are not guaranteed to have access to in-app billing services. Billing may be unavailable for many reasons, from misconfiguration to explicit denial: the owner of the device may not have a store account or may have removed in-app-purchase privileges for a guest or child's account.
 
 Your app can inspect the `google.payments.isBillingAvailable` property to test whether billing services are available or not. You can also register a listener on the `google.payments.onBillingAvailable` and `google.payments.onBilling` events to detect changes to billing availability.
 
 In general, calls to the payments API will fail if `isBillingAvailable` is `false`.
 
-### Purchasing products
+### Purchasing Products
 
-To initiate a purchase, call `google.payments.inapp.buy()`
+To initiate a purchase, call `google.payments.inapp.buy()`.
 
-### Consumable products
+### Consumable Products
 
-Both Android and iOS support the concept of "consumable" products. These products can be purchased multiple times, and are only associated with the device on which they were purchased. One-time purchasable products, in contrast, can only be purchased once per user, and can be used on all devices. Attempting to purchase a one-time purchasable product additional times will result in an error.
+Both Android and iOS support the concept of "consumable" products. These products can be purchased multiple times, and are only associated with the device on which they were purchased.
+
+One-time purchasable products, in contrast, can only be purchased once per user, and can be used on all devices. On Android, attempting to purchase a one-time purchasable product additional times will result in an error. On iOS, the user will be notified that the product has already been purchased.
 
 On Android, any item may be purchased as a consumable item. The `buy()` method accepts a `consume` argument which indicates whether the item is to be consumed after purchase.
 
@@ -70,7 +72,7 @@ If the purchase is successful, `options.success` will be called with a `purchase
             "consume": <boolean consume from original request>
         },
         "response": {
-            "orderId": <Unique order ID from the back-end store>,
+            "orderId": <Unique order ID from the back-end store>
         }
     }
 
@@ -84,7 +86,7 @@ If the purchase fails for any reason (including cancellation), `options.failure`
             "consume": <boolean consume from original request>
         },
         "response": {
-            "errorType": <error type, see below>,
+            "errorType": <Error type, see below>,
             "errorCode": <Error code, if available, from the back-end store>,
             "errorText": <Text associated with the error, if available, from the back-end store>,
             "message": <Explanatory text about where the error occurred>
@@ -99,11 +101,11 @@ If the purchase fails for any reason (including cancellation), `options.failure`
 
 `errorCode` and `errorText` come from the back-end store when possible, and can be useful for troubleshooting purchasing issues. Their values depend on the store used, and so can't be fully enumerated here. See the appropriate store documentation for details.
 
-`google.payments.inapp.getSkuDetails(<skuList>, <success callback>, <failure callback>)`
+`google.payments.inapp.getSkuDetails(<skuList>, <successCallback>, <failureCallback>)`
 
-`skuList` is an array of productId strings to retrieve information about
+`skuList` is an array of productId strings to retrieve information about.
 
-If successful, `success callback` will be called with a `skuDetails` array. Every item in the array is an object like this:
+If successful, `successCallback` will be called with a `skuDetails` array. Every item in the array is an object like this:
 
     {
         "productId": <The SKU for this product>,
@@ -113,20 +115,20 @@ If successful, `success callback` will be called with a `skuDetails` array. Ever
         "type": <The store-specific type associated with the product>
     }
 
-On failure, `failure callback` will be called with a `failureResult` as its single argument (see above).
+On failure, `failureCallback` will be called with a `failureResult` as its single argument (see above).
 
 ## External References
 
 ### API
-[Monetize your Chrome App](http://developer.chrome.com/apps/google_wallet.html)
-[Google Wallet for Digital Goods API](https://developers.google.com/wallet/digital/docs/jsreference)
+* [Monetize your Chrome App](http://developer.chrome.com/apps/google_wallet.html)
+* [Google Wallet for Digital Goods API](https://developers.google.com/wallet/digital/docs/jsreference)
 
 ### Back-end store references
-[Android BillingV3 documentation](http://developer.android.com/google/play/billing/api.html)
-[iOS In-App Purchase Programming Guide](https://developer.apple.com/library/IOS/documentation/NetworkingInternet/Conceptual/StoreKitGuide/Introduction.html)
+* [Android BillingV3 documentation](http://developer.android.com/google/play/billing/api.html)
+* [iOS In-App Purchase Programming Guide](https://developer.apple.com/library/IOS/documentation/NetworkingInternet/Conceptual/StoreKitGuide/Introduction.html)
 
 ## Notes
 
 * Ad-hoc payments are currently unsupported.
-* iOS does not support `getPurchases` or `getSkuDetails`.
+* iOS does not support `getPurchases`.
 
