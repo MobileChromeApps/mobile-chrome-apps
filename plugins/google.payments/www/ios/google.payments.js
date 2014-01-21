@@ -27,6 +27,7 @@ function createError(errorType, errorCode, errorText, message) {
 var loadedItemSet = {};
 
 exports.inapp = {
+    platform: 'ios-app-store',
     getSkuDetails: function(skus, success, failure) {
         // Load the products to retrieve their information.
         window.storekit.load(skus, function(validProducts, invalidProductIds) {

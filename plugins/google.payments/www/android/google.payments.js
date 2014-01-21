@@ -26,6 +26,7 @@ errorTypes[VERIFICATION_FAILED] = "INTERNAL_SERVER_ERROR";
 errorTypes[ITEM_UNAVAILABLE] = "INTERNAL_SERVER_ERROR";
 
 exports.inapp = {
+    platform: 'android-play-store',
     getSkuDetails: function(skus, success, failure) {
         if (!(skus instanceof Array)) {
             skus = [skus];

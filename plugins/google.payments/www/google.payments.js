@@ -28,7 +28,6 @@ exports.onBillingAvailabilityChanged = new Event('onBillingAvailabilityChanged')
 exports.billingAvailable = false;
 
 exports.inapp = {
-    platform: cordova.platformId,
     getSkuDetails: function(skus, success, failure) {
         var error = createError(INTERNAL_SERVER_ERROR, null, null, "getSkuDetails is not supported on this platform.");
         failure(error);
