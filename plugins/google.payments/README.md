@@ -87,9 +87,11 @@ If the purchase fails for any reason (including cancellation), `options.failure`
         },
         "response": {
             "errorType": <Error type, see below>,
-            "errorCode": <Error code, if available, from the back-end store>,
-            "errorText": <Text associated with the error, if available, from the back-end store>,
-            "message": <Explanatory text about where the error occurred>
+            "details": {
+                "message": <Explanatory text about where the error occurred>,
+                "errorCode": <Error code, if available, from the back-end store>,
+                "errorText": <Text associated with the error, if available, from the back-end store>
+            }
         }
     }
 
