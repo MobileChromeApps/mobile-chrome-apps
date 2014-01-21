@@ -24,8 +24,7 @@ function createError(errorType, errorCode, errorText, message) {
     };
 }
 
-exports.onBillingAvailable = new Event('onBillingAvailable');
-exports.onBillingUnavailable = new Event('onBillingUnavailable');
+exports.onBillingAvailabilityChanged = new Event('onBillingAvailabilityChanged');
 exports.billingAvailable = false;
 
 exports.inapp = {

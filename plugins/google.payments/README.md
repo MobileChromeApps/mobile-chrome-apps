@@ -30,7 +30,7 @@ The required public key can be obtained from the Google Play Store once you have
 
 Mobile applications are not guaranteed to have access to in-app billing services. Billing may be unavailable for many reasons, from misconfiguration to explicit denial: the owner of the device may not have a store account or may have removed in-app-purchase privileges for a guest or child's account.
 
-Your app can inspect the `google.payments.isBillingAvailable` property to test whether billing services are available or not. You can also register a listener on the `google.payments.onBillingAvailable` and `google.payments.onBilling` events to detect changes to billing availability.
+Your app can inspect the `google.payments.isBillingAvailable` property to test whether billing services are available or not. You can also register a listener on the `google.payments.onBillingAvailabilityChanged` events to detect changes to billing availability. It is fired whenever `isBillingAvailable` changes.
 
 In general, calls to the payments API will fail if `isBillingAvailable` is `false`.
 

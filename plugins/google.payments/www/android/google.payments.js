@@ -89,11 +89,11 @@ document.addEventListener('deviceready', function(ev) {
     exec(function() {
         console.log("Billing initialized.");
         google.payments.billingAvailable = true;
-        google.payments.onBillingAvailable.fire();
+        google.payments.onBillingAvailabilityChanged.fire();
     }, function() {
         console.log("Error initializing billing.");
         google.payments.billingAvailable = false;
-        google.payments.onBillingUnavailable.fire();
+        google.payments.onBillingAvailabilityChanged.fire();
     }, "InAppBillingV3", "init", []);
 });
 

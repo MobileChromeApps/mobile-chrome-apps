@@ -132,7 +132,7 @@ document.addEventListener('deviceready', function(ev) {
         ready: function() {
             console.log("Billing initialized");
             google.payments.billingAvailable = true;
-            google.payments.onBillingAvailable.fire();
+            google.payments.onBillingAvailabilityChanged.fire();
         }
     });
 });
