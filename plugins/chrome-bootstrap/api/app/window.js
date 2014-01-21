@@ -107,13 +107,6 @@ function rewritePage(pageContent, filePath) {
     startIndex = 0;
   }
 
-  function afterBase() {
-    fgHead.insertAdjacentHTML('beforeend', headHtml);
-    evalScripts(fgHead, function() {
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody, ChromeExtensionURLs.releaseReadyWait);
-    });
-  }
   // Put everything before the body tag in the head.
   var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
   if (endIndex == -1) {
@@ -125,15 +118,12 @@ function rewritePage(pageContent, filePath) {
     var headHtml = pageContent.slice(startIndex, endIndex);
     pageContent = pageContent.slice(endIndex);
 
-    fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="plugins/org.chromium.bootstrap/chromeappstyles.css">');
-    var baseUrl = filePath.replace(/\/.*?$/, '');
-    if (baseUrl != filePath) {
-      fgHead.insertAdjacentHTML('beforeend', '<base href="' + encodeURIComponent(baseUrl) + '/">\n');
-      // setTimeout required for <base> to take effect for <link> elements (browser bug).
-      window.setTimeout(afterBase, 0);
-    } else {
-      afterBase();
-    }
+    fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="' + runtime.getURL('plugins/org.chromium.bootstrap/chromeappstyles.css') + '">');
+    fgHead.insertAdjacentHTML('beforeend', headHtml);
+    evalScripts(fgHead, function() {
+      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+      evalScripts(fgBody, ChromeExtensionURLs.releaseReadyWait);
+    });
   }
 }
 
