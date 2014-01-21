@@ -13,6 +13,8 @@
 
   <name>Chrome Payments API</name>
 
+  <dependency id="cc.fovea.plugins.inapppurchase" />
+
   <js-module src="www/google.payments.js" name="payments">
     <clobbers target="google.payments" />
   </js-module>
