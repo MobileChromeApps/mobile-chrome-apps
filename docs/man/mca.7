@@ -1,0 +1,158 @@
+.\" The following commands are required for all man pages.
+.Dd January 1, 2014
+.Os Chrome Apps
+.Dt MCA 7
+.Sh NAME
+.Nm mca
+.Nd Mobile Chrome Apps command-line utility
+.Sh SYNOPSIS
+.Nm mca
+help
+.Nm mca
+init
+.Nm mca
+checkenv
+.Nm mca
+create
+.Ar package_name
+.Op Fl -copy-from Ns = Ns Ar directory
+.Op Fl -link-to Ns = Ns Ar directory
+.Nm mca
+prepare
+.Oo
+.Ar platform
+.Oc
+.Nm mca
+run
+.Ar platform
+.Nm mca
+.Op ...
+.Sh DESCRIPTION
+Mobile Chrome Apps is a toolkit for porting Chrome Packaged Apps to Android and iOS hybrid web applications, through Apache Cordova.
+
+The mca command is a tool which can create, build, manage and run mobile Chrome apps.
+
+Commands which are not recognized by mca are passed unchanged to
+.Xr cordova 7
+for processing.
+.Ss Initializing the development environment
+.Nm mca
+init
+
+Running mca init will install any additional required dependencies, fetching them from the public repositories. If there have been updates to the platform, then running any other mca command will suggest to you that you can run mca init first to download and apply the updates.
+.Ss Creating a mobile chrome app
+.Nm mca
+create
+.Ar package_name
+.Op Fl -copy-from Ns = Ns Ar directory
+.Op Fl -link-to Ns = Ns Ar directory
+.Bd -ragged -offset indent
+.Ar package_name
+should be a reverse-DNS-style package name, such as "com.google.appname" or "org.example.testapp". This command will create a new mobile Chrome app project in the current directory.
+
+.Fl -copy-from Ns = Ns Ar directory
+.Bd -ragged -offset indent
+Copy an existing Chrome packaged app from
+.Ar directory
+into the newly-created mobile Chrome app. After creation, the mobile and desktop apps will be separate from each other, and can be developed independently. It is an error to specify both this option as well as
+.Fl -link-to Ns .
+.Ed
+
+.Fl -link-to Ns = Ns Ar directory
+.Bd -ragged -offset indent
+Symlink the newly-created mobile Chrome app to an existing Chrome packaged app located in
+.Ar directory Ns .
+After creation, the mobile and desktop apps will be linked from each other, so changes in one will change the other as well. It is an error to specify both this option as well as
+.Fl -copy-from Ns .
+.Ed
+.Ed
+.Ss Preparing the platform-level projects
+.Nm mca
+prepare
+.Oo
+.Ar platform
+.Oc
+.Bd -ragged -offset indent
+Updates the platform-level projects with any changes that have been made in the source files. This command should be run before the app is run on device. Calling ".Nm mca run" will call this automatically.
+
+.Ar platform
+can be specified to update only a single platform
+.Po Ns Em android
+or
+.Em ios
+.Pc
+By default, all platforms are updated.
+.Ed
+.Ss Deploying the app to a device
+.Nm mca
+run
+.Ar platform
+.Bd -ragged -offset indent
+Builds the application for the specified platform
+.Po Ns Em android
+or
+.Em ios
+.Pc Ns ,
+preparing first if necessary, and deploys to an attached physical device to run.
+.Ed
+.Ss Miscellaneous commands
+.Nm mca
+help
+.Bd -ragged -offset indent
+Print a short help message with a list of the most common commands.
+.Ed
+
+.Nm mca
+version
+.Bd -ragged -offset indent
+Print the version of the mca toolkit.
+.Ed
+
+.Nm mca
+checkenv
+
+.Nm mca
+pre-prepare
+
+.Nm mca
+update-app
+.Bd -ragged -offset indent
+These commands are used internally by
+.Nm mca
+to update the underlying cordova project based on changes to your manifest.json file. They are not intended to be called by developers directly.
+.Ed
+.Ss Other commands
+Other commands are passed directly to
+.Xr cordova 7
+to be handled by that script.
+.\" The following commands should be uncommented and
+.\" used where appropriate.
+.\" .Sh IMPLEMENTATION NOTES
+.\" This next command is for sections 2, 3 and 9 function
+.\" return values only.
+.\" .Sh RETURN VALUES
+.\" This next command is for sections 1, 6, 7 and 8 only.
+.\" .Sh ENVIRONMENT
+.\" .Sh FILES
+
+.Sh EXAMPLES
+This sequence of commands would create a new "Hello, World!" mobile Chrome app, linked to the sample code from the mobile-chrome-app-samples repository, build it and run it on a connected Android device.
+
+.Bd -literal -offset indent
+$ mca create com.example.sampleapp --link-to=~/mobile-chrome-app-samples/helloworld
+$ cd helloworld
+$ mca prepare
+$ mca run android
+.Sh SEE ALSO
+.Xr cordova 7
+
+Chrome Packaged Apps: http://developer.chrome.com/apps/about_apps.html
+
+Repository:           https://github.com/MobileChromeApps
+.\" .Sh STANDARDS
+.Sh HISTORY
+January 2014: First version of this document
+.Sh AUTHORS
+Copyright 2012-2014 The Chromium Authors
+.Sh BUGS
+Please report bugs on the project's issue tracker at https://github.com/MobileChromeApps/mobile-chrome-apps/issues
