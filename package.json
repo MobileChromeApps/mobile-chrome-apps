@@ -11,7 +11,7 @@
     "apps"
   ],
   "bin": {
-    "mca": "./mca"
+    "cca": "src/cca.js"
   },
   "man": "./docs/man/man7/cca.7",
   "license": "Apache version 2.0",
@@ -37,7 +37,6 @@
     "chrome-cordova/plugins",
     "cordova",
     "docs",
-    "mca",
     "src",
     "templates"
   ]

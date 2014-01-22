@@ -1,6 +1,6 @@
 # Next Steps
 
-Now that you have a working mobile Chrome app, there are lots of ways to improve the experience on mobile devices. (If you don't yet have a working mobile Chrome app, go back to the [Getting Started Guide](GettingStarted.md).)
+Now that you have a working mobile Chrome App, there are lots of ways to improve the experience on mobile devices. (If you don't yet have a working mobile Chrome App, go back to the [Getting Started Guide](GettingStarted.md).)
 
 ## Application Polish
 

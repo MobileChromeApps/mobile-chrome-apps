@@ -1,4 +1,4 @@
-# Contributing to Mobile Chrome Apps
+# Contributing to this Repository
 
 Thank you for your interest in contributing!
 

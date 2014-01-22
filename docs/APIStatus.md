@@ -1,4 +1,4 @@
-# Mobile Chrome Packaged App API Implementation Status
+# Chrome API Implementation Status
 
 See the [reference guide for building Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html) on Desktop.
 
@@ -49,4 +49,10 @@ _Current as of Sept 2013_.
 * experimental.systemInfo.display
 * experimental.systemInfo.memory
 * experimental.systemInfo.storage
-* webview
+* `<webview>` tag
+* NaCl
+
+## Unsupported HTML5 APIs
+
+* IndexedDB (except on KitKat)
+* `getUserMedia()`

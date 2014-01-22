@@ -1,6 +1,6 @@
-# [Mobile Chrome Apps](//github.com/MobileChromeApps/mobile-chrome-apps)
+# [Run Chrome Apps on mobile using Apache Cordova](//github.com/MobileChromeApps/mobile-chrome-apps)
 
-Mobile Chrome Apps is a toolkit for porting [Chrome Packaged Apps](http://developer.chrome.com/apps) to Android and iOS hybrid web applications, through [Apache Cordova](http://cordova.apache.org/).
+`cca` is a command-line tool for porting [Chrome Packaged Apps](http://developer.chrome.com/apps) to Android and iOS hybrid web applications, through [Apache Cordova](http://cordova.apache.org/).
 
 ## Overview
 
@@ -28,4 +28,4 @@ Find all our documentation in the [`docs/`](docs/) directory.
 
 ## Discussion
 
-There is a [public mailing list](mailto:mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussing Mobile Chrome Apps.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).
+There is a [public mailing list](mailto:mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussion about this toolkit.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).

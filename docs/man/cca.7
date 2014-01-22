@@ -1,7 +1,7 @@
 .\" The following commands are required for all man pages.
 .Dd January 1, 2014
 .Os Chrome Apps
-.Dt MCA 7
+.Dt CCA 7
 .Sh NAME
 .Nm cca
 .Nd Run Chrome Apps on mobile using Apache Cordova
@@ -33,7 +33,7 @@ The cca command is a tool that can create, build, manage and run a Chrome Packag
 Commands which are not recognized by cca are passed unchanged to
 .Xr cordova 7
 for processing.
-.Ss Creating a mobile chrome app
+.Ss Creating a mobile Chrome App
 .Nm cca
 create
 .Ar package_name
@@ -41,19 +41,19 @@ create
 .Op Fl -link-to Ns = Ns Ar directory
 .Bd -ragged -offset indent
 .Ar package_name
-should be a reverse-DNS-style package name, such as "com.google.appname" or "org.example.testapp". This command will create a new mobile Chrome app project in the current directory.
+should be a reverse-DNS-style package name, such as "com.google.appname" or "org.example.testapp". This command will create a new Apache Cordova Chrome App project in the current directory.
 
 .Fl -copy-from Ns = Ns Ar directory
 .Bd -ragged -offset indent
 Copy an existing Chrome packaged app from
 .Ar directory
-into the newly-created mobile Chrome app. After creation, the mobile and desktop apps will be separate from each other, and can be developed independently. It is an error to specify both this option as well as
+into the newly-created mobile Chrome App. After creation, the mobile and desktop apps will be separate from each other, and can be developed independently. It is an error to specify both this option as well as
 .Fl -link-to Ns .
 .Ed
 
 .Fl -link-to Ns = Ns Ar directory
 .Bd -ragged -offset indent
-Symlink the newly-created mobile Chrome app to an existing Chrome packaged app located in
+Symlink the newly-created mobile Chrome App to an existing Chrome packaged app located in
 .Ar directory Ns .
 After creation, the mobile and desktop apps will be linked from each other, so changes in one will change the other as well. It is an error to specify both this option as well as
 .Fl -copy-from Ns .
@@ -129,7 +129,7 @@ to be handled by that script.
 .\" .Sh FILES
 
 .Sh EXAMPLES
-This sequence of commands would create a new "Hello, World!" mobile Chrome app, linked to the sample code from the mobile-chrome-app-samples repository, build it and run it on a connected Android device.
+This sequence of commands would create a new "Hello, World!" mobile Chrome App, linked to the sample code from the mobile-chrome-app-samples repository, build it and run it on a connected Android device.
 
 .Bd -literal -offset indent
 $ cca create com.example.sampleapp --link-to=~/mobile-chrome-app-samples/helloworld

@@ -38,7 +38,7 @@ var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
 var eventQueue = [];
-var mcaRoot = path.join(__dirname, '..');
+var ccaRoot = path.join(__dirname, '..');
 var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
@@ -78,16 +78,16 @@ var PLUGIN_MAP = {
 
 var CORDOVA_CONFIG_JSON = {
   plugin_search_path: [
-      path.join(mcaRoot, 'cordova'),
-      path.join(mcaRoot, 'cordova', 'cordova-plugins'),
-      path.join(mcaRoot, 'chrome-cordova', 'plugins'),
+      path.join(ccaRoot, 'cordova'),
+      path.join(ccaRoot, 'cordova', 'cordova-plugins'),
+      path.join(ccaRoot, 'chrome-cordova', 'plugins'),
       ],
   lib: {
     android: {
-      uri: path.join(mcaRoot, 'cordova', 'cordova-android')
+      uri: path.join(ccaRoot, 'cordova', 'cordova-android')
     },
     ios: {
-      uri: path.join(mcaRoot, 'cordova', 'cordova-ios')
+      uri: path.join(ccaRoot, 'cordova', 'cordova-ios')
     }
   }
 };
@@ -149,7 +149,7 @@ function exec(cmd, onSuccess, opt_onError, opt_silent) {
 }
 
 function chdir(d) {
-  d = path.resolve(mcaRoot, d);
+  d = path.resolve(ccaRoot, d);
   if (process.cwd() != d) {
     console.log('Changing directory to: ' + d);
     process.chdir(d);
@@ -379,7 +379,7 @@ function toolsCheck() {
 
 function ensureHasRunInit() {
   eventQueue.push(function(callback) {
-    if (!fs.existsSync(path.join(mcaRoot, 'chrome-cordova/README.md')))
+    if (!fs.existsSync(path.join(ccaRoot, 'chrome-cordova/README.md')))
       return fatal('Please run \'' + scriptName + ' init\' first');
     callback();
   });
@@ -387,7 +387,7 @@ function ensureHasRunInit() {
 
 function promptIfNeedsGitUpdate() {
   eventQueue.push(function(callback) {
-    process.chdir(mcaRoot);
+    process.chdir(ccaRoot);
     exec('git pull --rebase --dry-run', function(stdout, stderr) {
       var needsUpdate = (!!stdout || !!stderr);
       if (!needsUpdate)
@@ -431,14 +431,14 @@ function initCommand() {
   function checkOutSelf(callback) {
     console.log('## Updating mobile-chrome-apps');
 
-    process.chdir(mcaRoot);
+    process.chdir(ccaRoot);
     exec('git pull --rebase', callback);
   }
 
   function checkOutSubModules(callback) {
     console.log('## Updating git submodules');
 
-    process.chdir(mcaRoot);
+    process.chdir(ccaRoot);
 
     var error = function(error) {
       console.log("Could not update submodules:");
@@ -518,12 +518,12 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   function validateSourceArgStep(callback) {
     var sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
     if (!sourceArg) {
-      srcAppDir = path.join(mcaRoot, 'templates', 'default-app');
+      srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
       manifestFile = path.join(srcAppDir, 'manifest.json');
     } else {
       var dirsToTry = [
         sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
-        sourceArg === 'spec' && path.join(mcaRoot, 'chrome-cordova', 'spec', 'www')
+        sourceArg === 'spec' && path.join(ccaRoot, 'chrome-cordova', 'spec', 'www')
       ];
       var foundManifest = false;
       for (var i = 0; i < dirsToTry.length; i++) {
@@ -587,30 +587,30 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       fs.mkdirSync('hooks/before_prepare');
       fs.mkdirSync('hooks/after_prepare');
 
-      function writeHook(path, mcaArg) {
+      function writeHook(path, ccaArg) {
         var contents = [
             '#!/usr/bin/env node',
             'var child_process = require("child_process");',
             'var fs = require("fs");',
             'var isWin = process.platform.slice(0, 3) === "win";',
-            'var cmd = isWin ? "mca.cmd" : "mca";',
+            'var cmd = isWin ? "cca.cmd" : "cca";',
             'if (!isWin && fs.existsSync(cmd)) { cmd = "./" + cmd }',
-            'var p = child_process.spawn(cmd, ["' + mcaArg + '"], { stdio:"inherit" });',
+            'var p = child_process.spawn(cmd, ["' + ccaArg + '"], { stdio:"inherit" });',
             'p.on("close", function(code) { process.exit(code); });',
             ];
         fs.writeFileSync(path, contents.join('\n'));
         fs.chmodSync(path, '777');
       }
-      writeHook('hooks/before_prepare/mca-pre-prepare.js', 'pre-prepare');
-      writeHook('hooks/after_prepare/mca-post-prepare.js', 'update-app');
+      writeHook('hooks/before_prepare/cca-pre-prepare.js', 'pre-prepare');
+      writeHook('hooks/after_prepare/cca-post-prepare.js', 'update-app');
 
-      // Create a convenience link to MCA
+      // Create a convenience link to cca
       if (isGitRepo) {
-        var mcaPath = path.relative('.', path.join(mcaRoot, 'src', 'mca.js'));
-        var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
-        fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\nnode "' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
-        fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
-        fs.chmodSync('mca', '777');
+        var ccaPath = path.relative('.', path.join(ccaRoot, 'src', 'cca.js'));
+        var comment = 'Feel free to rewrite this file to point at "cca" in a way that works for you.';
+        fs.writeFileSync('cca.cmd', 'REM ' + comment + '\r\nnode "' + ccaPath.replace(/\//g, '\\') + '" %*\r\n');
+        fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
+        fs.chmodSync('cca', '777');
       }
       callback();
     }
@@ -635,7 +635,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
   function writeConfigStep(callback) {
     console.log("Writing config.xml");
-    fs.readFile(path.join(mcaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+    fs.readFile(path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
       if (err) {
         console.log(err);
       } else {
@@ -660,7 +660,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
                      wwwPath + '\n\n';
     }
-    welcomeText += 'Remember to run `mca prepare` after making changes (full instructions: http://goo.gl/9S89rn).';
+    welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/9S89rn).';
 
     runCmd(['prepare'], function(err) {
        if(err) {
@@ -870,7 +870,7 @@ function parseCommandLine() {
              '\n' +
              'init - Ensures that your environment is setup correctly.\n' +
              '    Examples:\n' +
-             '        mca init.\n' +
+             '        cca init.\n' +
              '\n' +
              'create [--android] [--ios] [--copy-from=path | --link-to=path] - Creates a new project.\n' +
              '    Flags:\n' +
@@ -879,14 +879,14 @@ function parseCommandLine() {
              '        --copy-from=path/to/app: Create a project based on the given Chrome App.\n' +
              '        --link-to=path/to/app: Create a project that symlinks to the given Chrome App.\n' +
              '    Examples:\n' +
-             '        mca create org.chromium.Demo\n' +
-             '        mca create org.chromium.Spec --android --link-to=path/to/app\n' +
+             '        cca create org.chromium.Demo\n' +
+             '        cca create org.chromium.Spec --android --link-to=path/to/app\n' +
              'Cordova commands will be forwarded directly to cordova.\n' +
              '    Commands:\n' +
              '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
              '    Examples:\n' +
-             '        mca platform add ios\n' +
-             '        mca build ios\n' +
+             '        cca platform add ios\n' +
+             '        cca build ios\n' +
              '    Run "cordova help" for details.\n'
       ).options('h', {
           alias: 'help',
