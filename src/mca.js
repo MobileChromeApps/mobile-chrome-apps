@@ -609,7 +609,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         var mcaPath = path.relative('.', path.join(mcaRoot, 'src', 'mca.js'));
         var comment = 'Feel free to rewrite this file to point at "mca" in a way that works for you.';
         fs.writeFileSync('mca.cmd', 'REM ' + comment + '\r\nnode "' + mcaPath.replace(/\//g, '\\') + '" %*\r\n');
-        fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
+        fs.writeFileSync('mca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + mcaPath.replace(/\\/g, '/') + '" "$@"\n');
         fs.chmodSync('mca', '777');
       }
       callback();
