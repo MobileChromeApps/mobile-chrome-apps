@@ -8,6 +8,7 @@ Track progress from our [API Status document](APIStatus.md).
 
 ## Not all Chrome Desktop features are available on mobile
 
-* No <webview> tag
-* No getUserMedia
+* No `<webview>` tag
+* No IndexedDB
+* No `getUserMedia()`
 * No NaCl
