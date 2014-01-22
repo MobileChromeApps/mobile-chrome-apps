@@ -843,7 +843,7 @@ exports.requestFileSystem = function(callback) {
     }
     var onRequestFileSystemSuccess = function(fileSystem) {
         // Change the name of the file system.  This is a syncable file system!
-        fileSystem.name = "syncable";
+        // fileSystem.name = "syncable";
 
         // Set the default conflict resolution policy.
         conflictResolutionPolicy = CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN;
