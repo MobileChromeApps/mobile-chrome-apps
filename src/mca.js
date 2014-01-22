@@ -916,9 +916,8 @@ function fixEnv() {
         if (!javacInPath) {
           process.env['PATH'] += ';' + firstJdkDir + '\\bin';
         }
-        if (!hasJavaHome) {
-          process.env['JAVA_HOME'] = firstJdkDir;
-        }
+        process.env['JAVA_HOME'] = firstJdkDir;
+        console.log('Set JAVA_HOME to ' + firstJdkDir);
       }
     }
   }
