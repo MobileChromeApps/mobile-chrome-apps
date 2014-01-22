@@ -1,10 +1,10 @@
-# Getting Started with Mobile Chrome Apps
+# Getting Started
 
 Please make sure you have completed the [Installation Guide](Installation.md) first.
 
 ### Step 1: Create a Project
 
-    mca create com.companyname.YourApp [--link-to=<path>|--copy-from=<path>]
+    cca create com.companyname.YourApp [--link-to=<path>|--copy-from=<path>]
 
 * You may pass one of `--link-to` or `--copy-from` to build your existing chrome app for mobile.
 * The `--link-to` flag will share your existing chrome app code using a _symlink_.
@@ -13,23 +13,23 @@ Please make sure you have completed the [Installation Guide](Installation.md) fi
 ### Step 2: Building and Running your application
 
 You can build and run your application either:
-* Option A: from the command line, using the `mca` tool, or
+* Option A: from the command line, using the `cca` tool, or
 * Option B: by using an IDE, like `Eclipse` or `Xcode`.
 
 Both options are described below.
 
-Note that you must use the command line `mca` tool with either option (specifics are described in Step 3, below).  The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
+Note that you must use the command line `cca` tool with either option (specifics are described in Step 3, below).  The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
 ### Step 2, Option A: Using the command line
 
-* To run on the iOS Simulator: `mca emulate ios`
-* To run on a connected iOS device: `mca run ios`
+* To run on the iOS Simulator: `cca emulate ios`
+* To run on a connected iOS device: `cca run ios`
   * This requires that you've set up a [Provisioning Profile](http://stackoverflow.com/questions/3362652/what-is-a-provisioning-profile-used-for-when-developing-iphone-applications) for your device.
-* To run on the Android Emulator: `mca emulate android`
+* To run on the Android Emulator: `cca emulate android`
   * This requires that you've set up an emulator `avd`. You can run `android avd` to set this up.
   * Download additional Emulator images by running `android`.
   * To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
-* To run on a connected Android device: `mca run android`
+* To run on a connected Android device: `cca run android`
 
 
 ### Step 2, Option B: Using an IDE
@@ -47,7 +47,7 @@ Make sure you are building the right target.
 
 * In Eclipse, select `File` -> `Import`
 * Choose `Android` > `Existing Android Code Into Workspace`.
-* Import from the path you just created with `mca`.
+* Import from the path you just created with `cca`.
     * You should expect to have two projects to import, one of which is `*-CordovaLib`
 * You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time automatically.
 * You will need to manage your devices/emulators the first time as well.
@@ -56,7 +56,7 @@ Make sure you are building the right target.
 
 Your HTML, CSS and JS files live within the `www` directory.
 
-_Every time_ you change them, you _must_ run `mca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
+_Every time_ you change them, you _must_ run `cca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
 
 ## Experiencing Hiccups?
 

@@ -41,18 +41,18 @@ iOS development can only be done on OS X.
 * Install [Apache Ant](http://ant.apache.org/bindownload.cgi)
   * Add `apache-ant-x.x.x/bin` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable.
 
-## Step 2: Mobile Chrome Apps Tool
+## Step 2: Install cca
 
 * Install via npm:
-  * Quick instructions: `npm install -g mobile-chrome-apps`
+  * Quick instructions: `npm install -g cca`
 * To update it later on:
-  * Quick instructions: `npm update -g mobile-chrome-apps`
+  * Quick instructions: `npm update -g cca`
 
 ## Step 3: Confirm everything is installed correctly
 
 Run this command from the command line:
 
-    mca checkenv
+    cca checkenv
 
 ### Experiencing Hiccups?
 

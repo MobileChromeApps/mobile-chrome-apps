@@ -3,45 +3,38 @@
 .Os Chrome Apps
 .Dt MCA 7
 .Sh NAME
-.Nm mca
-.Nd Mobile Chrome Apps command-line utility
+.Nm cca
+.Nd Run Chrome Apps on mobile using Apache Cordova
 .Sh SYNOPSIS
-.Nm mca
+.Nm cca
 help
-.Nm mca
-init
-.Nm mca
+.Nm cca
 checkenv
-.Nm mca
+.Nm cca
 create
 .Ar package_name
 .Op Fl -copy-from Ns = Ns Ar directory
 .Op Fl -link-to Ns = Ns Ar directory
-.Nm mca
+.Nm cca
 prepare
 .Oo
 .Ar platform
 .Oc
-.Nm mca
+.Nm cca
 run
 .Ar platform
-.Nm mca
+.Nm cca
 .Op ...
 .Sh DESCRIPTION
-Mobile Chrome Apps is a toolkit for porting Chrome Packaged Apps to Android and iOS hybrid web applications, through Apache Cordova.
+A toolkit for porting Chrome Packaged Apps to Android and iOS hybrid web applications, through Apache Cordova.
 
-The mca command is a tool which can create, build, manage and run mobile Chrome apps.
+The cca command is a tool that can create, build, manage and run a Chrome Packaged App on Android and iOS.
 
-Commands which are not recognized by mca are passed unchanged to
+Commands which are not recognized by cca are passed unchanged to
 .Xr cordova 7
 for processing.
-.Ss Initializing the development environment
-.Nm mca
-init
-
-Running mca init will install any additional required dependencies, fetching them from the public repositories. If there have been updates to the platform, then running any other mca command will suggest to you that you can run mca init first to download and apply the updates.
 .Ss Creating a mobile chrome app
-.Nm mca
+.Nm cca
 create
 .Ar package_name
 .Op Fl -copy-from Ns = Ns Ar directory
@@ -67,58 +60,58 @@ After creation, the mobile and desktop apps will be linked from each other, so c
 .Ed
 .Ed
 .Ss Preparing the platform-level projects
-.Nm mca
+.Nm cca
 prepare
 .Oo
 .Ar platform
 .Oc
 .Bd -ragged -offset indent
-Updates the platform-level projects with any changes that have been made in the source files. This command should be run before the app is run on device. Calling ".Nm mca run" will call this automatically.
+Updates the platform-level projects with any changes that have been made in the source files. This command should be run before the app is run on device. Executing "cca run" will do this automatically.
 
 .Ar platform
 can be specified to update only a single platform
 .Po Ns Em android
 or
-.Em ios
-.Pc
+.Em iOS
+.Pc .
 By default, all platforms are updated.
 .Ed
 .Ss Deploying the app to a device
-.Nm mca
+.Nm cca
 run
 .Ar platform
 .Bd -ragged -offset indent
 Builds the application for the specified platform
 .Po Ns Em android
 or
-.Em ios
+.Em iOS
 .Pc Ns ,
 preparing first if necessary, and deploys to an attached physical device to run.
 .Ed
 .Ss Miscellaneous commands
-.Nm mca
+.Nm cca
 help
 .Bd -ragged -offset indent
 Print a short help message with a list of the most common commands.
 .Ed
 
-.Nm mca
+.Nm cca
 version
 .Bd -ragged -offset indent
-Print the version of the mca toolkit.
+Print the version of the cca toolkit.
 .Ed
 
-.Nm mca
+.Nm cca
 checkenv
 
-.Nm mca
+.Nm cca
 pre-prepare
 
-.Nm mca
+.Nm cca
 update-app
 .Bd -ragged -offset indent
 These commands are used internally by
-.Nm mca
+.Nm cca
 to update the underlying cordova project based on changes to your manifest.json file. They are not intended to be called by developers directly.
 .Ed
 .Ss Other commands
@@ -139,10 +132,10 @@ to be handled by that script.
 This sequence of commands would create a new "Hello, World!" mobile Chrome app, linked to the sample code from the mobile-chrome-app-samples repository, build it and run it on a connected Android device.
 
 .Bd -literal -offset indent
-$ mca create com.example.sampleapp --link-to=~/mobile-chrome-app-samples/helloworld
+$ cca create com.example.sampleapp --link-to=~/mobile-chrome-app-samples/helloworld
 $ cd helloworld
-$ mca prepare
-$ mca run android
+$ cca prepare
+$ cca run android
 .Sh SEE ALSO
 .Xr cordova 7
 

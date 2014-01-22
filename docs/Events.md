@@ -1,4 +1,4 @@
-# Understanding Mobile Chrome Apps lifecycle events
+# Understanding Lifecycle Events
 
 
 ## Lifecycle Events
@@ -45,7 +45,7 @@ Applications (almost) never start without the intention of launching.
 
 Applications generally do not run in the background. They are suspended instead, and can be terminated at any time.
 
-## How Mobile Chrome Apps deals with this
+## How Mobile with this
 
 ![Mobile lifecycle event diagram](mobileevents.png)
 

@@ -13,7 +13,7 @@
   "bin": {
     "mca": "./mca"
   },
-  "man": "./docs/man/man7/mca.7",
+  "man": "./docs/man/man7/cca.7",
   "license": "Apache version 2.0",
   "repository": {
     "type": "git",

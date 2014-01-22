@@ -1,4 +1,4 @@
-# Next steps with Mobile Chrome Apps
+# Next Steps
 
 Now that you have a working mobile Chrome app, there are lots of ways to improve the experience on mobile devices. (If you don't yet have a working mobile Chrome app, go back to the [Getting Started Guide](GettingStarted.md).)
 
@@ -28,7 +28,7 @@ A complete icon list would look like this in your `manifest.json` file:
       "144": "assets/icons/icon144.png"
     }
 
-The icons will be copied to the appropriate places for each platform every time you run `mca prepare`.
+The icons will be copied to the appropriate places for each platform every time you run `cca prepare`.
 
 ### Splash Screens
 
