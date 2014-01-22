@@ -2,7 +2,14 @@
   "name": "jaawegx",
   "author": "The Chrome Team",
   "version": "0.1.8",
-  "description": "Mobile Chrome Apps command line tool",
+  "description": "Run Chrome Apps on mobile using Apache Cordova",
+  "preferGlobal": "true",
+  "keywords": [
+    "cordova",
+    "chrome",
+    "mobile",
+    "apps"
+  ],
   "bin": {
     "mca": "./mca"
   },
