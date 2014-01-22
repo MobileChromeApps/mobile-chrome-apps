@@ -21,13 +21,19 @@ chromespec.registerSubPage('chrome-navigation', function(rootEl) {
   }
 
   addButton('location = google.com (no-op)', function() {
-    location = 'http://www.google.com';
+    top.location = 'http://www.google.com';
   });
   addButton('location.replace() (no-op)', function() {
-    location.replace('http://www.google.com');
+    top.location.replace('http://www.google.com');
   });
   addButton('window.open() (open browser)', function() {
-    window.open('http://www.google.com');
+    top.open('http://www.google.com');
+  });
+  addButton('location = location', function() {
+    top.location = top.location.href;
+  });
+  addButton('location.reload()', function() {
+    top.location.reload();
   });
 });
 

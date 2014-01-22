@@ -14,13 +14,20 @@
 
 - (BOOL)shouldOverrideLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType
 {
-    if(navigationType == UIWebViewNavigationTypeLinkClicked) {
+    NSURL* url = request.URL;
+    if (navigationType == UIWebViewNavigationTypeLinkClicked) {
+        NSLog(@"Opening link in external browser: %@", url);
         MCAOpenInChromeController *openInController_ = [[MCAOpenInChromeController alloc] init];
         if ([openInController_ isChromeInstalled]) {
-            [openInController_ openInChrome:[request URL] ];
+            [openInController_ openInChrome:url];
         } else {
-            [[UIApplication sharedApplication] openURL:[request URL]];
+            [[UIApplication sharedApplication] openURL:url];
         }
+        return YES;
+    }
+    if ([url.scheme isEqualToString:@"chrome-extension"]) {
+        NSLog(@"location.reload() detected. Reloading via chromeapp.html");
+        [self.commandDelegate evalJs:@"chrome.runtime.reload()"];
         return YES;
     }
     return NO;
