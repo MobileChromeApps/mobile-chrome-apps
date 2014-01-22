@@ -42,7 +42,7 @@ exports.inapp = {
         exec(success, failure, "InAppBillingV3", "getAvailableProducts", []);
     },
 
-    buyAndroid: function(options) {
+    buyInternal: function(options) {
         var purchaseSuccess = function(purchaseDetails) {
                 var result = {
                     request: {

@@ -53,10 +53,8 @@ exports.inapp = {
         }
 
         // Delegate to the platform-specific implementation.
-        if (exports.inapp.platform === "android") {
-            exports.inapp.buyAndroid(options);
-        } else if (exports.inapp.platform === "ios") {
-            exports.inapp.buyIos(options);
+        if (exports.inapp.buyInternal) {
+            exports.inapp.buyInternal(options);
         } else {
             error = createError(INTERNAL_SERVER_ERROR, null, null, "buy is not supported on this platform.");
             options.failure(error);

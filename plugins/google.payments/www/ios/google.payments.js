@@ -60,7 +60,7 @@ exports.inapp = {
         });
     },
 
-    buyIos: function(options) {
+    buyInternal: function(options) {
         // We need to record whether the product to buy is valid.
         // This will be set to false if it's discovered that the given sku is invalid.
         var isValidProduct = true;
