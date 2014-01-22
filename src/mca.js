@@ -897,6 +897,11 @@ function parseCommandLine() {
       }).options('v', {
           alias: 'version',
           desc: 'Show version.'
+      }).options('android', { type: 'boolean'
+      }).options('ios', { type: 'boolean'
+      }).options('pause_on_exit', { type: 'boolean'
+      }).options('copy-from', { type: 'string'
+      }).options('link-to', { type: 'string'
       }).argv;
 }
 
