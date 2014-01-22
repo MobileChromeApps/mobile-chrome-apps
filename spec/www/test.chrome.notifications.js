@@ -15,22 +15,23 @@ chromeSpec('chrome.notifications', function(runningInBackground) {
     expect(chrome.notifications.onClicked).toBeDefined();
     expect(chrome.notifications.onButtonClicked).toBeDefined();
   });
-  if( cordova.require('cordova/platform').id != 'ios'){
-   describe('testing notifications', function() {
-    function createNotifications(callback) {
-      chrome.notifications.create(ids[0], options, function(id0) {
-        expect(id0).toBe(ids[0]);
-        chrome.notifications.create(ids[1], options, function(id1) {
-          expect(id1).toBe(ids[1]);
-          chrome.notifications.create('', options, function(id2) {
-            expect(id2).toBeString();
-            expect(id2).not.toBe('');
-            ids.push(id2);
-            callback();
-          });
-        });
+  
+   if(isOnCordova() && cordova.require('cordova/platform').id != 'ios'){
+    describe('testing notifications', function() {
+     function createNotifications(callback) {
+       chrome.notifications.create(ids[0], options, function(id0) {
+         expect(id0).toBe(ids[0]);
+         chrome.notifications.create(ids[1], options, function(id1) {
+           expect(id1).toBe(ids[1]);
+           chrome.notifications.create('', options, function(id2) {
+             expect(id2).toBeString();
+             expect(id2).not.toBe('');
+             ids.push(id2);
+             callback();
+           });
+         });
       });
-    }
+     }
 
     function clearAllNotifications(callback) {
       chrome.notifications.getAll(function clearNotifications(notifications) {

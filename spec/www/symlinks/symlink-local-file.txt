@@ -1,1 +1,0 @@
-../assets/i18n_test.txt

@@ -13,9 +13,9 @@
 
   <name>Chrome Apps Core</name>
 
-  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="org.chromium.runtime" url="." subdir="plugins/chrome-runtime" />
-  <dependency id="org.chromium.storage" url="." subdir="plugins/chrome.storage" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.chromium.storage" />
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
   <js-module src="api/bootstrap.js" name="bootstrap" />
@@ -29,9 +29,9 @@
   </js-module>
 
   <!-- Integration files -->
-  <asset src="www/chromeapp.html" target="chromeapp.html" />
-  <asset src="www/chromebgpage.html" target="chromebgpage.html" />
-  <asset src="www/chromeappstyles.css" target="chromeappstyles.css" />
+  <asset src="www/chromeapp.html" target="plugins/org.chromium.bootstrap/chromeapp.html" />
+  <asset src="www/chromebgpage.html" target="plugins/org.chromium.bootstrap/chromebgpage.html" />
+  <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
 
   <platform name="android">
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />

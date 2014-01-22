@@ -37,7 +37,7 @@ public class ChromeExtensionURLs extends CordovaPlugin {
         
         // i18n can return data URIs.
         if (uri.getScheme().equals("chrome-extension")) {
-            uri = new Uri.Builder().scheme("file").path("android_asset/www" + filePath).build();
+            uri = Uri.parse("file:///android_asset/www" + filePath);
             uri = webView.getResourceApi().remapUri(uri);
         }
 

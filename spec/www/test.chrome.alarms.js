@@ -3,12 +3,14 @@
 // found in the LICENSE file.
 
 chromeSpec('chrome.alarms', function(runningInBackground) {
-  var alarmEarlyTolerance = 100;
-  var alarmLateTolerance = 1000;
-  var scheduledEarlyTolerance = 100;
-  var scheduledLateTolerance = 1000;
-  var testTimeout = 5000;
-  var testInnerTimeout = 2000;
+  var sliceLowerLimit=300; // chrome production is 60000 ms, can get away with as low as 300ms for mobile (not spec)
+  var alarmEarlyTolerance = sliceLowerLimit;
+  var alarmLateTolerance = 5000;
+  var scheduledEarlyTolerance = sliceLowerLimit;
+  var scheduledLateTolerance = 5000;
+  var testTimeout = sliceLowerLimit*1.5;
+  var testInnerTimeout = sliceLowerLimit*1.5;
+  var minTestTime=sliceLowerLimit;
 
   it('should contain definitions', function() {
     expect(chrome.alarms).toBeDefined();
@@ -61,12 +63,12 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       });
 
       itWaitsForDone('when set only', function(done) {
-        var expectedFireTime = Date.now() + 250;
+        var expectedFireTime = Date.now() + minTestTime;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.name).toBe('myalarm');
-          expect(alarm.scheduledTime).toBe(expectedFireTime);
+          expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.periodInMinutes).not.toBeDefined();
           chrome.alarms.onAlarm.removeListener(alarmHandler);
           done();
@@ -75,7 +77,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       }, testTimeout);
 
       itWaitsForDone('delayInMinutes set only', function(done) {
-        var expectedFireTime = Date.now() + 250;
+        var expectedFireTime = Date.now() + minTestTime;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
@@ -91,11 +93,11 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           }, 0);
         });
 
-        chrome.alarms.create('myalarm', { delayInMinutes:0.0042 });
+        chrome.alarms.create('myalarm', { delayInMinutes: minTestTime/60000 });
       }, testTimeout);
 
       itWaitsForDone('periodInMinutes set only', function(done) {
-        var expectedFireTime = Date.now() + 250;
+        var expectedFireTime = Date.now() + minTestTime;
         var callNumber = 0;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
@@ -103,43 +105,43 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.name).toBe('myalarm');
           expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, scheduledEarlyTolerance, scheduledLateTolerance);
-          expect(alarm.periodInMinutes).toBe(0.0042);
+          expect(alarm.periodInMinutes).toBe(minTestTime/60000);
           if (callNumber < 3) {
-            expectedFireTime += 250;
+            expectedFireTime += minTestTime;
           } else {
             chrome.alarms.onAlarm.removeListener(alarmHandler);
             done();
           }
         });
 
-        chrome.alarms.create('myalarm', { periodInMinutes:0.0042 });
-      }, testTimeout);
+        chrome.alarms.create('myalarm', { periodInMinutes:minTestTime/60000 });
+      }, testTimeout*3);
 
       itWaitsForDone('periodInMinutes and delayInMinutes set', function(done) {
         var callNumber = 0;
-        var expectedFireTime = Date.now() + 250;
+        var expectedFireTime = Date.now() + minTestTime;
 
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           callNumber++;
           expect(Date.now()).toBeWithinDelta(expectedFireTime, alarmEarlyTolerance, alarmLateTolerance);
           expect(alarm.name).toBe('myalarm');
           expect(alarm.scheduledTime).toBeWithinDelta(expectedFireTime, scheduledEarlyTolerance, scheduledLateTolerance);
-          expect(alarm.periodInMinutes).toBe(0.0042);
+          expect(alarm.periodInMinutes).toBe(minTestTime/60000);
           if (callNumber < 3) {
-            expectedFireTime += 250;
+            expectedFireTime += minTestTime;
           } else {
             chrome.alarms.onAlarm.removeListener(alarmHandler);
             done();
           }
         });
 
-        chrome.alarms.create('myalarm', { delayInMinutes:0.0042, periodInMinutes:0.0042 });
-      }, testTimeout);
+        chrome.alarms.create('myalarm', { delayInMinutes:minTestTime/60000, periodInMinutes:minTestTime/60000 });
+      }, testTimeout*3);
 
       itWaitsForDone('multiple alarms', function(done) {
-        var expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:Date.now() + 250 },
-                               alarm2:{ name:'alarm2', scheduledTime:Date.now() + 350 },
-                               alarm3:{ name:'alarm3', scheduledTime:Date.now() + 450 } };
+        var expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:Date.now() + minTestTime },
+                               alarm2:{ name:'alarm2', scheduledTime:Date.now() + 2*minTestTime },
+                               alarm3:{ name:'alarm3', scheduledTime:Date.now() + 3*minTestTime } };
         chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
           expect(alarm.name).toBe(expectedAlarms[alarm.name].name);
           expect(alarm.scheduledTime).toBeWithinDelta(expectedAlarms[alarm.name].scheduledTime, scheduledEarlyTolerance,
@@ -155,7 +157,7 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
         for (var name in expectedAlarms) {
           chrome.alarms.create(name, { when:expectedAlarms[name].scheduledTime });
         }
-      }, testTimeout);
+      }, testTimeout*3);
     });
 
     describe('testing get', function() {
@@ -208,8 +210,8 @@ chromeSpec('chrome.alarms', function(runningInBackground) {
       var createAlarms;
 
       beforeEach(function() {
-        var inputAlarmInfo = { alarm1:{ when:Date.now() + 1000 }, alarm2:{ delayInMinutes:0.02 },
-                               alarm3:{ periodInMinutes:0.02 } };
+        var inputAlarmInfo = { alarm1:{ when:Date.now() + minTestTime }, alarm2:{ delayInMinutes:minTestTime/60000 },
+                               alarm3:{ periodInMinutes:minTestTime/60000 } };
         chrome.alarms.clearAll();
         chrome.alarms.getAll(function(alarms) {
           expect(alarms.length).toBe(0);

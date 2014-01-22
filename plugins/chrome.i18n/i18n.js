@@ -38,7 +38,7 @@ function _endsWith(string, endString) {
 }
 
 function _getFilePathForLocale(locale) {
-    return 'MCA_locales/' + locale.toLowerCase() + '/messages.json';
+    return '/MCA_locales/' + locale.toLowerCase() + '/messages.json';
 }
 
 function _toLowerCaseMessageAndPlaceholders(obj) {
@@ -87,12 +87,12 @@ function _getMessageFromMessageJson(messageName, localeChain) {
     }
 }
 
-var availableLocales = [];
+var availableLocales = {};
 function _isLocaleAvailable(locale) {
     if (!availableLocales.hasOwnProperty(locale)) {
         var fileName = _getFilePathForLocale(locale);
         var xhr = new XMLHttpRequest();
-        xhr.open('HEAD', fileName, false /* sync */);
+        xhr.open('HEAD', fileName, false);
         xhr.send(null);
         availableLocales[locale] = (xhr.status === 200);
     }

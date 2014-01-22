@@ -12,8 +12,8 @@
 
   <name>Chrome Apps Push Messaging API</name>
   
-  <dependency id="org.chromium.common" url="." subdir="plugins/chrome-common" />
-  <dependency id="org.chromium.identity" url="." subdir="plugins/chrome.identity" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.identity" />
 
   <js-module src="pushMessaging.js" name="pushMessaging">
     <clobbers target="chrome.pushMessaging" />

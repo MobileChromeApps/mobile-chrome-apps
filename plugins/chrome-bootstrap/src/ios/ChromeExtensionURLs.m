@@ -16,33 +16,19 @@
 @interface ChromeURLProtocol : NSURLProtocol
 @end
 
-static NSMutableDictionary *whitelists;
-
 static ChromeURLProtocol *outstandingDelayRequest;
-
 static NSString* pathPrefix;
 
 #pragma mark ChromeExtensionURLs
 
 @implementation ChromeExtensionURLs
 
-__attribute__((constructor))
-static void initialize_whitlist_dict() {
-  whitelists = [[NSMutableDictionary alloc] init];
-}
-
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
 {
     self = [super initWithWebView:theWebView];
     if (self) {
         [NSURLProtocol registerClass:[ChromeURLProtocol class]];
-
-        pathPrefix = [[NSBundle mainBundle] pathForResource:@"chromeapp.html" ofType:@"" inDirectory:@"www"];
-        NSRange range = [pathPrefix rangeOfString:@"www"];
-        pathPrefix = [[pathPrefix substringToIndex:NSMaxRange(range)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-        [whitelists setObject:self forKey:@"plugin"];
-
+        pathPrefix = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"www"];
     }
     return self;
 }

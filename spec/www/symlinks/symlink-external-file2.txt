@@ -1,1 +1,0 @@
-../../plugins/org.chromium.bootstrap/i18n_test.txt

@@ -49,8 +49,8 @@ chromeSpec('chrome.storage', function(runningInBackground) {
       'undefined': undefined, // This gets ignored by .set().
       'null': null,
       'function': function hello() { return 1; },
-      'DivElement': document.createElement('div'),
-      'Document': document,
+//      'DivElement': document.createElement('div'),
+//      'Document': document,
       'proto': { __proto__: {a:1}, b:2 }
     };
 
