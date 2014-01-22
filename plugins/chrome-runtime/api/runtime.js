@@ -95,12 +95,12 @@ exports.reload = function() {
 var cachedAppId = null;
 function getAppId() {
   if (!cachedAppId) {
-    try {
-      require('org.chromium.bootstrap.bootstrap');
-      var key = exports.getManifest()['key'];
+    var manifest = exports.getManifest();
+    if (manifest) {
+      var key = manifest['key'];
       if (typeof key === 'undefined') {
         // For development, we want a consistent ID even without a public key.  Chrome uses the app path instead of name.
-        cachedAppId = helpers.mapAppNameToAppId(exports.getManifest()['name']);
+        cachedAppId = helpers.mapAppNameToAppId(manifest['name']);
       } else {
         try {
           cachedAppId = helpers.mapAppKeyToAppId(key);
@@ -110,9 +110,9 @@ function getAppId() {
           // leaving appId undefined.
         }
       }
-    } catch (e) {
+    } else {
       // TODO: return fully qualified name given during cordova project creation
-      cachedAppId = exports.getManifest()['name'];
+      cachedAppId = manifest['name'];
     }
   }
   return cachedAppId;

@@ -5,10 +5,6 @@
 var Event = require('org.chromium.common.events');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
-var bootstrap = null;
-try {
-    bootstrap = require('org.chromium.bootstrap.bootstrap');
-} catch (e) { }
 
 exports.getChannelId = function(interactive, callback) {
   var outstandingCallbacks = 2;
@@ -56,8 +52,4 @@ function fireStartupMessages() {
     exec(undefined, undefined, 'ChromePushMessaging', 'fireStartupMessages', []);
 }
 
-if (bootstrap) {
-    bootstrap.onBackgroundPageLoaded.subscribe(fireStartupMessages);
-} else {
-    channel.onCordovaReady.subscribe(fireStartupMessages);
-}
+require('org.chromium.common.helpers').runAtStartUp(fireStartupMessages);

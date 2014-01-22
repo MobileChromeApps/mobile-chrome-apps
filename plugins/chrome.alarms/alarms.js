@@ -6,10 +6,6 @@ var exports = module.exports;
 var exec = require('cordova/exec');
 var storage = require('org.chromium.storage.Storage');
 var platform = require('cordova/platform');
-var bootstrap = null;
-try {
-    bootstrap = require('org.chromium.bootstrap.bootstrap');
-} catch (e) { }
 var channel = require('cordova/channel');
 var Event = require('org.chromium.common.events');
 var useNativeAlarms = platform.id == 'android';
@@ -184,10 +180,6 @@ channel.onCordovaReady.subscribe(function() {
         alarms = values.alarms;
         alarms.__proto__ = null;
         channel.initializationComplete('onChromeAlarmsReady');
-        if (bootstrap) {
-            bootstrap.onBackgroundPageLoaded.subscribe(reregisterAlarms);
-        } else {
-            reregisterAlarms();
-        }
+        require('org.chromium.common.helpers').runAtStartUp(reregisterAlarms);
     });
 });

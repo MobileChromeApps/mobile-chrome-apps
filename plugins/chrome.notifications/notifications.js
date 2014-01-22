@@ -7,10 +7,6 @@ var storage = require('org.chromium.storage.Storage');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
-var bootstrap = null;
-try {
-    bootstrap = require('org.chromium.bootstrap');
-} catch (e) { }
 
 var notifications = Object.create(null);
 
@@ -145,10 +141,6 @@ channel.onCordovaReady.subscribe(function() {
             notifications.__proto__ = null;
         }
         channel.initializationComplete('onChromeNotificationsReady');
-        if (bootstrap) {
-            bootstrap.onBackgroundPageLoaded.subscribe(fireStartupEvents);
-        } else {
-            setTimeout(fireStartupEvents, 0);
-        }
+        require('org.chromium.common.helpers').runAtStartUp(fireStartupEvents);
     });
 });

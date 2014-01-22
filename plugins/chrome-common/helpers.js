@@ -1,6 +1,9 @@
 var CryptoJS = require('org.chromium.common.CryptoJS-sha256');
 require('org.chromium.common.CryptoJS-enc-base64-min'); // just need to make sure this runs
 
+// Distinguish between having the plugin loaded vs. being run using chromeapp.html.
+var isChromeApp = /chromeapp.html$/.exec(location.href);
+
 var hexToMPDecimalLookupTable = {
   0:'a', 1:'b', 2:'c', 3:'d',
   4:'e', 5:'f', 6:'g', 7:'h',
@@ -21,3 +24,12 @@ exports.mapAppKeyToAppId = function(key) {
   // See http://stackoverflow.com/questions/1882981/google-chrome-alphanumeric-hashes-to-identify-extensions/2050916#2050916
   return exports.mapAppNameToAppId(CryptoJS.enc.Base64.parse(key))
 }
+
+exports.runAtStartUp = function(func) {
+  if (isChromeApp) {
+    var mobile = require('org.chromium.bootstrap.mobile.impl');
+    mobile.onBackgroundPageLoaded.subscribe(func);
+  } else {
+    document.addEventListener('deviceready', func, false);
+  }
+};

@@ -18,8 +18,6 @@
   <dependency id="org.chromium.storage" />
 
   <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
-  <js-module src="api/bootstrap.js" name="bootstrap" />
-
   <js-module src="api/app/window.js" name="app.window">
     <clobbers target="chrome.app.window" />
   </js-module>
