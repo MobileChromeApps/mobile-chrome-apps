@@ -261,7 +261,7 @@ public class InAppBillingV3 extends CordovaPlugin {
 				if (result.isFailure()) {
 					// TODO: Add way more info to this
 					int response = result.getResponse();
-                    if (response = BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED) {
+                    if (response == IabHelper.BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED) {
 					    callbackContext.error(makeError("Error consuming purchase", ITEM_NOT_OWNED, result));
                     } else {
 					    callbackContext.error(makeError("Error consuming purchase", CONSUME_FAILED, result));
