@@ -67,6 +67,7 @@ var PLUGIN_MAP = {
   'identity': ['org.chromium.identity'],
   'idle': ['org.chromium.idle'],
   'notifications': ['org.chromium.notifications'],
+  'payments': ['com.google.payments'],
   'power': ['org.chromium.power'],
   'pushMessaging': ['org.chromium.pushMessaging'],
   'socket': ['org.chromium.socket'],
