@@ -487,18 +487,16 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     } else {
       var dirsToTry = [
         sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
-        sourceArg === 'spec' && path.join(ccaRoot, 'chrome-cordova', 'spec', 'www')
+        sourceArg === 'spec' && path.join(ccaRoot, 'chrome-cordova', 'spec', 'www') // TODO: fix this
       ];
       var foundManifest = false;
       for (var i = 0; i < dirsToTry.length; i++) {
         if (dirsToTry[i]) {
           srcAppDir = dirsToTry[i];
           console.log('Searching for Chrome app source in ' + srcAppDir);
-          if (fs.existsSync(srcAppDir)) {
-            if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
-              foundManifest = true;
-              break;
-            }
+          if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
+            foundManifest = true;
+            break;
           }
         }
       }
@@ -584,6 +582,23 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       config_default.lib.www.link = true;
     }
 
+    function writeConfigStep(callback) {
+      console.log("Writing config.xml");
+      fs.readFile(path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
+        if (err) {
+          console.log(err);
+        } else {
+          var configfile = data
+              .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
+              .replace(/__APP_ID__/, (manifest.appId) || "com.your.company.HelloWorld")
+              .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
+              .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
+              .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
+          fs.writeFile(path.join(destAppDir, 'config.xml'), configfile, callback);
+        }
+      });
+    }
+
     runCmd(['create', destAppDir, manifest.name, manifest.name, config_default], function(err) {
       if(err)
         return fatal(err);
@@ -596,20 +611,17 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     });
   }
 
-  function writeConfigStep(callback) {
-    console.log("Writing config.xml");
-    fs.readFile(path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
-      if (err) {
-        console.log(err);
-      } else {
-        var configfile = data.replace(/__APP_NAME__/, manifest.name)
-            .replace(/__APP_ID__/, manifest.appId)
-            .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
-            .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
-            .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
-        fs.writeFile(path.join(destAppDir, 'config.xml'), configfile, callback);
-      }
-    });
+  function ensureManifestMobileExists(callback) {
+    var manifestMobileFilename = path.join('www', 'manifest.mobile.json');
+    if (fs.existsSync(manifestMobileFilename)) {
+      return callback();
+    }
+    var defaultManifestMobileFilename = path.join(ccaRoot, 'templates', 'default-app', 'manifest.mobile.json');
+    if (!fs.existsSync(defaultManifestMobileFilename)) {
+      return callback();
+    }
+    shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
+    return callback();
   }
 
   function prepareStep(callback) {
@@ -636,6 +648,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   eventQueue.push(validateSourceArgStep);
   eventQueue.push(readManifestStep);
   eventQueue.push(createStep);
+  eventQueue.push(ensureManifestMobileExists);
   eventQueue.push(prepareStep);
 }
 
