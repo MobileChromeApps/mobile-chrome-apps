@@ -66,7 +66,9 @@ module.exports.prototype = {
         infoPlist['CFBundleIdentifier'] = pkg;
 
         // Update version (bundle version)
-        infoPlist['CFBundleVersion'] = version;
+        infoPlist['CFBundleShortVersionString'] = version;
+        // TODO: add a way to update infoPlist['CFBundleVersion'].
+
         var info_contents = plist.build(infoPlist);
         info_contents = info_contents.replace(/<string>[\s\r\n]*<\/string>/g,'<string></string>');
         fs.writeFileSync(plistFile, info_contents, 'utf-8');

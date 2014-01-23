@@ -18,6 +18,7 @@
 */
 
 var path = require('path'),
+    CordovaError = require('./CordovaError'),
     optimist, // required in try-catch below to print a nice error message if it's not installed.
     _;
 
@@ -63,6 +64,16 @@ module.exports = function CLI(inputArgs) {
             silent: args.silent
         };
 
+    // For CrodovaError print only the message without stack trace.
+    process.on('uncaughtException', function(err){
+        if (err instanceof CordovaError) {
+            console.error(err.message);
+        } else {
+            console.error(err.stack);
+        }
+        process.exit(1);
+    });
+
     cordova.on('results', console.log);
 
     if (!opts.silent) {
@@ -99,7 +110,7 @@ module.exports = function CLI(inputArgs) {
     }
 
     if (!cordova.hasOwnProperty(cmd)) {
-        throw new Error('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');
+        throw new CordovaError('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');
     }
 
     if (cmd === "info") {
@@ -128,7 +139,7 @@ module.exports = function CLI(inputArgs) {
         var customWww = args.src || args.link;
         if (customWww) {
             if (customWww.indexOf(':') != -1) {
-                throw new Error('Only local paths for custom www assets are supported.');
+                throw new CordovaError('Only local paths for custom www assets are supported.');
             }
             if (customWww.substr(0,1) === '~') {  // resolve tilde in a naive way.
                 customWww = path.join(process.env.HOME,  customWww.substr(1));

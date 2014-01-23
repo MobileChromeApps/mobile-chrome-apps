@@ -132,7 +132,7 @@ module.exports = function platform(command, targets) {
                     // Call the platform's update script.
                     var script = path.join(libDir, 'bin', 'update');
                     var d = Q.defer();
-                    var cmd = script + ' "' + platformPath + '"';
+                    var cmd = '"' + script + '" "' + platformPath + '"';
                     events.emit('verbose', 'Running command:' + cmd);
                     child_process.exec(cmd, function(err, stdout, stderr) {
                         if (err) {
@@ -158,7 +158,7 @@ module.exports = function platform(command, targets) {
                 return Q.all(platforms_on_fs.map(function(p) {
                     var script = path.join(projectRoot, 'platforms', p, 'cordova', 'version');
                     var d = Q.defer();
-                    child_process.exec(script, function(err, stdout, stderr) {
+                    child_process.exec('"' + script + '"', function(err, stdout, stderr) {
                         if (err) d.resolve(p);
                         else {
                             if (stdout) d.resolve(p + ' ' + stdout.trim());

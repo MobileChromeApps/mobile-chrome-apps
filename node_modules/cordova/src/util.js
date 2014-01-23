@@ -18,6 +18,7 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
+    CordovaError  = require('./CordovaError'),
     shell         = require('shelljs');
 
 // Global configuration paths
@@ -75,11 +76,11 @@ exports = module.exports = {
         console.error('Hit an unhandled case in util.isCordova');
         return false;
     },
-    // Cd to project root dir and return its path. Throw if not in a Corodva project.
+    // Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
     cdProjectRoot: function() {
         var projectRoot = this.isCordova();
         if (!projectRoot) {
-            throw new Error('Current working directory is not a Cordova-based project.');
+            throw new CordovaError('Current working directory is not a Cordova-based project.');
         }
         process.chdir(projectRoot);
         return projectRoot;
