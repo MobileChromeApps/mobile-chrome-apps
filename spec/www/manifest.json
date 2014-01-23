@@ -41,6 +41,7 @@
     "alarms",
     "fileSystem",
     "identity",
+    "idle",
     "notifications",
     "pushMessaging",
     {
