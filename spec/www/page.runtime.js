@@ -19,4 +19,14 @@ chromespec.registerSubPage('chrome.runtime', function(rootEl) {
   addButton('chrome.runtime.reload()', function() {
     chrome.runtime.reload();
   });
+
+  addButton('chrome.runtime.getPlatformInfo()', function() {
+    var getPlatformInfoCallback = function(platformInfo) {
+      chromespec.log("Platform OS: " + platformInfo.os);
+      chromespec.log("Platform architecture (currently intended to be null): " + platformInfo.arch);
+      chromespec.log("Platform architecture (NaCl, currently intended to be null): " + platformInfo.nacl_arch);
+    };
+
+    chrome.runtime.getPlatformInfo(getPlatformInfoCallback);
+  });
 });

@@ -8,8 +8,6 @@ var stubs = require('org.chromium.common.stubs');
 
 var manifestJson;
 
-exports.platgform = cordova.platform;
-
 exports.onSuspend = new Event('onSuspend');
 exports.onInstalled = new Event('onInstalled');
 exports.onStartup = new Event('onStartup');
@@ -148,5 +146,18 @@ function getAppId() {
   return cachedAppId;
 }
 exports.__defineGetter__("id", getAppId);
+
+exports.getPlatformInfo = function(callback) {
+  var platformInfo = {};
+  platformInfo.os = cordova.platformId;
+
+  // The other two expected members do not apply meaningfully here.
+  // TODO(maxw): Or do they?
+  platformInfo.arch = null;
+  platformInfo.nacl_arch = null;
+
+  // Send the platform info to the callback.
+  callback(platformInfo);
+};
 
 stubs.createStub(exports, 'requestUpdateCheck', function(){});
