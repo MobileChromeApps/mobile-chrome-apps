@@ -80,4 +80,4 @@ var handleTouchEvent = function() {
 resetIdleTimer();
 
 // Add a touch listener.
-document.body.addEventListener('touchstart', handleTouchEvent);
+document.addEventListener('touchstart', handleTouchEvent);
