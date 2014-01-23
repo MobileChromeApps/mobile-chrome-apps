@@ -244,6 +244,7 @@ function parseManifest(manifest, callback) {
       console.warn('Unsupported manifest permission encountered: ' + permissions[i] + ' (skipping)');
     }
   }
+  // Note: chromeAppId is not currently used.
   if (manifest.key) {
     chromeAppId = mapAppKeyToAppId(manifest.key);
   } else {
@@ -602,7 +603,6 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         var configfile = data.replace(/__APP_NAME__/, manifest.name)
             .replace(/__APP_ID__/, appId)
             .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
-            .replace(/__CHROME_APP_ID__/, chromeAppId)
             .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
             .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
         fs.writeFile(path.join(destAppDir, 'config.xml'), configfile, callback);
