@@ -339,7 +339,7 @@ function toolsCheck() {
 
 function ensureHasRunInit() {
   eventQueue.push(function(callback) {
-    if (!fs.existsSync(path.join(ccaRoot, 'chrome-cordova/README.md')))
+    if (!fs.existsSync(path.join(ccaRoot, path.join('chrome-cordova', 'README.md'))))
       return fatal('Please run \'' + scriptName + ' init\' first');
     callback();
   });
@@ -544,8 +544,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 
     function afterAllCommands() {
       // Create scripts that update the cordova app on prepare
-      fs.mkdirSync('hooks/before_prepare');
-      fs.mkdirSync('hooks/after_prepare');
+      fs.mkdirSync(path.join('hooks', 'before_prepare'));
+      fs.mkdirSync(path.join('hooks', 'after_prepare'));
 
       function writeHook(path, ccaArg) {
         var contents = [
@@ -561,8 +561,8 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         fs.writeFileSync(path, contents.join('\n'));
         fs.chmodSync(path, '777');
       }
-      writeHook('hooks/before_prepare/cca-pre-prepare.js', 'pre-prepare');
-      writeHook('hooks/after_prepare/cca-post-prepare.js', 'update-app');
+      writeHook(path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'), 'pre-prepare');
+      writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'update-app');
 
       // Create a convenience link to cca
       if (isGitRepo) {
@@ -763,7 +763,7 @@ function updateAppCommand() {
 
   function copyIconAssetsStep(platform) {
     return function(callback) {
-      readManifest('www/manifest.json', function(manifest) {
+      readManifest(path.join('www', 'manifest.json'), function(manifest) {
         if (manifest && manifest.icons) {
           var iconMap = {};
           var iPhoneFiles = {
@@ -909,11 +909,11 @@ function parseCommandLine() {
              '    Flags:\n' +
              '        --android: Add the Android platform (default if android SDK is detected).\n' +
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
-             '        --copy-from=path/to/app: Create a project based on the given Chrome App.\n' +
-             '        --link-to=path/to/app: Create a project that symlinks to the given Chrome App.\n' +
+             '        --copy-from=' + path.join('path', 'to', 'app') + ': Create a project based on the given Chrome App.\n' +
+             '        --link-to=' + path.join('path', 'to', 'app') + ': Create a project that symlinks to the given Chrome App.\n' +
              '    Examples:\n' +
              '        cca create org.chromium.Demo\n' +
-             '        cca create org.chromium.Spec --android --link-to=path/to/app\n' +
+             '        cca create org.chromium.Spec --android --link-to=' + path.join('path', 'to', 'app') + '\n' +
              'Cordova commands will be forwarded directly to cordova.\n' +
              '    Commands:\n' +
              '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
