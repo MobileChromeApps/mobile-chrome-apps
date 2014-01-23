@@ -2,12 +2,12 @@
 
 This is a collection of automatic and manual tests that exercise various `chrome.*` APIs from Chrome Apps v2.
 
-## As a Mobile Chrome App
+## As a mobile Chrome App
 
     # From mobile-chrome-apps repository:
-    ./mca create com.google.ChromeSpec --source=spec
+    cca create com.google.ChromeSpec --link-to=spec
 
-## As a Desktop Chrome App
+## As a desktop Chrome App
 
 * goto `chrome://extensions`
 * click "Load Unpacked Extension"

@@ -41,7 +41,7 @@ For iOS, first follow **Step 1** of the instructions [here](https://developers.g
 
 ## Updating Your Manifest
 
-Your manifest needs to be updated to include your client id and scopes.  In a Mobile Chrome App (ie. an app created using mca.js), this is done in manifest.json as follows:
+Your manifest needs to be updated to include your client id and scopes. In a Chrome App, this is done in manifest.json as follows:
 
     "oauth2": {
       "client_id": "YOUR_IOS_CLIENT_ID",
@@ -52,7 +52,7 @@ Your manifest needs to be updated to include your client id and scopes.  In a Mo
       ]
     },
 
-When using this plugin outside the context of a Mobile Chrome App, this information must be provided using `chrome.runtime.setManifest`:
+When using this plugin outside the context of a Chrome App, this information must be provided using `chrome.runtime.setManifest`:
 
     chrome.runtime.setManifest({
       oauth2: {

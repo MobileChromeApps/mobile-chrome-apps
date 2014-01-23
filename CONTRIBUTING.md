@@ -1,10 +1,10 @@
-# Contributing to Mobile Chrome Apps
+# Contributing to this Repository
 
 Thank you for your interest in contributing!
 
 Unfortunately there are some legal hurdles. Sorry about that.
 
-MCA is a Google open source project, and so we require contributors to sign Google's open source Contributor License Agreement.
+This repository is a Google open source project, and so we require contributors to sign Google's open source Contributor License Agreement.
 It's easy to do, just click here to sign as an [individual](https://developers.google.com/open-source/cla/individual) or [corporation](https://developers.google.com/open-source/cla/corporate).
 Individuals can sign electronically in seconds (see the bottom of the page); corporations will need to email a PDF, or mail.
 

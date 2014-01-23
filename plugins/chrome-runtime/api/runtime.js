@@ -105,7 +105,7 @@ function getAppId() {
         try {
           cachedAppId = helpers.mapAppKeyToAppId(key);
         } catch (e) {
-          // If you are a mobile chrome app, and you do have a key in your manifest, and its invalid, we shouldn't pretend to return a valid appId
+          // If you are a Chrome App, and you do have a key in your manifest, and its invalid, we shouldn't pretend to return a valid appId
           console.error('Your manifest file has an invalid \'key\', cannot produce application id.');
           // leaving appId undefined.
         }

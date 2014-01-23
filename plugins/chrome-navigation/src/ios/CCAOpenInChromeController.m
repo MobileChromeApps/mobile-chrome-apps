@@ -29,7 +29,7 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MCAOpenInChromeController.h"
+#import "CCAOpenInChromeController.h"
 
 static NSString * const kGoogleChromeHTTPScheme = @"googlechrome:";
 static NSString * const kGoogleChromeHTTPSScheme = @"googlechromes:";
@@ -47,10 +47,10 @@ static NSString * encodeByAddingPercentEscapes(NSString *input) {
   return encodedValue;
 }
 
-@implementation MCAOpenInChromeController
+@implementation CCAOpenInChromeController
 
-+ (MCAOpenInChromeController *)sharedInstance {
-  static MCAOpenInChromeController *sharedInstance;
++ (CCAOpenInChromeController *)sharedInstance {
+  static CCAOpenInChromeController *sharedInstance;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     sharedInstance = [[self alloc] init];

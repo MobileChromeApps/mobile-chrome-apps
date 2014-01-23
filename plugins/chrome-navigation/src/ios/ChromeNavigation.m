@@ -6,7 +6,7 @@
 
 #import <Cordova/CDVViewController.h>
 
-#import "MCAOpenInChromeController.h"
+#import "CCAOpenInChromeController.h"
 
 #pragma mark ChromeNavigation
 
@@ -17,7 +17,7 @@
     NSURL* url = request.URL;
     if (navigationType == UIWebViewNavigationTypeLinkClicked) {
         NSLog(@"Opening link in external browser: %@", url);
-        MCAOpenInChromeController *openInController_ = [[MCAOpenInChromeController alloc] init];
+        CCAOpenInChromeController *openInController_ = [[CCAOpenInChromeController alloc] init];
         if ([openInController_ isChromeInstalled]) {
             [openInController_ openInChrome:url];
         } else {

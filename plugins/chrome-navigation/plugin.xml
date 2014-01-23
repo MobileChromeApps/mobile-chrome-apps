@@ -24,8 +24,8 @@
   </platform>
 
   <platform name="ios">
-    <source-file src="src/ios/MCAOpenInChromeController.m" />
-    <header-file src="src/ios/MCAOpenInChromeController.h" />
+    <source-file src="src/ios/CCAOpenInChromeController.m" />
+    <header-file src="src/ios/CCAOpenInChromeController.h" />
     <source-file src="src/ios/ChromeNavigation.m" />
     <header-file src="src/ios/ChromeNavigation.h" />
     <config-file target="config.xml" parent="/widget">
