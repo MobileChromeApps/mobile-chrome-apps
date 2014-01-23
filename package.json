@@ -20,7 +20,6 @@
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
-    "ncp": "~0.4",
     "cordova": "agrieve/cordova-cli",
     "optimist": "~0.5",
     "cryptojs": "~2",

@@ -25,7 +25,6 @@ var os = require('os');
 var path = require('path');
 
 // Third-party modules.
-var ncp = require('ncp');
 var optimist = require('optimist');
 var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
@@ -157,50 +156,6 @@ function chdir(d) {
   if (process.cwd() != d) {
     console.log('Changing directory to: ' + d);
     process.chdir(d);
-  }
-}
-
-function copyFile(src, dst, callback) {
-  var rd = fs.createReadStream(src);
-  var wr = fs.createWriteStream(dst);
-  wr.on('error', function(err) {
-    fatal('Copy file error: ' + err);
-  });
-  wr.on('close', callback);
-  rd.pipe(wr);
-}
-
-function copyDirectory(src, dst, callback) {
-  ncp.ncp(src, dst, function(err) {
-    if (err) {
-      fatal('Copy file error: ' + err);
-    } else {
-      callback();
-    }
-  });
-}
-
-function recursiveDelete(dirPath) {
-  if (fs.existsSync(dirPath)) {
-    console.log('Deleting: ' + dirPath);
-    helper(dirPath);
-  }
-  function helper(dirPath) {
-    try {
-       var files = fs.readdirSync(dirPath);
-    } catch(e) {
-      return;
-    }
-    for (var i = 0; i < files.length; i++) {
-      var filePath = path.join(dirPath, files[i]);
-      fs.chmodSync(filePath, '777');
-      if (fs.statSync(filePath).isFile()) {
-        fs.unlinkSync(filePath);
-      } else {
-        helper(filePath);
-      }
-    }
-    fs.rmdirSync(dirPath);
   }
 }
 
@@ -871,12 +826,10 @@ function updateAppCommand() {
                 if (manifest.icons[size]) {
                   //console.log("Copying " + size + "px icon file");
                   shelljs.mkdir('-p', path.dirname(dstPath));
-                  copyFile(path.join('www', fixPathSlashes(manifest.icons[size])), dstPath,
-                           function(err) {
-                             if (err) {
-                               console.log("Error copying " + size + "px icon file");
-                             }
-                           });
+                  shelljs.cp('-f', path.join('www', fixPathSlashes(manifest.icons[size])), dstPath);
+                  if (shelljs.error()) {
+                    console.log("Error copying " + size + "px icon file: " + shelljs.error());
+                  }
                 } else {
                   var imgName = path.basename(dstPath).replace(/\..*?$/, '');
                   delete iPadFiles[imgName];
