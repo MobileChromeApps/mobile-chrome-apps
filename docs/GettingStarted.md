@@ -4,7 +4,7 @@ Please make sure you have completed the [Installation Guide](Installation.md) fi
 
 ### Step 1: Create a Project
 
-    cca create com.companyname.YourApp [--link-to=<path>|--copy-from=<path>]
+    cca create <path> [--link-to=<path>|--copy-from=<path>]
 
 * You may pass one of `--link-to` or `--copy-from` to build your existing chrome app for mobile.
 * The `--link-to` flag will share your existing chrome app code using a _symlink_.
