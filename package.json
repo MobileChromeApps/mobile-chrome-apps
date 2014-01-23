@@ -24,7 +24,8 @@
     "optimist": "~0.5",
     "cryptojs": "~2",
     "elementtree": "0.1.5",
-    "shelljs": "~0.2.6"
+    "shelljs": "~0.2.6",
+    "node.extend": ""
   },
   "bundledDependencies": [
     "cordova"

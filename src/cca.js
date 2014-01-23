@@ -184,18 +184,27 @@ function waitForKey(opt_prompt, callback) {
   });
 }
 
-function readManifest(manifestFilename, callback) {
-  fs.readFile(manifestFilename, { encoding: 'utf-8' }, function(err, data) {
+function getManifest(manifestDir, callback) {
+  var manifestFilename = path.join(manifestDir, 'manifest.json');
+  var manifestMobileFilename = path.join(manifestDir, 'manifest.mobile.json');
+
+  fs.readFile(manifestFilename, { encoding: 'utf-8' }, function(err, manifestData) {
     if (err) {
       fatal('Unable to open manifest ' + manifestFilename + ' for reading.');
     }
-    try {
-      var manifest = eval('(' + data + ')'); // JSON.parse(data);
-      callback(manifest);
-    } catch (e) {
-      console.log(e);
-      fatal('Unable to parse manifest ' + manifestFilename);
-    }
+    fs.readFile(manifestMobileFilename, { encoding: 'utf-8' }, function(err, manifestMobileData) {
+      // Manifest Mobile is not required, its not fatal if we fail reading it
+      try {
+        var manifest = eval('(' + manifestData + ')');
+        var manifestMobile = err ? {} : eval('(' + manifestMobileData + ')');
+        var extend = require('node.extend');
+        manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
+        callback(manifest);
+      } catch (e) {
+        console.error(e);
+        fatal('Unable to parse manifest ' + manifestFilename);
+      }
+    });
   });
 }
 
@@ -456,14 +465,8 @@ function runAllCmds(commands, callback) {
 /******************************************************************************/
 // Create App
 
-function createCommand(appId, addAndroidPlatform, addIosPlatform) {
-  var match = /[a-z]+\.[a-z][a-z0-9_]*\.([a-z][a-z0-9_]*)/i.exec(appId);
-  if (!match) {
-    fatal('App Name must be a valid Java package name and follow the pattern: com.company.id');
-  }
-  var destAppDir = match[1];
+function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   var srcAppDir = null;
-  var manifestFile = null;
   var manifest = null;
 
   var whitelist = [];
@@ -476,11 +479,11 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       return path.resolve(process.env.HOME + string.substr(1))
     return string
   }
+
   function validateSourceArgStep(callback) {
     var sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
     if (!sourceArg) {
       srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
-      manifestFile = path.join(srcAppDir, 'manifest.json');
     } else {
       var dirsToTry = [
         sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
@@ -492,8 +495,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
           srcAppDir = dirsToTry[i];
           console.log('Searching for Chrome app source in ' + srcAppDir);
           if (fs.existsSync(srcAppDir)) {
-            manifestFile = path.join(srcAppDir, 'manifest.json');
-            if (fs.existsSync(manifestFile)) {
+            if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
               foundManifest = true;
               break;
             }
@@ -511,7 +513,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
   }
 
   function readManifestStep(callback) {
-    readManifest(manifestFile, function(manifestData) {
+    getManifest(srcAppDir, function(manifestData) {
       parseManifest(manifestData, function(chromeAppIdFromManifest, whitelistFromManifest, pluginsFromManifest) {
         // Set globals
         manifest = manifestData;
@@ -582,7 +584,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
       config_default.lib.www.link = true;
     }
 
-    runCmd(['create', destAppDir, appId, manifest.name, config_default], function(err) {
+    runCmd(['create', destAppDir, manifest.name, manifest.name, config_default], function(err) {
       if(err)
         return fatal(err);
       writeConfigStep(function(err) {
@@ -601,7 +603,7 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
         console.log(err);
       } else {
         var configfile = data.replace(/__APP_NAME__/, manifest.name)
-            .replace(/__APP_ID__/, appId)
+            .replace(/__APP_ID__/, manifest.appId)
             .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
             .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
             .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
@@ -644,13 +646,9 @@ function createCommand(appId, addAndroidPlatform, addIosPlatform) {
 function prePrepareCommand() {
   var plugins = [];
 
-  /* Pre-create, pre-prepare manifest check and project munger */
+  /* pre-prepare manifest check and project munger */
   function readManifestStep(callback) {
-    var manifestFile = path.join('www', 'manifest.json');
-    if (!fs.existsSync(manifestFile)) {
-      return callback();
-    }
-    readManifest(manifestFile, function(manifest) {
+    getManifest('www', function(manifest) {
       parseManifest(manifest, function(chromeAppId, whitelist, pluginsFromManifest) {
         plugins = pluginsFromManifest;
         console.log("Writing config.xml");
@@ -763,7 +761,7 @@ function updateAppCommand() {
 
   function copyIconAssetsStep(platform) {
     return function(callback) {
-      readManifest(path.join('www', 'manifest.json'), function(manifest) {
+      getManifest('www', function(manifest) {
         if (manifest && manifest.icons) {
           var iconMap = {};
           var iPhoneFiles = {
@@ -988,7 +986,6 @@ function fixEnv() {
 function main() {
   parseCommandLine();
   var command = commandLineFlags._[0];
-  var appId = commandLineFlags._[1] || '';
   var packageVersion = require('../package').version;
 
   if (commandLineFlags.v) {
@@ -1025,7 +1022,9 @@ function main() {
         promptIfNeedsGitUpdate();
       }
       toolsCheck();
-      createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
+
+      var destAppDir = commandLineFlags._[1] || '';
+      createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
     },
     'version': function() {
       console.log(packageVersion);
