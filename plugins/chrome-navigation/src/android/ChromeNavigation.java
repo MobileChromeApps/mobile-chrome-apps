@@ -4,7 +4,6 @@
 
 package org.chromium;
 
-import org.apache.cordova.Config;
 import org.apache.cordova.CordovaPlugin;
 
 import android.content.Intent;
@@ -13,6 +12,7 @@ import android.util.Log;
 
 public class ChromeNavigation extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeNavigation";
+    private String prevUrl = null;
 
     @Override
     public boolean onOverrideUrlLoading(String url) {
@@ -25,4 +25,22 @@ public class ChromeNavigation extends CordovaPlugin {
         return false;
     }
 
+    @Override
+    public Object onMessage(String id, Object data) {
+        // Look for top level navigation changes
+        if ("onPageStarted".equals(id)) {
+            String url = data.toString();
+            if (url.startsWith("chrome-extension:")) {
+                if (prevUrl != null) {
+                    // Assume this is someone refreshing via remote debugger.
+                    Log.i(LOG_TAG, "location.reload() detected. Reloading via " + prevUrl);
+                    webView.stopLoading();
+                    webView.loadUrl(prevUrl);
+                }
+            } else {
+                prevUrl = url;
+            }
+        }
+        return null;
+    }
 }

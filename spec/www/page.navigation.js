@@ -35,5 +35,10 @@ chromespec.registerSubPage('chrome-navigation', function(rootEl) {
   addButton('location.reload()', function() {
     top.location.reload();
   });
+  addButton('chrome-extension iframe', function() {
+    var el = rootEl.ownerDocument.createElement('iframe');
+    el.src = 'assets/iframewnd.html';
+    rootEl.appendChild(el);
+  });
 });
 
