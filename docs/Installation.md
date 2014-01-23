@@ -2,7 +2,7 @@
 
 ## Step 1: Dependencies
 
-### Node.js
+### Node.js (comes with npm)
 
 Version 0.10.0+ is required.
 
