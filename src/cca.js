@@ -775,7 +775,7 @@ function updateAppCommand() {
   function moveI18NMessagesDir(platform) {
     return function(callback) {
       var badPath = path.join(assetDirForPlatform(platform), '_locales');
-      var betterPath = path.join(assetDirForPlatform(platform), 'MCA_locales');
+      var betterPath = path.join(assetDirForPlatform(platform), 'CCA_locales');
       if (fs.existsSync(badPath)) {
         console.log('## Moving ' + platform + ' locales directory');
         fs.renameSync(badPath, betterPath);
