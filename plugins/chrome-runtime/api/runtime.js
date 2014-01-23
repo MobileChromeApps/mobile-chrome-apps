@@ -5,7 +5,6 @@
 var argscheck = cordova.require('cordova/argscheck');
 var Event = require('org.chromium.common.events');
 var stubs = require('org.chromium.common.stubs');
-var helpers = require('org.chromium.common.helpers');
 
 var manifestJson;
 
@@ -94,6 +93,35 @@ exports.reload = function() {
   location.reload();
 };
 
+function getCrypto() {
+  var ret = require('./CryptoJS-sha256');
+  require('./CryptoJS-enc-base64-min'); // just need to make sure this runs
+  return ret;
+}
+
+function hexToMPDecimal(hex) {
+  var hexToMPDecimalLookupTable = {
+    0:'a', 1:'b', 2:'c', 3:'d',
+    4:'e', 5:'f', 6:'g', 7:'h',
+    8:'i', 9:'j', a:'k', b:'l',
+    c:'m', d:'n', e:'o', f:'p',
+  };
+  return Array.prototype.map.call(hex, function(c) { return hexToMPDecimalLookupTable[c]; }).join('');
+}
+
+function mapAppNameToAppId (name) {
+  var CryptoJS = getCrypto();
+  var idInHex = CryptoJS.SHA256(name).toString(CryptoJS.enc.Hex).slice(0,32).toLowerCase();
+  var idInMPDecimal = hexToMPDecimal(idInHex);
+  return idInMPDecimal;
+}
+
+function mapAppKeyToAppId(key) {
+  var CryptoJS = getCrypto();
+  // See http://stackoverflow.com/questions/1882981/google-chrome-alphanumeric-hashes-to-identify-extensions/2050916#2050916
+  return mapAppNameToAppId(CryptoJS.enc.Base64.parse(key))
+}
+
 var cachedAppId = null;
 function getAppId() {
   if (!cachedAppId) {
@@ -102,10 +130,10 @@ function getAppId() {
       var key = manifest['key'];
       if (typeof key === 'undefined') {
         // For development, we want a consistent ID even without a public key.  Chrome uses the app path instead of name.
-        cachedAppId = helpers.mapAppNameToAppId(manifest['name']);
+        cachedAppId = mapAppNameToAppId(manifest['name']);
       } else {
         try {
-          cachedAppId = helpers.mapAppKeyToAppId(key);
+          cachedAppId = mapAppKeyToAppId(key);
         } catch (e) {
           // If you are a Chrome App, and you do have a key in your manifest, and its invalid, we shouldn't pretend to return a valid appId
           console.error('Your manifest file has an invalid \'key\', cannot produce application id.');
