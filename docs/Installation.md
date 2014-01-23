@@ -16,7 +16,7 @@ Version 0.10.0+ is required.
 Example:
 
     curl https://raw.github.com/creationix/nvm/master/install.sh | sh
-    source ~/.bash_profile
+    source ~/.bash_profile || source ~/.profile || source ~/.bashrc
     nvm install 0.10
     nvm alias default 0.10
 
