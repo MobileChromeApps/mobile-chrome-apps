@@ -786,14 +786,14 @@ function updateAppCommand() {
           };
           var infoPlistXml = null;
           var infoPlistPath = null;
+          var iosIconDir = null;
 
           if (platform === "android") {
             iconMap = {
               "36": [path.join('res','drawable-ldpi','icon.png')],
               "48": [path.join('res','drawable-mdpi','icon.png')],
               "72": [path.join('res','drawable-hdpi','icon.png')],
-              "96": [path.join('res','drawable-xhdpi','icon.png'),
-                     path.join('res','drawable','icon.png')],
+              "96": [path.join('res','drawable-xhdpi','icon.png')],
               "144": [path.join('res','drawable-xxhdpi','icon.png')],
               "192": [path.join('res','drawable-xxxhdpi','icon.png')]
             };
@@ -801,12 +801,12 @@ function updateAppCommand() {
             var platforms = require('cordova/platforms');
             var parser = new platforms.ios.parser(path.join('platforms','ios'));
             iconMap = {
+              "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
               "29": [path.join(parser.originalName, 'Resources','icons','icon-small.png')],
               "40": [path.join(parser.originalName, 'Resources','icons','icon-40.png')],
               "50": [path.join(parser.originalName, 'Resources','icons','icon-50.png')],
               "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
               "58": [path.join(parser.originalName, 'Resources','icons','icon-small@2x.png')],
-              "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
               "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
               "76": [path.join(parser.originalName, 'Resources','icons','icon-76.png')],
               "80": [path.join(parser.originalName, 'Resources','icons','icon-40@2x.png')],
@@ -818,7 +818,16 @@ function updateAppCommand() {
             };
             infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
             infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
+            iosIconDir = path.join(parser.originalName, 'Resources', 'icons');
           }
+          function copyIcon(size, dstPath) {
+            shelljs.mkdir('-p', path.dirname(dstPath));
+            shelljs.cp('-f', path.join('www', fixPathSlashes(manifest.icons[size])), dstPath);
+            if (shelljs.error()) {
+              console.log("Error copying " + size + "px icon file: " + shelljs.error());
+            }
+          }
+          var missingIcons = [];
           if (iconMap) {
             //console.log('## Copying icons for ' + platform);
             for (size in iconMap) {
@@ -826,21 +835,36 @@ function updateAppCommand() {
                 var dstPath = path.join('platforms', platform, iconMap[size][i]);
                 if (manifest.icons[size]) {
                   //console.log("Copying " + size + "px icon file");
-                  shelljs.mkdir('-p', path.dirname(dstPath));
-                  shelljs.cp('-f', path.join('www', fixPathSlashes(manifest.icons[size])), dstPath);
-                  if (shelljs.error()) {
-                    console.log("Error copying " + size + "px icon file: " + shelljs.error());
-                  }
+                  copyIcon(size, dstPath);
                 } else {
-                  var imgName = path.basename(dstPath).replace(/\..*?$/, '');
-                  delete iPadFiles[imgName];
-                  delete iPhoneFiles[imgName];
-                  // TODO: need to remove the iOS assets from the Xcode project file (ugh).
-                  if (platform == 'android' && fs.existsSync(dstPath)) {
-                    fs.unlinkSync(dstPath);
-                  }
+                  missingIcons.push(dstPath);
                 }
               }
+            }
+            // Find the largest icon.
+            var bestSize = '0';
+            for (size in manifest.icons) {
+              bestSize = +size > +bestSize ? size : bestSize;
+            }
+            missingIcons.forEach(function(dstPath) {
+              var imgName = path.basename(dstPath).replace(/\..*?$/, '');
+              // Leave at least one icon.
+              if (imgName != 'icon') {
+                delete iPadFiles[imgName];
+                delete iPhoneFiles[imgName];
+              }
+              // TODO: need to remove the iOS assets from the Xcode project file (ugh).
+              if (platform == 'android') {
+                shelljs.rm('-f', dstPath);
+              } else if (platform == 'ios') {
+                // Fill in all missing iOS icons with the largest resolution we have.
+                copyIcon(bestSize, dstPath);
+              }
+            });
+            // Use the largest icon as the default Android one.
+            if (platform == 'android') {
+              var dstPath = path.join('platforms', platform, 'res', 'drawable', 'icon.png');
+              copyIcon(bestSize, dstPath);
             }
             if (infoPlistXml) {
               function findArrayNode(key) {
