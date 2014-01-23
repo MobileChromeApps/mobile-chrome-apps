@@ -9,6 +9,8 @@ var helpers = require('org.chromium.common.helpers');
 
 var manifestJson;
 
+exports.platgform = cordova.platform;
+
 exports.onSuspend = new Event('onSuspend');
 exports.onInstalled = new Event('onInstalled');
 exports.onStartup = new Event('onStartup');
