@@ -590,7 +590,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
         } else {
           var configfile = data
               .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
-              .replace(/__APP_ID__/, (manifest.appId) || "com.your.company.HelloWorld")
+              .replace(/__APP_PACKAGE_ID__/, (manifest.packageId) || "com.your.company.HelloWorld")
               .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
               .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
               .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
@@ -674,6 +674,7 @@ function prePrepareCommand() {
             var widget = tree.getroot();
             if (widget.tag == 'widget') {
               widget.attrib.version = manifest.version;
+              widget.attrib.id = manifest.packageId;
             }
 
             var name = tree.find('./name');
@@ -719,7 +720,7 @@ function prePrepareCommand() {
   eventQueue.push(installPluginsStep);
 }
 
-function updateAppCommand() {
+function postPrepareCommand() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
@@ -1020,7 +1021,7 @@ function main() {
       prePrepareCommand();
     },
     'update-app': function() {
-      updateAppCommand();
+      postPrepareCommand();
     },
     'init': function() {
       toolsCheck();
