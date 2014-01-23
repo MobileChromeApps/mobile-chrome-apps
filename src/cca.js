@@ -720,6 +720,8 @@ function prePrepareCommand() {
   eventQueue.push(installPluginsStep);
 }
 
+/******************************************************************************/
+
 function postPrepareCommand() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
@@ -918,13 +920,24 @@ function postPrepareCommand() {
     };
   }
 
+  function mergeManifests(platform) {
+    return function (callback) {
+      var root = assetDirForPlatform(platform);
+      getManifest(root, function(manifest) {
+        fs.writeFile(path.join(root, 'manifest.json'), JSON.stringify(manifest), callback);
+      });
+    };
+  }
+
   if (hasAndroid) {
     eventQueue.push(moveI18NMessagesDir('android'));
     eventQueue.push(copyIconAssetsStep('android'));
+    eventQueue.push(mergeManifests('android'));
   }
   if (hasIos) {
     eventQueue.push(moveI18NMessagesDir('ios'));
     eventQueue.push(copyIconAssetsStep('ios'));
+    eventQueue.push(mergeManifests('ios'));
   }
 }
 
