@@ -964,6 +964,7 @@ function main() {
   parseCommandLine();
   var command = commandLineFlags._[0];
   var appId = commandLineFlags._[1] || '';
+  var packageVersion = require('../package').version;
 
   if (commandLineFlags.v) {
     command = 'version';
@@ -1002,8 +1003,7 @@ function main() {
       createCommand(appId, commandLineFlags.android, commandLineFlags.ios);
     },
     'version': function() {
-      var package = require('../package');
-      console.log(package.version);
+      console.log(packageVersion);
     },
     'help': function() {
       optimist.showHelp(console.log);
@@ -1030,6 +1030,9 @@ function main() {
     cordova.config(projectRoot, CORDOVA_CONFIG_JSON);
   }
   if (commandActions.hasOwnProperty(command)) {
+    if (command != 'version') {
+      console.log('cca v' + packageVersion);
+    }
     if (commandLineFlags.d) {
       cordova.on('verbose', console.log);
       require('plugman').on('verbose', console.log);
@@ -1037,6 +1040,7 @@ function main() {
     commandActions[command]();
     pump();
   } else if (cordovaCommands[command]) {
+    console.log('cca v' + packageVersion);
     console.log('Running cordova ' + command);
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
     var CLI = require('../node_modules/cordova/src/cli');
