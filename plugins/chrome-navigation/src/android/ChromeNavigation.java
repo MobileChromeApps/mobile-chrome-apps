@@ -21,11 +21,6 @@ public class ChromeNavigation extends CordovaPlugin {
             Intent systemBrowserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             cordova.getActivity().startActivity(systemBrowserIntent);
             return true;
-        } else if (url.startsWith("chrome-extension:")) {
-            // Assume this is someone refreshing via remote debugger.
-            Log.i(LOG_TAG, "location.reload() detected. Reloading via chromeapp.html");
-            webView.loadUrl(Config.getStartUrl());
-            return true;
         }
         return false;
     }
