@@ -881,7 +881,8 @@ function updateAppCommand() {
                   var imgName = path.basename(dstPath).replace(/\..*?$/, '');
                   delete iPadFiles[imgName];
                   delete iPhoneFiles[imgName];
-                  if (fs.existsSync(dstPath)) {
+                  // TODO: need to remove the iOS assets from the Xcode project file (ugh).
+                  if (platform == 'android' && fs.existsSync(dstPath)) {
                     fs.unlinkSync(dstPath);
                   }
                 }
