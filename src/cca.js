@@ -813,15 +813,26 @@ function updateAppCommand() {
               "72": [path.join('res','drawable-hdpi','icon.png')],
               "96": [path.join('res','drawable-xhdpi','icon.png'),
                      path.join('res','drawable','icon.png')],
+              "144": [path.join('res','drawable-xxhdpi','icon.png')],
+              "192": [path.join('res','drawable-xxxhdpi','icon.png')]
             };
           } else if (platform === "ios") {
             var platforms = require('cordova/platforms');
             var parser = new platforms.ios.parser(path.join('platforms','ios'));
             iconMap = {
+              "29": [path.join(parser.originalName, 'Resources','icons','icon-small.png')],
+              "40": [path.join(parser.originalName, 'Resources','icons','icon-40.png')],
+              "50": [path.join(parser.originalName, 'Resources','icons','icon-50.png')],
               "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
+              "58": [path.join(parser.originalName, 'Resources','icons','icon-small@2x.png')],
               "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
+              "76": [path.join(parser.originalName, 'Resources','icons','icon-76.png')],
+              "80": [path.join(parser.originalName, 'Resources','icons','icon-40@2x.png')],
+              "100": [path.join(parser.originalName, 'Resources','icons','icon-50@2x.png')],
               "114": [path.join(parser.originalName, 'Resources','icons','icon@2x.png')],
-              "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')]
+              "120": [path.join(parser.originalName, 'Resources','icons','icon-60@2x.png')],
+              "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')],
+              "152": [path.join(parser.originalName, 'Resources','icons','icon-76@2x.png')]
             };
           }
           if (iconMap) {
