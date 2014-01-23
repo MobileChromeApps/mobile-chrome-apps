@@ -120,6 +120,10 @@ function fatal(msg) {
   exit(1);
 }
 
+function fixPathSlashes(p) {
+  return isWindows ? p.replace(/\//g, '\\') : p;
+}
+
 function colorizeConsole() {
   var origWarn = console.warn;
   console.warn = function() {
@@ -705,17 +709,17 @@ function prePrepareCommand() {
               widget.attrib.version = manifest.version;
             }
 
-            var name = tree.findall('./name');
-            if (name.length) name[0].text = manifest.name;
+            var name = tree.find('./name');
+            if (name) name.text = manifest.name;
 
-            var description = tree.findall('./description');
-            if (description.length) description[0].text = manifest.description;
+            var description = tree.find('./description');
+            if (description) description.text = manifest.description;
 
-            var author = tree.findall('./author');
-            if (author.length) author[0].text = manifest.author;
+            var author = tree.find('./author');
+            if (author) author.text = manifest.author;
 
-            var content = tree.findall('./content');
-            if (content.length) content[0].attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
+            var content = tree.find('./content');
+            if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
 
             var access = widget.findall('access');
             access.forEach(function(elem, index) {
@@ -806,6 +810,27 @@ function updateAppCommand() {
       readManifest('www/manifest.json', function(manifest) {
         if (manifest && manifest.icons) {
           var iconMap = {};
+          var iPhoneFiles = {
+              'icon-40': true,
+              'icon-small': true,
+              'icon.png': true,
+              'icon@2x': true,
+              'icon-72': true,
+              'icon-72@2x': true
+          };
+          var iPadFiles = {
+              'icon-small': true,
+              'icon-40': true,
+              'icon-50': true,
+              'icon-76': true,
+              'icon': true,
+              'icon@2x': true,
+              'icon-72': true,
+              'icon-72@2x': true
+          };
+          var infoPlistXml = null;
+          var infoPlistPath = null;
+
           if (platform === "android") {
             iconMap = {
               "36": [path.join('res','drawable-ldpi','icon.png')],
@@ -825,6 +850,7 @@ function updateAppCommand() {
               "50": [path.join(parser.originalName, 'Resources','icons','icon-50.png')],
               "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
               "58": [path.join(parser.originalName, 'Resources','icons','icon-small@2x.png')],
+              "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
               "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
               "76": [path.join(parser.originalName, 'Resources','icons','icon-76.png')],
               "80": [path.join(parser.originalName, 'Resources','icons','icon-40@2x.png')],
@@ -834,24 +860,65 @@ function updateAppCommand() {
               "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')],
               "152": [path.join(parser.originalName, 'Resources','icons','icon-76@2x.png')]
             };
+            infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+            infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
           }
           if (iconMap) {
             //console.log('## Copying icons for ' + platform);
             for (size in iconMap) {
-              if (manifest.icons[size]) {
-                for (var i=0; i < iconMap[size].length; i++) {
+              for (var i=0; i < iconMap[size].length; i++) {
+                var dstPath = path.join('platforms', platform, iconMap[size][i]);
+                if (manifest.icons[size]) {
                   //console.log("Copying " + size + "px icon file");
-                  copyFile(path.join('www', manifest.icons[size]),
-                           path.join('platforms', platform, iconMap[size][i]),
+                  shelljs.mkdir('-p', path.dirname(dstPath));
+                  copyFile(path.join('www', fixPathSlashes(manifest.icons[size])), dstPath,
                            function(err) {
                              if (err) {
                                console.log("Error copying " + size + "px icon file");
                              }
                            });
+                } else {
+                  var imgName = path.basename(dstPath).replace(/\..*?$/, '');
+                  delete iPadFiles[imgName];
+                  delete iPhoneFiles[imgName];
+                  if (fs.existsSync(dstPath)) {
+                    fs.unlinkSync(dstPath);
+                  }
                 }
-              } else {
-                //console.log("No " + size + "px icon file declared");
               }
+            }
+            if (infoPlistXml) {
+              function findArrayNode(key) {
+                var foundNode = null;
+                var foundKey = 0;
+                infoPlistXml.iter('*', function(e) {
+                  if (foundKey == 0) {
+                    if (e.text == key) {
+                      foundKey = 1;
+                    }
+                  } else if (foundKey == 1) {
+                    if (e.text == 'CFBundleIconFiles') {
+                      foundKey = 2;
+                    }
+                  } else if (foundKey == 2) {
+                    if (e.tag == 'array') {
+                      foundNode = e;
+                      foundKey = 3;
+                    }
+                  }
+                });
+                return foundNode;
+              }
+              function setValues(key, vals) {
+                var node = findArrayNode(key);
+                node.clear();
+                for (var imgName in vals) {
+                  et.SubElement(node, 'string').text = imgName;
+                }
+              }
+              setValues('CFBundleIcons', iPhoneFiles);
+              setValues('CFBundleIcons~ipad', iPadFiles);
+              fs.writeFileSync(infoPlistPath, et.tostring(infoPlistXml.getroot(), {indent: 8}), 'utf8');
             }
           }
         }
