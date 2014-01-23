@@ -13,6 +13,7 @@ Version 0.10.0+ is required.
 * Available from [nodejs.org](http://nodejs.org).
 * To avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm).
 
+Example:
 
     curl https://raw.github.com/creationix/nvm/master/install.sh | sh
     source ~/.bash_profile
