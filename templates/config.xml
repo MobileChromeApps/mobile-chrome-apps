@@ -16,6 +16,7 @@
     <preference name="KeyboardShrinksView" value="true" />
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarBackgroundColor" value="#000000" />
+    <preference name="iosPersistentFileLocation" value="Library" />
 
     <content src="plugins/org.chromium.bootstrap/chromeapp.html" />
 </widget>
