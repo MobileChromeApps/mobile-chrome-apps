@@ -143,11 +143,11 @@ exports = module.exports = {
             projectRoot = this.isCordova();
 
         if (!projectRoot) {
-            return new Error('Current working directory is not a Cordova-based project.');
+            throw new CordovaError('Current working directory is not a Cordova-based project.');
         }
         var projectPlatforms = this.listPlatforms(projectRoot);
         if (projectPlatforms.length === 0) {
-            return new Error('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            throw new CordovaError('No platforms added to this project. Please use `cordova platform add <platform>`.');
         }
         /**
          * Current Desired Arguments

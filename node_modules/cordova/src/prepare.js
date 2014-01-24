@@ -43,9 +43,6 @@ module.exports = function prepare(options) {
     }
 
     options = cordova_util.preProcessOptions(options);
-    if (options.constructor.name === "Error") {
-        return Q.reject(options);
-    }
 
     var xml = cordova_util.projectConfig(projectRoot);
     var paths = options.platforms.map(function(p) {

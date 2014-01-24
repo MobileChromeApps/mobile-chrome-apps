@@ -24,7 +24,6 @@ var cordova_util = require('./util'),
     config_parser = require('./config_parser'),
     hooker        = require('./hooker'),
     fs = require('fs'),
-    util = require('util'),
     http = require("http"),
     url = require("url"),
     mime = require("mime"),
@@ -46,7 +45,7 @@ function launchServer(projectRoot, port) {
         }
         function doRoot() {
             response.writeHead(200, {"Content-Type": "text/html"});
-            var config = new cordova_util.config_parser(path.join(projectRoot, "www/config.xml"));
+            var config = new cordova_util.config_parser(cordova_util.projectConfig(projectRoot));
             response.write("<html><head><title>"+config.name()+"</title></head><body>");
             response.write("<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>");
             for (var c in {"name": true, "packageName": true, "version": true}) {

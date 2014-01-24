@@ -28,14 +28,20 @@ Project-Level Commands
     plugin(s) [{add|remove|rm} <PATH|URI>] .... add or remove a plugin from the specified PATH or URI, OR
               [{ls|list}] ..................... list all currently installed plugins
               [search <keyword1 keyword2...>] . search the plugin registry for plugins matching the keywords
+
     prepare [PLATFORM..] ...................... copies files for specified platforms, or all platforms,
                                                 so that the project is ready to build in each SDK
+
     compile [PLATFORM..] ...................... builds the app for specified platforms, or all platforms
+
     build [PLATFORM...] ....................... shortcut for prepare, then compile
-    emulate [PLATFORM...] ..................... deploys app in specified (or all) platform emulator(s),
-                                                opening each emulator if necessary
-    run [PLATFORM...] ......................... deploys app on specified (or all) platform devices, which
-                                                must be properly connected and configured in each SDK
+
+    run [--debug|--release]
+        [--device|--emulator|--target=FOO]
+        [PLATFORM] ............................ deploys app on specified platform devices / emulators
+
+    emulate [PLATFORM...] ..................... alias for "run --emulator"
+
     serve [PORT] .............................. runs a local web server for www/ assets. Port defaults to 8000.
                                                 Access projects at: http://HOST_IP:PORT/PLATFORM/www
 

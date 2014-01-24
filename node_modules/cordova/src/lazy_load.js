@@ -44,6 +44,7 @@ module.exports = {
     // Returns a promise for the path to the lazy-loaded directory.
     custom:function(url, id, platform, version) {
         var download_dir;
+        var tmp_dir;
         var lib_dir;
 
         // Return early for already-cached remote URL, or for local URLs.
@@ -79,7 +80,13 @@ module.exports = {
                     proxy = conf.get('proxy');
                 }
 
-                shell.mkdir('-p', download_dir);
+                // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
+                // fails in this case with "EXDEV, cross-device link not permitted".
+                tmp_subidr = 'tmp_' + id + '_' + process.pid + '_' + (new Date).valueOf();
+                tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
+                shell.rm('-rf', tmp_dir);
+                shell.mkdir('-p', tmp_dir);
+
                 var size = 0;
                 var request_options = {uri:url};
                 if (proxy) {
@@ -89,10 +96,10 @@ module.exports = {
                 events.emit('log', 'Downloading ' + id + ' library for ' + platform + '...');
                 var req = request.get(request_options, function(err, res, body) {
                     if (err) {
-                        shell.rm('-rf', download_dir);
+                        shell.rm('-rf', tmp_dir);
                         d.reject(err);
                     } else if (res.statusCode != 200) {
-                        shell.rm('-rf', download_dir);
+                        shell.rm('-rf', tmp_dir);
                         d.reject(new Error('HTTP error ' + res.statusCode + ' retrieving version ' + version + ' of ' + id + ' for ' + platform));
                     } else {
                         size = body.length;
@@ -100,18 +107,19 @@ module.exports = {
                 });
 
                 req.pipe(zlib.createUnzip())
-                .pipe(tar.Extract({path:download_dir}))
+                .pipe(tar.Extract({path:tmp_dir}))
                 .on('error', function(err) {
-                    shell.rm('-rf', download_dir);
+                    shell.rm('-rf', tmp_dir);
                     d.reject(err);
                 })
                 .on('end', function() {
                     events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
                     events.emit('log', 'Download complete');
-                    var entries = fs.readdirSync(download_dir);
-                    var entry = path.join(download_dir, entries[0]);
+                    var entries = fs.readdirSync(tmp_dir);
+                    var entry = path.join(tmp_dir, entries[0]);
+                    shell.mkdir('-p', download_dir);
                     shell.mv('-f', path.join(entry, (platform=='blackberry10'?'blackberry10':''), '*'), download_dir);
-                    shell.rm('-rf', entry);
+                    shell.rm('-rf', tmp_dir);
                     d.resolve(hooker.fire('after_library_download', {
                         platform:platform,
                         url:url,

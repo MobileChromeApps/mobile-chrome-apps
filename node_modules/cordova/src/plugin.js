@@ -24,6 +24,7 @@ module.exports = function plugin(command, targets, opts) {
         hooker        = require('./hooker'),
         config        = require('./config'),
         Q             = require('q'),
+        CordovaError  = require('./CordovaError'),
         events        = require('./events');
 
     var projectRoot = cordova_util.cdProjectRoot(),
@@ -59,7 +60,7 @@ module.exports = function plugin(command, targets, opts) {
     plugins = cordova_util.findPlugins(pluginPath);
     if (!targets || !targets.length) {
         if (command == 'add' || command == 'rm') {
-            return Q.reject(new Error('You need to qualify `add` or `remove` with one or more plugins!'));
+            return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more plugins!'));
         } else {
             targets = [];
         }
@@ -80,7 +81,7 @@ module.exports = function plugin(command, targets, opts) {
     switch(command) {
         case 'add':
             if (!targets || !targets.length) {
-                return Q.reject(new Error('No plugin specified. Please specify a plugin to add. See "plugin search".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See "plugin search".'));
             }
 
             var config_json = config(projectRoot, {});
@@ -142,14 +143,14 @@ module.exports = function plugin(command, targets, opts) {
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
-                return Q.reject(new Error('No plugin specified. Please specify a plugin to remove. See "plugin list".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See "plugin list".'));
             }
             return hooks.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                        return Q.reject(new Error('Plugin "' + target + '" is not present in the project. See "plugin list".'));
+                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See "plugin list".'));
                     }
 
                     var targetPath = path.join(pluginPath, target);

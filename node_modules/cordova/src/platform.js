@@ -25,6 +25,7 @@ var config            = require('./config'),
     hooker            = require('./hooker'),
     events            = require('./events'),
     lazy_load         = require('./lazy_load'),
+    CordovaError      = require('./CordovaError'),
     Q                 = require('q'),
     platforms         = require('../platforms'),
     child_process     = require('child_process'),
@@ -43,13 +44,13 @@ module.exports = function platform(command, targets) {
         var err;
         targets.forEach(function(t) {
             if (!(t in platforms)) {
-                err = new Error('Platform "' + t + '" not recognized as a core cordova platform. See "platform list".');
+                err = new CordovaError('Platform "' + t + '" not recognized as a core cordova platform. See "platform list".');
             }
         });
         if (err) return Q.reject(err);
     } else {
         if (command == 'add' || command == 'rm') {
-            return Q.reject(new Error('You need to qualify `add` or `remove` with one or more platforms!'));
+            return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more platforms!'));
         }
     }
 
@@ -62,7 +63,7 @@ module.exports = function platform(command, targets) {
     switch(command) {
         case 'add':
             if (!targets || !targets.length) {
-                return Q.reject(new Error('No platform specified. Please specify a platform to add. See "platform list".'));
+                return Q.reject(new CordovaError('No platform specified. Please specify a platform to add. See "platform list".'));
             }
             var config_json = config.read(projectRoot);
 
@@ -88,7 +89,7 @@ module.exports = function platform(command, targets) {
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
-                return Q.reject(new Error('No platform[s] specified. Please specify platform[s] to remove. See "platform list".'));
+                return Q.reject(new CordovaError('No platform[s] specified. Please specify platform[s] to remove. See "platform list".'));
             }
             return hooks.fire('before_platform_rm', opts)
             .then(function() {
@@ -106,15 +107,15 @@ module.exports = function platform(command, targets) {
         case 'up':
             // Shell out to the update script provided by the named platform.
             if (!targets || !targets.length) {
-                return Q.reject(new Error('No platform specified. Please specify a platform to update. See "platform list".'));
+                return Q.reject(new CordovaError('No platform specified. Please specify a platform to update. See "platform list".'));
             } else if (targets.length > 1) {
-                return Q.reject(new Error('Platform update can only be executed on one platform at a time.'));
+                return Q.reject(new CordovaError('Platform update can only be executed on one platform at a time.'));
             } else {
                 var plat = targets[0];
                 var platformPath = path.join(projectRoot, 'platforms', plat);
                 var installed_platforms = cordova_util.listPlatforms(projectRoot);
                 if (installed_platforms.indexOf(plat) < 0) {
-                    return Q.reject(new Error('Platform "' + plat + '" is not installed. See "platform list".'));
+                    return Q.reject(new CordovaError('Platform "' + plat + '" is not installed. See "platform list".'));
                 }
 
                 function copyCordovaJs() {
@@ -204,12 +205,12 @@ module.exports = function platform(command, targets) {
 
 module.exports.supports = function(project_root, name) {
     // required parameters
-    if (!name) return Q.reject(new Error('requires a platform name parameter'));
+    if (!name) return Q.reject(new CordovaError('requires a platform name parameter'));
 
     // check if platform exists
     var platform = platforms[name];
     if (!platform) {
-        return Q.reject(new Error(util.format('"%s" platform does not exist', name)));
+        return Q.reject(new CordovaError(util.format('"%s" platform does not exist', name)));
     }
 
     // look up platform meta-data parser
@@ -236,7 +237,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
 
     // Check if output directory already exists.
     if (fs.existsSync(output)) {
-        return Q.reject(new Error('Platform ' + target + ' already added'));
+        return Q.reject(new CordovaError('Platform ' + target + ' already added'));
     } else {
         // Make sure we have minimum requirements to work with specified platform
         events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');

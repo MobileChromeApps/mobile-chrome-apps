@@ -26,13 +26,12 @@ var cordova_util      = require('./util'),
     events            = require('./events'),
     Q                 = require('q'),
     child_process     = require('child_process'),
-    DEFAULT_OPTIONS   = ["--device"],
     os                = require('os');
 
 // Returns a promise.
 function shell_out_to_run(projectRoot, platform, options) {
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'run'),
-        args = options.length ? DEFAULT_OPTIONS.concat(options) : DEFAULT_OPTIONS,
+        args = options || [],
         d = Q.defer(),
         errors = "",
         child;
@@ -85,9 +84,6 @@ module.exports = function run(options) {
     }
 
     options = cordova_util.preProcessOptions(options);
-    if (options.constructor.name === "Error") {
-        return Q.reject(options);
-    }
 
     hooks = new hooker(projectRoot);
     return hooks.fire('before_run', options)

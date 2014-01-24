@@ -33,9 +33,6 @@ module.exports = function build(options) {
     }
 
     options = cordova_util.preProcessOptions(options);
-    if (options.constructor.name === "Error") {
-        return Q.reject(options);
-    }
 
     // fire build hooks
     var hooks = new hooker(projectRoot);

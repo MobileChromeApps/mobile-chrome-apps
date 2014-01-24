@@ -26,6 +26,7 @@ var path          = require('path'),
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
+    CordovaError  = require('./CordovaError'),
     util          = require('./util');
 
 var DEFAULT_NAME = "HelloCordova",
@@ -75,7 +76,7 @@ module.exports = function create (dir, id, name, cfg) {
     }
 
     if (fs.existsSync(dir) && !sanedircontents(dir)) {
-        return Q.reject(new Error('Path already exists and is not empty: ' + dir));
+        return Q.reject(new CordovaError('Path already exists and is not empty: ' + dir));
     }
 
     // Create basic project structure.
