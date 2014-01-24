@@ -945,31 +945,49 @@ function postPrepareCommand() {
 /******************************************************************************/
 
 function parseCommandLine() {
+  var pathToApp = '<' + path.join('path', 'to', 'app') + '>';
   commandLineFlags = optimist
-      .usage('Usage: $0 command [commandArgs]\n' +
+      .usage('Usage: $0 <command> [commandArgs]\n' +
              '\n' +
-             'Valid Commands:\n' +
+             'checkenv - Ensures that your environment is setup correctly.\n' +
+             '    Example:\n' +
+             '        cca checkenv\n' +
              '\n' +
-             'init - Ensures that your environment is setup correctly.\n' +
-             '    Examples:\n' +
-             '        cca init.\n' +
-             '\n' +
-             'create [--android] [--ios] [--copy-from=path | --link-to=path] - Creates a new project.\n' +
-             '    Flags:\n' +
+             'create <directory> [--android] [--ios] [--copy-from=' + pathToApp + ' | --link-to=' + pathToApp + '] - Creates a project.\n' +
+             '    Details:\n' +
+             '        <directory>: The directory to create the project in.\n' +
              '        --android: Add the Android platform (default if android SDK is detected).\n' +
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
-             '        --copy-from=' + path.join('path', 'to', 'app') + ': Create a project based on the given Chrome App.\n' +
-             '        --link-to=' + path.join('path', 'to', 'app') + ': Create a project that symlinks to the given Chrome App.\n' +
-             '    Examples:\n' +
-             '        cca create org.chromium.Demo\n' +
-             '        cca create org.chromium.Spec --android --link-to=' + path.join('path', 'to', 'app') + '\n' +
-             'Cordova commands will be forwarded directly to cordova.\n' +
-             '    Commands:\n' +
-             '        build, compile, emulate, platform(s), plugin(s), prepare, run\n' +
-             '    Examples:\n' +
-             '        cca platform add ios\n' +
-             '        cca build ios\n' +
-             '    Run "cordova help" for details.\n'
+             '        --copy-from=' + pathToApp + ': Create a project based on the given Chrome App.\n' +
+             '        --link-to=' + pathToApp + ': Create a project that symlinks to the given Chrome App.\n' +
+             '\n' +
+             'platform [{add|remove|rm} <PLATFORM>] ..... add or remove a specified PLATFORM, OR\n' +
+             '         [{list|ls}] ...................... list all installed and available platforms\n' +
+             '         [{update|up} <PLATFORM>] ......... update the version of Cordova used for a specific\n' +
+             '                                            PLATFORM; use after updating the CLI.\n' +
+             '\n' +
+             'plugin [{add|remove|rm} <PATH|URI>] ....... add or remove a plugin from the specified PATH or URI, OR\n' +
+             '       [{ls|list}] ........................ list all currently installed plugins\n' +
+             '       [search <keyword1 keyword2...>] .... search the plugin registry for plugins matching the keywords\n' +
+             '\n' +
+             'prepare [PLATFORM..] ...................... copies files for specified platforms, or all platforms,\n' +
+             '                                            so that the project is ready to build in each SDK\n' +
+             '\n' +
+             'build [PLATFORM...] ....................... shortcut for prepare, then compile\n' +
+             '\n' +
+             'run [--debug|--release]\n' +
+             '    [--device|--emulator|--target=FOO]\n' +
+             '    [PLATFORM] ............................ deploys app on specified platform devices / emulators\n' +
+             '\n' +
+             'serve [PORT] .............................. runs a local web server for www/ assets. Port defaults to 8000.\n' +
+             '                                            Access projects at: http://HOST_IP:PORT/PLATFORM/www\n' +
+             'Examples:\n' +
+             '    cca create MyApp\n' +
+             '    cca create MyApp --link-to=' + pathToApp + '\n' +
+             '    cca prepare\n' +
+             '    cca run android --device\n' +
+             '    cca run ios --emulator\n' +
+             '    cca plugin ls'
       ).options('h', {
           alias: 'help',
           desc: 'Show usage message.'
