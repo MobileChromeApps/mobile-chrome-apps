@@ -1110,7 +1110,6 @@ function main() {
     pump();
   } else if (cordovaCommands[command]) {
     console.log('cca v' + packageVersion);
-    console.log('Running cordova ' + command);
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
     var CLI = require('../node_modules/cordova/src/cli');
     new CLI(process.argv);
