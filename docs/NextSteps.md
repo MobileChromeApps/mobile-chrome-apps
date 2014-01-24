@@ -12,7 +12,7 @@ For Android, these sizes are needed:
     36px, 48px, 78px, 96px
 
 For iOS, these sizes are needed:
-    57px, 72px, 114px, 144px
+    57px, 72px; plus the corresponding 2x version.
 
 A complete icon list would look like this in your `manifest.json` file:
 
@@ -30,7 +30,19 @@ A complete icon list would look like this in your `manifest.json` file:
 
 The icons will be copied to the appropriate places for each platform every time you run `cca prepare`.
 
+Note: iOS has several additional icons requirements that you'll need to manually copy to  `platforms/ios/[AppName]/Resources/icons`.  Those sizes include:
+    29px, 40px, 50px, 60px, 76px; plus the corresponding 2x version
+
 ### Splash Screens
+
+Apps on iOS show a brief splash screen as the app is loading.  A set of default Cordova splash screens are included in `platforms/ios/[AppName]/Resources/splash`.  
+
+The sizes needed are:
+  320px x 480px + 2x 
+  768px x 1024px + 2x (iPad portrait)
+  1024px x 768px + 2x (iPad landscape)
+  640px x 1146px
+
 
 ## Publishing your App
 
