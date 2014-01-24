@@ -485,19 +485,28 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     if (!sourceArg) {
       srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
     } else {
-      var dirsToTry = [
-        sourceArg && path.resolve(origDir, resolveTilde(sourceArg)),
-        sourceArg === 'spec' && path.join(ccaRoot, 'chrome-cordova', 'spec', 'www') // TODO: fix this
-      ];
+      // Strip off manifest.json from path (its containing dir must be the root of the app)
+      if (path.basename(sourceArg) === 'manifest.json') {
+        sourceArg = path.dirname(sourceArg);
+      }
+      // Always check the sourceArg as a relative path, even if its a special value (like 'spec')
+      var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
+
+      // Special values for sourceArg we resolve to predefined locations
+      if (sourceArg === 'spec') {
+        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
+      } else if (sourceArg === 'default') {
+        dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
+      }
+
+      // Find the first valid path in our list (valid paths contain a manifest.json file)
       var foundManifest = false;
       for (var i = 0; i < dirsToTry.length; i++) {
-        if (dirsToTry[i]) {
-          srcAppDir = dirsToTry[i];
-          console.log('Searching for Chrome app source in ' + srcAppDir);
-          if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
-            foundManifest = true;
-            break;
-          }
+        srcAppDir = dirsToTry[i];
+        console.log('Searching for Chrome app source in ' + srcAppDir);
+        if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
+          foundManifest = true;
+          break;
         }
       }
       if (!srcAppDir) {
