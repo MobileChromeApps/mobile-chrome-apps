@@ -38,9 +38,13 @@ iOS development can only be done on OS X.
 * Install Java JDK 7: [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * Install the [Android SDK and Developer Tools](http://developer.android.com/sdk/index.html).
   * Add `sdk/tools` and `sdk/platform-tools` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable.
-  * _OS X Only_ - The version of Eclipse that comes with the Android SDK requires JRE 6. If opening Eclipse.app does not prompt you to install JRE 6, get it through the Mac App Store.
 * Install [Apache Ant](http://ant.apache.org/bindownload.cgi)
   * Add `apache-ant-x.x.x/bin` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable.
+
+_OS X_ - The version of Eclipse that comes with the Android SDK requires JRE 6. If opening Eclipse.app does not prompt you to install JRE 6, get it through the Mac App Store.
+
+_Linux_ - The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`
+
 
 ## Step 2: Install cca
 
