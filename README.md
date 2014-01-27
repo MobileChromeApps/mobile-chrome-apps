@@ -1,31 +1,28 @@
 # [Run Chrome Apps on mobile using Apache Cordova](//github.com/MobileChromeApps/mobile-chrome-apps)
 
-`cca` is a command-line tool for porting [Chrome Packaged Apps](http://developer.chrome.com/apps) to Android and iOS hybrid web applications, through [Apache Cordova](http://cordova.apache.org/).
+`cca` is a command-line tool for porting [Chrome Apps](http://developer.chrome.com/apps) to Android and iOS through [Apache Cordova](http://cordova.apache.org/).
 
 ## Overview
 
-* You're excited about [Chrome Packaged Apps](http://developer.chrome.com/apps) for Windows, OSX, Linux, and ChromeOS. Sweet!
-* You've discovered this toolkit for porting a Chrome Packaged App to Android & iOS as native apps.
-* Follow our guide (below) to import your existing app (or start fresh).
-* You test out your app on devices & make mobile-specific UX enhancements.
-* Publish to the Android Play Store or iOS App Store.
-* Profit!
-
-## Requirements
-
-Android 4.x+, iOS 6+.
+* Import your existing app, or start with a new one.
+* Test out your app & make mobile-specific UX enhancements.
+* Publish to the Android Play Store and / or the iOS App Store.
 
 ## Documentation
 
-You'll probably want to start with the [Installation Guide](docs/Installation.md).
-
-Follow that up with the [Getting Started Guide](docs/GettingStarted.md).
-
 See what APIs are supported on the [API Status Page](docs/APIStatus.md).
 
-Find all our documentation in the [`docs/`](docs/) directory.
+Get up and running by following the [Installation Guide](docs/Installation.md).
+
+Create your mobile app by following the [Getting Started Guide](docs/GettingStarted.md).
+
+Give yourself a pat on the back, and then read the through the [Next Steps](docs/NextSteps.md).
 
 
-## Discussion
+## Feedback
 
-There is a [public mailing list](mailto:mobile-chrome-apps@googlegroups.com) (mobile-chrome-apps@googlegroups.com) for discussion about this toolkit.  You can also visit the [groups page](//groups.google.com/forum/?fromgroups#!forum/mobile-chrome-apps).
+There are lots of ways to give feedback:
+* GitHub [issue tracker](https://github.com/MobileChromeApps/mobile-chrome-apps/issues)
+* Chrome Apps [developer forum](http://groups.google.com/a/chromium.org/group/chromium-apps/topics)
+* Stack Overflow, tagged as [google-chrome-app](http://stackoverflow.com/questions/tagged/google-chrome-app)
+* Our G+ [Developers Page](https://plus.google.com/+GoogleChromeDevelopers/)
