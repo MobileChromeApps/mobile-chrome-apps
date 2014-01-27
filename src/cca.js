@@ -296,9 +296,12 @@ function toolsCheck() {
       } else {
           console.warn('Android 4.4 (Google APIs) Platform is not installed.');
       }
-      callback();
+      exec('ant -version', callback, function() {
+        console.warn('Ant not detected on your PATH.');
+        callback();
+      }, true);
     }, function() {
-      console.log('Android SDK not detected on your PATH.');
+      console.warn('Android SDK not detected on your PATH.');
       callback();
     }, true);
   }
@@ -323,11 +326,7 @@ function toolsCheck() {
   }
   function checkAtLeastOneTool(callback) {
     if (!hasAndroidPlatform && !hasXcode) {
-      if (process.platform == 'darwin') {
-        fatal('No usable build environment could be found. Please install either XCode or the Android SDK and try again.');
-      } else {
-        fatal('No usable build environment could be found. Please install the Android SDK, make sure that android is on your PATH, and try again.');
-      }
+      fatal('No usable build environment could be found. Please refer to our installation guide: http://goo.gl/KWZFSe');
     }
     callback();
   }
