@@ -12,9 +12,9 @@ help
 checkenv
 .Nm cca
 create
-.Ar package_name
-.Op Fl -copy-from Ns = Ns Ar directory
-.Op Fl -link-to Ns = Ns Ar directory
+.Ar new_project_directory
+.Op Fl -copy-from Ns = Ns Ar source_directory
+.Op Fl -link-to Ns = Ns Ar source_directory
 .Nm cca
 prepare
 .Oo
@@ -36,25 +36,25 @@ for processing.
 .Ss Creating a mobile Chrome App
 .Nm cca
 create
-.Ar package_name
-.Op Fl -copy-from Ns = Ns Ar directory
-.Op Fl -link-to Ns = Ns Ar directory
+.Ar project_directory
+.Op Fl -copy-from Ns = Ns Ar source_directory
+.Op Fl -link-to Ns = Ns Ar source_directory
 .Bd -ragged -offset indent
-.Ar package_name
-should be a reverse-DNS-style package name, such as "com.google.appname" or "org.example.testapp". This command will create a new Apache Cordova Chrome App project in the current directory.
+.Ar project_directory
+will be created in the current directory, and the new Apache Cordova Chrome App project will be created within it.
 
-.Fl -copy-from Ns = Ns Ar directory
+.Fl -copy-from Ns = Ns Ar source_directory
 .Bd -ragged -offset indent
 Copy an existing Chrome packaged app from
-.Ar directory
+.Ar source_directory
 into the newly-created mobile Chrome App. After creation, the mobile and desktop apps will be separate from each other, and can be developed independently. It is an error to specify both this option as well as
 .Fl -link-to Ns .
 .Ed
 
-.Fl -link-to Ns = Ns Ar directory
+.Fl -link-to Ns = Ns Ar source_directory
 .Bd -ragged -offset indent
 Symlink the newly-created mobile Chrome App to an existing Chrome packaged app located in
-.Ar directory Ns .
+.Ar source_directory Ns .
 After creation, the mobile and desktop apps will be linked from each other, so changes in one will change the other as well. It is an error to specify both this option as well as
 .Fl -copy-from Ns .
 .Ed
@@ -132,8 +132,8 @@ to be handled by that script.
 This sequence of commands would create a new "Hello, World!" mobile Chrome App, linked to the sample code from the mobile-chrome-app-samples repository, build it and run it on a connected Android device.
 
 .Bd -literal -offset indent
-$ cca create com.example.sampleapp --link-to=~/mobile-chrome-app-samples/helloworld
-$ cd helloworld
+$ cca create sampleapp --link-to=~/mobile-chrome-app-samples/helloworld
+$ cd sampleapp
 $ cca prepare
 $ cca run android
 .Sh SEE ALSO
