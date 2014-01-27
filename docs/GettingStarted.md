@@ -1,67 +1,93 @@
 # Getting Started
 
-Please make sure you have completed the [Installation Guide](Installation.md) first.
+Please make sure you have completed [Step 1: Install your development tools](Installation.md) first.
 
-### Step 1: Create a Project
+## Step 2: Create a project
 
-    cca create <path> [--link-to=<path>|--copy-from=<path>]
+You can create a new mobile Chrome App project (named `YourApp`) by running the following command:
 
-* You may pass one of `--link-to` or `--copy-from` to build your existing chrome app for mobile.
-* The `--link-to` flag will share your existing chrome app code using a _symlink_.
-* The `--copy-from` flag will import your existing chrome app code by _copying_ the directory.
+    cca create YourApp
 
-### Step 2: Building and Running your application
+If you have already built a Chrome App and you are ready to port it to a mobile platform, you can import an existing Chrome App. The `--link-to` flag will create a _symlink_ to your existing Chrome App directory:
 
-You can build and run your application either:
-* Option A: from the command line, using the `cca` tool, or
-* Option B: by using an IDE, like `Eclipse` or `Xcode`.
+    cca create YourApp --link-to=path/to/manifest.json
 
-Both options are described below.
+If you wish to _copy_ your existing Chrome App files to the newly created cca-created folder, use the `--copy-from` flag instead:
 
-Note that you must use the command line `cca` tool with either option (specifics are described in Step 3, below).  The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
+    cca create YourApp --copy-from=path/to/manifest.json
 
-### Step 2, Option A: Using the command line
+## Step 3: Develop
 
-* To run on the iOS Simulator: `cca emulate ios`
-* To run on a connected iOS device: `cca run ios`
-  * This requires that you've set up a [Provisioning Profile](http://stackoverflow.com/questions/3362652/what-is-a-provisioning-profile-used-for-when-developing-iphone-applications) for your device.
-* To run on the Android Emulator: `cca emulate android`
-  * This requires that you've set up an emulator `avd`. You can run `android avd` to set this up.
-  * Download additional Emulator images by running `android`.
-  * To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
-* To run on a connected Android device: `cca run android`
+You can build and run your application in two ways:
+* Option A: From the command line, using the `cca` tool, or
+* Option B: By using an IDE, like Eclipse or Xcode. The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
+Both options are described below however note that the command line `cca` tool is used with both.
 
-### Step 2, Option B: Using an IDE
+### Option A: Develop and build using the command line
+
+From the root of your `cca`-generated project folder:
+
+#### Android
+* To run your app on the Android Emulator: `cca emulate android`
+  * Note: This requires that you've set up an emulator `avd`. You can run `android avd` to set this up. Download additional Emulator images by running `android`. To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
+* To run your app on a connected Android device: `cca run android`
 
 #### iOS
+* To run your app on the iOS Simulator: `cca emulate ios`
+* To run your app on a connected iOS device: `cca run ios`
+  * Note: This requires that you've set up a [Provisioning Profile](http://stackoverflow.com/questions/3362652/what-is-a-provisioning-profile-used-for-when-developing-iphone-applications) for your device.
 
-In Xcode, open the `xcodeproj` file from within the `platforms/ios/` directory.
-
-    open platforms/ios/*.xcodeproj
-
-Make sure you are building the right target.
-  * In the top left (beside Run&Stop buttons) there is a dropdown to select target project and device.  Ensure that `YourApp` is selected and _not_ `CordovaLib`.
+### Option B: Develop and build using an IDE
 
 #### Android
 
-* In Eclipse, select `File` -> `Import`
-* Choose `Android` > `Existing Android Code Into Workspace`.
-* Import from the path you just created with `cca`.
-    * You should expect to have two projects to import, one of which is `*-CordovaLib`
-* You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time automatically.
-* You will need to manage your devices/emulators the first time as well.
+1. In Eclipse, select `File` -> `Import`.
+2. Choose `Android` > `Existing Android Code Into Workspace`.
+3. Import from the path you just created with `cca`.
+    * You should expect to have two projects to import, one of which is `*-CordovaLib`.
+4. Click the Play button to run your app.
+  * You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time automatically.
+  * You will need to manage your devices/emulators the first time as well.
 
-### Step 3: Making changes to your App
+#### iOS
 
-Your HTML, CSS and JS files live within the `www` directory.
+1. Open the project in Xcode by typing the following in a terminal window:
+```
+cd YourApp
+open platforms/ios/*.xcodeproj
+```
 
-_Every time_ you change them, you _must_ run `cca prepare` from the root of your project.  Otherwise, those changes will not be reflected when running your app.
+2. Make sure you are building the right target.
+ * In the top left (beside Run and Stop buttons) there is a dropdown to select target project and device. Ensure that `YourApp` is selected and not `CordovaLib`. 
 
-## Experiencing Hiccups?
+3. Click the Play button.
 
-Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
+### Making changes to your app source code
 
-## Done?
+Your HTML, CSS, and JavaScript files live within the `www` directory of your cca project folder. In order to see your file changes reflected, you **must** run `cca prepare` from the root of your project.
 
-Check out some [next steps](NextSteps.md), or read the [API Status document](APIStatus.md).
+**iOS**: If you are using XCode, you may notice that the XCode project creates your workspace to point to `YourApp/platforms/ios/www/`. Changes to these files will be overwritten each time your run `cca prepare` so double-check that you are editing source files in the `YourApp/www` directory.
+
+### Debugging
+
+You can debug your Chrome App for Mobile the same way that you debug normal Cordova applications.
+
+### Supported Chrome APIs 
+
+We’ve made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
+
+* <a href="http://developer.chrome.com/apps/identity.html">identity</a> - sign-in users using OAuth2
+* <a href="http://developer.chrome.com/apps/payments.html">payments</a> - sell virtual goods within your mobile app
+* <a href="http://developer.chrome.com/apps/pushMessaging.html">pushMessaging</a> - push messages to your app from your server
+* <a href="http://developer.chrome.com/apps/sockets.html">sockets</a> - send and receive data over the network using TCP and UDP
+* <a href="http://developer.chrome.com/apps/notifications.html">notifications</a> (Android only) - send rich notifications from your mobile app
+* <a href="http://developer.chrome.com/apps/storage.html">storage</a> - store and retrieve key-value data locally
+* <a href="http://developer.chrome.com/apps/syncFileSystem.html">syncFileSystem</a> - store and retrieve files backed by Google Drive
+* <a href="http://developer.chrome.com/apps/alarms.html">alarms</a> - run tasks periodically
+* <a href="http://developer.chrome.com/apps/idle.html">idle</a> -  detect when the machine's idle state changes.
+* <a href="http://developer.chrome.com/apps/power.html">power</a> - override the system's power management features.
+
+You can also track the latest list of supported Chrome APIs [here](APIStatus.md).
+
+_**Done? Continue to [Step 4: Publish &raquo;](Publish.md)**_
