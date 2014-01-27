@@ -642,7 +642,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
                      wwwPath + '\n\n';
     }
-    welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/9S89rn).';
+    welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/iCaCFG).';
 
     runCmd(['prepare'], function(err) {
        if(err) {
