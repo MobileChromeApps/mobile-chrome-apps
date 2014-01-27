@@ -12,8 +12,8 @@ For Android, these sizes are needed:
 For iOS apps, the required sizes differ depending on whether you support 
 [iOS 6](https://developer.apple.com/library/ios/qa/qa1686/_index.html) vs 
 [iOS 7](https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/IconMatrix.html). The minimum number of icons required are:
-* iOS 6 - 57px, 72px, 114px, 144px;
-* iOS 7 - 72px, 120px, 152px;
+* **iOS 6**: 57px, 72px, 114px, 144px
+* **iOS 7**: 72px, 120px, 152px
 
 A complete icon list would look like this in your `manifest.json` file:
 

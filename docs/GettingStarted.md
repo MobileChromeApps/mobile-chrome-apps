@@ -12,7 +12,7 @@ If you have already built a Chrome App and you are ready to port it to a mobile 
 
     cca create YourApp --link-to=path/to/manifest.json
 
-If you wish to _copy_ your existing Chrome App files to the newly created cca-created folder, use the `--copy-from` flag instead:
+If you wish to _copy_ your existing Chrome App files to the newly created project folder, use the `--copy-from` flag instead:
 
     cca create YourApp --copy-from=path/to/manifest.json
 
@@ -22,15 +22,13 @@ You can build and run your application in two ways:
 * Option A: From the command line, using the `cca` tool, or
 * Option B: By using an IDE, like Eclipse or Xcode. The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
-Both options are described below however note that the command line `cca` tool is used with both.
-
 ### Option A: Develop and build using the command line
 
 From the root of your `cca`-generated project folder:
 
 #### Android
 * To run your app on the Android Emulator: `cca emulate android`
-  * Note: This requires that you've set up an emulator `avd`. You can run `android avd` to set this up. Download additional Emulator images by running `android`. To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
+  * Note: This requires that you've set up an emulator. You can run `android avd` to set this up. Download additional emulator images by running `android`. To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
 * To run your app on a connected Android device: `cca run android`
 
 #### iOS
@@ -67,26 +65,26 @@ open platforms/ios/*.xcodeproj
 
 Your HTML, CSS, and JavaScript files live within the `www` directory of your cca project folder. In order to see your file changes reflected, you **must** run `cca prepare` from the root of your project.
 
-**iOS**: If you are using XCode, you may notice that the XCode project creates your workspace to point to `YourApp/platforms/ios/www/`. Changes to these files will be overwritten each time your run `cca prepare` so double-check that you are editing source files in the `YourApp/www` directory.
+**iOS**: If you are using XCode, notice that the XCode project creates your workspace to point to `YourApp/platforms/ios/www/`. Changes to these files will be overwritten each time your run `cca prepare` so double-check that you are editing source files in the `YourApp/www` directory and not `platforms`.
 
 ### Debugging
 
-You can debug your Chrome App for Mobile the same way that you debug normal Cordova applications.
+You can debug your Chrome App on mobile the same way that you debug normal Cordova applications.
 
 ### Supported Chrome APIs 
 
 We’ve made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
 
-* <a href="http://developer.chrome.com/apps/identity.html">identity</a> - sign-in users using OAuth2
-* <a href="http://developer.chrome.com/apps/payments.html">payments</a> - sell virtual goods within your mobile app
-* <a href="http://developer.chrome.com/apps/pushMessaging.html">pushMessaging</a> - push messages to your app from your server
-* <a href="http://developer.chrome.com/apps/sockets.html">sockets</a> - send and receive data over the network using TCP and UDP
-* <a href="http://developer.chrome.com/apps/notifications.html">notifications</a> (Android only) - send rich notifications from your mobile app
-* <a href="http://developer.chrome.com/apps/storage.html">storage</a> - store and retrieve key-value data locally
-* <a href="http://developer.chrome.com/apps/syncFileSystem.html">syncFileSystem</a> - store and retrieve files backed by Google Drive
-* <a href="http://developer.chrome.com/apps/alarms.html">alarms</a> - run tasks periodically
-* <a href="http://developer.chrome.com/apps/idle.html">idle</a> -  detect when the machine's idle state changes.
-* <a href="http://developer.chrome.com/apps/power.html">power</a> - override the system's power management features.
+* [identity](http://developer.chrome.com/apps/identity.html) - sign-in users using OAuth2
+* [payments](http://developer.chrome.com/apps/payments.html) - sell virtual goods within your mobile app
+* [pushMessaging](http://developer.chrome.com/apps/pushMessaging.html) - push messages to your app from your server
+* [sockets](http://developer.chrome.com/apps/sockets.html) - send and receive data over the network using TCP and UDP
+* [notifications](http://developer.chrome.com/apps/notifications.html) (Android only) - send rich notifications from your mobile app
+* [storage](http://developer.chrome.com/apps/storage.html) - store and retrieve key-value data locally
+* [syncFileSystem](http://developer.chrome.com/apps/syncFileSystem.html) - store and retrieve files backed by Google Drive
+* [alarms](http://developer.chrome.com/apps/alarms.html) - run tasks periodically
+* [idle](http://developer.chrome.com/apps/idle.html) -  detect when the machine's idle state changes.
+* [power](http://developer.chrome.com/apps/power.html) - override the system's power management features.
 
 You can also track the latest list of supported Chrome APIs [here](APIStatus.md).
 

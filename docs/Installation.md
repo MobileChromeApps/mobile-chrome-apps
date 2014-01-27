@@ -57,4 +57,4 @@ Confirm that everything is installed correctly by running this command from the 
 
 You will see the version number of `cca` outputted and confirmation about your Android or iOS SDK installation.
 
-_**Done? Continue to [Step 2: Create a project &raquo;](docs/GettingStarted.md)**_
+_**Done? Continue to [Step 2: Create a project &raquo;](GettingStarted.md)**_
