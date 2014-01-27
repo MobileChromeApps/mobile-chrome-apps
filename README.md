@@ -23,6 +23,6 @@ There are a few special considerations that you should keep in mind when develop
 
 To view which Chrome APIs are supported on mobile, visit the [API Status](docs/APIStatus.md) page.
 
-Use the [ChromeADT](docs/ChromeADT.md) to preview your Chrome App on an Android device without the toolchain if you're in a hurry.
+And if you're in a hurry, use the [Chrome ADT](docs/ChromeADT.md) to preview your Chrome App on an Android device without the toolchain.
 
 _**Let's get started. Continue to [Step 1: Install your development tools &raquo;](docs/Installation.md)**_
