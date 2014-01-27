@@ -53,17 +53,3 @@ The sizes needed are:
 
 These are not currently modified by `cca`.
 
-## Publishing your App
-
-### Google Play Store (Android)
-
-### iOS App Store (iOS)
-
-## Experiencing Hiccups?
-
-Please [reach out to us](mailto:mobile-chrome-apps@googlegroups.com).
-
-## Done?
-
-Read the [API Status document](APIStatus.md).
-
