@@ -71,21 +71,4 @@ Your HTML, CSS, and JavaScript files live within the `www` directory of your cca
 
 You can debug your Chrome App on mobile the same way that you debug normal Cordova applications.
 
-### Supported Chrome APIs 
-
-We’ve made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
-
-* [identity](http://developer.chrome.com/apps/identity.html) - sign-in users using OAuth2
-* [payments](http://developer.chrome.com/apps/payments.html) - sell virtual goods within your mobile app
-* [pushMessaging](http://developer.chrome.com/apps/pushMessaging.html) - push messages to your app from your server
-* [sockets](http://developer.chrome.com/apps/sockets.html) - send and receive data over the network using TCP and UDP
-* [notifications](http://developer.chrome.com/apps/notifications.html) (Android only) - send rich notifications from your mobile app
-* [storage](http://developer.chrome.com/apps/storage.html) - store and retrieve key-value data locally
-* [syncFileSystem](http://developer.chrome.com/apps/syncFileSystem.html) - store and retrieve files backed by Google Drive
-* [alarms](http://developer.chrome.com/apps/alarms.html) - run tasks periodically
-* [idle](http://developer.chrome.com/apps/idle.html) -  detect when the machine's idle state changes.
-* [power](http://developer.chrome.com/apps/power.html) - override the system's power management features.
-
-You can also track the latest list of supported Chrome APIs [here](APIStatus.md).
-
 _**Done? Continue to [Step 4: Publish &raquo;](Publish.md)**_
