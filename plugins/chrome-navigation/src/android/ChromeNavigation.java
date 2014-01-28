@@ -27,7 +27,8 @@ public class ChromeNavigation extends CordovaPlugin {
 
     @Override
     public Object onMessage(String id, Object data) {
-        // Look for top level navigation changes
+        // Look for top level navigation changes.
+        // Using shouldOverrideUrlLoading() would be much more convenient, but it gets triggered by iframe loads :(. 
         if ("onPageStarted".equals(id)) {
             String url = data.toString();
             if (url.startsWith("chrome-extension:")) {
@@ -35,7 +36,7 @@ public class ChromeNavigation extends CordovaPlugin {
                     // Assume this is someone refreshing via remote debugger.
                     Log.i(LOG_TAG, "location.reload() detected. Reloading via " + prevUrl);
                     webView.stopLoading();
-                    webView.loadUrl(prevUrl);
+                    webView.loadUrlIntoView(prevUrl, false);
                 }
             } else {
                 prevUrl = url;
