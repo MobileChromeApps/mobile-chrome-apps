@@ -4,7 +4,7 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 
 * Layout issues with small screens, especially while in a portrait orientation.
   * _Suggested fix:_ Use [CSS media queries](http://www.html5rocks.com/en/mobile/mobifying/#toc-mediaqueries) to optimize your content for smaller screens.
-* Chrome App window sizes set via [chrome.app.window](http://developer.chrome.com/apps/app_window.html) will be ignored, instead using the device’s native dimensions.
+* Chrome App window sizes set via [chrome.app.window](http://developer.chrome.com/apps/app_window.html) will be ignored, instead using the device's native dimensions.
   * _Suggested fix:_ Remove hard-coded window dimensions; design your app with different sizes in mind.
 * Small buttons and links will be hard to tap with a finger.
   * _Suggested fix:_ Adjust your touch targets to be at least 44 x 44 points. 
@@ -16,7 +16,7 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 
 ### Supported Chrome APIs 
 
-We’ve made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
+We've made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
 
 * [identity](http://developer.chrome.com/apps/identity.html) - sign-in users using OAuth2
 * [payments](http://developer.chrome.com/apps/payments.html) - sell virtual goods within your mobile app

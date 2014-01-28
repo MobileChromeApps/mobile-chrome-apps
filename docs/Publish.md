@@ -1,6 +1,6 @@
 ## Step 4: Publish
 
-In your project’s `platforms` directory, you have two complete native projects: one for Android, and one for iOS. You can build release versions of these projects and publish them to Google Play or to the iOS App Store.
+In your project's `platforms` directory, you have two complete native projects: one for Android, and one for iOS. You can build release versions of these projects and publish them to Google Play or to the iOS App Store.
 
 ### Publish to the Play Store
 
