@@ -36,13 +36,6 @@ chromeSpec('chrome.runtime', function(runningInBackground) {
     expect(chrome.runtime.getURL('b')).toBe(prefix + 'b');
     expect(chrome.runtime.getURL('/b')).toBe(prefix + 'b');
   });
-  it('getPlatformInfo returns null for architectures', function() {
-    var getPlatformInfoCallback = function(platformInfo) {
-      expect(platformInfo.arch).toBeNull();
-      expect(platformInfo.nacl_arch).toBeNull();
-    }
-    chrome.runtime.getPlatformInfo(getPlatformInfoCallback);
-  });
   itShouldHaveAnEvent(chrome.runtime, 'onInstalled');
   itShouldHaveAnEvent(chrome.runtime, 'onStartup');
   itShouldHaveAnEvent(chrome.runtime, 'onSuspend');

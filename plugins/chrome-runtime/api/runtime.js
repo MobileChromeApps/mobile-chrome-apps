@@ -149,7 +149,7 @@ exports.__defineGetter__("id", getAppId);
 
 exports.getPlatformInfo = function(callback) {
   var platformInfo = {};
-  platformInfo.os = cordova.platformId;
+  platformInfo.os = 'cordova-' + cordova.platformId;
 
   // The other two expected members do not apply meaningfully here.
   // TODO(maxw): Or do they?
