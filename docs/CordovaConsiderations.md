@@ -34,6 +34,6 @@ However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desk
   * no getUserMedia()
   * no NaCl
 
-You can track progress from our [API Status](docs/APIStatus.md) page.
+You can track progress from our [API Status](APIStatus.md) page.
 
 _**Done? Continue to [Step 4: Publish &raquo;](Publish.md)**_
