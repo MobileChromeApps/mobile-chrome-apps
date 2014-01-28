@@ -23,15 +23,27 @@
   </js-module>
 
   <platform name="ios">
+    <source-file src="src/ios/SyncFileSystem.m" />
+    <header-file src="src/ios/SyncFileSystem.h" />
+
     <config-file target="config.xml" parent="/widget">
       <access origin="https://www.googleapis.com/drive/*" />
       <access origin="https://www.googleapis.com/upload/drive/*" />
       <access origin="https://*.googleusercontent.com/*" />
+      <feature name="SyncFileSystem">
+        <param name="ios-package" value="SyncFileSystem"/>
+        <param name="onload" value="true"/>
+      </feature>
     </config-file>
   </platform>
 
   <platform name="android">
+    <source-file src="src/android/SyncFileSystem.java" target-dir="src/org/chromium" />
     <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="SyncFileSystem">
+        <param name="android-package" value="org.chromium.SyncFileSystem"/>
+        <param name="onload" value="true"/>
+      </feature>
       <access origin="https://www.googleapis.com/drive/*" />
       <access origin="https://www.googleapis.com/upload/drive/*" />
       <access origin="https://*.googleusercontent.com/*" />

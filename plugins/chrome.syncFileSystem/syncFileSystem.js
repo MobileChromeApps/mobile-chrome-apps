@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 var runtime = require('org.chromium.runtime.runtime');
+var exec = cordova.require('cordova/exec');
 
 //=======
 // Drive
@@ -841,10 +842,9 @@ exports.requestFileSystem = function(callback) {
     } else {
         console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.")
     }
-    var onRequestFileSystemSuccess = function(fileSystem) {
-        // Change the name of the file system.  This is a syncable file system!
-        // fileSystem.name = "syncable";
-
+    var onRequestFileSystemSuccess = function(entry) {
+        var fileSystem = entry.filesystem;
+        
         // Set the default conflict resolution policy.
         conflictResolutionPolicy = CONFLICT_RESOLUTION_POLICY_LAST_WRITE_WIN;
 
@@ -903,7 +903,9 @@ exports.requestFileSystem = function(callback) {
     };
 
     // Request the file system.
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, onRequestFileSystemFailure);
+    exec(function(url) {
+      window.resolveLocalFileSystemURL(url, onRequestFileSystemSuccess, onRequestFileSystemFailure);
+    }, onRequestFileSystemFailure, "SyncFileSystem", "getRootURL", []);
 };
 
 exports.setConflictResolutionPolicy = function(policy, callback) {
