@@ -17,6 +17,7 @@
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarBackgroundColor" value="#000000" />
     <preference name="iosPersistentFileLocation" value="Library" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
 
     <content src="plugins/org.chromium.bootstrap/chromeapp.html" />
 </widget>
