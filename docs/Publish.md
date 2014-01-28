@@ -18,3 +18,7 @@ cca build android --release
 4. Find your signed .apk located in `platforms/android/ant-build`.
 
 5. Upload your signed application to the Google Play developer console.
+
+### Publish to the iOS App Store
+
+Instructions coming soon.
