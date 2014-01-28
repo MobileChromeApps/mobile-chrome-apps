@@ -937,14 +937,62 @@ function postPrepareCommand() {
     };
   }
 
+  // Set the "other" version values if defined in the manifest.
+  // CFBundleVersion on iOS and versionCode on Android.
+  function setVersionCode(platform) {
+    return function(callback) {
+      var root = assetDirForPlatform(platform);
+      getManifest(root, function(manifest) {
+        // Android
+        if (platform === 'android' && manifest && manifest.versionCode) {
+          var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+          var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+          androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
+          fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+        }
+
+        // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
+        // so if manifest.CFBundleVersion is not specifically set, we'll default to manifest.version
+        if (platform === 'ios' && manifest && (manifest.version || manifest.CFBundleVersion)) {
+          var platforms = require('cordova/platforms');
+          var parser = new platforms.ios.parser(path.join('platforms','ios'));
+          var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+          var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
+          var theNode;
+          var isFound = 0;
+
+          // plist file format is pretty strange, we need the <string> node
+          // immediately following <key>CFBundleVersion</key>
+          // iterating over all the nodes.
+          infoPlistXml.iter('*', function(e) {
+            if (isFound == 0) {
+              if (e.text == 'CFBundleVersion') {
+                isFound = 1;
+              }
+            } else if (isFound == 1) {
+              theNode = e;
+              isFound = 2;
+            }
+          });
+
+          theNode.text = manifest.CFBundleVersion || manifest.version;
+          fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
+        }
+        callback();
+      });
+    }
+  }
+
   if (hasAndroid) {
     eventQueue.push(moveI18NMessagesDir('android'));
     eventQueue.push(copyIconAssetsStep('android'));
+    eventQueue.push(setVersionCode('android'));
     eventQueue.push(mergeManifests('android'));
   }
   if (hasIos) {
     eventQueue.push(moveI18NMessagesDir('ios'));
     eventQueue.push(copyIconAssetsStep('ios'));
+    eventQueue.push(setVersionCode('ios'));
     eventQueue.push(mergeManifests('ios'));
   }
 }
