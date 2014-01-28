@@ -4,7 +4,7 @@ See the [reference guide for building Chrome Packaged Apps](http://developer.chr
 
 This list tracks API support on mobile.
 
-_Current as of Sept 2013_.
+_Current as of Jan 2014_.
 
 ## Chrome Apps APIs
 
@@ -25,14 +25,14 @@ _Current as of Sept 2013_.
 * [power](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.power)
     * Working on Android and iOS.
 * [pushMessaging](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.pushMessaging)
-    * Working on Android and iOS.
+    * Beta quality on Android and iOS.
 * [socket](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.socket)
     * Working on Android and iOS.
 * [storage](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
     * local storage Working on Android and iOS.
     * sync storage does not sync, but works like storage.local.
 * [syncFileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.syncFileSystem)
-    * Alpha quality on iOS and Android.
+    * Beta quality on iOS and Android.
 
 ## Other APIs
 
@@ -47,15 +47,14 @@ _Current as of Sept 2013_.
 * mediaGalleries
 * permissions
 * serial
+* systemInfo.cpu
+* systemInfo.display
+* systemInfo.memory
+* systemInfo.storage
 * tts
 * types
 * usb
 * webstore
-* experimental.record
-* experimental.systemInfo.cpu
-* experimental.systemInfo.display
-* experimental.systemInfo.memory
-* experimental.systemInfo.storage
 * `<webview>` tag
 * NaCl
 
