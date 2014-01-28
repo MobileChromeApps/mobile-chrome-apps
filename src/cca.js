@@ -250,7 +250,7 @@ function parseManifest(manifest, callback) {
         plugins.push(pluginsForPermission[j]);
       }
     } else {
-      console.warn('Unsupported manifest permission encountered: ' + permissions[i] + ' (skipping)');
+      console.warn('Permission not supported by cca: ' + permissions[i] + ' (skipping)');
     }
   }
   // Note: chromeAppId is not currently used.
