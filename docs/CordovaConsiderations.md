@@ -2,10 +2,16 @@
 
 A Chrome App may not work out of the box on mobile. Some common problems with porting to mobile:
 
-* Layout issues with small screens, especially while in Portrait orientation.
+* Layout issues with small screens, especially while in a portrait orientation.
+  * _Suggested fix:_ Use [CSS media queries](http://www.html5rocks.com/en/mobile/mobifying/#toc-mediaqueries) to optimize your content for smaller screens.
 * Chrome Apps using Cordova will ignore your app’s requested screen size, instead using the device’s native size.
 * Small buttons and links will be hard to tap with a finger.
+  * _Suggested fix:_ Adjust your touch targets to be at least 44 x 44 points. 
 * Unexpected behavior when relying on mouse hover which does not exist on touch screens.
+  * _Suggested fix:_ In addition to hover, activate UI elements such as dropdowns and tooltips on tap.
+* A 300ms tap delay.
+  * _Suggested fix:_ Use the [FastClick by FT Labs](https://github.com/ftlabs/fastclick) JavaScript polyfill.
+  * Read this [HTML5Rocks article](http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away) for some background info.
 
 ### Supported Chrome APIs 
 
