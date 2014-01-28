@@ -65,12 +65,6 @@ open platforms/ios/*.xcodeproj
 
 Your HTML, CSS, and JavaScript files live within the `www` directory of your cca project folder. In order to see your file changes reflected, you **must** run `cca prepare` from within your project.
 
-**IDE Warning**: Both Xcode and Eclipse contain references to the root `www/` as well as the output `www/` within `platforms/`. Take care to edit files only within the root `www/`, as `cca prepare` will overwrite changes made directly to `platforms/.../www`.
-
-Xcode - Do not edit files found under the `staging` group.
-
-Eclipse - Do not edit files within `assets/`. Look for them under `-- Cordova Project --`.
-
 ### Debugging
 
 You can debug your Chrome App on mobile the same way that you debug normal Cordova applications.
