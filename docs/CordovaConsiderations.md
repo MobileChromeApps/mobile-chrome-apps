@@ -4,7 +4,8 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 
 * Layout issues with small screens, especially while in a portrait orientation.
   * _Suggested fix:_ Use [CSS media queries](http://www.html5rocks.com/en/mobile/mobifying/#toc-mediaqueries) to optimize your content for smaller screens.
-* Chrome Apps using Cordova will ignore your app’s requested screen size, instead using the device’s native size.
+* Chrome App window sizes set via [chrome.app.window](http://developer.chrome.com/apps/app_window.html) will be ignored, instead using the device’s native dimensions.
+  * _Suggested fix:_ Remove hard-coded window dimensions; design your app with different sizes in mind.
 * Small buttons and links will be hard to tap with a finger.
   * _Suggested fix:_ Adjust your touch targets to be at least 44 x 44 points. 
 * Unexpected behavior when relying on mouse hover which does not exist on touch screens.
