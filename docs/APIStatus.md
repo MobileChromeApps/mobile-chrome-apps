@@ -6,7 +6,7 @@ This list tracks API support on mobile.
 
 _Current as of Sept 2013_.
 
-## Chrome Apps Apis
+## Chrome Apps APIs
 
 * [alarms](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.alarms)
     * Working on Android and iOS.
@@ -14,25 +14,30 @@ _Current as of Sept 2013_.
 * [fileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.fileSystem)
     * Working on Android and iOS.
 * [i18n](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.i18n)
-    * JS methods work (`chrome.i18n.getMessage()` and `chrome.i18n.getAcceptLanguages()`)
-    * CSS placeholders not implemented
+    * JS methods work (`chrome.i18n.getMessage()` and `chrome.i18n.getAcceptLanguages()`).
+    * CSS placeholders not implemented.
 * [identity](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.identity)
-    * Working on Android and iOS
+    * Working on Android and iOS.
 * [idle](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.idle)
     * Working on Android and iOS.
 * [notifications](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.notifications)
-    * Working on Android only
+    * Working on Android only.
 * [power](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.power)
+    * Working on Android and iOS.
+* [pushMessaging](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.pushMessaging)
     * Working on Android and iOS.
 * [socket](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.socket)
     * Working on Android and iOS.
 * [storage](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.storage)
-    * local storage Working on Android and iOS
-    * sync storage does not sync, but works like storage.local
+    * local storage Working on Android and iOS.
+    * sync storage does not sync, but works like storage.local.
 * [syncFileSystem](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/chrome.syncFileSystem)
     * Alpha quality on iOS and Android.
 
 ## Other APIs
+
+* [payments](https://github.com/MpbileChromeApps/chrome-cordova/tree/master/plugins/google.payments)
+    * Alpha quality on iOS and Android.
 
 ## Not yet supported APIs
 
@@ -40,9 +45,7 @@ _Current as of Sept 2013_.
 * commands
 * contextMenus
 * mediaGalleries
-* notifications
 * permissions
-* pushMessaging
 * serial
 * tts
 * types
