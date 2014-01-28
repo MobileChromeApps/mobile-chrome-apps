@@ -43,7 +43,7 @@ Please note that iOS development can only be done on OS X. In addition, you will
   * This is necessary for testing on real devices and for submitting to the app store.
   * You can skip registration if you only plan to use the iPhone/iPad simulators.
 
-### Install the Chrome Apps converter toolchain
+### Install the `cca` Command-line Tool
 
 Install `cca` via npm:
 
