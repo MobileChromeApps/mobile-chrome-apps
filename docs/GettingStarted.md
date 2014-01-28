@@ -16,6 +16,8 @@ If you wish to _copy_ your existing Chrome App files to the newly created projec
 
     cca create YourApp --copy-from=path/to/manifest.json
 
+Don't have your own Chrome App yet? Download one of the many [sample Chrome Apps](https://github.com/GoogleChrome/chrome-app-samples#mobile-support) with mobile support for a trial conversion.
+
 ## Step 3: Develop
 
 You can build and run your application in two ways:
