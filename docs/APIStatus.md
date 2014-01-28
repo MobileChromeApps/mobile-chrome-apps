@@ -36,7 +36,7 @@ _Current as of Jan 2014_.
 
 ## Other APIs
 
-* [payments](https://github.com/MpbileChromeApps/chrome-cordova/tree/master/plugins/google.payments)
+* [payments](https://github.com/MobileChromeApps/chrome-cordova/tree/master/plugins/google.payments)
     * Alpha quality on iOS and Android.
 
 ## Not yet supported APIs
