@@ -1,6 +1,6 @@
 # chrome.payments Plugin
 
-This plugin provides in-app payments and billing functions for Android and iOS. It uses the Google Wallet for Digital Goods API, but interfaces directly to the Google Play Store (for Android) and iOS App Store (for iOS).
+This plugin allows you to sell digital and virtual goods within your app. It is built on the [Android In-App Billing API](http://developer.android.com/google/play/billing/index.html) and the [iOS In-App Purchase API](https://developer.apple.com/library/IOS/documentation/NetworkingInternet/Conceptual/StoreKitGuide/Introduction.html). It provides a JavaScript interface similar to the [Chrome Apps Google Wallet for Digital Goods API](http://developer.chrome.com/apps/google_wallet.html), so that you can use the same API in both a desktop and mobile Chrome App.
 
 ## Status
 
