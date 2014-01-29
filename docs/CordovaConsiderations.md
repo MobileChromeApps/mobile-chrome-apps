@@ -19,7 +19,7 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 We've made many of the core Chrome APIs available to Chrome Apps for Mobile, including:
 
 * [identity](http://developer.chrome.com/apps/identity.html) - sign-in users using OAuth2
-* [payments](http://developer.chrome.com/apps/payments.html) - sell virtual goods within your mobile app
+* [payments](http://developer.chrome.com/apps/payments.html) - sell virtual goods within your mobile app *(currently only supported on Android)*
 * [pushMessaging](http://developer.chrome.com/apps/pushMessaging.html) - push messages to your app from your server
 * [sockets](http://developer.chrome.com/apps/sockets.html) - send and receive data over the network using TCP and UDP
 * [notifications](http://developer.chrome.com/apps/notifications.html) (Android only) - send rich notifications from your mobile app
