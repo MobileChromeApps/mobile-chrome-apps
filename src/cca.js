@@ -288,20 +288,22 @@ function toolsCheck() {
       console.log('Android SDK detected.');
       var targets = parseTargetOutput(targetOutput);
       /* This is the android SDK version declared in cordova-android/framework/project.properties */
-      if (targets.length === 0) {
-          console.log('No Android Platforms are installed');
-      } else if (targets.indexOf('Google Inc.:Google APIs:19') > -1 ||
-                 targets.indexOf('android-19') > -1) {
+      if (targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1) {
           hasAndroidPlatform = true;
       } else {
-          console.warn('Android 4.4 (Google APIs) Platform is not installed.');
+          console.warn('Android 4.4 (Google APIs) Platform is not installed. Add it using the Android SDK Manager (run the "android" command)');
       }
-      exec('ant -version', callback, function() {
-        console.warn('Ant not detected on your PATH.');
+      exec('ant -version', function() {
+        exec('javac -version', callback, function() {
+          console.warn('`javac` command not detected on your PATH.');
+          callback();
+        }, true);
+      }, function() {
+        console.warn('`ant` command not detected on your PATH.');
         callback();
       }, true);
     }, function() {
-      console.warn('Android SDK not detected on your PATH.');
+      console.warn('`android` command not detected on your PATH.');
       callback();
     }, true);
   }
