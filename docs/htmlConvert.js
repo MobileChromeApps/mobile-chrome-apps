@@ -51,17 +51,16 @@ var meta = '<meta name="doc-family" content="apps"> \n\n\ \
 --> \n\n\ ';
 fs.writeFileSync(outputFile, meta, 'utf8');
 
-// convert each .md file to html markup and append to output file
+// convert each .md file to html markup and add to 'output' array
 pages.forEach(function(page, i){
 
   var mdContent,
-      html,
-      cleanedHtml;
+      html;
 
   mdContent = fs.readFileSync(page.file, {encoding:'utf8'}); 
   html = markdown.toHTML(mdContent);
 
-  // Clean up:
+  // Clean up unneeded footer navigation and links/anchors
   jsdom.env({
     html: html,
     scripts: ['http://code.jquery.com/jquery.js'],
@@ -76,7 +75,7 @@ pages.forEach(function(page, i){
       // Re-word opening paragraph that starts with "Let's get started. Continue to"
       $('p:contains("Let\'s get started. Continue to")').text("Let's get started.");
 
-      // For all important headers, add in a id attribute so it shows up in sidebar
+      // For all important headers, add in an id attribute so it shows up in sidebar
       $('h2, h3').each(function(index, element) {
 
         // clean the anchor of any strange characters and use that as an id
@@ -132,7 +131,7 @@ function getAnchor( filename ) {
       return '#' + page.anchor;
     }
   }
-  console.log("Unable to find match for " + filename + " You should check into that.");
+  console.log("Unable to find match for " + filename + ". You should check into that.");
   return '#';
 }
 
@@ -141,7 +140,7 @@ function done() {
   // for debugging and updating 'anchor' property in 'pages' array
   // console.log(anchors);
 
-  console.log('File outputted. Check the docs folder for doc.html');
   fs.appendFileSync(outputFile, output.join('\n\n'), 'utf8');
+  console.log('File outputted. Check the docs folder for doc.html');
 
 }
