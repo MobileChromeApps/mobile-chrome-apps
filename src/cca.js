@@ -136,6 +136,13 @@ function colorizeConsole() {
   };
 }
 
+function assetDirForPlatform(platform) {
+  if (platform === 'android') {
+    return path.join('platforms', platform, 'assets','www');
+  }
+  return path.join('platforms', platform, 'www');
+}
+
 function exec(cmd, onSuccess, opt_onError, opt_silent) {
   var onError = opt_onError || function(e) {
     fatal('command failed: ' + cmd + '\n' + e);
@@ -747,13 +754,6 @@ function postPrepareCommand() {
     fatal('No platforms directory found. Please run script from the root of your project.');
   }
 
-  function assetDirForPlatform(platform) {
-    if (platform === 'android') {
-      return path.join('platforms', platform, 'assets','www');
-    }
-    return path.join('platforms', platform, 'www');
-  }
-
   /* Android asset packager ignores, by default, directories beginning with
      underscores. This can be fixed with an update to the project.properties
      file, but only when compiling with ant. There is a bug outstanding to
@@ -1006,6 +1006,98 @@ function postPrepareCommand() {
   }
 }
 
+function push(platform, url) {
+  var srcDir, zipContents, crxContents;
+  var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
+  var hasIos = fs.existsSync(path.join('platforms', 'ios'));
+
+
+  function findWww(callback) {
+    srcDir = assetDirForPlatform(platform);
+    callback();
+  }
+
+  function zipify(callback) {
+    // Zip up the directory into an in-memory string.
+    function zipDir(zip, dir) {
+      var contents = fs.readdirSync(dir);
+      contents.forEach(function(f) {
+        var fullPath = path.join(dir, f);
+        if (fs.statSync(fullPath).isDirectory()) {
+          var inner = zip.folder(f);
+          zipDir(inner, path.join(dir, f));
+        } else {
+          zip.file(f, fs.readFileSync(fullPath, 'binary'), { binary: true });
+        }
+      });
+    }
+
+    var zip = new require('node-zip')();
+    zipDir(zip, srcDir);
+
+    var tempzip = zip.generate({ type: 'base64' });
+    zipContents = new Buffer(tempzip, 'base64');
+    fs.writeFileSync('temp.zip', tempzip, 'base64');
+    callback();
+  }
+
+  function makeCrx(callback) {
+    crxContents = new Buffer(zipContents.length + 16);
+
+    // Magic number
+    crxContents[0] = 0x43; // C
+    crxContents[1] = 0x72; // r
+    crxContents[2] = 0x32; // 2
+    crxContents[3] = 0x34; // 4
+    // Version
+    crxContents[4] = 2;
+    // Zeroes (latter 3 bytes of the version, 4 bytes of key length, 4 bytes of signature length.
+    for(var i = 5; i < 16; i++) {
+      crxContents[i] = 0;
+    }
+    zipContents.copy(crxContents, 16);
+    callback();
+  }
+
+  function doPush(callback) {
+    // crxContents is a Node Buffer, and should form the payload of the HTTP request.
+    var request = require('request');
+
+    // Prepare the form data for upload.
+    var uri = require('url').format({
+      protocol: 'http',
+      hostname: url,
+      port: 2424,
+      pathname: '/push',
+      query: { type: 'crx', name: 'CCA-push' }
+    });
+    var req = request.post({
+      uri: uri,
+      method: 'POST'
+    }, function(err, res, body) {
+      console.log(body);
+      callback();
+    });
+    req.form().append("file", crxContents, { filename: 'push.crx', contentType: 'application/octet-stream' });
+  }
+
+
+  if (platform == 'android' && !hasAndroid) {
+    console.error('Selected platform \'android\' is not available.');
+    return;
+  }
+  if (platform == 'ios' && !hasIos) {
+    console.error('Selected platform \'ios\' is not available.');
+    return;
+  }
+
+  // Steps: locate the www, zip it up, make it into a fake CRX, send it over HTTP.
+  eventQueue.push(findWww);
+  eventQueue.push(zipify);
+  eventQueue.push(makeCrx);
+  eventQueue.push(doPush);
+}
+
 /******************************************************************************/
 /******************************************************************************/
 
@@ -1125,6 +1217,18 @@ function main() {
     },
     'checkenv': function() {
       toolsCheck();
+    },
+    'push': function() {
+      var platform = commandLineFlags._[1];
+      var url = commandLineFlags._[2];
+      if (!platform) {
+        console.error('You must specify a platform: cca push <platform> <url>');
+        return;
+      } else if (!url) {
+        console.error('You must specify the destination URL: cca push <platform> <url>');
+        return;
+      }
+      push(platform, url);
     },
     'create': function() {
       ensureHasRunInit();
