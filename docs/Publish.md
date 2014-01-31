@@ -11,9 +11,8 @@ To publish your Android application to the Play Store:
 2. Edit (or create) `platforms/android/ant.properties` and set the `key.store` and `key.alias` properties (as explained [in the Android developer docs](http://developer.android.com/tools/building/building-cmdline.html#ReleaseMode)).
 
 3. Build your project:
-```
-cca build android --release
-```
+
+        cca build android --release
 
 4. Find your signed .apk located in `platforms/android/ant-build`.
 

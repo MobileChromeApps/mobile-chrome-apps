@@ -8,25 +8,21 @@ The Chrome Apps for mobile toolchain can target iOS 6+ and Android 4.x+.
   * **Windows**: Install Node.js using the installation executables downloadable from [nodejs.org](http://nodejs.org).
   * **OS X** or **Linux**: Installation executables are also available from [nodejs.org](http://nodejs.org). If you wish to avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm). Example:
 
-```
-curl https://raw.github.com/creationix/nvm/master/install.sh | sh
-source ~/.bash_profile || source ~/.profile || source ~/.bashrc
-nvm install 0.10
-nvm alias default 0.10
-````
+            curl https://raw.github.com/creationix/nvm/master/install.sh | sh
+            source ~/.bash_profile || source ~/.profile || source ~/.bashrc
+            nvm install 0.10
+            nvm alias default 0.10
 
 ### Targeting Android
 
 When developing an application for Android, you will also need to install:
 
 * [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-
 * [Android SDK](http://developer.android.com/sdk/index.html) version 4.4.2 (or higher)
   * Install the Android SDK and Android Developer Tools which come bundled with Android ADT Bundle.
   * Add `sdk/tools` and `sdk/platform-tools` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable. 
   * **OS X**: The version of Eclipse that comes with the Android SDK requires JRE 6. If opening Eclipse.app does not prompt you to install JRE 6, get it through the Mac App Store.
   * **Linux**: The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`.
-
 * [Apache Ant](http://ant.apache.org/bindownload.cgi)
   * Add `apache-ant-x.x.x/bin` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable.
 
@@ -57,4 +53,4 @@ Confirm that everything is installed correctly by running this command from the 
 
 You will see the version number of `cca` outputted and confirmation about your Android or iOS SDK installation.
 
-_**Done? Continue to [Step 2: Create a project &raquo;](GettingStarted.md)**_
+_**Done? Continue to [Step 2: Create a project &raquo;](CreateProject.md)**_

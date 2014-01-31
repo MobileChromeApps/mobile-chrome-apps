@@ -11,9 +11,9 @@ Try out the `cca` toolchain by following these steps:
 
 * [Step 1: Install your development tools](docs/Installation.md)
 
-* [Step 2: Create a project](docs/GettingStarted.md#step-2-create-a-project)
+* [Step 2: Create a project](docs/CreateProject.md)
 
-* [Step 3: Develop](docs/GettingStarted.md#step-3-develop)
+* [Step 3: Develop](docs/Develop.md)
 
 * [Step 4: Publish](docs/Publish.md)
 
