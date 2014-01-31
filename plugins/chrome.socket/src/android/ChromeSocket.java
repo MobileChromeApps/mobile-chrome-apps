@@ -802,6 +802,7 @@ public class ChromeSocket extends CordovaPlugin {
 
                 		int toRead = readData.size;
                         byte[] out;
+                        byte[] outResized;
                         int bytesRead;
 
                         if (type == Type.TCP) {
@@ -822,7 +823,13 @@ public class ChromeSocket extends CordovaPlugin {
                                 return;
                             }
 
-                            readData.context.success(out);
+                            if (bytesRead < toRead) {
+                                outResized = new byte[bytesRead];
+                                System.arraycopy(out, 0, outResized, 0, bytesRead);
+                                readData.context.success(outResized);
+                            } else {
+                                readData.context.success(out);
+                            }
                         } else {
                             if (toRead > 0) {
                                 out = new byte[toRead];
