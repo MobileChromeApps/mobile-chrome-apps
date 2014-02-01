@@ -564,7 +564,7 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
 
-            if (type == Type.UDP && !bound) {
+            if (type == Type.UDP && !bound && !connected) {
                 context.error("read() is not allowed on unbound UDP sockets.");
                 return;
             }
