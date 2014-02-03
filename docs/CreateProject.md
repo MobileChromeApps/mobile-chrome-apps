@@ -8,7 +8,7 @@ If you have already built a Chrome App and wish to port it to a mobile platform,
 
     cca create YourApp --link-to=path/to/manifest.json
 
-If you instead wish to _copy_ your existing Chrome App files to the newly created project folder, you can use the `--copy-from` flag:
+If you instead wish to _copy_ your existing Chrome App files, you can use the `--copy-from` flag:
 
     cca create YourApp --copy-from=path/to/manifest.json
 
