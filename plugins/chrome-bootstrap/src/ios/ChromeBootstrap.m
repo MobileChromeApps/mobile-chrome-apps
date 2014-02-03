@@ -2,26 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeBootstrap.h"
+#import <Cordova/CDVPlugin.h>
 
-#pragma mark ChromeBootstrap
+@interface ChromeBootstrap : CDVPlugin {
+    BOOL _needsLaunch;
+}
+@end
 
 @implementation ChromeBootstrap
-
-@synthesize needsLaunch=_needsLaunch;
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
 {
     self = [super initWithWebView:theWebView];
     if (self) {
-        self.needsLaunch = ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground);
+        _needsLaunch = ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground);
     }
     return self;
 }
 
 - (void)doesNeedLaunch:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:self.needsLaunch];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:_needsLaunch];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 

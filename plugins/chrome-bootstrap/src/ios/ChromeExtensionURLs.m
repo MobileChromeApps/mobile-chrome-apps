@@ -2,20 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeExtensionURLs.h"
-
-#import <Cordova/CDVViewController.h>
-
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #import <AssetsLibrary/ALAssetsLibrary.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
-#pragma mark declare
+#import <Cordova/CDVPlugin.h>
+#import <Cordova/CDVViewController.h>
+
+@interface ChromeExtensionURLs : CDVPlugin
+@end
 
 @interface ChromeURLProtocol : NSURLProtocol
 @end
 
+static NSString* const kChromeExtensionURLScheme = @"chrome-extension";
 static ChromeURLProtocol *outstandingDelayRequest;
 static NSString* pathPrefix;
 
@@ -39,8 +40,13 @@ static NSString* pathPrefix;
     CDVPluginResult *pluginResult = nil;
 
     if (outstandingDelayRequest != nil) {
-        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:[[NSURL alloc] initWithString:@"chrome-extension://null/chrome-content-loaded"] statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
-        [[outstandingDelayRequest client] URLProtocol:outstandingDelayRequest didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+        NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:outstandingDelayRequest.request.URL
+                                                              statusCode:200
+                                                             HTTPVersion:@"HTTP/1.1"
+                                                            headerFields:@{@"Cache-Control": @"no-cache"}];
+        [[outstandingDelayRequest client] URLProtocol:outstandingDelayRequest
+                                   didReceiveResponse:response
+                                   cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 
         [[outstandingDelayRequest client] URLProtocolDidFinishLoading:outstandingDelayRequest];
         outstandingDelayRequest = nil;
@@ -106,4 +112,5 @@ static NSString* pathPrefix;
 }
 
 @end
+
 

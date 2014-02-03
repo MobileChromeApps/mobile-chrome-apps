@@ -56,9 +56,7 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeBootstrap.m" />
-    <header-file src="src/ios/ChromeBootstrap.h" />
     <source-file src="src/ios/ChromeExtensionURLs.m" />
-    <header-file src="src/ios/ChromeExtensionURLs.h" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
 
