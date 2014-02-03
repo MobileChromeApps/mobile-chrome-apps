@@ -29,9 +29,6 @@
     "node-zip": "~1",
     "node.extend": ""
   },
-  "bundledDependencies": [
-    "cordova"
-  ],
   "files": [
     "README.md",
     "RELEASENOTES.md",
