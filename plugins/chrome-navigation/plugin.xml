@@ -27,7 +27,6 @@
     <source-file src="src/ios/CCAOpenInChromeController.m" />
     <header-file src="src/ios/CCAOpenInChromeController.h" />
     <source-file src="src/ios/ChromeNavigation.m" />
-    <header-file src="src/ios/ChromeNavigation.h" />
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeNavigation">
         <param name="ios-package" value="ChromeNavigation"/>
