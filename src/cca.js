@@ -482,7 +482,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   }
 
   function validateSourceArgStep(callback) {
-    var sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
+    sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
     if (!sourceArg) {
       srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
     } else {
@@ -637,11 +637,18 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   function prepareStep(callback) {
     var wwwPath = path.join(origDir, destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
+    // Strip off manifest.json from path (its containing dir must be the root of the app)
+    if (path.basename(sourceArg) === 'manifest.json') {
+      sourceArg = path.dirname(sourceArg);
+    }
     if (commandLineFlags['link-to']) {
-      welcomeText += 'Your project has been created, with the following symlink:\n' +
-                     wwwPath + ' --> ' + path.resolve(origDir, commandLineFlags['link-to']) + '\n\n';
+      welcomeText += 'Your project has been created, with web assets symlinked to the following chrome app:\n' +
+                     wwwPath + ' --> ' + srcAppDir + '\n\n';
+    } else if (commandLineFlags['copy-from']) {
+      welcomeText += 'Your project has been created, with web assets copied from the following chrome app:\n'+
+                     srcAppDir + ' --> ' + wwwPath + '\n\n';
     } else {
-      welcomeText += 'Your project has been created, with web assets residing inside the `www` folder:\n'+
+      welcomeText += 'Your project has been created, with web assets in the `www` directory:\n'+
                      wwwPath + '\n\n';
     }
     welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/iCaCFG).';
