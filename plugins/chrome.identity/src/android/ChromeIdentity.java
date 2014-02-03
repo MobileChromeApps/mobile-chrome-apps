@@ -11,7 +11,6 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -25,6 +24,7 @@ import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.AccountPicker;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
 public class ChromeIdentity extends CordovaPlugin {
@@ -80,12 +80,19 @@ public class ChromeIdentity extends CordovaPlugin {
     }
 
     private void launchAccountChooserAndCallback(CordovaArgs cordovaArgsToSave, CallbackContext callbackContextToSave) {
-        this.savedCordovaArgs = cordovaArgsToSave;
-        this.savedCallbackContext = callbackContextToSave;
-        this.savedContent  = true;
-        // Note the "google.com" filter aqccepts both google and gmail accounts.
-        Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
-        this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
+        // Check if Google Play Services is available.
+        int availabilityCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this.cordova.getActivity());
+        if (availabilityCode == ConnectionResult.SUCCESS) {
+            this.savedCordovaArgs = cordovaArgsToSave;
+            this.savedCallbackContext = callbackContextToSave;
+            this.savedContent  = true;
+
+            // The "google.com" filter accepts both Google and Gmail accounts.
+            Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
+            this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
+        } else {
+            callbackContextToSave.error("Google Play Services is unavailable.");
+        }
     }
 
     private void launchPermissionsGrantPageAndCallback(Intent permissionsIntent, CordovaArgs cordovaArgsToSave, CallbackContext callbackContextToSave) {
@@ -99,14 +106,14 @@ public class ChromeIdentity extends CordovaPlugin {
     public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         // Enter only if we have requests waiting
         if(savedContent) {
-            if(requestCode == ACCOUNT_CHOOSER_INTENT ) {
+            if(requestCode == ACCOUNT_CHOOSER_INTENT) {
                 if(resultCode == Activity.RESULT_OK && intent.hasExtra(AccountManager.KEY_ACCOUNT_NAME)) {
                     accountName = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     getAuthToken(this.savedCordovaArgs, this.savedCallbackContext);
                 } else {
                     this.savedCallbackContext.error("User declined to provide an account");
                 }
-                this.savedContent  = false;
+                this.savedContent = false;
                 this.savedCallbackContext = null;
                 this.savedCordovaArgs = null;
             } else if(requestCode == OAUTH_PERMISSIONS_GRANT_INTENT) {
