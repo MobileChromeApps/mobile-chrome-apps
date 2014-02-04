@@ -576,7 +576,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'update-app');
 
     // Create a convenience link to cca
-    if (isGitRepo) {
+    if (isGitRepo || !shelljs.which('cca')) {
       var ccaPath = path.relative('.', path.join(ccaRoot, 'src', 'cca.js'));
       var comment = 'Feel free to rewrite this file to point at "cca" in a way that works for you.';
       fs.writeFileSync('cca.cmd', 'REM ' + comment + '\r\nnode "' + ccaPath.replace(/\//g, '\\') + '" %*\r\n');
