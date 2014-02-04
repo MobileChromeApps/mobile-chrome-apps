@@ -91,6 +91,10 @@ exports.launchWebAuthFlow = function(details, callback) {
     launchInAppBrowser(details.url, details.interactive, callback);
 };
 
+exports.getRedirectURL = function(path) {
+    return 'https://' + chrome.runtime.id + '.chromiumapp.org/' + (path ? path : '');
+};
+
 function getAllParametersFromUrl(url, startString, endString) {
     if (typeof url !== 'undefined' && typeof startString !== 'undefined')
         url = url.split(startString)[1];
@@ -108,7 +112,6 @@ function getAllParametersFromUrl(url, startString, endString) {
 }
 
 function launchInAppBrowser(authURL, interactive, callback) {
-    // TODO: see what the termination conditions are for desktop's implementation.
     var oAuthBrowser = window.open(authURL, '_blank', 'hidden=yes');
     var success = false;
     var timeoutid;
@@ -118,15 +121,11 @@ function launchInAppBrowser(authURL, interactive, callback) {
         if (timeoutid)
             timeoutid = clearTimeout(timeoutid);
         var newLoc = event.url;
-        var paramsAfterQuestion = getAllParametersFromUrl(newLoc, "?", "#");
-        var paramsAfterPound = getAllParametersFromUrl(newLoc, "#");
-        var keys = Object.keys(paramsAfterQuestion).concat(Object.keys(paramsAfterPound));
 
-        ['access_token', 'oauth_verifier', 'token'].forEach(function(breakKey) {
-            if (keys.indexOf(breakKey) != -1) {
-                success = true;
-            }
-        });
+        // When the location address starts with our redirect URL, we're done.
+        if (newLoc.indexOf(exports.getRedirectURL()) == 0) {
+            success = true;
+        }
 
         if (success) {
             oAuthBrowser.close();

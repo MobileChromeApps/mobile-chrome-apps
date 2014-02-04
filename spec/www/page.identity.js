@@ -123,7 +123,7 @@ chromespec.registerSubPage('chrome.identity', function(rootEl) {
 
     var webAuthDetails = {
       interactive: true,
-      url: 'https://accounts.google.com/o/oauth2/auth?client_id=429153676186-efnn5o5otvpa75kpa82ee91qkd80evb3.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Fwww.google.com&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com/auth/userinfo.profile'
+      url: 'https://accounts.google.com/o/oauth2/auth?client_id=545713885199-pq7ffbv68ktqpv6qlg0nu62dh0f3n1f8.apps.googleusercontent.com&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com/auth/userinfo.profile'
     };
 
     var onLaunchWebAuthFlowSuccess = function(url) {
