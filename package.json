@@ -27,7 +27,8 @@
     "request": "MobileChromeApps/request",
     "shelljs": "~0.2.6",
     "node-zip": "~1",
-    "node.extend": ""
+    "node.extend": "",
+    "q": "~1"
   },
   "files": [
     "README.md",

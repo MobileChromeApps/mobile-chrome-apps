@@ -30,13 +30,13 @@ var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
 var shelljs = require('shelljs');
 var cordova = require('cordova');
+var Q = require('q');
 
 // Globals
 var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
 var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
-var eventQueue = [];
 var ccaRoot = path.join(__dirname, '..');
 var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
@@ -96,16 +96,7 @@ var CORDOVA_CONFIG_JSON = {
 /******************************************************************************/
 // Utility Functions
 
-function pump() {
-  if (eventQueue.length) {
-    eventQueue.shift()(pump);
-  }
-}
-
 function exit(code) {
-  if (eventQueue) {
-    eventQueue.length = 0;
-  }
   if (commandLineFlags['pause_on_exit']) {
     waitForKey(function() {
       process.exit(code);
@@ -117,6 +108,7 @@ function exit(code) {
 
 function fatal(msg) {
   console.error(msg);
+  if (msg.stack) console.error(msg.stack);
   exit(1);
 }
 
@@ -143,20 +135,23 @@ function assetDirForPlatform(platform) {
   return path.join('platforms', platform, 'www');
 }
 
-function exec(cmd, onSuccess, opt_onError, opt_silent) {
-  var onError = opt_onError || function(e) {
-    fatal('command failed: ' + cmd + '\n' + e);
-  };
+// Returns a promise for an object with 'stdout' and 'stderr' as keys.
+function exec(cmd, opt_silent) {
   if (!opt_silent) {
     console.log('Running: ' + cmd);
   }
+  var d = Q.defer();
   childProcess.exec(cmd, function(error, stdout, stderr) {
     if (error) {
-      onError(error);
+      d.reject(error);
     } else {
-      onSuccess(stdout.trim(), stderr.trim());
+      d.resolve({
+        stdout: stdout.trim(),
+        stderr: stderr.trim()
+      });
     }
   });
+  return d.promise;
 }
 
 function chdir(d) {
@@ -167,11 +162,9 @@ function chdir(d) {
   }
 }
 
-function waitForKey(opt_prompt, callback) {
-  if (typeof opt_prompt == 'function') {
-    callback = opt_prompt;
-    opt_prompt = 'Press the Any Key';
-  }
+// Returns a promise with the key as its value.
+function waitForKey(opt_prompt) {
+  opt_prompt = opt_prompt || 'Press the Any Key';
   process.stdout.write(opt_prompt);
   process.stdin.resume();
   try {
@@ -180,6 +173,7 @@ function waitForKey(opt_prompt, callback) {
   } catch (e) {
   }
   process.stdin.setEncoding('utf8');
+  var d = Q.defer();
   process.stdin.on('data', function cont(key) {
     if (key == '\u0003') {
       process.exit(2);
@@ -187,31 +181,37 @@ function waitForKey(opt_prompt, callback) {
     process.stdin.removeListener('data', cont);
     process.stdin.pause();
     process.stdout.write('\n');
-    callback(key);
+    d.resolve(key);
   });
+  return d.promise;
 }
 
-function getManifest(manifestDir, callback) {
+// Returns a promise for the manifest contents.
+function getManifest(manifestDir) {
   var manifestFilename = path.join(manifestDir, 'manifest.json');
   var manifestMobileFilename = path.join(manifestDir, 'manifest.mobile.json');
 
-  fs.readFile(manifestFilename, { encoding: 'utf-8' }, function(err, manifestData) {
-    if (err) {
-      fatal('Unable to open manifest ' + manifestFilename + ' for reading.');
-    }
-    fs.readFile(manifestMobileFilename, { encoding: 'utf-8' }, function(err, manifestMobileData) {
-      // Manifest Mobile is not required, its not fatal if we fail reading it
+  return Q.ninvoke(fs, 'readFile', manifestFilename, { encoding: 'utf-8' }).then(function(manifestData) {
+    var manifestMobileData = '{}';
+    return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' })
+    .then(function(mobile) {
+      manifestMobileData = mobile;
+    }, function(err) {
+      // Swallow any errors opening the mobile manifest, it's not required.
+    }).then(function() {
       try {
         var manifest = eval('(' + manifestData + ')');
-        var manifestMobile = err ? {} : eval('(' + manifestMobileData + ')');
+        var manifestMobile = eval('(' + manifestMobileData + ')');
         var extend = require('node.extend');
         manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
-        callback(manifest);
+        return manifest;
       } catch (e) {
         console.error(e);
-        fatal('Unable to parse manifest ' + manifestFilename);
+        return Q.reject('Unable to parse manifest ' + manifestFilename);
       }
     });
+  }, function(err) {
+    return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.')
   });
 }
 
@@ -225,7 +225,8 @@ function mapAppKeyToAppId(key) {
           }));
 }
 
-function parseManifest(manifest, callback) {
+// Returns a promise for an object with three keys: appId, whitelist, and plugins.
+function parseManifest(manifest) {
   var permissions = [],
       chromeAppId,
       whitelist = [],
@@ -267,7 +268,11 @@ function parseManifest(manifest, callback) {
     // All zeroes -- should we use rand() here instead?
     chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   }
-  callback(chromeAppId, whitelist, plugins);
+  return Q.when({
+    appId: chromeAppId,
+    whitelist: whitelist,
+    plugins: plugins
+  });
 }
 
 /******************************************************************************/
@@ -284,104 +289,81 @@ function parseTargetOutput(targetOutput) {
   return targets;
 }
 
+// Returns a promise.
 function toolsCheck() {
-  function printHeader(callback) {
-    console.log('## Checking that tools are installed');
-    callback();
-  }
-  function checkAndroid(callback) {
-    exec('android list targets', function(targetOutput) {
-      hasAndroidSdk = true;
-      console.log('Android SDK detected.');
-      var targets = parseTargetOutput(targetOutput);
-      /* This is the android SDK version declared in cordova-android/framework/project.properties */
-      if (targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1) {
-          hasAndroidPlatform = true;
-      } else {
-          console.warn('Android 4.4 (Google APIs) Platform is not installed. Add it using the Android SDK Manager (run the "android" command)');
-      }
-      exec('ant -version', function() {
-        exec('javac -version', callback, function() {
-          console.warn('`javac` command not detected on your PATH.');
-          callback();
-        }, true);
-      }, function() {
-        console.warn('`ant` command not detected on your PATH.');
-        callback();
-      }, true);
-    }, function() {
-      console.warn('`android` command not detected on your PATH.');
-      callback();
-    }, true);
-  }
-  function checkXcode(callback) {
-    if (process.platform == 'darwin') {
-      exec('which xcodebuild', function() {
-        exec('xcodebuild -version', function() {
-          hasXcode = true;
-          console.log('Xcode detected.');
-          callback();
-        }, function() {
-          console.log('Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
-          callback();
-        }, true);
-      }, function() {
-        console.log('Xcode not detected.');
-        callback();
-      }, true);
+  console.log('## Checking that tools are installed');
+
+  if (!os.tmpdir) return Q.reject('Your version of node (' + process.version + ') is too old. Please update your version of node.');
+
+  // Android
+  return exec('android list targets', true /* opt_silent */).then(function(out) {
+    var targetOutput = out.stdout;
+    hasAndroidSdk = true;
+    console.log('Android SDK detected.');
+    var targets = parseTargetOutput(targetOutput);
+    /* This is the android SDK version declared in cordova-android/framework/project.properties */
+    if (targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1) {
+      hasAndroidPlatform = true;
     } else {
-      callback();
+      console.warn('Android 4.4 (Google APIs) Platform is not installed. Add it using the Android SDK Manager (run the "android" command)');
     }
-  }
-  function checkAtLeastOneTool(callback) {
-    if (!hasAndroidPlatform && !hasXcode) {
-      fatal('No usable build environment could be found. Please refer to our installation guide: http://goo.gl/KWZFSe');
+    // Stacking up here because we want to bail after the first one fails.
+    return exec('ant -version', true /* opt_silent */).then(function() {
+      return exec('javac -version', true /* opt_silent */).then(null, function(err) { console.warn('`javac` command not detected on your PATH.'); });
+    }, function(err) {
+      console.warn('`ant` command not detected on your PATH.');
+    });
+  }, function(err) {
+    console.warn('`android` command not detected on your PATH.');
+  })
+  // iOS
+  .then(function() {
+    if (process.platform != 'darwin') return;
+    return exec('which xcodebuild', true /* opt_silent */).then(function() {
+      return exec('xcodebuild -version', true /* opt_silent */).then(function() {
+        hasXcode = true;
+        console.log('Xcode detected.');
+      }, function(err) {
+        console.log('Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
+      });
+    }, function(err) {
+      console.log('Xcode not detected.');
+    });
+  })
+  // Check for at least one of the tools.
+  .then(function() {
+    if (!hasAndroidPlatform && ! hasXcode) {
+      return Q.reject('No usable build environment could be found. Please refer to our installation guide: http://goo.gl/KWZFSe');
     }
-    callback();
-  }
-  function checkNodeVersion(callback) {
-    if (!os.tmpdir) {
-      fatal('Your version of node (' + process.version + ') is too old. Please update your version of node.');
-    }
-    callback();
-  }
-  eventQueue.push(printHeader);
-  eventQueue.push(checkNodeVersion);
-  eventQueue.push(checkAndroid);
-  eventQueue.push(checkXcode);
-  eventQueue.push(checkAtLeastOneTool);
-}
-
-/******************************************************************************/
-/******************************************************************************/
-
-function ensureHasRunInit() {
-  eventQueue.push(function(callback) {
-    if (!fs.existsSync(path.join(ccaRoot, path.join('chrome-cordova', 'README.md'))))
-      return fatal('Please run \'' + scriptName + ' init\' first');
-    callback();
   });
 }
 
-function promptIfNeedsGitUpdate() {
-  eventQueue.push(function(callback) {
-    process.chdir(ccaRoot);
-    exec('git pull --rebase --dry-run', function(stdout, stderr) {
-      var needsUpdate = (!!stdout || !!stderr);
-      if (!needsUpdate)
-        return callback();
+/******************************************************************************/
+/******************************************************************************/
 
-      console.warn('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
-      waitForKey('Continue anyway? [y/n] ', function(key) {
-        if (key.toLowerCase() !== 'y')
-          return exit(1);
-        callback();
-      });
-    }, function(error) {
-      console.warn("Could not check repo for updates:");
-      console.warn(error.toString());
-      callback();
-    }, true);
+// Returns a promise.
+function ensureHasRunInit() {
+  if (!fs.existsSync(path.join(ccaRoot, path.join('chrome-cordova', 'README.md'))))
+    return Q.reject('Please run \'' + scriptName + ' init\' first');
+  return Q();
+}
+
+// Returns a promise.
+function promptIfNeedsGitUpdate() {
+  process.chdir(ccaRoot);
+  return exec('git pull --rebase --dry-run', true /* opt_silent */).then(function(out) {
+    var needsUpdate = (!!out.stdout || !!out.stderr);
+    if (!needsUpdate)
+      return Q();
+
+    console.warn('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
+    return waitForKey('Continue anyway? [y/n] ').then(function(key) {
+      if (key.toLowerCase() !== 'y')
+        return exit(1);
+    });
+  }, function(err) {
+    console.warn("Could not check repo for updates:");
+    console.warn(err.toString());
   });
 }
 
@@ -390,82 +372,74 @@ function promptIfNeedsGitUpdate() {
 /******************************************************************************/
 // Init
 
+// Returns a promise.
 function initCommand() {
-  function checkGit(callback) {
-    var errMsg = 'git is not installed (or not available on your PATH). Please install it from http://git-scm.com';
-    exec('git --version', callback, function() {
+  var promise = Q();
+  if (isGitRepo) {
+    promise = exec('git --version', true /* opt_silent */).then(null, function(err) {
+      var p;
       if (isWindows) {
         // See if it's at the default install path.
         process.env['PATH'] += ';' + path.join(process.env['ProgramFiles'], 'Git', 'bin');
-        exec('git --version', callback, function() {
-          fatal(errMsg);
-        }, true);
+        p = exec('git --version', true /* opt_silent */);
       } else {
-        fatal(errMsg);
+        p = Q.reject();
       }
-    }, true);
+      return p.then(null, function(err) {
+        return Q.reject('git is not installed (or not available on your PATH). Please install it from http://git-scm.com');
+      });
+    })
+
+    // Check myself out.
+    .then(function() {
+      console.log('## Updating mobile-chrome-apps');
+      process.chdir(ccaRoot);
+      return exec('git pull --rebase');
+    })
+
+    // Check out submodules.
+    .then(function() {
+      console.log('## Updating git submodules');
+      process.chdir(ccaRoot);
+
+      return exec('git submodule status').then(function(out) {
+        var isFirstInit = out.stdout.split('\n').some(function(s) { return s[0] == '-'; });
+        if (isFirstInit) {
+          console.warn('The next step may take a while the first time.');
+        }
+        return exec('git submodule update --init --recursive', callback, error);
+      }).then(null, function(err) {
+        console.log("Could not update submodules:");
+        console.warn(err.toString());
+        console.log("Continuing without update.");
+      });
+    });
   }
 
-  function checkOutSelf(callback) {
-    console.log('## Updating mobile-chrome-apps');
-
-    process.chdir(ccaRoot);
-    exec('git pull --rebase', callback);
-  }
-
-  function checkOutSubModules(callback) {
-    console.log('## Updating git submodules');
-
-    process.chdir(ccaRoot);
-
-    var error = function(error) {
-      console.log("Could not update submodules:");
-      console.warn(error.toString());
-      console.log("Continuing without update.");
-      callback();
-    }
-    exec('git submodule status', function(stdout) {
-      var isFirstInit = stdout.split('\n').some(function(s) { return s[0] == '-'; });
-      if (isFirstInit) {
-        console.warn('The next step may take a while the first time.');
-      }
-      exec('git submodule update --init --recursive', callback, error);
-    }, error);
-  }
-
-  function cleanup(callback) {
+  // Clean up.
+  return promise.then(function() {
     process.chdir(origDir);
-    callback();
-  }
-
-  if (isGitRepo) {
-    eventQueue.push(checkGit);
-    eventQueue.push(checkOutSelf);
-    eventQueue.push(checkOutSubModules);
-  }
-  eventQueue.push(cleanup);
+  });
 }
 
 /******************************************************************************/
 /******************************************************************************/
 
-function runCmd(cmd, callback) {
+// Returns the promise from the raw Cordova command.
+function runCmd(cmd) {
   // Hack to remove the obj passed to the cordova create command.
   console.log(cmd.join(' ').replace('[object Object]', ''));
-  cordova[cmd[0]].apply(cordova, cmd.slice(1).concat([callback]));
+  debugger;
+  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
 }
 
-function runAllCmds(commands, callback) {
-  if (commands.length === 0) {
-    return callback();
-  }
-  var curCmd = commands[0],
-      moreCommands = commands.slice(1);
-  runCmd(curCmd, function(err) {
-    if (err)
-      return fatal(err);
-    runAllCmds(moreCommands, callback);
-  });
+// Chains a list of cordova commands, returning a promise.
+function runAllCmds(commands) {
+  return commands.reduce(function(soFar, f) {
+    return soFar.then(function() {
+      return runCmd(f);
+    });
+  }, Q());
 }
 
 
@@ -473,12 +447,14 @@ function runAllCmds(commands, callback) {
 /******************************************************************************/
 // Create App
 
+// Returns a promise.
 function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   var srcAppDir = null;
   var manifest = null;
 
   var whitelist = [];
   var plugins = [];
+  var cmds = [];
   var chromeAppId;
 
   function resolveTilde(string) {
@@ -488,64 +464,59 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     return string
   }
 
-  function validateSourceArgStep(callback) {
-    sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
-    if (!sourceArg) {
-      srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
-    } else {
-      // Strip off manifest.json from path (its containing dir must be the root of the app)
-      if (path.basename(sourceArg) === 'manifest.json') {
-        sourceArg = path.dirname(sourceArg);
-      }
-      // Always check the sourceArg as a relative path, even if its a special value (like 'spec')
-      var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
+  // Validate source arg.
+  sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
+  if (!sourceArg) {
+    srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
+  } else {
+    // Strip off manifest.json from path (its containing dir must be the root of the app)
+    if (path.basename(sourceArg) === 'manifest.json') {
+      sourceArg = path.dirname(sourceArg);
+    }
+    // Always check the sourceArg as a relative path, even if its a special value (like 'spec')
+    var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
 
-      // Special values for sourceArg we resolve to predefined locations
-      if (sourceArg === 'spec') {
-        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
-      } else if (sourceArg === 'default') {
-        dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
-      }
+    // Special values for sourceArg we resolve to predefined locations
+    if (sourceArg === 'spec') {
+      dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
+    } else if (sourceArg === 'default') {
+      dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
+    }
 
-      // Find the first valid path in our list (valid paths contain a manifest.json file)
-      var foundManifest = false;
-      for (var i = 0; i < dirsToTry.length; i++) {
-        srcAppDir = dirsToTry[i];
-        console.log('Searching for Chrome app source in ' + srcAppDir);
-        if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
-          foundManifest = true;
-          break;
-        }
-      }
-      if (!srcAppDir) {
-        fatal('Directory does not exist.');
-      }
-      if (!foundManifest) {
-        fatal('No manifest.json file found');
+    // Find the first valid path in our list (valid paths contain a manifest.json file)
+    var foundManifest = false;
+    for (var i = 0; i < dirsToTry.length; i++) {
+      srcAppDir = dirsToTry[i];
+      console.log('Searching for Chrome app source in ' + srcAppDir);
+      if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
+        foundManifest = true;
+        break;
       }
     }
-    callback();
+    if (!srcAppDir) {
+      return Q.reject('Directory does not exist.');
+    }
+    if (!foundManifest) {
+      return Q.reject('No manifest.json file found');
+    }
   }
 
-  function readManifestStep(callback) {
-    getManifest(srcAppDir, function(manifestData) {
-      parseManifest(manifestData, function(chromeAppIdFromManifest, whitelistFromManifest, pluginsFromManifest) {
-        // Set globals
-        manifest = manifestData;
-        chromeAppId = chromeAppIdFromManifest;
-        whitelist = whitelistFromManifest;
-        plugins = pluginsFromManifest;
-        callback();
-      });
-    });
-  }
+  // Get the manifest.
+  return getManifest(srcAppDir).then(function(manifestData) {
+    manifest = manifestData;
+    return parseManifest(manifest);
+  }).then(function(parsed) {
+    chromeAppId = parsed.appId;
+    whitelist = parsed.whitelist;
+    plugins = parsed.plugins;
+  })
 
-  function createStep(callback) {
+  // Create step.
+  .then(function() {
     console.log('## Creating Your Application');
     chdir(origDir);
 
     var platformSpecified = addAndroidPlatform || addIosPlatform;
-    var cmds = [];
 
     if ((!platformSpecified && hasXcode) || addIosPlatform) {
       cmds.push(['platform', 'add', 'ios']);
@@ -560,88 +531,71 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       cmds.push(['plugin', 'add', pluginPath]);
     });
 
-    function afterAllCommands() {
-      // Create scripts that update the cordova app on prepare
-      fs.mkdirSync(path.join('hooks', 'before_prepare'));
-      fs.mkdirSync(path.join('hooks', 'after_prepare'));
-
-      function writeHook(path, ccaArg) {
-        var contents = [
-            '#!/usr/bin/env node',
-            'var child_process = require("child_process");',
-            'var fs = require("fs");',
-            'var isWin = process.platform.slice(0, 3) === "win";',
-            'var cmd = isWin ? "cca.cmd" : "cca";',
-            'if (!isWin && fs.existsSync(cmd)) { cmd = "./" + cmd }',
-            'var p = child_process.spawn(cmd, ["' + ccaArg + '"], { stdio:"inherit" });',
-            'p.on("close", function(code) { process.exit(code); });',
-            ];
-        fs.writeFileSync(path, contents.join('\n'));
-        fs.chmodSync(path, '777');
-      }
-      writeHook(path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'), 'pre-prepare');
-      writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'update-app');
-
-      // Create a convenience link to cca
-      if (isGitRepo) {
-        var ccaPath = path.relative('.', path.join(ccaRoot, 'src', 'cca.js'));
-        var comment = 'Feel free to rewrite this file to point at "cca" in a way that works for you.';
-        fs.writeFileSync('cca.cmd', 'REM ' + comment + '\r\nnode "' + ccaPath.replace(/\//g, '\\') + '" %*\r\n');
-        fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
-        fs.chmodSync('cca', '777');
-      }
-      callback();
-    }
-
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
     if (commandLineFlags['link-to']) {
       config_default.lib.www.link = true;
     }
 
-    function writeConfigStep(callback) {
-      console.log("Writing config.xml");
-      fs.readFile(path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'}, function(err, data) {
-        if (err) {
-          console.log(err);
-        } else {
-          var configfile = data
-              .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
-              .replace(/__APP_PACKAGE_ID__/, (manifest.packageId) || "com.your.company.HelloWorld")
-              .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
-              .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
-              .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
-          fs.writeFile(path.join(destAppDir, 'config.xml'), configfile, callback);
-        }
-      });
+    return runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
+  }).then(function() {
+    console.log("Writing config.xml");
+    return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
+  }).then(function(data) {
+    var configfile = data
+        .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
+        .replace(/__APP_PACKAGE_ID__/, (manifest.packageId) || "com.your.company.HelloWorld")
+        .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
+        .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
+        .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
+    return Q.ninvoke(fs, 'writeFile', path.join(destAppDir, 'config.xml'), configfile, { encoding: 'utf-8' });
+  }).then(function() {
+    chdir(path.join(origDir, destAppDir));
+    return runAllCmds(cmds);
+  })
+  .then(function() {
+    // Create scripts that update the cordova app on prepare
+    fs.mkdirSync(path.join('hooks', 'before_prepare'));
+    fs.mkdirSync(path.join('hooks', 'after_prepare'));
+
+    function writeHook(path, ccaArg) {
+      var contents = [
+          '#!/usr/bin/env node',
+          'var child_process = require("child_process");',
+          'var fs = require("fs");',
+          'var isWin = process.platform.slice(0, 3) === "win";',
+          'var cmd = isWin ? "cca.cmd" : "cca";',
+          'if (!isWin && fs.existsSync(cmd)) { cmd = "./" + cmd }',
+          'var p = child_process.spawn(cmd, ["' + ccaArg + '"], { stdio:"inherit" });',
+          'p.on("close", function(code) { process.exit(code); });',
+          ];
+      fs.writeFileSync(path, contents.join('\n'));
+      fs.chmodSync(path, '777');
     }
+    writeHook(path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'), 'pre-prepare');
+    writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'update-app');
 
-    runCmd(['create', destAppDir, manifest.name, manifest.name, config_default], function(err) {
-      if(err)
-        return fatal(err);
-      writeConfigStep(function(err) {
-        if(err)
-           return fatal(err);
-        chdir(path.join(origDir, destAppDir));
-        runAllCmds(cmds, afterAllCommands);
-      });
-    });
-  }
+    // Create a convenience link to cca
+    if (isGitRepo) {
+      var ccaPath = path.relative('.', path.join(ccaRoot, 'src', 'cca.js'));
+      var comment = 'Feel free to rewrite this file to point at "cca" in a way that works for you.';
+      fs.writeFileSync('cca.cmd', 'REM ' + comment + '\r\nnode "' + ccaPath.replace(/\//g, '\\') + '" %*\r\n');
+      fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
+      fs.chmodSync('cca', '777');
+    }
+  })
 
-  function ensureManifestMobileExists(callback) {
+  // Ensure the mobile manifest exists.
+  .then(function() {
     var manifestMobileFilename = path.join('www', 'manifest.mobile.json');
-    if (fs.existsSync(manifestMobileFilename)) {
-      return callback();
-    }
+    if (fs.existsSync(manifestMobileFilename)) return;
     var defaultManifestMobileFilename = path.join(ccaRoot, 'templates', 'default-app', 'manifest.mobile.json');
-    if (!fs.existsSync(defaultManifestMobileFilename)) {
-      return callback();
-    }
+    if (!fs.existsSync(defaultManifestMobileFilename)) return; // TODO: Was I supposed to be an error?
     shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
-    return callback();
-  }
+  })
 
-  function prepareStep(callback) {
+  // Run prepare.
+  .then(function() {
     var wwwPath = path.join(origDir, destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
     // Strip off manifest.json from path (its containing dir must be the root of the app)
@@ -660,99 +614,100 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     }
     welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/iCaCFG).';
 
-    runCmd(['prepare'], function(err) {
-       if(err) {
-          return fatal(err);
-       }
-       console.log(welcomeText);
-       callback()
+    return runCmd(['prepare']).then(function() {
+      console.log(welcomeText);
     });
-  }
-
-  eventQueue.push(validateSourceArgStep);
-  eventQueue.push(readManifestStep);
-  eventQueue.push(createStep);
-  eventQueue.push(ensureManifestMobileExists);
-  eventQueue.push(prepareStep);
+  });
 }
 
 /******************************************************************************/
 /******************************************************************************/
 // Update App
 
+// Returns a promise.
 function prePrepareCommand() {
   var plugins = [];
+  var manifest, whitelist;
 
-  /* pre-prepare manifest check and project munger */
-  function readManifestStep(callback) {
-    getManifest('www', function(manifest) {
-      parseManifest(manifest, function(chromeAppId, whitelist, pluginsFromManifest) {
-        plugins = pluginsFromManifest;
-        console.log("Writing config.xml");
-        fs.readFile('config.xml', {encoding: 'utf-8'}, function(err, data) {
-          if (err) {
-            console.log(err);
-          } else {
-            var tree = et.parse(data);
+  // Pre-prepare manifest check and project munger
+  return getManifest('www')
+  .then(function(m) {
+    manifest = m;
+    return parseManifest(m);
+  }).then(function(manifestData) {
+    plugins = manifestData.plugins;
+    whitelist = manifestData.whitelist;
+    console.log("Writing config.xml");
+    return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'});
+  }).then(function(data) {
+    var tree = et.parse(data);
 
-            var widget = tree.getroot();
-            if (widget.tag == 'widget') {
-              widget.attrib.version = manifest.version;
-              widget.attrib.id = manifest.packageId;
-            }
+    var widget = tree.getroot();
+    if (widget.tag == 'widget') {
+      widget.attrib.version = manifest.version;
+      widget.attrib.id = manifest.packageId;
+    }
 
-            var name = tree.find('./name');
-            if (name) name.text = manifest.name;
+    var name = tree.find('./name');
+    if (name) name.text = manifest.name;
 
-            var description = tree.find('./description');
-            if (description) description.text = manifest.description;
+    var description = tree.find('./description');
+    if (description) description.text = manifest.description;
 
-            var author = tree.find('./author');
-            if (author) author.text = manifest.author;
+    var author = tree.find('./author');
+    if (author) author.text = manifest.author;
 
-            var content = tree.find('./content');
-            if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
+    var content = tree.find('./content');
+    if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
 
-            var access = widget.findall('access');
-            access.forEach(function(elem, index) {
-              /* The useless '0' parameter here will be removed with elementtree 0.1.6 */
-              widget.remove(0, elem);
-            });
-            whitelist.forEach(function(pattern, index) {
-              var tag = et.SubElement(widget, 'access');
-              tag.attrib.origin = pattern;
-            });
-
-            var configfile = et.tostring(tree.getroot(), {indent: 4});
-            fs.writeFile('config.xml', configfile, callback);
-          }
-        });
-      });
+    var access = widget.findall('access');
+    access.forEach(function(elem, index) {
+      /* The useless '0' parameter here will be removed with elementtree 0.1.6 */
+      widget.remove(0, elem);
     });
-  }
+    whitelist.forEach(function(pattern, index) {
+      var tag = et.SubElement(widget, 'access');
+      tag.attrib.origin = pattern;
+    });
 
-  function installPluginsStep(callback) {
+    var configfile = et.tostring(tree.getroot(), {indent: 4});
+    return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
+  })
+
+  // Install plugins
+  .then(function() {
     console.log("Updating plugins");
-    var cmds = [];
-    plugins.forEach(function(pluginPath) {
-      cmds.push(['plugin', 'add', pluginPath]);
+    var cmds = plugins.map(function(pluginPath) {
+      return ['plugin', 'add', pluginPath];
     });
-    runAllCmds(cmds, callback);
-  }
-
-  eventQueue.push(readManifestStep);
-  eventQueue.push(installPluginsStep);
+    return runAllCmds(cmds);
+  });
 }
 
 /******************************************************************************/
 
+// Returns a promise.
 function postPrepareCommand() {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
   if (!fs.existsSync('platforms')) {
-    fatal('No platforms directory found. Please run script from the root of your project.');
+    return Q.reject('No platforms directory found. Please run script from the root of your project.');
   }
+
+  var p = Q();
+  if (hasAndroid) {
+    p = p.then(function() { return postPrepareInternal('android'); });
+  }
+  if (hasIos) {
+    p = p.then(function() { return postPrepareInternal('ios'); });
+  }
+  return p;
+}
+
+// Internal function called potentially multiple times to cover all platforms.
+function postPrepareInternal(platform) {
+  var root = assetDirForPlatform(platform);
 
   /* Android asset packager ignores, by default, directories beginning with
      underscores. This can be fixed with an update to the project.properties
@@ -763,339 +718,293 @@ function postPrepareCommand() {
        https://code.google.com/p/android/issues/detail?id=5343
        https://code.google.com/p/android/issues/detail?id=41237
    */
-  function moveI18NMessagesDir(platform) {
-    return function(callback) {
-      var badPath = path.join(assetDirForPlatform(platform), '_locales');
-      var betterPath = path.join(assetDirForPlatform(platform), 'CCA_locales');
-      if (fs.existsSync(badPath)) {
-        console.log('## Moving ' + platform + ' locales directory');
-        fs.renameSync(badPath, betterPath);
-        console.log('## Renaming directories inside locales');
-        fs.readdir(betterPath,function(err, files) {
-          if (!err) {
-            for (var i=0; i<files.length; i++) {
-              var fullName = path.join(betterPath, files[i]);
-              var adjustedFilename= files[i].replace('-', '_').toLowerCase();
-              if (files[i] !== adjustedFilename) {
-                stats = fs.statSync(fullName);
-                if (stats.isDirectory()) {
-                  fs.renameSync(fullName, path.join(betterPath, adjustedFilename));
-                }
-              }
-            }
-          }
-          callback();
-        });
-      } else {
-        callback();
-      }
-    };
-  }
-
-  function copyIconAssetsStep(platform) {
-    return function(callback) {
-      getManifest('www', function(manifest) {
-        if (manifest && manifest.icons) {
-          var iconMap = {};
-          var iPhoneFiles = {
-              'icon-40': true,
-              'icon-small': true,
-              'icon.png': true,
-              'icon@2x': true,
-              'icon-72': true,
-              'icon-72@2x': true
-          };
-          var iPadFiles = {
-              'icon-small': true,
-              'icon-40': true,
-              'icon-50': true,
-              'icon-76': true,
-              'icon': true,
-              'icon@2x': true,
-              'icon-72': true,
-              'icon-72@2x': true
-          };
-          var infoPlistXml = null;
-          var infoPlistPath = null;
-          var iosIconDir = null;
-
-          if (platform === "android") {
-            iconMap = {
-              "36": [path.join('res','drawable-ldpi','icon.png')],
-              "48": [path.join('res','drawable-mdpi','icon.png')],
-              "72": [path.join('res','drawable-hdpi','icon.png')],
-              "96": [path.join('res','drawable-xhdpi','icon.png')],
-              "144": [path.join('res','drawable-xxhdpi','icon.png')],
-              "192": [path.join('res','drawable-xxxhdpi','icon.png')]
-            };
-          } else if (platform === "ios") {
-            var platforms = require('cordova/platforms');
-            var parser = new platforms.ios.parser(path.join('platforms','ios'));
-            iconMap = {
-              "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
-              "29": [path.join(parser.originalName, 'Resources','icons','icon-small.png')],
-              "40": [path.join(parser.originalName, 'Resources','icons','icon-40.png')],
-              "50": [path.join(parser.originalName, 'Resources','icons','icon-50.png')],
-              "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
-              "58": [path.join(parser.originalName, 'Resources','icons','icon-small@2x.png')],
-              "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
-              "76": [path.join(parser.originalName, 'Resources','icons','icon-76.png')],
-              "80": [path.join(parser.originalName, 'Resources','icons','icon-40@2x.png')],
-              "100": [path.join(parser.originalName, 'Resources','icons','icon-50@2x.png')],
-              "114": [path.join(parser.originalName, 'Resources','icons','icon@2x.png')],
-              "120": [path.join(parser.originalName, 'Resources','icons','icon-60@2x.png')],
-              "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')],
-              "152": [path.join(parser.originalName, 'Resources','icons','icon-76@2x.png')]
-            };
-            infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
-            infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
-            iosIconDir = path.join(parser.originalName, 'Resources', 'icons');
-          }
-          function copyIcon(size, dstPath) {
-            shelljs.mkdir('-p', path.dirname(dstPath));
-            shelljs.cp('-f', path.join('www', fixPathSlashes(manifest.icons[size])), dstPath);
-            if (shelljs.error()) {
-              console.log("Error copying " + size + "px icon file: " + shelljs.error());
-            }
-          }
-          var missingIcons = [];
-          if (iconMap) {
-            //console.log('## Copying icons for ' + platform);
-            for (size in iconMap) {
-              for (var i=0; i < iconMap[size].length; i++) {
-                var dstPath = path.join('platforms', platform, iconMap[size][i]);
-                if (manifest.icons[size]) {
-                  //console.log("Copying " + size + "px icon file");
-                  copyIcon(size, dstPath);
-                } else {
-                  missingIcons.push(dstPath);
-                }
-              }
-            }
-            // Find the largest icon.
-            var bestSize = '0';
-            for (size in manifest.icons) {
-              bestSize = +size > +bestSize ? size : bestSize;
-            }
-            missingIcons.forEach(function(dstPath) {
-              var imgName = path.basename(dstPath).replace(/\..*?$/, '');
-              // Leave at least one icon.
-              if (imgName != 'icon') {
-                delete iPadFiles[imgName];
-                delete iPhoneFiles[imgName];
-              }
-              // TODO: need to remove the iOS assets from the Xcode project file (ugh).
-              if (platform == 'android') {
-                shelljs.rm('-f', dstPath);
-              } else if (platform == 'ios') {
-                // Fill in all missing iOS icons with the largest resolution we have.
-                copyIcon(bestSize, dstPath);
-              }
-            });
-            // Use the largest icon as the default Android one.
-            if (platform == 'android') {
-              var dstPath = path.join('platforms', platform, 'res', 'drawable', 'icon.png');
-              copyIcon(bestSize, dstPath);
-            }
-            if (infoPlistXml) {
-              function findArrayNode(key) {
-                var foundNode = null;
-                var foundKey = 0;
-                infoPlistXml.iter('*', function(e) {
-                  if (foundKey == 0) {
-                    if (e.text == key) {
-                      foundKey = 1;
-                    }
-                  } else if (foundKey == 1) {
-                    if (e.text == 'CFBundleIconFiles') {
-                      foundKey = 2;
-                    }
-                  } else if (foundKey == 2) {
-                    if (e.tag == 'array') {
-                      foundNode = e;
-                      foundKey = 3;
-                    }
-                  }
-                });
-                return foundNode;
-              }
-              function setValues(key, vals) {
-                var node = findArrayNode(key);
-                node.clear();
-                for (var imgName in vals) {
-                  et.SubElement(node, 'string').text = imgName;
-                }
-              }
-              setValues('CFBundleIcons', iPhoneFiles);
-              setValues('CFBundleIcons~ipad', iPadFiles);
-              fs.writeFileSync(infoPlistPath, et.tostring(infoPlistXml.getroot(), {indent: 8}), 'utf8');
-            }
+  var badPath = path.join(assetDirForPlatform(platform), '_locales');
+  var betterPath = path.join(assetDirForPlatform(platform), 'CCA_locales');
+  var promise = Q();
+  if (fs.existsSync(badPath)) {
+    console.log('## Moving ' + platform + ' locales directory');
+    fs.renameSync(badPath, betterPath);
+    console.log('## Renaming directories inside locales');
+    promise = Q.ninvoke(fs, 'readdir', betterPath)
+    .then(function(files) {
+      for (var i=0; i<files.length; i++) {
+        var fullName = path.join(betterPath, files[i]);
+        var adjustedFilename= files[i].replace('-', '_').toLowerCase();
+        if (files[i] !== adjustedFilename) {
+          stats = fs.statSync(fullName);
+          if (stats.isDirectory()) {
+            fs.renameSync(fullName, path.join(betterPath, adjustedFilename));
           }
         }
-        callback();
-      });
-    };
+      }
+    });
   }
 
-  function mergeManifests(platform) {
-    return function (callback) {
-      var root = assetDirForPlatform(platform);
-      getManifest(root, function(manifest) {
-        fs.writeFile(path.join(root, 'manifest.json'), JSON.stringify(manifest), callback);
-      });
+  return promise.then(function() {
+    return getManifest('www');
+  }).then(function(manifest) {
+    if (!manifest || !manifest.icons) return;
+    var iconMap = {};
+    var iPhoneFiles = {
+        'icon-40': true,
+        'icon-small': true,
+        'icon.png': true,
+        'icon@2x': true,
+        'icon-72': true,
+        'icon-72@2x': true
     };
-  }
+    var iPadFiles = {
+        'icon-small': true,
+        'icon-40': true,
+        'icon-50': true,
+        'icon-76': true,
+        'icon': true,
+        'icon@2x': true,
+        'icon-72': true,
+        'icon-72@2x': true
+    };
+    var infoPlistXml = null;
+    var infoPlistPath = null;
+    var iosIconDir = null;
+
+    if (platform === "android") {
+      iconMap = {
+        "36": [path.join('res','drawable-ldpi','icon.png')],
+        "48": [path.join('res','drawable-mdpi','icon.png')],
+        "72": [path.join('res','drawable-hdpi','icon.png')],
+        "96": [path.join('res','drawable-xhdpi','icon.png')],
+        "144": [path.join('res','drawable-xxhdpi','icon.png')],
+        "192": [path.join('res','drawable-xxxhdpi','icon.png')]
+      };
+    } else if (platform === "ios") {
+      var platforms = require('cordova/platforms');
+      var parser = new platforms.ios.parser(path.join('platforms','ios'));
+      iconMap = {
+        "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
+        "29": [path.join(parser.originalName, 'Resources','icons','icon-small.png')],
+        "40": [path.join(parser.originalName, 'Resources','icons','icon-40.png')],
+        "50": [path.join(parser.originalName, 'Resources','icons','icon-50.png')],
+        "57": [path.join(parser.originalName, 'Resources','icons','icon.png')],
+        "58": [path.join(parser.originalName, 'Resources','icons','icon-small@2x.png')],
+        "72": [path.join(parser.originalName, 'Resources','icons','icon-72.png')],
+        "76": [path.join(parser.originalName, 'Resources','icons','icon-76.png')],
+        "80": [path.join(parser.originalName, 'Resources','icons','icon-40@2x.png')],
+        "100": [path.join(parser.originalName, 'Resources','icons','icon-50@2x.png')],
+        "114": [path.join(parser.originalName, 'Resources','icons','icon@2x.png')],
+        "120": [path.join(parser.originalName, 'Resources','icons','icon-60@2x.png')],
+        "144": [path.join(parser.originalName, 'Resources','icons','icon-72@2x.png')],
+        "152": [path.join(parser.originalName, 'Resources','icons','icon-76@2x.png')]
+      };
+      infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+      infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
+      iosIconDir = path.join(parser.originalName, 'Resources', 'icons');
+    }
+    function copyIcon(size, dstPath) {
+      shelljs.mkdir('-p', path.dirname(dstPath));
+      shelljs.cp('-f', path.join('www', fixPathSlashes(manifest.icons[size])), dstPath);
+      if (shelljs.error()) {
+        console.log("Error copying " + size + "px icon file: " + shelljs.error());
+      }
+    }
+    var missingIcons = [];
+    if (iconMap) {
+      //console.log('## Copying icons for ' + platform);
+      for (size in iconMap) {
+        for (var i=0; i < iconMap[size].length; i++) {
+          var dstPath = path.join('platforms', platform, iconMap[size][i]);
+          if (manifest.icons[size]) {
+            //console.log("Copying " + size + "px icon file");
+            copyIcon(size, dstPath);
+          } else {
+            missingIcons.push(dstPath);
+          }
+        }
+      }
+      // Find the largest icon.
+      var bestSize = '0';
+      for (size in manifest.icons) {
+        bestSize = +size > +bestSize ? size : bestSize;
+      }
+      missingIcons.forEach(function(dstPath) {
+        var imgName = path.basename(dstPath).replace(/\..*?$/, '');
+        // Leave at least one icon.
+        if (imgName != 'icon') {
+          delete iPadFiles[imgName];
+          delete iPhoneFiles[imgName];
+        }
+        // TODO: need to remove the iOS assets from the Xcode project file (ugh).
+        if (platform == 'android') {
+          shelljs.rm('-f', dstPath);
+        } else if (platform == 'ios') {
+          // Fill in all missing iOS icons with the largest resolution we have.
+          copyIcon(bestSize, dstPath);
+        }
+      });
+      // Use the largest icon as the default Android one.
+      if (platform == 'android') {
+        var dstPath = path.join('platforms', platform, 'res', 'drawable', 'icon.png');
+        copyIcon(bestSize, dstPath);
+      }
+      if (infoPlistXml) {
+        function findArrayNode(key) {
+          var foundNode = null;
+          var foundKey = 0;
+          infoPlistXml.iter('*', function(e) {
+            if (foundKey == 0) {
+              if (e.text == key) {
+                foundKey = 1;
+              }
+            } else if (foundKey == 1) {
+              if (e.text == 'CFBundleIconFiles') {
+                foundKey = 2;
+              }
+            } else if (foundKey == 2) {
+              if (e.tag == 'array') {
+                foundNode = e;
+                foundKey = 3;
+              }
+            }
+          });
+          return foundNode;
+        }
+        function setValues(key, vals) {
+          var node = findArrayNode(key);
+          node.clear();
+          for (var imgName in vals) {
+            et.SubElement(node, 'string').text = imgName;
+          }
+        }
+        setValues('CFBundleIcons', iPhoneFiles);
+        setValues('CFBundleIcons~ipad', iPadFiles);
+        fs.writeFileSync(infoPlistPath, et.tostring(infoPlistXml.getroot(), {indent: 8}), 'utf8');
+      }
+    }
+  })
+
+  // Merge the manifests.
+  .then(function() {
+    return getManifest(root);
+  }).then(function(manifest) {
+    return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
+  })
 
   // Set the "other" version values if defined in the manifest.
   // CFBundleVersion on iOS and versionCode on Android.
-  function setVersionCode(platform) {
-    return function(callback) {
-      var root = assetDirForPlatform(platform);
-      getManifest(root, function(manifest) {
-        // Android
-        if (platform === 'android' && manifest && manifest.versionCode) {
-          var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-          var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-          androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
-          fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
-        }
-
-        // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
-        // so if manifest.CFBundleVersion is not specifically set, we'll default to manifest.version
-        if (platform === 'ios' && manifest && (manifest.version || manifest.CFBundleVersion)) {
-          var platforms = require('cordova/platforms');
-          var parser = new platforms.ios.parser(path.join('platforms','ios'));
-          var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
-          var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
-          var theNode;
-          var isFound = 0;
-
-          // plist file format is pretty strange, we need the <string> node
-          // immediately following <key>CFBundleVersion</key>
-          // iterating over all the nodes.
-          infoPlistXml.iter('*', function(e) {
-            if (isFound == 0) {
-              if (e.text == 'CFBundleVersion') {
-                isFound = 1;
-              }
-            } else if (isFound == 1) {
-              theNode = e;
-              isFound = 2;
-            }
-          });
-
-          theNode.text = manifest.CFBundleVersion || manifest.version;
-          fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
-        }
-        callback();
-      });
+  .then(function() {
+    return getManifest(root);
+  }).then(function(manifest) {
+    // Android
+    if (platform === 'android' && manifest && manifest.versionCode) {
+      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+      androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
+      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
     }
-  }
 
-  if (hasAndroid) {
-    eventQueue.push(moveI18NMessagesDir('android'));
-    eventQueue.push(copyIconAssetsStep('android'));
-    eventQueue.push(setVersionCode('android'));
-    eventQueue.push(mergeManifests('android'));
-  }
-  if (hasIos) {
-    eventQueue.push(moveI18NMessagesDir('ios'));
-    eventQueue.push(copyIconAssetsStep('ios'));
-    eventQueue.push(setVersionCode('ios'));
-    eventQueue.push(mergeManifests('ios'));
-  }
+    // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
+    // so if manifest.CFBundleVersion is not specifically set, we'll default to manifest.version
+    if (platform === 'ios' && manifest && (manifest.version || manifest.CFBundleVersion)) {
+      var platforms = require('cordova/platforms');
+      var parser = new platforms.ios.parser(path.join('platforms','ios'));
+      var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+      var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
+      var theNode;
+      var isFound = 0;
+
+      // plist file format is pretty strange, we need the <string> node
+      // immediately following <key>CFBundleVersion</key>
+      // iterating over all the nodes.
+      infoPlistXml.iter('*', function(e) {
+        if (isFound == 0) {
+          if (e.text == 'CFBundleVersion') {
+            isFound = 1;
+          }
+        } else if (isFound == 1) {
+          theNode = e;
+          isFound = 2;
+        }
+      });
+
+      theNode.text = manifest.CFBundleVersion || manifest.version;
+      fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
+    }
+  });
 }
 
+
+// Returns a promise.
 function push(platform, url) {
-  var srcDir, zipContents, crxContents;
+  var zipContents, crxContents;
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
-
-  function findWww(callback) {
-    srcDir = assetDirForPlatform(platform);
-    callback();
-  }
-
-  function zipify(callback) {
-    // Zip up the directory into an in-memory string.
-    function zipDir(zip, dir) {
-      var contents = fs.readdirSync(dir);
-      contents.forEach(function(f) {
-        var fullPath = path.join(dir, f);
-        if (fs.statSync(fullPath).isDirectory()) {
-          var inner = zip.folder(f);
-          zipDir(inner, path.join(dir, f));
-        } else {
-          zip.file(f, fs.readFileSync(fullPath, 'binary'), { binary: true });
-        }
-      });
-    }
-
-    var zip = new require('node-zip')();
-    zipDir(zip, srcDir);
-
-    var tempzip = zip.generate({ type: 'base64' });
-    zipContents = new Buffer(tempzip, 'base64');
-    fs.writeFileSync('temp.zip', tempzip, 'base64');
-    callback();
-  }
-
-  function makeCrx(callback) {
-    crxContents = new Buffer(zipContents.length + 16);
-
-    // Magic number
-    crxContents[0] = 0x43; // C
-    crxContents[1] = 0x72; // r
-    crxContents[2] = 0x32; // 2
-    crxContents[3] = 0x34; // 4
-    // Version
-    crxContents[4] = 2;
-    // Zeroes (latter 3 bytes of the version, 4 bytes of key length, 4 bytes of signature length.
-    for(var i = 5; i < 16; i++) {
-      crxContents[i] = 0;
-    }
-    zipContents.copy(crxContents, 16);
-    callback();
-  }
-
-  function doPush(callback) {
-    // crxContents is a Node Buffer, and should form the payload of the HTTP request.
-    var request = require('request');
-
-    // Prepare the form data for upload.
-    var uri = require('url').format({
-      protocol: 'http',
-      hostname: url,
-      port: 2424,
-      pathname: '/push',
-      query: { type: 'crx', name: 'CCA-push' }
-    });
-    var req = request.post({
-      uri: uri,
-      method: 'POST'
-    }, function(err, res, body) {
-      console.log(body);
-      callback();
-    });
-    req.form().append("file", crxContents, { filename: 'push.crx', contentType: 'application/octet-stream' });
-  }
-
+  var srcDir = assetDirForPlatform(platform);
 
   if (platform == 'android' && !hasAndroid) {
-    console.error('Selected platform \'android\' is not available.');
-    return;
+    return Q.reject('Selected platform \'android\' is not available.');
   }
   if (platform == 'ios' && !hasIos) {
-    console.error('Selected platform \'ios\' is not available.');
-    return;
+    return Q.reject('Selected platform \'ios\' is not available.');
   }
 
-  // Steps: locate the www, zip it up, make it into a fake CRX, send it over HTTP.
-  eventQueue.push(findWww);
-  eventQueue.push(zipify);
-  eventQueue.push(makeCrx);
-  eventQueue.push(doPush);
+  function zipDir(zip, dir) {
+    var contents = fs.readdirSync(dir);
+    contents.forEach(function(f) {
+      var fullPath = path.join(dir, f);
+      if (fs.statSync(fullPath).isDirectory()) {
+        var inner = zip.folder(f);
+        zipDir(inner, path.join(dir, f));
+      } else {
+        zip.file(f, fs.readFileSync(fullPath, 'binary'), { binary: true });
+      }
+    });
+  }
+
+  // Build the zip object.
+  var zip = new require('node-zip')();
+  zipDir(zip, srcDir);
+
+  var tempzip = zip.generate({ type: 'base64' });
+  zipContents = new Buffer(tempzip, 'base64');
+  fs.writeFileSync('temp.zip', tempzip, 'base64');
+
+  // Build the CRX data from the zip object.
+  crxContents = new Buffer(zipContents.length + 16);
+  // Magic number
+  crxContents[0] = 0x43; // C
+  crxContents[1] = 0x72; // r
+  crxContents[2] = 0x32; // 2
+  crxContents[3] = 0x34; // 4
+  // Version
+  crxContents[4] = 2;
+  // Zeroes (latter 3 bytes of the version, 4 bytes of key length, 4 bytes of signature length.
+  for(var i = 5; i < 16; i++) {
+    crxContents[i] = 0;
+  }
+  zipContents.copy(crxContents, 16);
+
+  // Send the HTTP request. crxContents is a Node Buffer, which is the payload.
+  var request = require('request');
+
+  // Prepare the form data for upload.
+  var uri = require('url').format({
+    protocol: 'http',
+    hostname: url,
+    port: 2424,
+    pathname: '/push',
+    query: { type: 'crx', name: 'CCA-push' }
+  });
+  var d = Q.defer();
+  var req = request.post({
+    uri: uri,
+    method: 'POST'
+  }, function(err, res, body) {
+    console.log(body);
+    if (err) d.reject();
+    else d.resolve();
+  });
+  req.form().append("file", crxContents, { filename: 'push.crx', contentType: 'application/octet-stream' });
+  return d.promise;
 }
 
 /******************************************************************************/
@@ -1206,45 +1115,43 @@ function main() {
   var commandActions = {
     // Secret command used by our prepare hook.
     'pre-prepare': function() {
-      prePrepareCommand();
+      return prePrepareCommand();
     },
     'update-app': function() {
-      postPrepareCommand();
+      return postPrepareCommand();
     },
     'init': function() {
-      toolsCheck();
-      initCommand();
+      return toolsCheck().then(initCommand);
     },
     'checkenv': function() {
-      toolsCheck();
+      return toolsCheck();
     },
     'push': function() {
       var platform = commandLineFlags._[1];
       var url = commandLineFlags._[2];
       if (!platform) {
-        console.error('You must specify a platform: cca push <platform> <url>');
-        return;
+        return Q.reject('You must specify a platform: cca push <platform> <url>');
       } else if (!url) {
-        console.error('You must specify the destination URL: cca push <platform> <url>');
-        return;
+        return Q.reject('You must specify the destination URL: cca push <platform> <url>');
       }
-      push(platform, url);
+      return push(platform, url);
     },
     'create': function() {
-      ensureHasRunInit();
-      if (isGitRepo) {
-        promptIfNeedsGitUpdate();
-      }
-      toolsCheck();
-
-      var destAppDir = commandLineFlags._[1] || '';
-      createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
+      return ensureHasRunInit().then(function() {
+        return isGitRepo ? promptIfNeedsGitUpdate() : Q();
+      }).then(toolsCheck)
+      .then(function() {
+        var destAppDir = commandLineFlags._[1] || '';
+        return createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
+      });
     },
     'version': function() {
       console.log(packageVersion);
+      return Q();
     },
     'help': function() {
       optimist.showHelp(console.log);
+      return Q();
     }
   };
 
@@ -1275,8 +1182,8 @@ function main() {
       cordova.on('verbose', console.log);
       require('plugman').on('verbose', console.log);
     }
-    commandActions[command]();
-    pump();
+    console.log('Loading command: ' + command);
+    commandActions[command]().done(null, fatal);
   } else if (cordovaCommands[command]) {
     console.log('cca v' + packageVersion);
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
