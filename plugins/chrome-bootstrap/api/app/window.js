@@ -127,6 +127,51 @@ function rewritePage(pageContent, filePath) {
   }
 }
 
+function fixLocationObjects() {
+  var hostDescriptor = {
+    configurable: false,
+    enumerable: true,
+    get: function() {
+      var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
+      return parts[2];
+    }
+  };
+  // Android KK incorrectly parses chrome-extension:// URLs
+  if (document.location.host === "") {
+    Object.defineProperty(document.location, "host", hostDescriptor);
+    Object.defineProperty(document.location, "hostname", hostDescriptor);
+    Object.defineProperty(document.location, "pathname", {
+      configurable: false,
+      enumerable: true,
+      get: function() {
+        var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
+        return parts[3];
+      }
+    });
+    Object.defineProperty(document.location, "origin", {
+      configurable: false,
+      enumerable: true,
+      get: function() {
+        var parts = /^([^:]*:\/\/[^/]*)(\/[^#?]*)/.exec(this.href);
+        return parts[1];
+      }
+    });
+  }
+  // This is needed for both pre- and post-KK Android, but throws an exception on Safari
+  if (document.domain === "") {
+    try {
+      Object.defineProperty(document, "domain", {
+        configurable: false,
+        enumerable: true,
+        get: function() {
+          var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.location.href);
+          return parts[2];
+        }
+      });
+    } catch (e) {}
+  }
+}
+
 exports.create = function(filePath, options, callback) {
   if (createdAppWindow) {
     console.log('ERROR - chrome.app.window.create called multiple times. This is unsupported.');
@@ -144,6 +189,7 @@ exports.create = function(filePath, options, callback) {
   xhr.onload = xhr.onerror = function() {
     // Change the page URL before the callback.
     history.replaceState(null, null, resolvedUrl);
+    fixLocationObjects();
     // Call the callback before the page contents loads.
     if (callback) {
       callback(createdAppWindow);
