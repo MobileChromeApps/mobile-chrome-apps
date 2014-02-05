@@ -1,9 +1,6 @@
 [submodule "chrome-cordova"]
 	path = chrome-cordova
 	url = https://github.com/MobileChromeApps/chrome-cordova.git
-[submodule "mobile-chrome-app-samples"]
-	path = mobile-chrome-app-samples
-	url = https://github.com/MobileChromeApps/mobile-chrome-app-samples.git
 [submodule "cordova/cordova-android"]
 	path = cordova/cordova-android
 	url = https://git-wip-us.apache.org/repos/asf/cordova-android.git
