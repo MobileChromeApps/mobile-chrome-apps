@@ -20,10 +20,14 @@ Try out the `cca` toolchain by following these steps:
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
 
-There are a few special considerations that you should keep in mind when developing with Cordova; we've listed them in the [considerations section](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/CordovaConsiderations.md).
+## Additional resources
 
-To view which Chrome APIs are supported on mobile, visit the [API Status](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md) page.
+* There are a few special considerations that you should keep in mind when developing with Cordova; we've listed them in the [considerations section](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/CordovaConsiderations.md).
 
-And if you're in a hurry, use the [Chrome ADT](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/ChromeADT.md) to preview your Chrome App on an Android device without the toolchain.
+* To view which Chrome APIs are supported on mobile, visit the [API Status](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md) page.
 
-_**Let's get started. Continue to [Step 1: Install your development tools &raquo;](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md)**_
+* To preview your Chrome App on an Android device without the toolchain, use the [Chrome ADT](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/ChromeADT.md).
+
+## Let's get started
+
+_**Continue to [Step 1: Install your development tools &raquo;](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md)**_
