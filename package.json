@@ -1,7 +1,7 @@
 {
   "name": "cca",
   "author": "The Chrome Team",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Run Chrome Apps on mobile using Apache Cordova",
   "preferGlobal": "true",
   "keywords": [
@@ -24,7 +24,6 @@
     "optimist": "~0.5",
     "cryptojs": "~2",
     "elementtree": "0.1.5",
-    "request": "MobileChromeApps/request",
     "shelljs": "~0.2.6",
     "node-zip": "~1",
     "node.extend": "",
