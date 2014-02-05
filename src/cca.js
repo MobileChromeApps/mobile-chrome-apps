@@ -97,7 +97,7 @@ var CORDOVA_CONFIG_JSON = {
 // Utility Functions
 
 function exit(code) {
-  if (commandLineFlags['pause_on_exit']) {
+  if (commandLineFlags.pause_on_exit) {
     waitForKey(function() {
       process.exit(code);
     });
@@ -200,8 +200,10 @@ function getManifest(manifestDir) {
       // Swallow any errors opening the mobile manifest, it's not required.
     }).then(function() {
       try {
+        // jshint evil:true
         var manifest = eval('(' + manifestData + ')');
         var manifestMobile = eval('(' + manifestMobileData + ')');
+        // jshint evil:false
         var extend = require('node.extend');
         manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
         return manifest;
@@ -211,7 +213,7 @@ function getManifest(manifestDir) {
       }
     });
   }, function(err) {
-    return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.')
+    return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.');
   });
 }
 
@@ -383,7 +385,7 @@ function initCommand() {
       var p;
       if (isWindows) {
         // See if it's at the default install path.
-        process.env['PATH'] += ';' + path.join(process.env['ProgramFiles'], 'Git', 'bin');
+        process.env.PATH += ';' + path.join(process.env.ProgramFiles, 'Git', 'bin');
         p = exec('git --version', true /* opt_silent */);
       } else {
         p = Q.reject();
@@ -432,7 +434,6 @@ function initCommand() {
 function runCmd(cmd) {
   // Hack to remove the obj passed to the cordova create command.
   console.log(cmd.join(' ').replace('[object Object]', ''));
-  debugger;
   return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
 }
 
@@ -463,8 +464,8 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   function resolveTilde(string) {
     // TODO: implement better
     if (string.substr(0,1) === '~')
-      return path.resolve(process.env.HOME + string.substr(1))
-    return string
+      return path.resolve(process.env.HOME + string.substr(1));
+    return string;
   }
 
   // Validate source arg.
@@ -812,7 +813,7 @@ function postPrepareInternal(platform) {
     var missingIcons = [];
     if (iconMap) {
       //console.log('## Copying icons for ' + platform);
-      for (size in iconMap) {
+      for (var size in iconMap) {
         for (var i=0; i < iconMap[size].length; i++) {
           var dstPath = path.join('platforms', platform, iconMap[size][i]);
           if (manifest.icons[size]) {
@@ -853,7 +854,7 @@ function postPrepareInternal(platform) {
           var foundNode = null;
           var foundKey = 0;
           infoPlistXml.iter('*', function(e) {
-            if (foundKey == 0) {
+            if (foundKey === 0) {
               if (e.text == key) {
                 foundKey = 1;
               }
@@ -918,7 +919,7 @@ function postPrepareInternal(platform) {
       // immediately following <key>CFBundleVersion</key>
       // iterating over all the nodes.
       infoPlistXml.iter('*', function(e) {
-        if (isFound == 0) {
+        if (isFound === 0) {
           if (e.text == 'CFBundleVersion') {
             isFound = 1;
           }
@@ -1078,19 +1079,19 @@ function fixEnv() {
   if (isWindows) {
     // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
     var javacInPath = !shelljs.which('javac');
-    var hasJavaHome = !!process.env['JAVA_HOME'];
+    var hasJavaHome = !!process.env.JAVA_HOME;
     if (hasJavaHome && !javacInPath) {
-      process.env['PATH'] += ';' + process.env['JAVA_HOME'] + '\\bin';
+      process.env.PATH += ';' + process.env.JAVA_HOME + '\\bin';
     } else if (!hasJavaHome || !javacInPath) {
       var firstJdkDir =
-          shelljs.ls(process.env['ProgramFiles'] + '\\java\\jdk*')[0] ||
+          shelljs.ls(process.env.ProgramFiles + '\\java\\jdk*')[0] ||
           shelljs.ls('C:\\Program Files\\java\\jdk*')[0] ||
           shelljs.ls('C:\\Program Files (x86)\\java\\jdk*')[0];
       if (firstJdkDir) {
         if (!javacInPath) {
-          process.env['PATH'] += ';' + firstJdkDir + '\\bin';
+          process.env.PATH += ';' + firstJdkDir + '\\bin';
         }
-        process.env['JAVA_HOME'] = firstJdkDir;
+        process.env.JAVA_HOME = firstJdkDir;
         console.log('Set JAVA_HOME to ' + firstJdkDir);
       }
     }
