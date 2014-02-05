@@ -410,7 +410,7 @@ function initCommand() {
         if (isFirstInit) {
           console.warn('The next step may take a while the first time.');
         }
-        return exec('git submodule update --init --recursive', callback, error);
+        return exec('git submodule update --init --recursive');
       }).then(null, function(err) {
         console.log("Could not update submodules:");
         console.warn(err.toString());
