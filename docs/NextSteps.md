@@ -1,4 +1,4 @@
-## Next Steps
+## Step 4: Next Steps
 
 Now that you have a working mobile Chrome App, there are lots of ways to improve the experience on mobile devices.
 

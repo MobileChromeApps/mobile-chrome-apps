@@ -52,4 +52,4 @@ Your HTML, CSS, and JavaScript files live within the `www` directory of your cca
 
 You can debug your Chrome App on mobile the same way that you debug normal Cordova applications.
 
-_**Done? Continue to [Next Steps &raquo;](NextSteps.md)**_
+_**Done? Continue to [Step 4: Next Steps &raquo;](NextSteps.md)**_

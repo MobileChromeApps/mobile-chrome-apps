@@ -37,4 +37,4 @@ However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desk
 
 You can track progress from our [API Status](APIStatus.md) page.
 
-_**Done? Continue to [Step 4: Publish &raquo;](Publish.md)**_
+_**Done? Continue to [Step 5: Publish &raquo;](Publish.md)**_
