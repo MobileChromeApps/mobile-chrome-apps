@@ -302,19 +302,22 @@ function toolsCheck() {
     console.log('Android SDK detected.');
     var targets = parseTargetOutput(targetOutput);
     /* This is the android SDK version declared in cordova-android/framework/project.properties */
-    if (targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1) {
-      hasAndroidPlatform = true;
-    } else {
-      console.warn('Android 4.4 (Google APIs) Platform is not installed. Add it using the Android SDK Manager (run the "android" command)');
+    if (!(targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1)) {
+      console.warn('Dependency warning: Android 4.4 (Google APIs) Platform is not installed.' +
+        '\nAdd it using the Android SDK Manager (run the "android" command)');
     }
     // Stacking up here because we want to bail after the first one fails.
     return exec('ant -version', true /* opt_silent */).then(function() {
-      return exec('javac -version', true /* opt_silent */).then(null, function(err) { console.warn('`javac` command not detected on your PATH.'); });
+      // Project creation does succeed without javac.
+      hasAndroidPlatform = true;
+      return exec('javac -version', true /* opt_silent */).then(null, function(err) {
+        console.warn('Dependency warning: `javac` command not detected on your PATH.');
+      });
     }, function(err) {
-      console.warn('`ant` command not detected on your PATH.');
+      console.warn('Dependency warning: `ant` command not detected on your PATH.');
     });
   }, function(err) {
-    console.warn('`android` command not detected on your PATH.');
+    console.warn('Android not detected (`android` command not detected on your PATH).');
   })
   // iOS
   .then(function() {
