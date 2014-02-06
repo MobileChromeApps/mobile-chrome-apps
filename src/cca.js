@@ -938,7 +938,6 @@ function postPrepareInternal(platform) {
 
 // Returns a promise.
 function push(platform, url) {
-  var zipContents, crxContents;
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
@@ -951,69 +950,8 @@ function push(platform, url) {
     return Q.reject('Selected platform \'ios\' is not available.');
   }
 
-  function zipDir(zip, dir) {
-    var contents = fs.readdirSync(dir);
-    contents.forEach(function(f) {
-      var fullPath = path.join(dir, f);
-      if (fs.statSync(fullPath).isDirectory()) {
-        var inner = zip.folder(f);
-        zipDir(inner, path.join(dir, f));
-      } else {
-        zip.file(f, fs.readFileSync(fullPath, 'binary'), { binary: true });
-      }
-    });
-  }
-
-  // Fetch the manifest so we can get the app's name for use in the push.
-  return getManifest('www').then(function(manifest) {
-    var appName = manifest.name || 'CCA-push';
-
-    // Build the zip object.
-    var zip = new require('node-zip')();
-    zipDir(zip, srcDir);
-
-    var tempzip = zip.generate({ type: 'base64' });
-    zipContents = new Buffer(tempzip, 'base64');
-    fs.writeFileSync('temp.zip', tempzip, 'base64');
-
-    // Build the CRX data from the zip object.
-    crxContents = new Buffer(zipContents.length + 16);
-    // Magic number
-    crxContents[0] = 0x43; // C
-    crxContents[1] = 0x72; // r
-    crxContents[2] = 0x32; // 2
-    crxContents[3] = 0x34; // 4
-    // Version
-    crxContents[4] = 2;
-    // Zeroes (latter 3 bytes of the version, 4 bytes of key length, 4 bytes of signature length.
-    for(var i = 5; i < 16; i++) {
-      crxContents[i] = 0;
-    }
-    zipContents.copy(crxContents, 16);
-
-    // Send the HTTP request. crxContents is a Node Buffer, which is the payload.
-    var request = require('request');
-
-    // Prepare the form data for upload.
-    var uri = require('url').format({
-      protocol: 'http',
-      hostname: url,
-      port: 2424,
-      pathname: '/push',
-      query: { type: 'crx', name: appName }
-    });
-    var d = Q.defer();
-    var req = request.post({
-      uri: uri,
-      method: 'POST'
-    }, function(err, res, body) {
-      console.log(body);
-      if (err) d.reject();
-      else d.resolve();
-    });
-    req.form().append("file", crxContents, { filename: 'push.crx', contentType: 'application/octet-stream' });
-    return d.promise;
-  });
+  var Push = require('cca-push');
+  return Q.nfcall(Push.push, srcDir, url);
 }
 
 /******************************************************************************/

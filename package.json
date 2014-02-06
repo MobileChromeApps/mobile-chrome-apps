@@ -25,8 +25,8 @@
     "cryptojs": "~2",
     "elementtree": "0.1.5",
     "shelljs": "~0.2.6",
-    "node-zip": "~1",
     "node.extend": "",
+    "cca-push": "",
     "q": "~1"
   },
   "files": [
