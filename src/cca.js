@@ -600,6 +600,35 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
   })
 
+  // Add a URL type for iOS.
+  // This uses PlistBuddy to update the app's .plist file.  Sadly, Plistbuddy is a Mac utility, so it won't work on other platforms.
+  // TODO(maxw): Is it better, then, to bite the bullet and hack this in with sed?
+  .then(function() {
+    var hasIos = fs.existsSync(path.join('platforms', 'ios'));
+    if (hasIos) {
+      var platforms = require('cordova/platforms');
+      var parser = new platforms.ios.parser(path.join('platforms','ios'));
+      var appName = parser.originalName.replace(' ', '\\ ');
+      var plistPath = 'platforms/ios/' + appName + '/' + appName + '-Info.plist';
+      return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" ' + plistPath, /* opt_silent */ true)
+      .then(function() {
+        return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" ' + plistPath, /* opt_silent */ true);
+      })
+      .then(function() {
+        return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleTypeRole string Editor" ' + plistPath, /* opt_silent */ true);
+      })
+      .then(function() {
+        return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string ' + manifest.packageId + '" ' + plistPath, /* opt_silent */ true);
+      })
+      .then(function() {
+        return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" ' + plistPath, /* opt_silent */ true);
+      })
+      .then(function() {
+        return exec('/usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string ' + manifest.packageId + '" ' + plistPath, /* opt_silent */ true);
+      })
+    }
+  })
+
   // Run prepare.
   .then(function() {
     var wwwPath = path.join(origDir, destAppDir, 'www');
