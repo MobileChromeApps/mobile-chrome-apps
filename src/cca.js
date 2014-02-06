@@ -482,6 +482,8 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 
     // Special values for sourceArg we resolve to predefined locations
     if (sourceArg === 'spec') {
+      dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'chrome-apps-api-tests'));
+    } else if (sourceArg === 'oldspec') {
       dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
     } else if (sourceArg === 'default') {
       dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
