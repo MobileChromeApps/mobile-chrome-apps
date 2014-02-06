@@ -338,7 +338,8 @@ function toolsCheck() {
   // Check for at least one of the tools.
   .then(function() {
     if (!hasAndroidPlatform && ! hasXcode) {
-      return Q.reject('No usable build environment could be found. Please refer to our installation guide: http://goo.gl/KWZFSe');
+      return Q.reject('No usable build environment could be found. Please refer to our installation guide:\n' +
+          'https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md');
     }
   });
 }
@@ -647,7 +648,8 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       welcomeText += 'Your project has been created, with web assets in the `www` directory:\n'+
                      wwwPath + '\n\n';
     }
-    welcomeText += 'Remember to run `cca prepare` after making changes (full instructions: http://goo.gl/iCaCFG).';
+    welcomeText += 'Remember to run `cca prepare` after making changes\n';
+    welcomeText += 'Full instructions: https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md#making-changes-to-your-app-source-code';
 
     return runCmd(['prepare']).then(function() {
       console.log(welcomeText);
