@@ -1,6 +1,8 @@
 # Run Chrome Apps on mobile using Apache Cordova
 _**The toolchain for running Chrome Apps on mobile is in early developer preview. Feel free to give us your feedback using the [Github issue tracker](https://github.com/MobileChromeApps/mobile-chrome-apps/issues), our [Chrome Apps developer forum](http://groups.google.com/a/chromium.org/group/chromium-apps/topics), on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-chrome-app), or our [G+ Developers page](https://plus.google.com/+GoogleChromeDevelopers/).**_
 
+![A Chrome App running on both desktop and mobile](docs/images/cca-desktop-and-mobile.jpg)
+
 ## Overview
 
 You can run your [Chrome Apps](http://developer.chrome.com/apps) on Android and iOS via a [toolchain](https://github.com/MobileChromeApps/mobile-chrome-apps) based on [Apache Cordova](http://cordova.apache.org), an open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript.
@@ -20,10 +22,14 @@ Try out the `cca` toolchain by following these steps:
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
 
-There are a few special considerations that you should keep in mind when developing with Cordova; we've listed them in the [considerations section](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/CordovaConsiderations.md).
+## Additional resources
 
-To view which Chrome APIs are supported on mobile, visit the [API Status](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md) page.
+* There are a few special considerations that you should keep in mind when developing with Cordova; we've listed them in the [considerations section](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/CordovaConsiderations.md).
 
-And if you're in a hurry, use the [Chrome ADT](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/ChromeADT.md) to preview your Chrome App on an Android device without the toolchain.
+* To view which Chrome APIs are supported on mobile, visit the [API Status](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md) page.
 
-_**Let's get started. Continue to [Step 1: Install your development tools &raquo;](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md)**_
+* To preview your Chrome App on an Android device without the toolchain, use the [Chrome ADT](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/ChromeADT.md).
+
+## Let's get started
+
+_**Continue to [Step 1: Install your development tools &raquo;](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md)**_
