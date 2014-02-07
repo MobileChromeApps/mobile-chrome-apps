@@ -1038,12 +1038,15 @@ function parseCommandLine() {
              '    cca run ios --emulator\n' +
              '    cca plugin ls'
       ).options('h', {
+          type: 'boolean',
           alias: 'help',
           desc: 'Show usage message.'
       }).options('d', {
+          type: 'boolean',
           alias: 'verbose',
           desc: 'Enable verbose logging.'
       }).options('v', {
+          type: 'boolean',
           alias: 'version',
           desc: 'Show version.'
       }).options('android', { type: 'boolean'
@@ -1166,16 +1169,21 @@ function main() {
     if (command != 'version') {
       console.log('cca v' + packageVersion);
     }
+    var cliDummyArgs = [0, 0, 'foo'];
     if (commandLineFlags.d) {
-      cordova.on('verbose', console.log);
-      require('plugman').on('verbose', console.log);
+      cliDummyArgs.push('--verbose');
     }
+    // Hack to enable logging :(.
+    var CLI = require('../node_modules/cordova/src/cli');
+    try {
+      CLI(cliDummyArgs);
+    } catch(e) {}
     commandActions[command]().done(null, fatal);
   } else if (cordovaCommands[command]) {
     console.log('cca v' + packageVersion);
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
     var CLI = require('../node_modules/cordova/src/cli');
-    new CLI(process.argv);
+    CLI(process.argv);
   } else {
     fatal('Invalid command: ' + command + '. Use --help for usage.');
   }
