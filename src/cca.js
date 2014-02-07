@@ -1120,11 +1120,16 @@ function main() {
       return push(platform, url);
     },
     'create': function() {
+      var destAppDir = commandLineFlags._[1] || '';
+      if (!destAppDir) {
+        console.error('No output directory given.');
+        optimist.showHelp(console.log);
+        process.exit(1);
+      }
       return ensureHasRunInit().then(function() {
         return isGitRepo ? promptIfNeedsGitUpdate() : Q();
       }).then(toolsCheck)
       .then(function() {
-        var destAppDir = commandLineFlags._[1] || '';
         return createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
       });
     },
@@ -1165,7 +1170,6 @@ function main() {
       cordova.on('verbose', console.log);
       require('plugman').on('verbose', console.log);
     }
-    console.log('Loading command: ' + command);
     commandActions[command]().done(null, fatal);
   } else if (cordovaCommands[command]) {
     console.log('cca v' + packageVersion);
