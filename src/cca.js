@@ -511,7 +511,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   // Get the manifest.
   return getManifest(srcAppDir).then(function(manifestData) {
     if (!(manifestData.app && manifestData.app.background && manifestData.app.background.scripts && manifestData.app.background.scripts.length)) {
-      fatal('No background scripts found in your manifest.json file. You supply at least one script in the "app.background.scripts" array.');
+      fatal('No background scripts found in your manifest.json file. Your manifest must contain at least one script in the "app.background.scripts" array.');
     }
     manifest = manifestData;
     return parseManifest(manifest);
