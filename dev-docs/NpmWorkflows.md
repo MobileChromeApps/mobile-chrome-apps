@@ -16,6 +16,13 @@
 
     npm update -g npm
 
+## How to Update Release Notes:
+
+    vim RELEASENOTES.md
+    :read !./dev-bin/release-logs.sh
+
+Now curate the list.
+
 ## How to Publish a Release Candidate:
 
     git pull
@@ -31,7 +38,12 @@
 
 ## Promote to Full Release:
 
+1. Tag it:
+
     npm tag cca@0.0.4 latest # new version
+
+2. Post to G+ page with version & release notes
+3. Send an email to chromium-apps@ with version & release notes
 
 ## How to See What is Packaged:
     ./prepfornpm.sh

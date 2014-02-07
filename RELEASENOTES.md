@@ -1,13 +1,13 @@
 
 ## Release Notes
 
-### 0.0.5 (2014-02-05)
+### 0.0.5 (Feb 5, 2014)
 * Fire readystate change events to fix polymer on Android KitKat
 * Fix for locally installed `cca` not setting up hooks correctly.
 * Fix npm install not working when `git` isn't installed.
 * Fixes #80: Don't enable android if `ant` is not found.
 
-### 0.0.4 (2014-02-04)
+### 0.0.4 (Feb 4, 2014)
 * Fixes #54: delayedStream npm dependency not found
 * Fixes #56: cca checkenv not checking for javac
 * Fixes #76, #77: jQuery Mobile page transitions not working
