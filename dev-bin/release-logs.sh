@@ -22,6 +22,6 @@ fi
 cd $(dirname $0)/..
 
 prevtag=$(git describe --abbrev=0 HEAD)
-echo "Commits made since $prevtag"
+echo "### Commits made since $prevtag ($(date "+%h %d, %Y")"
 git submodule foreach --quiet $PWD'/dev-bin/release-logs.sh --submodule "$name" "$path" "$sha1" "$toplevel" '"$prevtag"
 git log --pretty=format:'* cca: %s' --topo-order --no-merges $prevtag..HEAD
