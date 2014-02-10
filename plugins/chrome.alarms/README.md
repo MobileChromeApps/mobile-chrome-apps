@@ -10,7 +10,7 @@ Stable on Android; not supported on iOS.
 
 ### Android
 
-You have to manually make the theme translucent in AndroidManifest.xml by changing `"Theme.Black.NoTitleBar"` to `"Theme.Translucent"` inside your `<activity>` tag.
+You have to manually change the theme to translucent in `platforms/android/AndroidManifest.xml` by changing `"Theme.Black.NoTitleBar"` to `"Theme.Translucent"` inside your `<activity>` tag.
 
 ## Reference
 
