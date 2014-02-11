@@ -13,7 +13,7 @@ registerAutoTests("chrome.alarms", function() {
   var testTimeout = sliceLowerLimit*1.5;
   var testInnerTimeout = sliceLowerLimit*1.5;
   var minTestTime=sliceLowerLimit;
-  jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 //testTimeout;
+//  jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 //testTimeout;
 
   var isWithinDelta = function(actual, expected, lowerDelta, upperDelta) {
         return expected - lowerDelta <= actual && expected + upperDelta >= actual;

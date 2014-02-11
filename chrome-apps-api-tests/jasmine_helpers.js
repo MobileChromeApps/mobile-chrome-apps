@@ -10,7 +10,7 @@ exports.setUpJasmine = function() {
   jasmineRequire.html(jasmine);
   var jasmineEnv = jasmine.currentEnv_ = new jasmine.Env();
 
-  jasmine.DEFAULT_TIMEOUT_INTERVAL = 300;
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
   jasmineEnv.catchExceptions(false);
 
   // Set up jasmine interface
