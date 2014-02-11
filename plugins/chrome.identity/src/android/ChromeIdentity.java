@@ -30,10 +30,15 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 public class ChromeIdentity extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeIdentity";
-    // These are just unique request codes. They can be anything as long as the don't clash.
+
+    // These are just unique request codes. They can be anything as long as they don't clash.
     private static final int AUTH_REQUEST_CODE = 5;
     private static final int ACCOUNT_CHOOSER_INTENT = 6;
     private static final int OAUTH_PERMISSIONS_GRANT_INTENT = 7;
+
+    // Error codes.
+    private static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+
     private String accountName = "";
     private CordovaArgs savedCordovaArgs;
     private CallbackContext savedCallbackContext;
@@ -91,7 +96,7 @@ public class ChromeIdentity extends CordovaPlugin {
             Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
             this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
         } else {
-            callbackContextToSave.error("Google Play Services is unavailable.");
+            callbackContextToSave.error(GOOGLE_PLAY_SERVICES_UNAVAILABLE);
         }
     }
 

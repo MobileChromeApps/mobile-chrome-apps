@@ -12,6 +12,9 @@ try {
 // TODO(maxw): Automatically handle expiration.
 var cachedToken;
 
+// This constant is used as an error message when Google Play Services is unavailable during an attempt to get an auth token natively.
+var GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
         callback = details;
@@ -23,15 +26,15 @@ exports.getAuthToken = function(details, callback) {
     if (typeof details !== 'object') {
         return callbackWithError('TokenDetails object required', callback);
     }
-    var fail = function(msg) {
-        callbackWithError(msg, callback);
-    };
 
     // If we have a cached token, send it along.
     if (cachedToken) {
         callback(cachedToken);
         return;
     }
+
+    // Fetch the OAuth details from either the passed-in `details` object or the manifest.
+    var oAuthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
 
     // Augment the callback so that it caches a received token.
     var augmentedCallback = function(token) {
@@ -41,11 +44,53 @@ exports.getAuthToken = function(details, callback) {
         callback(token);
     };
 
-    // If we are not using chrome.runtime, check for oauth2 args in the details map
-    var oauthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
+    // This function extracts a token from a given URL and returns it.
+    var extractToken = function(url) {
+        // Split the url, hoping to find an access token in the query string.
+        // This function is only when using web authentication as a fallback from native Google authentication.
+        // As a result, it's okay to search for "access_token", since that's what Google puts in the resulting URL.
+        var firstSplit = url.split('access_token=');
 
-    // Use native implementation for logging into google accounts
-    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oauthDetails]);
+        // If we didn't find the necessary string, we have a problem.
+        if (firstSplit.length < 2) {
+            return null;
+        }
+
+        // The second string in the array starts with the token; get rid of the rest and return what's left.
+        var secondSplit = firstSplit[1].split('&');
+        return secondSplit[0];
+    };
+
+    // If we failed because Google Play Services is unavailable, revert to the web auth flow.
+    // Otherwise, just fail.
+    var fail = function(msg) {
+        if (msg === GOOGLE_PLAY_SERVICES_UNAVAILABLE) {
+            // Add the appropriate URL to the `details` object.
+            var clientId = oAuthDetails.client_id;
+            var scopes = encodeURIComponent(oAuthDetails.scopes.join(' '));
+            details.url = 'https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=' + scopes;
+
+            // The callback needs to extract the access token from the returned URL and pass that on to the original callback.
+            var launchWebAuthFlowCallback = function(responseUrl) {
+                var token = extractToken(responseUrl);
+
+                // If we weren't able to extract a token, error out.  Otherwise, call the callback.
+                if (token === null) {
+                    callbackWithError('URL did not contain a token.', callback);
+                    return;
+                }
+                augmentedCallback(token);
+            };
+
+            // Launch the web auth flow!
+            exports.launchWebAuthFlow(details, launchWebAuthFlowCallback);
+        } else {
+            callbackWithError(msg, callback);
+        }
+    };
+
+    // Use the native implementation for logging into Google accounts.
+    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oAuthDetails]);
 };
 
 exports.removeCachedAuthToken = function(details, callback) {
