@@ -12,7 +12,7 @@ To publish your Android application to the Play Store:
 
 3. Build your project:
 
-        cca build android --release
+        ./platforms/android/cordova/build --release
 
 4. Find your signed .apk located in `platforms/android/ant-build`.
 
