@@ -1,5 +1,5 @@
 {
   "packageId": "com.your.company.HelloWorld",
   "versionCode": 1,
-  "CFBundleVersion": '1.1.1',
+  "CFBundleVersion": "1.1.1"
 }
