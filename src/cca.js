@@ -187,7 +187,7 @@ function waitForKey(opt_prompt) {
 }
 
 // Returns a promise for the manifest contents.
-function getManifest(manifestDir) {
+function getManifest(manifestDir, platform) {
   var manifestFilename = path.join(manifestDir, 'manifest.json');
   var manifestMobileFilename = path.join(manifestDir, 'manifest.mobile.json');
 
@@ -206,6 +206,10 @@ function getManifest(manifestDir) {
         // jshint evil:false
         var extend = require('node.extend');
         manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
+        // If you want a specific platform manifest, also merge in its platform specific settings
+        if (typeof platform !== 'undefined' && platform in manifest) {
+          manifest = extend(true, manifest, manifest[platform]);
+        }
         return manifest;
       } catch (e) {
         console.error(e);
@@ -894,7 +898,7 @@ function postPrepareInternal(platform) {
 
   // Merge the manifests.
   .then(function() {
-    return getManifest(root);
+    return getManifest(root, platform);
   }).then(function(manifest) {
     return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
   })
