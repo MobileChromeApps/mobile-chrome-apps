@@ -46,25 +46,30 @@ exports.getAuthToken = function(details, callback) {
 
     // This function extracts a token from a given URL and returns it.
     var extractToken = function(url) {
-        // Split the url, hoping to find an access token in the query string.
-        // This function is only when using web authentication as a fallback from native Google authentication.
+        // This function is only used when using web authentication as a fallback from native Google authentication.
         // As a result, it's okay to search for "access_token", since that's what Google puts in the resulting URL.
-        var firstSplit = url.split('access_token=');
-
-        // If we didn't find the necessary string, we have a problem.
-        if (firstSplit.length < 2) {
-            return null;
-        }
-
-        // The second string in the array starts with the token; get rid of the rest and return what's left.
-        var secondSplit = firstSplit[1].split('&');
-        return secondSplit[0];
+        // The regular expression looks for "access_token=", followed by a lazy capturing of some string (the token).
+        // This lazy capturing ends when either an ampersand (followed by more stuff) is reached or the end of the string is reached.
+        var match = /\baccess_token=(.+?)(?:&.*)?$/.exec(url);
+        return match && match[1];
     };
 
     // If we failed because Google Play Services is unavailable, revert to the web auth flow.
     // Otherwise, just fail.
     var fail = function(msg) {
         if (msg === GOOGLE_PLAY_SERVICES_UNAVAILABLE) {
+            console.warn('Google Play Services is unavailable; falling back to web authentication flow.');
+
+            // Verify that oAuthDetails contains a client_id and scopes.
+            if (!oAuthDetails.client_id) {
+                callbackWithError('Client id missing from manifest.', callback);
+                return;
+            }
+            if (!oAuthDetails.scopes) {
+                callbackWithError('Scopes missing from manifest.', callback);
+                return;
+            }
+
             // Add the appropriate URL to the `details` object.
             var clientId = oAuthDetails.client_id;
             var scopes = encodeURIComponent(oAuthDetails.scopes.join(' '));
@@ -75,7 +80,7 @@ exports.getAuthToken = function(details, callback) {
                 var token = extractToken(responseUrl);
 
                 // If we weren't able to extract a token, error out.  Otherwise, call the callback.
-                if (token === null) {
+                if (!token) {
                     callbackWithError('URL did not contain a token.', callback);
                     return;
                 }
