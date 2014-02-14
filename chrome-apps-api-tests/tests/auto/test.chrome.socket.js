@@ -256,35 +256,32 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
   describe('UDP', function() {
 
     beforeEach(function() {
-      var customMatchers={
-        toBeValidUdpReadResultEqualTo: function(util, customEqualityTesters){
+      var customMatchers = {
+        toBeValidUdpReadResultEqualTo: function(util, customEqualityTesters) {
           return {
-            compare : function(actual, expected) {
-              if (Object.prototype.toString.call(data).slice(8,-1) !== 'ArrayBuffer')
-                throw new Error('toBeValidTcpReadResultEqualTo expects an ArrayBuffer');
-
-              var result={};
-              result.pass=true;
+            compare: function(actual, expected) {
+              if (Object.prototype.toString.call(data).slice(8, -1) !== "ArrayBuffer") throw new Error("toBeValidTcpReadResultEqualTo expects an ArrayBuffer");
+              var result = {};
+              result.pass = true;
               var readResult = actual;
-              if (!readResult) result.pass= false;
-              if (readResult.resultCode <= 0) result.pass=false;
-              if (!readResult.data) result.pass=false;
-              if (!readResult.address) result.pass= false;
-              if (!readResult.port) result.pass= false;
-              if (Object.prototype.toString.call(readResult.data).slice(8,-1) !== 'ArrayBuffer') result.pass=false;
-
+              if (!readResult) result.pass = false;
+              if (readResult.resultCode <= 0) result.pass = false;
+              if (!readResult.data) result.pass = false;
+              if (!readResult.address) result.pass = false;
+              if (!readResult.port) result.pass = false;
+              if (Object.prototype.toString.call(readResult.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
               var sent = new Uint8Array(data);
               var recv = new Uint8Array(readResult.data);
-
-              if (recv.length !== sent.length) result.pass= false;
+              if (recv.length !== sent.length) result.pass = false;
               for (var i = 0; i < recv.length; i++) {
-                if (recv[i] !== sent[i]) result.pass=false;
+                if (recv[i] !== sent[i]) result.pass = false;
               }
               return result;
             }
-          }
+          };
         }
       };
+
       addMatchers(customMatchers);
     });
 
@@ -360,27 +357,35 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
     });
 
 
-    xit('bind connect x2 read write', function(done) {
+    it('bind connect x2 read write', function(done) {
       chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
         expect(bindResult1).toEqual(0);
-
         chrome.socket.bind(sockets[1].socketId, bindAddr, port+1, function(bindResult2) {
           expect(bindResult2).toEqual(0);
 
-          chrome.socket.connect(sockets[0].socketId, connectAddr, port+1, function(connectResult1) {
-            expect(connectResult1).toEqual(0);
+          chrome.socket.getInfo(sockets[0].socketId, function(info1) {
+            chrome.socket.getInfo(sockets[1].socketId, function(info2) {
+              chrome.socket.connect(sockets[0].socketId, connectAddr, info2.localPort, function(connectResult1) {
+                expect(connectResult1).toEqual(0);
 
-            chrome.socket.connect(sockets[1].socketId, connectAddr, port, function(connectResult2) {
-              expect(connectResult2).toEqual(0);
+                chrome.socket.connect(sockets[1].socketId, connectAddr, info1.localPort, function(connectResult2) {
+                  expect(connectResult2).toEqual(0);
 
-              chrome.socket.read(sockets[0].socketId, function(readResult) {
-                expect(readResult).toBeValidUdpReadResultEqualTo(data);
-                done();
-              });
+                  chrome.socket.getInfo(sockets[0].socketId, function(info1) {
+                    chrome.socket.getInfo(sockets[1].socketId, function(info2) {
 
-              chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
-                expect(writeResult).toBeTruthy();
-                expect(writeResult.bytesWritten).toBeGreaterThan(0);
+                      chrome.socket.read(sockets[0].socketId, function(readResult) {
+                        expect(readResult).toBeValidUdpReadResultEqualTo(data);
+                        done();
+                      });
+
+                      chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
+                        expect(writeResult).toBeTruthy();
+                        expect(writeResult.bytesWritten).toBeGreaterThan(0);
+                      });
+                    });
+                  });
+                });
               });
             });
           });
