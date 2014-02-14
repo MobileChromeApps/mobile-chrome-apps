@@ -83,17 +83,20 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
         toBeValidTcpReadResultEqualTo: function(util, customEqualityTesters) {
           return {
             compare: function(actual, expected) {
-              if (Object.prototype.toString.call(data).slice(8, -1) !== "ArrayBuffer") throw new Error("toBeValidTcpReadResultEqualTo expects an ArrayBuffer");
-              var result = {};
-              result.pass = true;
-              var readResult = actual;
-              if (!readResult) result.pass = false;
-              if (readResult.resultCode <= 0) result.pass = false;
-              if (!readResult.data) result.pass = false;
-              if (Object.prototype.toString.call(readResult.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
-              var sent = new Uint8Array(data);
-              var recv = new Uint8Array(readResult.data);
+              if (Object.prototype.toString.call(expected).slice(8, -1) !== "ArrayBuffer")
+                throw new Error("toBeValidTcpReadResultEqualTo expects an ArrayBuffer");
+              var result = { pass: true };
+
+              if (!actual) result.pass = false;
+              if (actual.resultCode <= 0) result.pass = false;
+              if (actual.resultCode != expected.byteLength) result.pass = false;
+              if (!actual.data) result.pass = false;
+              if (Object.prototype.toString.call(actual.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
+
+              var sent = new Uint8Array(expected);
+              var recv = new Uint8Array(actual.data);
               if (recv.length !== sent.length) result.pass = false;
+
               for (var i = 0; i < recv.length; i++) {
                 if (recv[i] !== sent[i]) result.pass = false;
               }
@@ -260,22 +263,32 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
         toBeValidUdpReadResultEqualTo: function(util, customEqualityTesters) {
           return {
             compare: function(actual, expected) {
-              if (Object.prototype.toString.call(data).slice(8, -1) !== "ArrayBuffer") throw new Error("toBeValidTcpReadResultEqualTo expects an ArrayBuffer");
-              var result = {};
-              result.pass = true;
-              var readResult = actual;
-              if (!readResult) result.pass = false;
-              if (readResult.resultCode <= 0) result.pass = false;
-              if (!readResult.data) result.pass = false;
-              if (!readResult.address) result.pass = false;
-              if (!readResult.port) result.pass = false;
-              if (Object.prototype.toString.call(readResult.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
-              var sent = new Uint8Array(data);
-              var recv = new Uint8Array(readResult.data);
+              if (Object.prototype.toString.call(expected).slice(8, -1) !== "ArrayBuffer")
+                throw new Error("toBeValidUdpReadResultEqualTo expects an ArrayBuffer");
+              var result = { pass: true };
+              if (!actual) result.pass = false;
+              if (actual.resultCode <= 0) result.pass = false;
+              if (actual.resultCode != expected.byteLength) result.pass = false;
+              if (!actual.data) result.pass = false;
+              if (Object.prototype.toString.call(actual.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
+
+              var sent = new Uint8Array(expected);
+              var recv = new Uint8Array(actual.data);
               if (recv.length !== sent.length) result.pass = false;
+
               for (var i = 0; i < recv.length; i++) {
                 if (recv[i] !== sent[i]) result.pass = false;
               }
+              return result;
+            }
+          };
+        },
+        toBeValidUdpRecvFromResultEqualTo: function(util, customEqualityTesters) {
+          return {
+            compare: function(actual, expected) {
+              var result = customMatchers.toBeValidUdpReadResultEqualTo(util, customEqualityTesters).compare(actual, expected);
+              if (!actual.address) result.pass = false;
+              if (!actual.port) result.pass = false;
               return result;
             }
           };
@@ -333,7 +346,7 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
         expect(bindResult).toEqual(0);
 
         chrome.socket.recvFrom(sockets[0].socketId, function(readResult) {
-          expect(readResult).toBeValidUdpReadResultEqualTo(data);
+          expect(readResult).toBeValidUdpRecvFromResultEqualTo(data);
 
           chrome.socket.sendTo(sockets[0].socketId, data, readResult.address, readResult.port, function(writeResult) {
             expect(writeResult).toBeTruthy();
@@ -381,7 +394,7 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
 
                       chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
                         expect(writeResult).toBeTruthy();
-                        expect(writeResult.bytesWritten).toBeGreaterThan(0);
+                        expect(writeResult.bytesWritten).toBe(data.byteLength);
                       });
                     });
                   });
@@ -400,7 +413,7 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
         chrome.socket.joinGroup(sockets[0].socketId, multicastAddr, function(joinResult1) {
           expect(joinResult1).toEqual(0);
           chrome.socket.recvFrom(sockets[0].socketId, function(readResult) {
-            expect(readResult).toBeValidUdpReadResultEqualTo(data);
+            expect(readResult).toBeValidUdpRecvFromResultEqualTo(data);
             done();
           });
 
