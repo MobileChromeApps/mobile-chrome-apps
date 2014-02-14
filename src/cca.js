@@ -538,12 +538,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    DEFAULT_PLUGINS.forEach(function(pluginID) {
-      cmds.push(['plugin', 'add', pluginID]);
-    });
-    plugins.forEach(function(pluginPath) {
-      cmds.push(['plugin', 'add', pluginPath]);
-    });
+    cmds.push(['plugin', 'add', DEFAULT_PLUGINS.concat(plugins)]);
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
