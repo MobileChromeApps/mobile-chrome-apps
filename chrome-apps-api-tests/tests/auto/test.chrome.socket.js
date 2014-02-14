@@ -147,7 +147,7 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
       });
     });
 
-    it('read fewer bytes than buffer size', function(done) {
+    it('read with larger bufferSize', function(done) {
       chrome.socket.listen(sockets[0].socketId, bindAddr, port, function(listenResult) {
         expect(listenResult).toEqual(0);
 
@@ -158,6 +158,32 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
           expect(acceptInfo.socketId).toBeDefined();
 
           chrome.socket.read(acceptInfo.socketId, data.byteLength * 2, function(readResult) {
+            expect(readResult).toBeValidTcpReadResultEqualTo(data);
+            done();
+          });
+        });
+
+        chrome.socket.connect(sockets[1].socketId, connectAddr, port, function(connectResult) {
+          expect(connectResult).toEqual(0);
+
+          chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+          });
+        });
+      });
+    });
+
+    it('read with null bufferSize', function(done) {
+      chrome.socket.listen(sockets[0].socketId, bindAddr, port, function(listenResult) {
+        expect(listenResult).toEqual(0);
+
+        chrome.socket.accept(sockets[0].socketId, function(acceptInfo) {
+          sockets.push(acceptInfo);
+          expect(acceptInfo).toBeTruthy();
+          expect(acceptInfo.resultCode).toEqual(0);
+          expect(acceptInfo.socketId).toBeDefined();
+
+          chrome.socket.read(acceptInfo.socketId, null, function(readResult) {
             expect(readResult).toBeValidTcpReadResultEqualTo(data);
             done();
           });
@@ -369,6 +395,62 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
       });
     });
 
+    it('recvFrom with larger bufferSize', function(done) {
+      chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult) {
+        expect(bindResult).toEqual(0);
+
+        chrome.socket.recvFrom(sockets[0].socketId, data.byteLength * 2, function(readResult) {
+          expect(readResult).toBeValidUdpRecvFromResultEqualTo(data);
+
+          chrome.socket.sendTo(sockets[0].socketId, data, readResult.address, readResult.port, function(writeResult) {
+            expect(writeResult).toBeTruthy();
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+          });
+        });
+
+        chrome.socket.bind(sockets[1].socketId, bindAddr, port+1, function(bindResult) {
+          expect(bindResult).toEqual(0);
+
+          chrome.socket.sendTo(sockets[1].socketId, data, connectAddr, port, function(writeResult) {
+            expect(writeResult).toBeTruthy();
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+
+            chrome.socket.recvFrom(sockets[1].socketId, function(readResult) {
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('recvFrom with null bufferSize', function(done) {
+      chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult) {
+        expect(bindResult).toEqual(0);
+
+        chrome.socket.recvFrom(sockets[0].socketId, null, function(readResult) {
+          expect(readResult).toBeValidUdpRecvFromResultEqualTo(data);
+
+          chrome.socket.sendTo(sockets[0].socketId, data, readResult.address, readResult.port, function(writeResult) {
+            expect(writeResult).toBeTruthy();
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+          });
+        });
+
+        chrome.socket.bind(sockets[1].socketId, bindAddr, port+1, function(bindResult) {
+          expect(bindResult).toEqual(0);
+
+          chrome.socket.sendTo(sockets[1].socketId, data, connectAddr, port, function(writeResult) {
+            expect(writeResult).toBeTruthy();
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+
+            chrome.socket.recvFrom(sockets[1].socketId, function(readResult) {
+              done();
+            });
+          });
+        });
+      });
+    });
+
 
     it('bind connect x2 read write', function(done) {
       chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
@@ -388,6 +470,42 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
                     chrome.socket.getInfo(sockets[1].socketId, function(info2) {
 
                       chrome.socket.read(sockets[0].socketId, function(readResult) {
+                        expect(readResult).toBeValidUdpReadResultEqualTo(data);
+                        done();
+                      });
+
+                      chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
+                        expect(writeResult).toBeTruthy();
+                        expect(writeResult.bytesWritten).toBe(data.byteLength);
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('read with null bufferSize', function(done) {
+      chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
+        expect(bindResult1).toEqual(0);
+        chrome.socket.bind(sockets[1].socketId, bindAddr, port+1, function(bindResult2) {
+          expect(bindResult2).toEqual(0);
+
+          chrome.socket.getInfo(sockets[0].socketId, function(info1) {
+            chrome.socket.getInfo(sockets[1].socketId, function(info2) {
+              chrome.socket.connect(sockets[0].socketId, connectAddr, info2.localPort, function(connectResult1) {
+                expect(connectResult1).toEqual(0);
+
+                chrome.socket.connect(sockets[1].socketId, connectAddr, info1.localPort, function(connectResult2) {
+                  expect(connectResult2).toEqual(0);
+
+                  chrome.socket.getInfo(sockets[0].socketId, function(info1) {
+                    chrome.socket.getInfo(sockets[1].socketId, function(info2) {
+
+                      chrome.socket.read(sockets[0].socketId, null, function(readResult) {
                         expect(readResult).toBeValidUdpReadResultEqualTo(data);
                         done();
                       });
