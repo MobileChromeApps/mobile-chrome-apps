@@ -20,6 +20,19 @@ static NSString* const kChromeExtensionURLScheme = @"chrome-extension";
 static ChromeURLProtocol *outstandingDelayRequest;
 static NSString* pathPrefix;
 
+
+static NSString* mimeTypeForPath(NSString* path) {
+    NSString *ret = nil;
+    CFStringRef pathExtension = (__bridge_retained CFStringRef)[path pathExtension];
+    CFStringRef type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, NULL);
+    CFRelease(pathExtension);
+    if (type != NULL) {
+        ret = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(type, kUTTagClassMIMEType);
+        CFRelease(type);
+    }
+    return ret;
+}
+
 #pragma mark ChromeExtensionURLs
 
 @implementation ChromeExtensionURLs
@@ -86,14 +99,21 @@ static NSString* pathPrefix;
         NSString *path = [NSString stringWithFormat:@"%@/%@", pathPrefix, pathString];
         FILE *fp = fopen([path UTF8String], "r");
         if (fp) {
-            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:@{@"Cache-Control": @"no-cache"}];
+            NSMutableDictionary* responseHeaders = [[NSMutableDictionary alloc] init];
+            responseHeaders[@"Cache-Control"] = @"no-cache";
+            NSString* mimeType = mimeTypeForPath(pathString);
+            if (mimeType != nil) {
+                responseHeaders[@"Content-Type"] = mimeType;
+            }
+            NSURLResponse *response = [[NSHTTPURLResponse alloc] initWithURL:url statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:responseHeaders];
             [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 
-            char buf[32768];
+            char* buf = malloc(32768);
             size_t len;
             while ((len = fread(buf,1,sizeof(buf),fp))) {
                 [[self client] URLProtocol:self didLoadData:[NSData dataWithBytes:buf length:len]];
             }
+            free(buf);
             fclose(fp);
 
             [[self client] URLProtocolDidFinishLoading:self];
