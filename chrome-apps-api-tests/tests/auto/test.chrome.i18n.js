@@ -14,8 +14,8 @@ registerAutoTests('chrome.i18n', function(runningInBackground) {
     }
   });
 
-  it('language should be set to en-US', function() {
-    expect(navigator.language.toLowerCase()).toBe('en-us');
+  it('language should be set to en-*', function() {
+    expect(navigator.language.toLowerCase()).toMatch(/^en-.*$/);
   });
 
   if (!runningInBackground) {
