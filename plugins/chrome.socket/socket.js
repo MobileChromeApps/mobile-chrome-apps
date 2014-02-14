@@ -54,6 +54,7 @@ exports.read = function(socketId, bufferSize, callback) {
         callback = bufferSize;
         bufferSize = 0;
     }
+    bufferSize = bufferSize || 0;
     var win = callback && function(data) {
         var readInfo = {
             resultCode: data.byteLength || 1,
@@ -96,6 +97,7 @@ exports.recvFrom = function(socketId, bufferSize, callback) {
         callback = bufferSize;
         bufferSize = 0;
     }
+    bufferSize = bufferSize || 0;
     var win;
     if (platform.id == 'android') {
         win = callback && (function() {
