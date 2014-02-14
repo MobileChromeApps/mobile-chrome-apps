@@ -2,22 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-function forEachWaitForDoneAndThen(arr, handler, andthen) {
-  var calls = [];
-  function callnext() {
-    calls.shift()();
-  }
-  arr.forEach(function() {
-    var args = Array.prototype.slice.call(arguments);
-    calls.push(function() {
-      args.unshift(callnext);
-      handler.apply(null, args);
-    });
-  });
-  calls.push(andthen);
-  callnext();
-}
-
 registerAutoTests('chrome.socket', function(runningInBackground) {
   'use strict';
   // constants
@@ -51,12 +35,10 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
     });
   }
   function createSockets(type, count, callback) {
-    forEachWaitForDoneAndThen((new Array(count)).join(' ').split(' '), function(done) {
-      createSocket(type, done);
-    }, callback);
+    if (!count)
+      return setTimeout(callback, 0);
+    createSocket(type, createSockets.bind(null, type, count-1, callback));
   }
-
-
 
   it('should contain definitions', function() {
     expect(chrome.socket).toBeDefined();
@@ -97,34 +79,30 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
 
   describe('TCP', function() {
     beforeEach(function() {
-
-      var customMatchers={
-        toBeValidTcpReadResultEqualTo: function(util, customEqualityTesters){
+      var customMatchers = {
+        toBeValidTcpReadResultEqualTo: function(util, customEqualityTesters) {
           return {
-            compare : function(actual, expected) {
-              if (Object.prototype.toString.call(data).slice(8,-1) !== 'ArrayBuffer')
-                throw new Error('toBeValidTcpReadResultEqualTo expects an ArrayBuffer');
-
-              var result={};
-              result.pass=true;
+            compare: function(actual, expected) {
+              if (Object.prototype.toString.call(data).slice(8, -1) !== "ArrayBuffer") throw new Error("toBeValidTcpReadResultEqualTo expects an ArrayBuffer");
+              var result = {};
+              result.pass = true;
               var readResult = actual;
-              if (!readResult) result.pass=false;
-              if (readResult.resultCode <= 0) result.pass=false;
-              if (!readResult.data) result.pass=false;
-              if (Object.prototype.toString.call(readResult.data).slice(8,-1) !== 'ArrayBuffer') result.pass=false;
-
+              if (!readResult) result.pass = false;
+              if (readResult.resultCode <= 0) result.pass = false;
+              if (!readResult.data) result.pass = false;
+              if (Object.prototype.toString.call(readResult.data).slice(8, -1) !== "ArrayBuffer") result.pass = false;
               var sent = new Uint8Array(data);
               var recv = new Uint8Array(readResult.data);
-
-              if (recv.length !== sent.length) result.pass=false;
+              if (recv.length !== sent.length) result.pass = false;
               for (var i = 0; i < recv.length; i++) {
-                if (recv[i] !== sent[i]) result.pass=false;
+                if (recv[i] !== sent[i]) result.pass = false;
               }
               return result;
             }
-          }
+          };
         }
       };
+
       addMatchers(customMatchers);
     });
 
@@ -151,6 +129,32 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
           expect(acceptInfo.socketId).toBeDefined();
 
           chrome.socket.read(acceptInfo.socketId, function(readResult) {
+            expect(readResult).toBeValidTcpReadResultEqualTo(data);
+            done();
+          });
+        });
+
+        chrome.socket.connect(sockets[1].socketId, connectAddr, port, function(connectResult) {
+          expect(connectResult).toEqual(0);
+
+          chrome.socket.write(sockets[1].socketId, data, function(writeResult) {
+            expect(writeResult.bytesWritten).toBeGreaterThan(0);
+          });
+        });
+      });
+    });
+
+    it('read fewer bytes than buffer size', function(done) {
+      chrome.socket.listen(sockets[0].socketId, bindAddr, port, function(listenResult) {
+        expect(listenResult).toEqual(0);
+
+        chrome.socket.accept(sockets[0].socketId, function(acceptInfo) {
+          sockets.push(acceptInfo);
+          expect(acceptInfo).toBeTruthy();
+          expect(acceptInfo.resultCode).toEqual(0);
+          expect(acceptInfo.socketId).toBeDefined();
+
+          chrome.socket.read(acceptInfo.socketId, data.byteLength * 2, function(readResult) {
             expect(readResult).toBeValidTcpReadResultEqualTo(data);
             done();
           });
