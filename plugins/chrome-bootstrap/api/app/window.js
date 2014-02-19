@@ -68,7 +68,9 @@ function evalScripts(rootNode, afterFunc) {
     }
   }
   for (var i = 0, script; script = scripts[i]; ++i) {
-    if (script.type && !(/text\/javascript/i.exec(script.type) || /application\/javascript/i.exec(script.type))) {
+    if (script.type && !(/text\/javascript/i.exec(script.type) ||
+                         /application\/javascript/i.exec(script.type) ||
+                         /application\/dart/i.exec(script.type))) {
       onLoadCallback();
     } else if (script.src) {
       var replacement = doc.createElement('script');
