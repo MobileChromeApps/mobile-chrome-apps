@@ -32,7 +32,7 @@ This process will yield a client id, but no action is required with it (unlike f
 
 ### iOS
 
-For iOS, first follow **Step 1** of the instructions [here](https://developers.google.com/+/mobile/ios/getting-started#step_1_creating_the_apis_console_project).
+For iOS, first follow **Steps 1 and 4** of the instructions [here](https://developers.google.com/+/mobile/ios/getting-started#step_1_creating_the_apis_console_project).
 
 **Note:** If you change your app's bundle identifier at any time, you will need to correspondingly update the bundle identifier in the following places:
 
