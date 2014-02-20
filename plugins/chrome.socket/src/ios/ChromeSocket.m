@@ -402,6 +402,10 @@ static NSString* stringFromData(NSData* data) {
     [socket->_readCallbacks addObject:[^(NSData* data, NSString* address, uint16_t port) {
         VERBOSE_LOG(@"ACK %@.%@ Read Payload(%d): %@", socketId, command.callbackId, [data length], stringFromData(data));
 
+        if (bufferSize > 0 && [data length] > bufferSize) {
+            data = [NSData dataWithBytes:data.bytes length:bufferSize];
+        }
+
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:data] callbackId:command.callbackId];
     } copy]];
 
@@ -410,10 +414,8 @@ static NSString* stringFromData(NSData* data) {
     BOOL success = YES;
     if ([socket->_mode isEqualToString:@"udp"]) {
         success = [socket->_socket receiveOnce:nil];
-    } else if (bufferSize == 0) {
-        [socket->_socket readDataWithTimeout:-1 tag:-1];
     } else {
-        [socket->_socket readDataToLength:bufferSize withTimeout:-1 tag:-1];
+        [socket->_socket readDataWithTimeout:-1 tag:-1];
     }
 
     if (!success) {
