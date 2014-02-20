@@ -6,7 +6,9 @@ In your project's `platforms` directory, you have two complete native projects: 
 
 To publish your Android application to the Play Store:
 
-1. Edit `platforms/android/AndroidManifest.xml` and set the `versionCode` and `versionName` properties correctly.
+1. Update the two Android version ids, then run `cca prepare`:
+    * `android:versionName` is set using the `version` key in `www/manifest.json` (this sets the version of your desktop packaged app, too).
+    * `android:versionCode` is set using the `versionCode` key in `www/manifest.mobile.js`.
 
 2. Edit (or create) `platforms/android/ant.properties` and set the `key.store` and `key.alias` properties (as explained [in the Android developer docs](http://developer.android.com/tools/building/building-cmdline.html#ReleaseMode)).
 
@@ -14,14 +16,16 @@ To publish your Android application to the Play Store:
 
         ./platforms/android/cordova/build --release
 
-4. Find your signed .apk located in `platforms/android/ant-build`.
+4. Find your signed .apk located inside `platforms/android/ant-build/`.
 
-5. Upload your signed application to the Google Play developer console.
+5. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
 
 ### Publish to the iOS App Store
 
-Open the Xcode project file found under your `platforms/ios` directory:
+1. Update the app version by setting the `CFBundleVersion` key in `www/manifest.mobile.js`, then run `cca prepare`.
+
+2. Open the Xcode project file found under your `platforms/ios` directory:
 
     open platforms/ios/*.xcodeproj
-    
-And then follow Apple's [App Distribution Guide](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/Introduction/Introduction.html)
+
+3. Follow Apple's [App Distribution Guide](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/Introduction/Introduction.html)
