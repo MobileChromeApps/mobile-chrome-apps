@@ -354,82 +354,8 @@ function toolsCheck() {
 // Returns a promise.
 function ensureHasRunInit() {
   if (!fs.existsSync(path.join(ccaRoot, path.join('chrome-cordova', 'README.md'))))
-    return Q.reject('Please run \'' + scriptName + ' init\' first');
+    return Q.reject('Node submodules not initialized. Please run "dev-bin/git-up.js"');
   return Q();
-}
-
-// Returns a promise.
-function promptIfNeedsGitUpdate() {
-  process.chdir(ccaRoot);
-  return exec('git pull --rebase --dry-run', true /* opt_silent */).then(function(out) {
-    var needsUpdate = (!!out.stdout || !!out.stderr);
-    if (!needsUpdate)
-      return Q();
-
-    console.warn('Warning: mobile-chrome-apps has updates pending; Please run \'' + scriptName + ' init\'');
-    return waitForKey('Continue anyway? [y/n] ').then(function(key) {
-      if (key.toLowerCase() !== 'y')
-        return exit(1);
-    });
-  }, function(err) {
-    console.warn("Could not check repo for updates:");
-    console.warn(err.toString());
-  });
-}
-
-
-/******************************************************************************/
-/******************************************************************************/
-// Init
-
-// Returns a promise.
-function initCommand() {
-  var promise = Q();
-  if (isGitRepo) {
-    promise = exec('git --version', true /* opt_silent */).then(null, function(err) {
-      var p;
-      if (isWindows) {
-        // See if it's at the default install path.
-        process.env.PATH += ';' + path.join(process.env.ProgramFiles, 'Git', 'bin');
-        p = exec('git --version', true /* opt_silent */);
-      } else {
-        p = Q.reject();
-      }
-      return p.then(null, function(err) {
-        return Q.reject('git is not installed (or not available on your PATH). Please install it from http://git-scm.com');
-      });
-    })
-
-    // Check myself out.
-    .then(function() {
-      console.log('## Updating mobile-chrome-apps');
-      process.chdir(ccaRoot);
-      return exec('git pull --rebase');
-    })
-
-    // Check out submodules.
-    .then(function() {
-      console.log('## Updating git submodules');
-      process.chdir(ccaRoot);
-
-      return exec('git submodule status').then(function(out) {
-        var isFirstInit = out.stdout.split('\n').some(function(s) { return s[0] == '-'; });
-        if (isFirstInit) {
-          console.warn('The next step may take a while the first time.');
-        }
-        return exec('git submodule update --init --recursive');
-      }).then(null, function(err) {
-        console.log("Could not update submodules:");
-        console.warn(err.toString());
-        console.log("Continuing without update.");
-      });
-    });
-  }
-
-  // Clean up.
-  return promise.then(function() {
-    process.chdir(origDir);
-  });
 }
 
 /******************************************************************************/
@@ -1076,9 +1002,6 @@ function main() {
     'update-app': function() {
       return postPrepareCommand();
     },
-    'init': function() {
-      return toolsCheck().then(initCommand);
-    },
     'checkenv': function() {
       return toolsCheck();
     },
@@ -1099,9 +1022,8 @@ function main() {
         optimist.showHelp(console.log);
         process.exit(1);
       }
-      return ensureHasRunInit().then(function() {
-        return isGitRepo ? promptIfNeedsGitUpdate() : Q();
-      }).then(toolsCheck)
+      return ensureHasRunInit()
+      .then(toolsCheck)
       .then(function() {
         return createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
       });
