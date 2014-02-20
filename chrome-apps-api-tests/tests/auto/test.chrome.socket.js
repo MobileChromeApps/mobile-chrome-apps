@@ -452,6 +452,8 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
     });
 
 
+    describeCordovaOnly('fail on desktop', function() {
+
     it('bind connect x2 read write', function(done) {
       chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
         expect(bindResult1).toEqual(0);
@@ -522,6 +524,8 @@ registerAutoTests('chrome.socket', function(runningInBackground) {
           });
         });
       });
+    });
+
     });
 
 
