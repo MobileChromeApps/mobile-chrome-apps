@@ -363,8 +363,19 @@ function ensureHasRunInit() {
 
 // Returns the promise from the raw Cordova command.
 function runCmd(cmd) {
+  var msg = cmd[0];
+  cmd.slice(1).forEach(function(arg) {
+    if (typeof arg != 'string') {
+      return;
+    }
+    if (arg.indexOf(' ') != -1) {
+      msg += ' "' + arg + '"';
+    } else {
+      msg += ' ' + arg;
+    }
+  });
   // Hack to remove the obj passed to the cordova create command.
-  console.log(cmd.join(' ').replace('[object Object]', ''));
+  console.log('## Running Cordova Command: ' + msg);
   return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
 }
 
@@ -474,7 +485,8 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 
     return runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
   }).then(function() {
-    console.log("Writing config.xml");
+    chdir(path.join(origDir, destAppDir));
+    console.log("Generating config.xml from manifest.json");
     return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
   }).then(function(data) {
     var configfile = data
@@ -483,9 +495,8 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
         .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
         .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
         .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
-    return Q.ninvoke(fs, 'writeFile', path.join(destAppDir, 'config.xml'), configfile, { encoding: 'utf-8' });
+    return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
   }).then(function() {
-    chdir(path.join(origDir, destAppDir));
     return runAllCmds(cmds);
   })
   .then(function() {
@@ -573,7 +584,7 @@ function prePrepareCommand() {
   }).then(function(manifestData) {
     plugins = manifestData.plugins;
     whitelist = manifestData.whitelist;
-    console.log("Writing config.xml");
+    console.log('## Updating config.xml from manifest.json');
     return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'});
   }).then(function(data) {
     var tree = et.parse(data);
@@ -612,11 +623,22 @@ function prePrepareCommand() {
 
   // Install plugins
   .then(function() {
-    console.log("Updating plugins");
-    var cmds = plugins.map(function(pluginPath) {
-      return ['plugin', 'add', pluginPath];
+    cordova.off('results', console.log); // Hack :(.
+    cordova.raw.plugin('ls').then(function(installedPlugins) {
+      cordova.on('results', console.log);
+      var missingPlugins = plugins.filter(function(p) {
+        return installedPlugins.indexOf(p) == -1;
+      });
+      if (missingPlugins.length) {
+        console.log('## Adding in new plugins based on manifest.json');
+        var cmds = missingPlugins.map(function(pluginPath) {
+          return ['plugin', 'add', pluginPath];
+        });
+        return runAllCmds(cmds);
+      }
+    }, function() {
+      console.log = oldLog;
     });
-    return runAllCmds(cmds);
   });
 }
 
@@ -658,9 +680,8 @@ function postPrepareInternal(platform) {
   var betterPath = path.join(assetDirForPlatform(platform), 'CCA_locales');
   var promise = Q();
   if (fs.existsSync(badPath)) {
-    console.log('## Moving ' + platform + ' locales directory');
+    console.log('## Pre-processing _locales for ' + platform);
     fs.renameSync(badPath, betterPath);
-    console.log('## Renaming directories inside locales');
     promise = Q.ninvoke(fs, 'readdir', betterPath)
     .then(function(files) {
       for (var i=0; i<files.length; i++) {
@@ -1003,9 +1024,11 @@ function main() {
       return postPrepareCommand();
     },
     'checkenv': function() {
+      console.log('cca v' + packageVersion);
       return toolsCheck();
     },
     'push': function() {
+      console.log('cca v' + packageVersion);
       var platform = commandLineFlags._[1];
       var url = commandLineFlags._[2];
       if (!platform) {
@@ -1016,6 +1039,7 @@ function main() {
       return push(platform, url);
     },
     'create': function() {
+      console.log('cca v' + packageVersion);
       var destAppDir = commandLineFlags._[1] || '';
       if (!destAppDir) {
         console.error('No output directory given.');
@@ -1033,6 +1057,7 @@ function main() {
       return Q();
     },
     'help': function() {
+      console.log('cca v' + packageVersion);
       optimist.showHelp(console.log);
       return Q();
     }
@@ -1058,9 +1083,6 @@ function main() {
     cordova.config(projectRoot, CORDOVA_CONFIG_JSON);
   }
   if (commandActions.hasOwnProperty(command)) {
-    if (command != 'version') {
-      console.log('cca v' + packageVersion);
-    }
     var cliDummyArgs = [0, 0, 'foo'];
     if (commandLineFlags.d) {
       cliDummyArgs.push('--verbose');
