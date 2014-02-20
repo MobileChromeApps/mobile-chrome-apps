@@ -2,6 +2,12 @@
 
 Now that you have a working mobile Chrome App, there are lots of ways to improve the experience on mobile devices.
 
+### Mobile Manifest
+
+There are certain chrome packaged app settings that only apply to mobile platforms.  We have created a `www/manifest.mobile.js` file to contain these, and the specific values are referenced throughout the plugin documentation and this guide.
+
+You should adjust the values here accordingly.
+
 ### Icons
 
 Mobile apps need a few more icon resolutions than desktop Chrome Apps.
