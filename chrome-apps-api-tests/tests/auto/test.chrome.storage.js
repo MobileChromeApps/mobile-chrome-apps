@@ -5,6 +5,19 @@
 registerAutoTests("chrome.storage", function() {
   'use strict';
 
+  var storage_local_items = {};
+  var storage_sync_items = {};
+
+  it('backup storage', function(done) {
+    chrome.storage.local.get(null, function(items) {
+      storage_local_items = items;
+      chrome.storage.sync.get(null, function(items) {
+        storage_sync_items = items;
+        done();
+      });
+    });
+  });
+
   it('should contain definitions', function() {
     expect(chrome.storage).toBeDefined();
     expect(chrome.storage.local).toBeDefined();
@@ -407,7 +420,7 @@ registerAutoTests("chrome.storage", function() {
   test_storagearea('local', chrome.storage.local);
   test_storagearea('sync', chrome.storage.sync);
 
-  describe('testing storage areas are distinct', function(done) {
+  describe('testing storage areas are distinct', function() {
     it('Value set in local should not be fetched by sync', function(done) {
       chrome.storage.local.clear(function(){
         chrome.storage.sync.clear(function(){
@@ -447,17 +460,30 @@ registerAutoTests("chrome.storage", function() {
       });
     });
     it('Clearing sync should not clear local', function(done) {
+      console.log('here');
       chrome.storage.local.clear(function(){
         chrome.storage.sync.clear(function(){
-          chrome.storage.local.set({a:1},function(){
+          chrome.storage.local.set({a:1}, function() {
             chrome.storage.sync.clear(function(){
               chrome.storage.local.get(function(items) {
                 expect(items.a).toBe(1);
-            done();
+                done();
               });
             });
           });
         });
+      });
+    });
+  });
+
+  it('restore storage', function(done) {
+    chrome.storage.local.clear();
+    chrome.storage.sync.clear();
+    chrome.storage.local.set(storage_local_items, function() {
+      chrome.storage.sync.set(storage_sync_items, function() {
+        console.log(storage_local_items);
+        console.log(storage_sync_items);
+        done();
       });
     });
   });
