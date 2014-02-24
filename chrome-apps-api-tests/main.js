@@ -97,12 +97,19 @@ function runAutoTests() {
 function runManualTests() {
   setTitle('Manual Tests');
 
+  createActionButton('Again', setMode.bind(null, 'auto'));
+  createActionButton('Reset App', chrome.runtime.reload);
   createActionButton('Back', setMode.bind(null, 'main'));
 
+  var contentEl = document.getElementById('content');
   Object.keys(window.tests).forEach(function(key) {
-    //if (!window.tests[key].enabled)
-    //  return;
-    window.tests[key].defineManualTests();
+    if (!window.tests[key].enabled)
+      return;
+    window.tests[key].defineManualTests(function(name, test) {
+      createActionButton(name, function() {
+        test(contentEl);
+      });
+    });
   });
 }
 
