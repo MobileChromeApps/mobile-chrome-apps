@@ -460,7 +460,6 @@ registerAutoTests("chrome.storage", function() {
       });
     });
     it('Clearing sync should not clear local', function(done) {
-      console.log('here');
       chrome.storage.local.clear(function(){
         chrome.storage.sync.clear(function(){
           chrome.storage.local.set({a:1}, function() {
@@ -481,8 +480,6 @@ registerAutoTests("chrome.storage", function() {
     chrome.storage.sync.clear();
     chrome.storage.local.set(storage_local_items, function() {
       chrome.storage.sync.set(storage_sync_items, function() {
-        console.log(storage_local_items);
-        console.log(storage_sync_items);
         done();
       });
     });
