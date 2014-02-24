@@ -43,7 +43,7 @@ exports.setUpJasmine = function() {
 
   // Add Spec Filter
   jasmineEnv.specFilter = function(spec) {
-    //logger(spec.getFullName());
+    //console.log(spec.getFullName());
     return true;
   };
 
@@ -55,8 +55,6 @@ exports.setUpJasmine = function() {
 }
 
 function addJasmineHelpers(jasmineInterface) {
-  jasmineInterface.log = logger;
-
   jasmineInterface.isOnCordova = function() {
     return typeof window.cordova !== 'undefined';
   };

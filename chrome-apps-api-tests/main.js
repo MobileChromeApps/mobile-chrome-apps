@@ -32,8 +32,10 @@ function setMode(mode) {
 window.clearContent = function() {
   var content = document.getElementById('content');
   content.innerHTML = '';
-  var logger = document.getElementById('log');
+  var log = document.getElementById('log--content');
   log.innerHTML = '';
+  var buttons = document.getElementById('buttons');
+  buttons.innerHTML = '';
 }
 
 window.setTitle = function(title) {
@@ -42,7 +44,7 @@ window.setTitle = function(title) {
 }
 
 window.createActionButton = function(title, callback) {
-  var content = document.getElementById('content');
+  var buttons = document.getElementById('buttons');
   var div = document.createElement('div');
   var button = document.createElement('a');
   button.textContent = title;
@@ -52,7 +54,7 @@ window.createActionButton = function(title, callback) {
   };
   button.classList.add('topcoat-button');
   div.appendChild(button);
-  content.appendChild(div);
+  buttons.appendChild(div);
 }
 
 // TODO: make a better logger
@@ -60,12 +62,14 @@ window.logger = function() {
   console.log.apply(console, arguments);
   window.medic.log.apply(window.medic.log, arguments);
 
-  var el = document.getElementById('log');
+  var el = document.getElementById('log--content');
   var div = document.createElement('div');
+  div.classList.add('log--content--line');
   div.textContent = Array.prototype.slice.apply(arguments).map(function(arg) {
       return (typeof arg === 'string') ? arg : JSON.stringify(arg);
     }).join(' ');
   el.appendChild(div);
+  // scroll to bottom
   el.scrollTop = el.scrollHeight;
 }
 

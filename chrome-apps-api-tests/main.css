@@ -17,16 +17,16 @@ html, body {
   top: 0;
   z-index: 1000;
 
-  background-color: #58b;
+  background-color: #75B2F0;
   font-size: 25px;
   text-align: center;
   font-weight: bold;
 }
 
-#content {
+#middle {
   position: absolute;
   top: 30px;
-  bottom: 150px;
+  bottom: 20px;
   width: 100%;
   overflow-y: auto;
   overflow-x: auto;
@@ -34,18 +34,37 @@ html, body {
 
 #log {
   position: fixed;
-  height: 150px;
+  height: 20px;
   width: 100%;
   bottom: 0;
   z-index: 1000;
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  background-color: white;
   border-top: 2px solid #777;
-  white-space: pre;
+  transition: 0.25s ease;
 }
 
-#log > div {
+#log.expanded {
+  height: 60%;
+}
+
+#log--title {
+  position: absolute;
+  top: 0;
+  height: 20px;
+  width: 100%;
+  background-color: #93AAC2;
+}
+
+#log--content {
+  position: absolute;
+  top: 20px;
+  bottom: 0;
+  width: 100%;
+  overflow-x: none;
+  overflow-y: auto;
+  background-color: white;
+}
+
+#log--content--line {
   border-bottom: 1px solid #ccc;
+  white-space: pre;
 }
