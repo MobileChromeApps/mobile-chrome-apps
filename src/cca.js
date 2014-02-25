@@ -540,6 +540,44 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
   })
 
+  // Add a URL type to the iOS project's .plist file.
+  // This is necessary for chrome.identity to redirect back to the app after authentication.
+  .then(function() {
+    var hasIos = fs.existsSync(path.join('platforms', 'ios'));
+    if (hasIos) {
+      var platforms = require('cordova/platforms');
+      var parser = new platforms.ios.parser(path.join('platforms','ios'));
+      var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+      var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
+
+      var rootPlistElement = infoPlistXml.getroot();
+      var rootDictElement = rootPlistElement.getItem(0);
+
+      var bundleUrlTypesKey = et.SubElement(rootDictElement, 'key');
+      bundleUrlTypesKey.text = 'CFBundleURLTypes';
+      var bundleUrlTypesArray = et.SubElement(rootDictElement, 'array');
+      var bundleUrlTypesDict = et.SubElement(bundleUrlTypesArray, 'dict');
+
+      var bundleTypeRoleKey = et.SubElement(bundleUrlTypesDict, 'key');
+      bundleTypeRoleKey.text = 'CFBundleTypeRole';
+      var bundleTypeRoleString = et.SubElement(bundleUrlTypesDict, 'string');
+      bundleTypeRoleString.text = 'Editor';
+
+      var bundleUrlNameKey = et.SubElement(bundleUrlTypesDict, 'key');
+      bundleUrlNameKey.text = 'CFBundleURLName';
+      var bundleUrlNameString = et.SubElement(bundleUrlTypesDict, 'string');
+      bundleUrlNameString.text = manifest.packageId;
+
+      var bundleUrlSchemesKey = et.SubElement(bundleUrlTypesDict, 'key');
+      bundleUrlSchemesKey.text = 'CFBundleURLSchemes';
+      var bundleUrlSchemesArray = et.SubElement(bundleUrlTypesDict, 'array');
+      var bundleUrlSchemeString = et.SubElement(bundleUrlSchemesArray, 'string');
+      bundleUrlSchemeString.text = manifest.packageId;
+
+      fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
+    }
+  })
+
   // Run prepare.
   .then(function() {
     var wwwPath = path.join(origDir, destAppDir, 'www');
