@@ -22,7 +22,7 @@ function setMode(mode) {
   }
 
   chrome.storage.local.set({'mode': mode});
-  clearContent();
+  window.clearContent();
 
   handlers[mode]();
 }
@@ -88,6 +88,8 @@ function runAutoTests() {
   Object.keys(window.tests).forEach(function(key) {
     if (!window.tests[key].enabled)
       return;
+    if (!window.tests[key].hasOwnProperty('defineAutoTests'))
+      return;
     window.tests[key].defineAutoTests(jasmineInterface);
   });
 
@@ -109,10 +111,14 @@ function runManualTests() {
   Object.keys(window.tests).forEach(function(key) {
     if (!window.tests[key].enabled)
       return;
-    window.tests[key].defineManualTests(function(name, test) {
-      createActionButton(name, function() {
-        test(contentEl);
-      });
+    if (!window.tests[key].hasOwnProperty('defineManualTests'))
+      return;
+    createActionButton(key, function() {
+      window.clearContent();
+      createActionButton('Reset App', chrome.runtime.reload);
+      createActionButton('Back', setMode.bind(null, 'manual'));
+
+      window.tests[key].defineManualTests(contentEl, createActionButton);
     });
   });
 }
