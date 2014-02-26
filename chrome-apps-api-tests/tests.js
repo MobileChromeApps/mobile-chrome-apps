@@ -24,16 +24,15 @@ exports.registerAutoTests = function(api, fn) {
 };
 
 // Usage:
-// registerManualTests('apiName', {
-//   'Test Description': function(contentEl) { ... },
-//   'Test 2': function(contentEl) { ..  },
+// registerManualTests('apiName', function(contentEl, addButton) {
+//   .. setup ..
+//   addButton('Test Description', function() { ... });
+//   addButton('Test 2', function() { ... });
 // });
-exports.registerManualTests = function(api, tests) {
+exports.registerManualTests = function(api, fn) {
   var apiTests = getTestsObject(api);
-  apiTests.defineManualTests = function(defineManualTest) {
-    Object.keys(tests).forEach(function(testName) {
-      defineManualTest(testName, tests[testName]);
-    });
+  apiTests.defineManualTests = function(contentEl, addButton) {
+    fn(contentEl, addButton);
   };
 }
 
