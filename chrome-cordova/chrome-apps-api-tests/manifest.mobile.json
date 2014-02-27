@@ -7,5 +7,12 @@
   "incoming_sync_delay": { // syncFileSystem
     "initial": 2000,
     "maximum": 64000
+  },
+  "android": {
+    "oath2": {
+      "client_id": "1097129105475-7nr770lpuipprtlh33fm9tlkrf98u0dl.apps.googleusercontent.com"
+    }
+  },
+  "ios": {
   }
 }
