@@ -1,5 +1,11 @@
 {
   "packageId": "org.chromium.apps.ChromeAppsApiTests",
-  "versionCode": 1,
-  "CFBundleVersion": '1.1.1',
+  "versionCode": 2,
+  "CFBundleVersion": '0.2.0',
+
+  "senderId": "429153676186", // pushMessaging
+  "incoming_sync_delay": { // syncFileSystem
+    "initial": 2000,
+    "maximum": 64000
+  }
 }

@@ -1,14 +1,13 @@
 {
   "name": "Chrome Apps Api Tests",
-  "description": "New style tests, shared with cordova",
+  "description": "Auto and Manual testing of chrome APIs, for desktop and mobile",
   "manifest_version": 2,
   "minimum_chrome_version": "23",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "offline_enabled": true,
   "icons": {
-    "16": "assets/icons/icon16.png",
-    "48": "assets/icons/icon48.png",
-    "128": "assets/icons/icon128.png"
+    "16": "assets/icon-128x128.png",
+    "128": "assets/icon-128x128.png"
   },
   "app": {
     "background": {
@@ -33,6 +32,19 @@
     "http://127.0.0.1/*",
     "https://www.googleapis.com/*"
   ],
-  "default_locale": "fr"
+  "default_locale": "fr",
 
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCq7U5RoVWf4rUqCS+VDN1lNffuc1BfodrsjUBv6BDeqRust5ePjbsDBzmW6aUjgwhb38WIJNihOqLl7HRYlG4F25FjiK+GUwM3zCfZFgJpKmakuofpSEmkkoniHTcuqGKpQn2o9j5lPom7iM0Dq2LdN+WTDc0qe0/2Ndp3SH+A0QIDAQAB",
+
+  "oauth2": {
+    "client_id": "545713885199-6h5bad5od8r86prjv5t2r8oudkivc5ph.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar.readonly",
+      "https://www.googleapis.com/auth/drive",
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/youtube.readonly",
+      "https://www.googleapis.com/auth/gcm_for_chrome",
+      "https://www.googleapis.com/auth/gcm_for_chrome.readonly"
+    ]
+  }
 }
