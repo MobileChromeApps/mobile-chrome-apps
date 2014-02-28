@@ -14,5 +14,8 @@
     }
   },
   "ios": {
+    "oath2": {
+      "client_id": "1097129105475-4bugctonbclnrs9u3cbv5phgvdemk5b5.apps.googleusercontent.com"
+    }
   }
 }
