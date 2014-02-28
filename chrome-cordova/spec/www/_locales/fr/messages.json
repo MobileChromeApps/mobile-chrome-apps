@@ -1,0 +1,51 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Locale = fr.
+{
+  "AppName": {
+    "message": "Le Chrome Spec",
+    "description": "The title of our app."
+  },
+  "description": {
+    "message": "The app description"
+  },
+  "@test1": {
+    "message": "Bonjour $NAME$. $NAME$, voulez-vous des $STUFF$?",
+    "description": "Tests named placeholders",
+    "placeholders": {
+      "NaMe": {
+        "content": "$1",
+        "example": "John"
+      },
+      "StUfF": {
+        "content": "fun $2 $NaMe$ $$"
+      }
+    }
+  },
+  "test2": {
+    "message": "$1, $2, et $3",
+    "description": "Tests multiple args & also non-existant args."
+  },
+  "test3": {
+    "message": "_$$_",
+    "description": "Tests $ literals"
+  },
+  "testColor": {
+    "message": "#ccc",
+    "description": "Test CSS replacement"
+  },
+  "testWidth": {
+    "message": "5px"
+  },
+  "extended_char": {
+    "message": "᠀\x01\u1801"
+  },
+  "override2": {
+    "message": "échec"
+  },
+  "override3": {
+    "message": "échec"
+  }
+}

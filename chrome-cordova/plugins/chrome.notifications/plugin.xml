@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.notifications"
+    version="1.0.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Notifications API</name>
+
+  <dependency id="com.google.androidsupport" />
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.chromium.storage" />
+
+  <platform name="android">
+    <js-module src="notifications.js" name="notifications">
+      <clobbers target="chrome.notifications" />
+    </js-module>
+    <source-file src="src/android/ChromeNotifications.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/NotificationReceiver.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeNotifications">
+        <param name="android-package" value="org.chromium.ChromeNotifications"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        <receiver android:name="org.chromium.NotificationReceiver" />
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <js-module src="notifications.js" name="notifications">
+      <clobbers target="chrome.notifications" />
+    </js-module>
+    <source-file src="src/ios/ChromeNotifications.m" />
+    <header-file src="src/ios/ChromeNotifications.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeNotifications">
+        <param name="ios-package" value="ChromeNotifications"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

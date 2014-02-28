@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.navigation"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.1.0-dev" />
+  </engines>
+
+  <name>Chrome Apps Navigation</name>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeNavigation.java" target-dir="src/org/chromium" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeNavigation">
+        <param name="android-package" value="org.chromium.ChromeNavigation"/>
+        <param name="onload" value="true"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/CCAOpenInChromeController.m" />
+    <header-file src="src/ios/CCAOpenInChromeController.h" />
+    <source-file src="src/ios/ChromeNavigation.m" />
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeNavigation">
+        <param name="ios-package" value="ChromeNavigation"/>
+        <param name="onload" value="true"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

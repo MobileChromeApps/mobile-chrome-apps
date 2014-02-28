@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.storage"
+    version="1.0.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Storage API</name>
+
+  <dependency id="org.chromium.common" />
+
+  <js-module src="storage.js" name="Storage">
+    <clobbers target="chrome.storage" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeStorage.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeStorage">
+        <param name="android-package" value="org.chromium.ChromeStorage"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeStorage.m" />
+    <header-file src="src/ios/ChromeStorage.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeStorage">
+        <param name="ios-package" value="ChromeStorage"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

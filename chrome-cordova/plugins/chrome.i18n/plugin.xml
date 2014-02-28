@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.i18n"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps I18n API</name>
+
+  <dependency id="org.chromium.common" />
+
+  <js-module src="i18n.js" name="I18n">
+    <clobbers target="chrome.i18n" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeI18n.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeI18n">
+        <param name="android-package" value="org.chromium.ChromeI18n"/>
+        <param name="onload" value="true"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeI18n.m" />
+    <header-file src="src/ios/ChromeI18n.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeI18n">
+        <param name="ios-package" value="ChromeI18n"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

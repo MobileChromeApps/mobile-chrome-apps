@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.chromium.runtime"
+    version="1.0.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome App Runtime</name>
+
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.storage" />
+
+  <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
+  <js-module src="api/app/runtime.js" name="app.runtime">
+    <clobbers target="chrome.app.runtime" />
+  </js-module>
+
+  <js-module src="api/runtime.js" name="runtime">
+    <clobbers target="chrome.runtime" />
+  </js-module>
+
+  <js-module src="lib/CryptoJS/sha256.js" name="CryptoJS-sha256" />
+  <js-module src="lib/CryptoJS/enc-base64-min.js" name="CryptoJS-enc-base64-min" />
+</plugin>

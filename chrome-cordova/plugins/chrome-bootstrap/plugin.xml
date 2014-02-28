@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.bootstrap"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Core</name>
+
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.chromium.storage" />
+
+  <!-- Javascript modules. Note that some module names differ from the chrome API locations -->
+  <js-module src="api/app/window.js" name="app.window">
+    <clobbers target="chrome.app.window" />
+  </js-module>
+
+  <js-module src="api/mobile.js" name="mobile.impl">
+    <clobbers target="chrome.mobile.impl" />
+  </js-module>
+
+  <!-- Integration files -->
+  <asset src="www/chromeapp.html" target="plugins/org.chromium.bootstrap/chromeapp.html" />
+  <asset src="www/chromebgpage.html" target="plugins/org.chromium.bootstrap/chromebgpage.html" />
+  <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
+
+  <platform name="android">
+    <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />
+    <!-- Convert 'chrome-extension://' urls -->
+    <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/org/chromium" />
+
+    <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBootstrap">
+        <param name="android-package" value="org.chromium.ChromeBootstrap"/>
+        <param name="onload" value="true"/>
+      </feature>
+      <feature name="ChromeExtensionURLs">
+        <param name="android-package" value="org.chromium.ChromeExtensionURLs"/>
+        <param name="onload" value="true"/>
+      </feature>
+
+      <access origin="chrome-extension://*" />
+
+      <preference name="DisallowOverscroll" value="true" />
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeBootstrap.m" />
+    <source-file src="src/ios/ChromeExtensionURLs.m" />
+
+    <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeBootstrap">
+        <param name="ios-package" value="ChromeBootstrap"/>
+        <param name="onload" value="true"/>
+      </feature>
+      <feature name="ChromeExtensionURLs">
+        <param name="ios-package" value="ChromeExtensionURLs"/>
+        <param name="onload" value="true"/>
+      </feature>
+
+      <access origin="chrome-extension://*" />
+
+      <preference name="KeyboardDisplayRequiresUserAction" value="false" />
+      <preference name="DisallowOverscroll" value="true" />
+    </config-file>
+  </platform>
+</plugin>

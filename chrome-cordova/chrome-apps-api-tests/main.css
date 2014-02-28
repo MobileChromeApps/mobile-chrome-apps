@@ -1,0 +1,70 @@
+*, *:before, *:after {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#title {
+  position: fixed;
+  height: 30px;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+
+  background-color: #75B2F0;
+  font-size: 25px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#middle {
+  position: absolute;
+  top: 30px;
+  bottom: 20px;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#log {
+  position: fixed;
+  height: 20px;
+  width: 100%;
+  bottom: 0;
+  z-index: 1000;
+  border-top: 2px solid #777;
+  transition: 0.25s ease;
+}
+
+#log.expanded {
+  height: 60%;
+}
+
+#log--title {
+  position: absolute;
+  top: 0;
+  height: 20px;
+  width: 100%;
+  background-color: #93AAC2;
+}
+
+#log--content {
+  position: absolute;
+  top: 20px;
+  bottom: 0;
+  width: 100%;
+  overflow-x: none;
+  overflow-y: auto;
+  background-color: white;
+}
+
+#log--content--line {
+  border-bottom: 1px solid #ccc;
+  white-space: pre;
+}

@@ -1,0 +1,26 @@
+#!/bin/bash
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+exec 1>&2
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+    against=HEAD
+else
+    # Initial commit: diff against an empty tree object
+    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+missing_license=0
+
+IFS='
+'
+for FILE in $(git diff --cached --name-only $against); do
+  if ! hooks/check_file.sh "$FILE" yes; then
+    missing_license=1
+  fi
+done
+
+exit $missing_license

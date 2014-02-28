@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.socket"
+    version="1.1.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Socket API</name>
+
+  <dependency id="org.chromium.common" />
+
+  <js-module src="socket.js" name="Socket">
+    <clobbers target="chrome.socket" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeSocket.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSocket">
+        <param name="android-package" value="org.chromium.ChromeSocket"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <framework src="Security.framework" />
+    <framework src="CFNetwork.framework" />
+    <source-file src="src/ios/ChromeSocket.m" />
+    <header-file src="src/ios/ChromeSocket.h" />
+
+    <source-file src="src/ios/third_party/GCDAsyncSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncSocket.h" />
+    <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSocket">
+        <param name="ios-package" value="ChromeSocket"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

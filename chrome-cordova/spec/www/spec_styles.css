@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+html, body {
+  overflow: visible;
+  font-family: sans-serif;
+}
+
+pre, form {
+  margin: 0;
+}
+
+body {
+  background: #000;
+  color: #ccc;
+  word-break: break-word;
+}
+
+h1 {
+  font-size: 15pt;
+  text-shadow: 2px 2px #555;
+  text-align: center;
+  margin: 8px 0;
+}
+
+h2 {
+  font-size: 14pt;
+  border-bottom: 1px solid;
+}
+
+#btns {
+  text-align: center;
+}
+
+#logs {
+  word-break: break-word;
+  -webkit-user-select: initial;
+}
+
+.btn {
+  border: 1px solid #555;
+  -webkit-border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+  background: #444;
+  min-width: 150px;
+  font-size: 10pt;
+  padding: 6px 10px;
+  margin: 6px;
+  cursor: pointer;
+}
+
+.btn:active {
+  background: #222;
+}
+
+.btn:focus {
+  border-color: yellow;
+  outline: none;
+}
+
+.home-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 0;
+}
+
+#jasmine-container {
+  max-height: 300px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  -webkit-user-select: initial;
+}
+
+.jasmine_reporter {
+  background: #eee;
+  padding-bottom: 4px;
+}
+
+.clear-logs {
+  font-size: 11pt;
+  margin-left: 20px;
+  color: #55f;
+}
+
+.i18n_test {
+  color: __MSG_testColor__;
+  background-image: url(__MSG_@@extENSIOn_id__.png);
+  margin-__MSG_@@bidi_start_edge__: 2px;
+  margin-__MSG_@@bidi_end_edge__: 4px;
+  direction: __MSG_@@bidi_dir__;
+  width: __MSG_testwidth__;
+}

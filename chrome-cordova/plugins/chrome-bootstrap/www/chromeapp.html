@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <script src="../../cordova.js"></script>
+        <script>
+            cordova.require('cordova/channel').onPluginsReady.subscribe(function() {
+                cordova.require('org.chromium.bootstrap.mobile.impl').boot();
+            });
+        </script>
+    </head>
+    <body>
+        <script src="chrome-extension://z/chrome-content-loaded"></script>
+    </body>
+</html>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.identity"
+    version="1.0.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Identity API</name>
+
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.runtime" />
+  <dependency id="org.apache.cordova.inappbrowser" />
+  <dependency id="com.google.playservices" />
+  <dependency id="org.chromium.frameworks.googleopensource" />
+  <dependency id="org.chromium.frameworks.googleplus" />
+
+  <js-module src="identity.js" name="Identity">
+    <clobbers target="chrome.identity" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeIdentity.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeIdentity">
+        <param name="android-package" value="org.chromium.ChromeIdentity"/>
+      </feature>
+      <access origin="https://accounts.google.com/*" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/*">
+      <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    </config-file>
+
+  </platform>
+
+  <platform name="ios">
+     <source-file src="src/ios/ChromeIdentity.m" />
+     <header-file src="src/ios/ChromeIdentity.h" />
+
+     <config-file target="config.xml" parent="/widget">
+       <feature name="ChromeIdentity">
+         <param name="ios-package" value="ChromeIdentity"/>
+       </feature>
+       <access origin="https://accounts.google.com/*" />
+     </config-file>
+  </platform>
+</plugin>

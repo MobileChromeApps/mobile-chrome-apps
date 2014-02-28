@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * Contains extra user-agent styles to apply to all Chrome App windows.
+ *
+ * These should be kept in sync with:
+ * https://code.google.com/p/chromium/codesearch#chromium/src/chrome/renderer/resources/extensions/platform_app.css
+ */
+body { -webkit-user-select: none; }
+html, body { overflow: hidden; }
+img, a { -webkit-user-drag: none; }
+

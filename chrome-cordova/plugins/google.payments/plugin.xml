@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="com.google.payments"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Payments API</name>
+
+  <dependency id="cc.fovea.plugins.inapppurchase" />
+
+  <js-module src="www/google.payments.js" name="payments">
+    <clobbers target="google.payments" />
+  </js-module>
+
+  <platform name="android">
+    <js-module src="www/android/google.payments.js" name="androidPayments">
+      <merges target="google.payments" />
+    </js-module>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="com.android.vending.BILLING" />
+    </config-file>
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="InAppBillingV3">
+        <param name="android-package" value="com.google.payments.InAppBillingV3"/>
+      </feature>
+    </config-file>
+
+    <source-file src="src/android/InAppBillingV3.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Base64.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Base64DecoderException.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabException.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabHelper.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/IabResult.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Inventory.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Purchase.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/Security.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/SkuDetails.java" target-dir="src/com/google/payments" />
+    <source-file src="src/android/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
+  </platform>
+
+  <platform name="ios">
+    <js-module src="www/ios/google.payments.js" name="iosPayments">
+      <merges target="google.payments" />
+    </js-module>
+  </platform>
+</plugin>
