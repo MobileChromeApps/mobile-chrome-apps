@@ -13,19 +13,7 @@
       "scripts": [
         "spec_bootstrap.js",
         "page.chromespec.js",
-        "page.directoryFinder.js",
         "page.jasmine.js",
-        "page.fileSystem.js",
-        "page.identity.js",
-        "page.idle.js",
-        "page.navigation.js",
-        "page.notifications.js",
-        "page.power.js",
-        "page.pushMessaging.js",
-        "page.runtime.js",
-        "page.socket.js",
-        "page.syncFileSystem.js",
-        "page.embed.js",
         "background.js"
       ]
     }
