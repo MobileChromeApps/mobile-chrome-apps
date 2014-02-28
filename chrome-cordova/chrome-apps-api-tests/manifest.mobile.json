@@ -9,12 +9,12 @@
     "maximum": 64000
   },
   "android": {
-    "oath2": {
+    "oauth2": {
       "client_id": "1097129105475-7nr770lpuipprtlh33fm9tlkrf98u0dl.apps.googleusercontent.com"
     }
   },
   "ios": {
-    "oath2": {
+    "oauth2": {
       "client_id": "1097129105475-4bugctonbclnrs9u3cbv5phgvdemk5b5.apps.googleusercontent.com"
     }
   }
