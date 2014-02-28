@@ -1,5 +1,5 @@
 ## Components
 
-* APIs live under `plugins/`.
-* Chrome-spec test suite is in `spec/`.
+* APIs live under [`plugins/`](plugins/).
+* Our test suite is in [`chrome-apps-api-tests/`](chrome-apps-api-tests/).
 
