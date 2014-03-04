@@ -84,12 +84,6 @@ function initCommand() {
     return spawn('git', ['submodule', 'update', '--init', '--recursive']);
   })
   .then(function() {
-    return spawn('git', ['checkout', 'master'], {cwd: 'chrome-cordova'});
-  })
-  .then(function() {
-    return spawn('git', ['pull', '--rebase'], {cwd: 'chrome-cordova'});
-  })
-  .then(function() {
     return spawn('npm', ['install']);
   }).done();
 }
