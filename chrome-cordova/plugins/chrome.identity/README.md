@@ -39,6 +39,8 @@ For iOS, first follow **Step 1** of the instructions [here](https://developers.g
 * the [Google Cloud Console](https://cloud.google.com/console), under "APIs & Auth" > "Registered Apps", and
 * your app's URL types in Xcode (located in the app's *Info* tab).
 
+Next, follow **Step 4** on the same page ([here](https://developers.google.com/+/mobile/ios/getting-started#step_4_add_a_url_type)) to register a URL type.  If the URL type is already registered, you have no more to do for this step.
+
 ## Updating Your Manifest
 
 Your manifest needs to be updated to include your client id and scopes. In a Chrome App, this is done in manifest.json as follows:
