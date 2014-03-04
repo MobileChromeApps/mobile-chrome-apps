@@ -30,6 +30,14 @@ You will be prompted for a password, which is `android`.
 
 This process will yield a client id, but no action is required with it (unlike for iOS).
 
+#### Identity Without Google Play Services
+
+If Google Play Services is unavailable (for instance, using an emulator), this plugin uses a web authentication flow, which requires a web client id.
+
+In the project created in the Google Cloud Console, create a new client ID.  The "Web application" type should be selected by default.  Empty the "Authorized JavaScript origins" text box, and in the "Authorized redirect URI" text box, remove the default and enter `https://YOUR_CHROME_APP_ID.chromiumapp.org/`.
+
+Put the yielded client ID in your mobile manifest as described in the "Updating Your Manifest" section.
+
 ### iOS
 
 For iOS, first follow **Step 1** of the instructions [here](https://developers.google.com/+/mobile/ios/getting-started#step_1_creating_the_apis_console_project).
@@ -43,16 +51,32 @@ Next, follow **Step 4** on the same page ([here](https://developers.google.com/+
 
 ## Updating Your Manifest
 
-Your manifest needs to be updated to include your client id and scopes. In a Chrome App, this is done in manifest.json as follows:
+Your manifest needs to be updated to include your client id and scopes. In a Chrome App, this is done in **manifest.json** as follows:
 
     "oauth2": {
-      "client_id": "YOUR_IOS_CLIENT_ID",
+      "client_id": "YOUR_CHROME_CLIENT_ID",
       "scopes": [
         "SCOPE_1",
         "SCOPE_2",
         "SCOPE_3"
       ]
     },
+    
+Additionally, for each other platform (including web, if you'd like to support Android authentication without Google Play Services), add a section to **manifest.mobile.json** containing the appropriate client ID.  For example:
+
+    "android": {
+      "client_id": "YOUR_ANDROID_CLIENT_ID"
+    },
+    "ios": {
+      "client_id": "YOUR_IOS_CLIENT_ID"
+    },
+    "web": {
+      "client_id": "YOUR_WEB_CLIENT_ID"
+    }
+
+This will clobber the client ID in **manifest.json** according to the platform.
+    
+**Note:** You do not need to specify your client ID for Android, but may want to for completeness. :)
 
 When using this plugin outside the context of a Chrome App, this information must be provided using `chrome.runtime.setManifest`:
 
