@@ -34,10 +34,10 @@
   ],
   "default_locale": "fr",
 
-  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCq7U5RoVWf4rUqCS+VDN1lNffuc1BfodrsjUBv6BDeqRust5ePjbsDBzmW6aUjgwhb38WIJNihOqLl7HRYlG4F25FjiK+GUwM3zCfZFgJpKmakuofpSEmkkoniHTcuqGKpQn2o9j5lPom7iM0Dq2LdN+WTDc0qe0/2Ndp3SH+A0QIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAh6XIwsoka6hUjQ+YvR+4URrYVjsSAVuPCmqIi1LQhBWiwInV2nviFVS5mbok4GMr3GXQNSaCN2u9e1lQXgz9/+6strxVfwHfPM1oRn0lJmwYozqGYBrRLkFrdIV3+/ECW3fMYDVJXOohsbs/m+DEkKaEXZXM1AkSKRsgtTKls9qBjOK8lZF7rKPN8Rx0ikqUS8i42Llxc3OfgXWi99WH/VByrxZbc/EvR/HKM9MzzGvAy1510vVB2MbveX5YAxgvTIJUAC8ZUv5RnfYK4GWGQoF+n83o6YIIONfC3pnM0gRfLIaz4+gZaY3KuYocpNHp6b/bRhr49kT/oER8TkOW7QIDAQAB",
 
   "oauth2": {
-    "client_id": "545713885199-6h5bad5od8r86prjv5t2r8oudkivc5ph.apps.googleusercontent.com",
+    "client_id": "545713885199-9iica957p9m65f7nv21us5nmtbbrdba9.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar.readonly",
       "https://www.googleapis.com/auth/drive",
