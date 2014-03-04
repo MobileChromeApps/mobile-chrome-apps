@@ -61,8 +61,11 @@ exports.getAuthToken = function(details, callback) {
             console.warn('Google Play Services is unavailable; falling back to web authentication flow.');
 
             // Verify that oAuthDetails contains a client_id and scopes.
-            if (!oAuthDetails.client_id) {
-                callbackWithError('Client id missing from manifest.', callback);
+            // Since we're using the web auth flow as a fallback, we need the web client id.
+            var manifest = runtime.getManifest();
+            var webClientId = manifest && manifest.web && manifest.web.oauth2 && manifest.web.oauth2.client_id;
+            if (!webClientId) {
+                callbackWithError('Web client id missing from mobile manifest.', callback);
                 return;
             }
             if (!oAuthDetails.scopes) {
@@ -71,9 +74,8 @@ exports.getAuthToken = function(details, callback) {
             }
 
             // Add the appropriate URL to the `details` object.
-            var clientId = oAuthDetails.client_id;
             var scopes = encodeURIComponent(oAuthDetails.scopes.join(' '));
-            details.url = 'https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=' + scopes;
+            details.url = 'https://accounts.google.com/o/oauth2/auth?client_id=' + webClientId + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=' + scopes;
 
             // The callback needs to extract the access token from the returned URL and pass that on to the original callback.
             var launchWebAuthFlowCallback = function(responseUrl) {
