@@ -48,7 +48,7 @@ registerManualTests('cordova.file.directoryFinder', function(rootEl, addButton) 
     var selectedPersistenceValue = persistenceDropdown.options[persistenceDropdown.selectedIndex].value;
 
     var getDirectoryForPurposeCallback = function(directoryEntry) {
-      console.log('path: ' + directoryEntry.fullPath);
+      logger('path: ' + directoryEntry.fullPath);
     };
 
     cordova.file.getDirectoryForPurpose(selectedWritableValue, selectedSandboxedValue, selectedCategoryValue, selectedPersistenceValue, getDirectoryForPurposeCallback);

@@ -4,16 +4,16 @@
 
 registerManualTests('chrome.notifications', function(rootEl, addButton) {
   chrome.notifications.onClosed.addListener(function(notificationId, byUser) {
-    console.log('onClosed fired. notificationId = ' + notificationId + ', byUser = ' + byUser);
+    logger('onClosed fired. notificationId = ' + notificationId + ', byUser = ' + byUser);
   });
 
   chrome.notifications.onClicked.addListener(function(notificationId) {
-    console.log('onClicked fired. notificationId = ' + notificationId);
+    logger('onClicked fired. notificationId = ' + notificationId);
     chrome.notifications.clear(notificationId, function(wasCleared) {});
   });
 
   chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
-    console.log('onButtonClicked fired. notificationId = ' + notificationId + ', buttonIndex = ' + buttonIndex);
+    logger('onButtonClicked fired. notificationId = ' + notificationId + ', buttonIndex = ' + buttonIndex);
   });
 
   var numIds = 0;

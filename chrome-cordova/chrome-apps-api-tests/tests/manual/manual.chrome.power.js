@@ -5,12 +5,12 @@
 registerManualTests('chrome.power', function(rootEl, addButton) {
   addButton('Request Keep-Awake', function() {
     chrome.power.requestKeepAwake('system');
-    console.log('Requested keep-awake.');
+    logger('Requested keep-awake.');
   });
 
   addButton('Release Keep-Awake', function() {
     chrome.power.releaseKeepAwake();
-    console.log('Released keep-awake.');
+    logger('Released keep-awake.');
   });
 });
 

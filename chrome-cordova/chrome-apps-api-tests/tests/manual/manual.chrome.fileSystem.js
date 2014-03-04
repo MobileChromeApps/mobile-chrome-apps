@@ -19,10 +19,10 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
     var onFileReceived = function(file) {
       var reader = new FileReader();
       reader.onload = function(evt) {
-        console.log('Text: ' + evt.target.result);
+        logger('Text: ' + evt.target.result);
       };
       reader.onerror = function(evt) {
-        console.log('Error: ' + evt.target.error.code);
+        logger('Error: ' + evt.target.error.code);
       };
       reader.readAsText(file);
     };
@@ -41,10 +41,10 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
     var onFileReceived = function(file) {
       var reader = new FileReader();
       reader.onload = function(evt) {
-        console.log('Data URL: ' + evt.target.result.substring(0, 32) + '...');
+        logger('Data URL: ' + evt.target.result.substring(0, 32) + '...');
       };
       reader.onerror = function(evt) {
-        console.log('Error: ' + evt.target.error.code);
+        logger('Error: ' + evt.target.error.code);
       };
       reader.readAsDataURL(file);
     };
@@ -60,7 +60,7 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
 
     // This method is called when a file is uploaded.
     var onFileUploaded = function(response) {
-      console.log('Response code: ' + response.responseCode);
+      logger('Response code: ' + response.responseCode);
     };
 
     // This method is called when a file is received from a file entry.
@@ -78,9 +78,9 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
     // This method is called when a file entry is retrieved.
     var chooseEntryCallback = function(fileEntry) {
       if (fileEntry) {
-        console.log('Writable file entry non-null: ' + fileEntry.fullPath);
+        logger('Writable file entry non-null: ' + fileEntry.fullPath);
       } else {
-        console.log('Writable file entry null, as expected.');
+        logger('Writable file entry null, as expected.');
       }
     };
 
@@ -93,9 +93,9 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
     // This method is called when a file entry is retrieved.
     var chooseEntryCallback = function(fileEntry) {
       if (fileEntry) {
-        console.log('Save file entry non-null: ' + fileEntry.fullPath);
+        logger('Save file entry non-null: ' + fileEntry.fullPath);
       } else {
-        console.log('Save file entry null, as expected.');
+        logger('Save file entry null, as expected.');
       }
     };
 
@@ -107,7 +107,7 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
   addButton('chooseEntry, images only', function() {
     // This method is called when a file entry is retrieved.
     var chooseEntryCallback = function(fileEntry) {
-      console.log('File entry path: ' + fileEntry.fullPath);
+      logger('File entry path: ' + fileEntry.fullPath);
     };
 
     var chooseEntryOptions = { acceptsAllTypes: false,
@@ -119,7 +119,7 @@ registerManualTests('chrome.fileSystem', function(rootEl, addButton) {
   addButton('chooseEntry, videos only', function() {
     // This method is called when a file entry is retrieved.
     var chooseEntryCallback = function(fileEntry) {
-      console.log('File entry path: ' + fileEntry.fullPath);
+      logger('File entry path: ' + fileEntry.fullPath);
     };
 
     var chooseEntryOptions = { acceptsAllTypes: false,

@@ -5,7 +5,7 @@
 registerManualTests('chrome.runtime', function(rootEl, addButton) {
   addButton('Attach onSuspend', function() {
     chrome.runtime.onSuspend.addListener(function() {
-      console.log('onSuspend fired.');
+      logger('onSuspend fired.');
     });
   });
 
@@ -15,8 +15,8 @@ registerManualTests('chrome.runtime', function(rootEl, addButton) {
 
   addButton('chrome.runtime.getPlatformInfo()', function() {
     chrome.runtime.getPlatformInfo(function(platformInfo) {
-      console.log("Platform OS: " + platformInfo.os);
-      console.log(JSON.stringify(platformInfo, null, 4));
+      logger("Platform OS: " + platformInfo.os);
+      logger(JSON.stringify(platformInfo, null, 4));
     });
   });
 });
