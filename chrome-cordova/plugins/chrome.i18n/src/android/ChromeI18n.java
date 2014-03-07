@@ -81,7 +81,7 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
     public Uri remapChromeUri(Uri uri) {
         Uri ret = Uri.parse(replacePatternsInLine(uri.toString()));
         if (ret.getPath().endsWith(".css") || uri.getPath().equals("manifest.json")) {
-            Uri fileUri = new Uri.Builder().scheme("file").path("android_asset/www" + uri.getPath()).build();
+            Uri fileUri = Uri.parse("file:///android_asset/www" + uri.getPath());
             fileUri = webView.getResourceApi().remapUri(fileUri);
             try {
                 OpenForReadResult readResult = webView.getResourceApi().openForRead(fileUri, true);
