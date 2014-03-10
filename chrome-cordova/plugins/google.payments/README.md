@@ -134,3 +134,4 @@ On failure, `failureCallback` will be called with a `failureResult` as its singl
 * Ad-hoc payments are currently unsupported.
 * iOS does not support `getPurchases`.
 
+# Release Notes

@@ -24,3 +24,7 @@ This plugin can be used by Apache Cordova applications, but some of the automate
 ## Limitations
 
 * Placeholders are not replaced in CSS files
+
+# Release Notes
+## 1.0.1 (March 10, 2014)
+- Fix incorrect file: URL building in ChromeI18n.java

@@ -23,3 +23,5 @@ In addition, the Drive API must be enabled.  On the left sidebar, navigate to "A
 * DirectoryEntry.getFile triggers a sync even when an existing file is retrieved.
 * Failed sync uploads are not currently retried (until another change triggers another sync attempt).
 * FileEntry.moveTo and FileEntry.copyTo do not trigger syncs.
+
+# Release Notes

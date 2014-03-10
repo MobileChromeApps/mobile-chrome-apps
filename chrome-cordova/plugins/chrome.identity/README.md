@@ -61,7 +61,7 @@ Your manifest needs to be updated to include your client id and scopes. In a Chr
         "SCOPE_3"
       ]
     },
-    
+
 Additionally, for each other platform (including web, if you'd like to support Android authentication without Google Play Services), add a section to **manifest.mobile.json** containing the appropriate client ID.  For example:
 
     "android": {
@@ -75,7 +75,7 @@ Additionally, for each other platform (including web, if you'd like to support A
     }
 
 This will clobber the client ID in **manifest.json** according to the platform.
-    
+
 **Note:** You do not need to specify your client ID for Android, but may want to for completeness. :)
 
 When using this plugin outside the context of a Chrome App, this information must be provided using `chrome.runtime.setManifest`:
@@ -90,4 +90,11 @@ When using this plugin outside the context of a Chrome App, this information mus
 ## Playing With Google APIs
 
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
+
+# Release Notes
+## 1.1.0 (March 10, 2014)
+- Documentation updates.
+- Android: Use of the web auth flow when Play Services is unavailable
+- Added `chrome.identity.getRedirectURL()`
+- Fixes to launchWebAuthFlow()
 

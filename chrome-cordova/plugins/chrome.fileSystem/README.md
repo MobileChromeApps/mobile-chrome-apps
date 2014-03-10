@@ -14,3 +14,5 @@ The API reference is [here](http://developer.chrome.com/apps/fileSystem.html).
 
 * restoreEntry, isRestorable, and retainEntry are not supported.
 * All files are can be made "writable"; there is not yet any differentiation here.
+
+# Release Notes

@@ -14,3 +14,4 @@ The API reference is [here](http://developer.chrome.com/apps/power.html).
 
 * There is no distinction between `system` and `display` levels; both act as though `display` was specified.
 
+# Release Notes

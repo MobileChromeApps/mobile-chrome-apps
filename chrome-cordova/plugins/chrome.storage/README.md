@@ -20,3 +20,5 @@ The API reference is [here](https://developer.chrome.com/apps/storage.html).
 ## Notes
 
 * Both `chrome.storage.local` and `chrome.storage.sync` are available, but the latter does not actually sync.
+
+# Release Notes

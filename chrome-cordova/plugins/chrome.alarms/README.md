@@ -15,3 +15,7 @@ You have to manually change the theme to translucent in `platforms/android/Andro
 ## Reference
 
 The API reference is [here](http://developer.chrome.com/apps/alarms.html).
+
+# Release Notes
+## 1.0.1 (March 10, 2014)
+- Documentation updates.
