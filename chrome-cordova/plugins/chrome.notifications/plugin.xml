@@ -13,7 +13,7 @@
 
   <name>Chrome Apps Notifications API</name>
 
-  <dependency id="com.google.androidsupport" />
+  <dependency id="android.support.v4" />
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.runtime" />
   <dependency id="org.chromium.storage" />

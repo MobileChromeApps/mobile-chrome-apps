@@ -19,6 +19,6 @@
 [submodule "cordova/cordova-plugins"]
 	path = cordova/cordova-plugins
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugins.git
-[submodule "cordova/android-support"]
-	path = cordova/android-support
-	url = https://github.com/MobileChromeApps/android-support.git
+[submodule "cordova/cordova-plugin-android-support-v4"]
+	path = cordova/cordova-plugin-android-support-v4
+	url = https://github.com/MobileChromeApps/cordova-plugin-android-support-v4.git
