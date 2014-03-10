@@ -16,7 +16,30 @@
 
     npm update -g npm
 
-## How to Update Release Notes:
+# Cutting a Release
+
+## Update submodules
+
+    # Pull updates:
+    git submodule foreach "git fetch origin"
+    # Update what they point to:
+    ( cd cordova/cordova-android && git checkout TAG_OR_BRANCH )
+    git commit -am "Updated cordova-android submodule to FOO"
+
+## Publish Plugin Changes
+
+* For each plugin within chrome-cordova/plugins:
+
+    cd path/to/plugin
+    git log . # See what's changed since the previous release.
+    vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
+    git commit -am "Updated plugin release notes and version numbers for release."
+
+* For each plugin found by: `plugman search org.chromium`:
+
+    plugman publish path/to/plugin
+
+## Update Release Notes:
 
     vim RELEASENOTES.md
     :read !./dev-bin/release-logs.sh
@@ -33,8 +56,11 @@ Now curate the list.
     ./prepfornpm.sh
     npm publish --tag=rc
     ./prepfornpm.sh # It's a toggle... yeah, i know...
-    git push
-    git push --tags
+    git push origin master --tags
+    # Double check that the previous command doesn't change the "latest" tag:
+    npm info cca
+    # If it did, set it back via:
+    npm tag cca@### latest
 
 ## Promote to Full Release:
 
