@@ -5,7 +5,7 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
-### v0.0.6 (Mar 10, 2014)
+### v0.0.7 (Mar 10, 2014)
 * Faster `cca create` and `cca prepare`
 * Improved log messages & no longer hiding output from hooks & build sub-commands
 * Show output from hooks and build sub-commands
@@ -23,6 +23,8 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * chrome.identity: Added getRedirectURL()
 * chrome.identity: Remove a manual step for iOS (Adding URL type to Info.plist)
 * chrome.identity: Fixed security hole in InAppBrowser plugin on iOS (used by launchWebAuthFlow)
+
+### 0.0.6 (skipped)
 
 ### 0.0.5 (Feb 5, 2014)
 * Fire readystate change events to fix polymer on Android KitKat
