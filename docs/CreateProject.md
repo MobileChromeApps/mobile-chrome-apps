@@ -1,6 +1,6 @@
 ## Step 2: Create a project
 
-To create an empty mobile Chrome App project in a directory named `YourApp` run:
+To create a default mobile Chrome App project in a directory named `YourApp` run:
 
     cca create YourApp
 
