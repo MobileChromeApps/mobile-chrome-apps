@@ -16,6 +16,14 @@
 
     npm update -g npm
 
+## How to See What is Packaged:
+    dev-bin/prepfornpm.sh
+    npm pack
+    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    tar xzf *.tgz
+    cd package
+    find .
+
 # Cutting a Release
 
 ## Update submodules
@@ -45,8 +53,6 @@
     npm outdated
     # Update them by:
     npm install foo@version --save
-    # Update shrinkwrap file:
-    npm shrinkwrap
 
 ## Update Release Notes:
 
@@ -60,29 +66,34 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
 
     git status
     # Things are good.
-    npm version 0.0.4 # new version
-    ./prepfornpm.sh
+    vim package.json # and set version to "x.x.x-rc1"
+    # Update shrinkwrap file:
+    npm shrinkwrap
+    git commit -am "Set version to x.x.x-rc1"
+    dev-bin/prepfornpm.sh
     npm publish --tag=rc
-    ./prepfornpm.sh # It's a toggle... yeah, i know...
-    git push origin master --tags
+    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    git push origin master
     # Double check that the previous command doesn't change the "latest" tag:
     npm info cca
     # If it did, set it back via:
     npm tag cca@### latest
 
-## Promote to Full Release:
+## Publish full release:
 
-1. Tag it:
-
-    npm tag cca@0.0.4 latest # new version
+    vim package.json # and remove -rc1 from version
+    # Update shrinkwrap file:
+    npm shrinkwrap
+    git commit -am "Set version to x.x.x"
+    git tag vx.x.x
+    dev-bin/prepfornpm.sh
+    npm publish
+    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    git push origin master --tags
+    # Unpublish rc
+    npm tag cca@0.0.0 rc
+    npm unpublish cca@x.x.x-rc1
 
 2. Post to G+ page with version & release notes
 3. Send an email to chromium-apps@ with version & release notes
 
-## How to See What is Packaged:
-    ./prepfornpm.sh
-    npm pack
-    ./prepfornpm.sh # It's a toggle... yeah, i know...
-    tar xzf *.tgz
-    cd package
-    find .
