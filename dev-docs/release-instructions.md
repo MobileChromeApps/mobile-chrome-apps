@@ -94,6 +94,7 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     npm tag cca@0.0.0 rc
     npm unpublish cca@x.x.x-rc1
 
-2. Post to G+ page with version & release notes
-3. Send an email to chromium-apps@ with version & release notes
+2. Send an email to chromium-apps@ with version & release notes
+3. Post on G+ (using corp G+, but setting as public) then ask for it to be re-shared ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).
+4. TODO: Is there merit in adding a "release" to our GitHub?
 
