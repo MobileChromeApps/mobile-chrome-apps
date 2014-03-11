@@ -39,17 +39,25 @@
 
     plugman publish path/to/plugin
 
+## Update npm Dependencies
+
+    # See what is stale
+    npm outdated
+    # Update them by:
+    npm install foo@version --save
+    # Update shrinkwrap file:
+    npm shrinkwrap
+
 ## Update Release Notes:
 
     vim RELEASENOTES.md
     :read !./dev-bin/release-logs.sh
+    # Curate judiciously
 
-Now curate the list.
+Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-cli`.
 
 ## How to Publish a Release Candidate:
 
-    git pull
-    git submodule update
     git status
     # Things are good.
     npm version 0.0.4 # new version
