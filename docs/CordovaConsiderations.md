@@ -1,5 +1,7 @@
 ## Special considerations when developing with Cordova
 
+If you're new to Chrome Apps, the biggest gotcha is that some [web features are disabled](http://developer.chrome.com/apps/app_deprecated). However, several of these do currently work within Cordova.
+
 A Chrome App may not work out of the box on mobile. Some common problems with porting to mobile:
 
 * Layout issues with small screens, especially while in a portrait orientation.
