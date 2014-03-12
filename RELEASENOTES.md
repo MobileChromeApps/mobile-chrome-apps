@@ -5,6 +5,9 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.0.8 (Mar 11, 2014)
+* Fixed googleplayservices plugin (previous update crashes apps)
+
 ### v0.0.7 (Mar 10, 2014)
 * Faster `cca create` and `cca prepare`
 * Improved log messages & no longer hiding output from hooks & build sub-commands
