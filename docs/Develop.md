@@ -46,7 +46,9 @@ From the root of your `cca`-generated project folder:
 
 ### Making changes to your app source code
 
-Your HTML, CSS, and JavaScript files live within the `www` directory of your cca project folder. In order to see your file changes reflected, you **must** run `cca prepare` from within your project.
+Your HTML, CSS, and JavaScript files live within the `www` directory of your cca project folder.
+
+**Important**: After making changes to `www/`, you must run `cca prepare` before deploying your application.  If you are running `cca build`, `cca run`, or `cca emulate` from the command line, the prepare step is done automatically.  If you are developing using Eclipse/XCode, you must run `cca prepare` manually.
 
 ### Debugging
 
