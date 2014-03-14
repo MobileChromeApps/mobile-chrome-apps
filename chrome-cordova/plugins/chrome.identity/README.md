@@ -65,13 +65,19 @@ Your manifest needs to be updated to include your client id and scopes. In a Chr
 Additionally, for each other platform (including web, if you'd like to support Android authentication without Google Play Services), add a section to **manifest.mobile.json** containing the appropriate client ID.  For example:
 
     "android": {
-      "client_id": "YOUR_ANDROID_CLIENT_ID"
+      "oauth2": {
+        "client_id": "YOUR_ANDROID_CLIENT_ID"
+      }
     },
     "ios": {
-      "client_id": "YOUR_IOS_CLIENT_ID"
+      "oauth2": {
+        "client_id": "YOUR_IOS_CLIENT_ID"
+      }
     },
     "web": {
-      "client_id": "YOUR_WEB_CLIENT_ID"
+      "oauth2": {
+        "client_id": "YOUR_WEB_CLIENT_ID"
+      }
     }
 
 This will clobber the client ID in **manifest.json** according to the platform.
