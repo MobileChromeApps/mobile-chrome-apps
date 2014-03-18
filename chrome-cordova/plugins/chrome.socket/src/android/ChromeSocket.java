@@ -9,6 +9,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
@@ -19,7 +20,6 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -278,14 +278,19 @@ public class ChromeSocket extends CordovaPlugin {
             // Enumerations are a crappy legacy API, can't use the for (foo : bar) syntax.
             while(interfaces.hasMoreElements()) {
                 iface = interfaces.nextElement();
-                Enumeration<InetAddress> addresses = iface.getInetAddresses();
-
-                String address = addresses.hasMoreElements() ? addresses.nextElement().getHostAddress() : null;
-                if (address != null) {
-                  JSONObject data = new JSONObject();
-                  data.put("name", iface.getDisplayName());
-                  data.put("address", address);
-                  list.put(data);
+                if (iface.isLoopback()) {
+                    continue;
+                }
+                for (InterfaceAddress interfaceAddress : iface.getInterfaceAddresses()) {
+                    InetAddress address = interfaceAddress.getAddress();
+                    if (address != null) {
+                        JSONObject data = new JSONObject();
+                        data.put("name", iface.getDisplayName());
+                        // Strip percent suffix off of ipv6 addresses to match desktop behaviour.
+                        data.put("address", address.getHostAddress().replaceAll("%.*", ""));
+                        data.put("prefixLength", interfaceAddress.getNetworkPrefixLength());
+                        list.put(data);
+                    }
                 }
             }
 
