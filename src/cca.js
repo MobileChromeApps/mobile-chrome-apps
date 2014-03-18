@@ -1086,6 +1086,20 @@ function main() {
       }
       return push(platform, url);
     },
+    'run': function() {
+      console.log('cca v' + packageVersion);
+      var platform = commandLineFlags._[1];
+      if (platform !== 'chrome') {
+        var CLI = require('../node_modules/cordova/src/cli');
+        CLI(process.argv);
+      } else {
+        // TODO: improve
+        var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
+        var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
+        childProcess.spawn(chromePath, args);
+        return Q();
+      }
+    },
     'create': function() {
       console.log('cca v' + packageVersion);
       var destAppDir = commandLineFlags._[1] || '';
