@@ -241,12 +241,11 @@ function parseManifest(manifest) {
   if (manifest && manifest.permissions) {
     for (i = 0; i < manifest.permissions.length; ++i) {
       if (typeof manifest.permissions[i] === "string") {
-        if (manifest.permissions[i].indexOf('://') > -1) {
-          // Check for wildcard path scenario: <scheme>://<host>/ should translate to <scheme>://<host>/*
-          if (/:\/\/[^\/]+\/$/.test(manifest.permissions[i])) {
-            manifest.permissions[i] += "*";
-          }
-          whitelist.push(manifest.permissions[i]);
+        var matchPatternParts = /([^:]+:\/\/[^\/]+)(\/.*)$/.exec(manifest.permissions[i]);
+        if (matchPatternParts) {
+          // Disregard paths in host permissions: path is required, but
+          // <scheme>://<host>/<any path> should translate to <scheme>://<host>/*
+          whitelist.push(matchPatternParts[1] + "/*");
         } else if (manifest.permissions[i] === "<all_urls>") {
           whitelist.push("*");
         } else {

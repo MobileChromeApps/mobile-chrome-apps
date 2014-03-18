@@ -37,8 +37,16 @@
     },
     "storage",
     "syncFileSystem",
-    "http://www.apache.org/*",
-    "https://www.googleapis.com/*"
+    "http://www.apache.org/this-url-does-not-exist",
+    "https://www.googleapis.com/*",
+    "http://drop1.example.com",
+    "drop2.example.com/*",
+    "http://pass1.example.com/",
+    "http://pass2.example.com/*",
+    "http://pass3.example.com/foo*",
+    "http://pass4.example.com/foo/*",
+    "http://pass5.example.com/foo/*/bar",
+    "https://pass6.example.com/bar*",
   ],
   "default_locale": "fr",
   "oauth2": {
