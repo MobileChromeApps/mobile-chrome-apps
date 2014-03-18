@@ -12,6 +12,31 @@ Stable on Android; alpha on iOS.
 
 The API reference is [here](http://developer.chrome.com/apps/identity.html); a description of how to use the API is [here](http://developer.chrome.com/apps/app_identity.html).
 
+### Mobile Reference
+
+#### Added Functions
+
+    chrome.identity.revokeAuthToken(object details, function callback)
+
+Revokes the permissions associated with an OAuth2 access token and removes it from the cache.
+
+* object `details`: Token information.
+    * string `token`: The token to revoke.
+* function `callback`: Called when the token has been revoked.
+    * `callback` has no parameters.
+
+#### Amended Functions
+
+    chrome.identity.getAuthToken(object details, function callback)
+    
+* object `details` recognizes an additional option:
+    * string `accountHint`: The account to authenticate in the event that the account chooser dialog is to appear.
+        * Specifying this prevents the account chooser dialog from appearing.
+        * This only has an effect on Android.
+* function `callback` has two parameters:
+    * string `token`: The authentication token.
+    * string `account`: The account associated with the token.
+
 ## Preparing Your Application
 
 ### Android
