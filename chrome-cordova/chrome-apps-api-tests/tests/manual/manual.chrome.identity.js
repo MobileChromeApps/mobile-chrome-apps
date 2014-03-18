@@ -24,11 +24,12 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
   }
 
   addButton('Get auth token', function() {
-    var callback = function(token) {
+    var callback = function(token, account) {
       if (!token) {
         logger('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
       } else {
         logger('Token: ' + token);
+        logger('Account: ' + account);
       }
     };
 
@@ -36,11 +37,12 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
   });
 
   addButton('Get auth token with account hint', function() {
-    var callback = function(token) {
+    var callback = function(token, account) {
       if (!token) {
         logger('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
       } else {
         logger('Token: ' + token);
+        logger('Account: ' + account);
       }
     };
 

@@ -11,6 +11,7 @@ try {
 
 // TODO(maxw): Automatically handle expiration.
 var cachedToken;
+var cachedAccount;
 
 // This constant is used as an error message when Google Play Services is unavailable during an attempt to get an auth token natively.
 var GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
@@ -29,7 +30,7 @@ exports.getAuthToken = function(details, callback) {
 
     // If we have a cached token, send it along.
     if (cachedToken) {
-        callback(cachedToken);
+        callback(cachedToken, cachedAccount);
         return;
     }
 
@@ -37,11 +38,14 @@ exports.getAuthToken = function(details, callback) {
     var oAuthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
 
     // Augment the callback so that it caches a received token.
-    var augmentedCallback = function(token) {
-        if (token) {
-            cachedToken = token;
+    var augmentedCallback = function(tokenData) {
+        if (tokenData.token) {
+            cachedToken = tokenData.token;
         }
-        callback(token);
+        if (tokenData.account) {
+            cachedAccount = tokenData.account;
+        }
+        callback(tokenData.token, tokenData.account);
     };
 
     // This function extracts a token from a given URL and returns it.

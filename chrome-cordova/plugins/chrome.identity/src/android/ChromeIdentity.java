@@ -11,6 +11,7 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -228,7 +229,12 @@ public class ChromeIdentity extends CordovaPlugin {
         if(token.trim().equals("")) {
             callbackContext.error("Could not get auth token");
         } else {
-            callbackContext.success(token);
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("account", accountName);
+                jsonObject.put("token", token);
+                callbackContext.success(jsonObject);
+            } catch (JSONException e) { }
         }
     }
 
