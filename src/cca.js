@@ -1097,8 +1097,8 @@ function main() {
         var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
         var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
         childProcess.spawn(chromePath, args);
-        return Q();
       }
+      return Q();
     },
     'create': function() {
       console.log('cca v' + packageVersion);
