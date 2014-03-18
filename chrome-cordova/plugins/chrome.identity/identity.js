@@ -97,7 +97,11 @@ exports.getAuthToken = function(details, callback) {
     };
 
     // Use the native implementation for logging into Google accounts.
-    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oAuthDetails]);
+    var args = [!!details.interactive, oAuthDetails];
+    if (details.accountHint) {
+        args.push(details.accountHint);
+    }
+    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', args);
 };
 
 exports.removeCachedAuthToken = function(details, callback) {

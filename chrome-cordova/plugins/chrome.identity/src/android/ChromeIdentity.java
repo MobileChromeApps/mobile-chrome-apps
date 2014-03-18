@@ -167,7 +167,16 @@ public class ChromeIdentity extends CordovaPlugin {
         this.cordova.getThreadPool().execute(new Runnable() {
             public void run() {
                 if(!haveAccount()) {
-                    launchAccountChooserAndCallback(args, callbackContext);
+                    String accountHint = null;
+                    try {
+                        accountHint = args.getString(2);
+                    } catch (JSONException e) { }
+                    if (accountHint != null) {
+                        accountName = accountHint;
+                        getAuthTokenWithAccount(accountName, args, callbackContext);
+                    } else {
+                        launchAccountChooserAndCallback(args, callbackContext);
+                    }
                 } else {
                     getAuthTokenWithAccount(accountName, args, callbackContext);
                 }
