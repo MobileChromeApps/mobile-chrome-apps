@@ -2,11 +2,11 @@
 
 This plugin provides OAuth2 authentication for Android and iOS.
 
-On Android, this plugin uses Google Play Services; on iOS, it uses InAppBrowser.
+On Android, this plugin uses Google Play Services; on iOS, it uses Google+.
 
 ## Status
 
-Stable on Android; alpha on iOS.
+Stable on Android and iOS.
 
 ## Reference
 
