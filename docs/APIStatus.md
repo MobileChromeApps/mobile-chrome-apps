@@ -17,7 +17,7 @@ _Current as of Jan 2014_.
     * JS methods work (`chrome.i18n.getMessage()` and `chrome.i18n.getAcceptLanguages()`).
     * CSS placeholders not implemented.
 * [identity](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.identity)
-    * Working on Android and iOS.
+    * New API in progress.
 * [idle](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.idle)
     * Working on Android and iOS.
 * [notifications](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.notifications)

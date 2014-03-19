@@ -2,105 +2,11 @@
 
 This plugin provides OAuth2 authentication for Android and iOS.
 
-On Android, this plugin uses Google Play Services; on iOS, it uses InAppBrowser.
-
 ## Status
 
-Stable on Android; alpha on iOS.
+In progress.
 
 ## Reference
 
-The API reference is [here](http://developer.chrome.com/apps/identity.html); a description of how to use the API is [here](http://developer.chrome.com/apps/app_identity.html).
-
-## Preparing Your Application
-
-### Android
-
-You will need to register your application in the [Google Cloud Console](https://cloud.google.com/console).  Create a project.
-
-On the left sidebar, navigate to "APIs & Auth" > "Registered Apps".  Click the red `Register App` button.
-
-Register your app as an "Android" app.  This requires a package name and a SHA1 fingerprint.  To obtain the fingerprint, enter the following the command in a console window:
-
-    keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore -list -v
-
-(On Windows, replace `~` with `%USERPROFILE%`.)
-
-You will be prompted for a password, which is `android`.
-
-This process will yield a client id, but no action is required with it (unlike for iOS).
-
-#### Identity Without Google Play Services
-
-If Google Play Services is unavailable (for instance, using an emulator), this plugin uses a web authentication flow, which requires a web client id.
-
-In the project created in the Google Cloud Console, create a new client ID.  The "Web application" type should be selected by default.  Empty the "Authorized JavaScript origins" text box, and in the "Authorized redirect URI" text box, remove the default and enter `https://YOUR_CHROME_APP_ID.chromiumapp.org/`.
-
-Put the yielded client ID in your mobile manifest as described in the "Updating Your Manifest" section.
-
-### iOS
-
-For iOS, first follow **Step 1** of the instructions [here](https://developers.google.com/+/mobile/ios/getting-started#step_1_creating_the_apis_console_project).
-
-**Note:** If you change your app's bundle identifier at any time, you will need to correspondingly update the bundle identifier in the following places:
-
-* the [Google Cloud Console](https://cloud.google.com/console), under "APIs & Auth" > "Registered Apps", and
-* your app's URL types in Xcode (located in the app's *Info* tab).
-
-Next, follow **Step 4** on the same page ([here](https://developers.google.com/+/mobile/ios/getting-started#step_4_add_a_url_type)) to register a URL type.  If the URL type is already registered, you have no more to do for this step.
-
-## Updating Your Manifest
-
-Your manifest needs to be updated to include your client id and scopes. In a Chrome App, this is done in **manifest.json** as follows:
-
-    "oauth2": {
-      "client_id": "YOUR_CHROME_CLIENT_ID",
-      "scopes": [
-        "SCOPE_1",
-        "SCOPE_2",
-        "SCOPE_3"
-      ]
-    },
-
-Additionally, for each other platform (including web, if you'd like to support Android authentication without Google Play Services), add a section to **manifest.mobile.json** containing the appropriate client ID.  For example:
-
-    "android": {
-      "oauth2": {
-        "client_id": "YOUR_ANDROID_CLIENT_ID"
-      }
-    },
-    "ios": {
-      "oauth2": {
-        "client_id": "YOUR_IOS_CLIENT_ID"
-      }
-    },
-    "web": {
-      "oauth2": {
-        "client_id": "YOUR_WEB_CLIENT_ID"
-      }
-    }
-
-This will clobber the client ID in **manifest.json** according to the platform.
-
-**Note:** You do not need to specify your client ID for Android, but may want to for completeness. :)
-
-When using this plugin outside the context of a Chrome App, this information must be provided using `chrome.runtime.setManifest`:
-
-    chrome.runtime.setManifest({
-      oauth2: {
-        client_id: 'YOUR_IOS_CLIENT_ID',
-        scopes: [ 'SCOPE_1', 'SCOPE_2', 'SCOPE_3' ]
-      }
-    });
-
-## Playing With Google APIs
-
-The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
-
-# Release Notes
-## 1.1.0 (March 10, 2014)
-- Documentation updates.
-- Android: Use of the web auth flow when Play Services is unavailable
-- Added `chrome.identity.getRedirectURL()`
-- Fixes to launchWebAuthFlow()
+None available yet.
 
