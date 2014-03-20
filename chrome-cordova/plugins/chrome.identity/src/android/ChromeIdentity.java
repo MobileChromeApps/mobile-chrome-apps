@@ -29,7 +29,13 @@ public class ChromeIdentity extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeIdentity";
 
     // Error codes.
-    private static final int ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+    private static final int ERROR_GENERAL = -1;
+    private static final int ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE = -2;
+    private static final int ERROR_ACCOUNT_SELECTION_DECLINED = -3;
+    private static final int ERROR_PERMISSION_NOT_GRANTED = -4;
+    private static final int ERROR_INVALID_ARGUMENTS = -5;
+    private static final int ERROR_INTERACTION_REQUIRED_FOR_ACCOUNT_SELECTION = -6;
+    private static final int ERROR_INTERACTION_REQUIRED_FOR_PERMISSION = -7;
 
     // Intent request codes.
     private static final int REQUEST_CODE_ACCOUNT_CHOOSER = 1;
@@ -42,10 +48,16 @@ public class ChromeIdentity extends CordovaPlugin {
     // The account currently authenticated (or being authenticated).
     private String cachedAccount;
 
+    // This determines whether to return token data (including the account) or just the token.
+    private boolean tokenOnly;
+
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("getAccountAndAuthToken".equals(action)) {
             getAccountAndAuthToken(args, callbackContext);
+            return true;
+        } else if ("getAuthToken".equals(action)) {
+            getAuthToken(args, callbackContext);
             return true;
         }
 
@@ -55,12 +67,55 @@ public class ChromeIdentity extends CordovaPlugin {
     // API Functions
 
     private void getAccountAndAuthToken(final CordovaArgs args, final CallbackContext callbackContext) {
+        // When this is called, we want to return the selected account, not just the token.
+        this.tokenOnly = false;
+
         // This function always launches the account chooser.
         this.cordova.getThreadPool().execute(new Runnable() {
             public void run() {
                 launchAccountChooser(args, callbackContext);
             }
         });
+    }
+
+    private void getAuthToken(final CordovaArgs args, final CallbackContext callbackContext) {
+        // When this is called, we just want to return the token.
+        this.tokenOnly = true;
+
+        boolean interactive = false;
+        String account = null;
+
+        try {
+            interactive = args.getBoolean(1);
+            account = args.getString(2);
+        } catch (JSONException e) { }
+
+        if (account != null) {
+            // Account cannot be specified with interactive mode.
+            // Note that this should be caught in JavaScript.
+            if (interactive) {
+                Log.e(LOG_TAG, "User account can only be specified in non-interactive mode.");
+                callbackContext.error(ERROR_INVALID_ARGUMENTS);
+                return;
+            }
+
+            // We have an account, so try to get a token.
+            getAuthTokenForAccount(args, callbackContext, account);
+        } else {
+            // We don't have an account, so we need to ask the user to choose one.
+            if (interactive) {
+                this.cordova.getThreadPool().execute(new Runnable() {
+                    public void run() {
+                        launchAccountChooser(args, callbackContext);
+                    }
+                });
+            } else {
+                // We can't ask for an account if we're not in interactive mode.
+                Log.e(LOG_TAG, "User interaction is required in order to obtain an account.");
+                callbackContext.error(ERROR_INTERACTION_REQUIRED_FOR_ACCOUNT_SELECTION);
+                return;
+            }
+        }
     }
 
     // Helper Functions
@@ -96,11 +151,23 @@ public class ChromeIdentity extends CordovaPlugin {
                     token = GoogleAuthUtil.getToken(context, account, scopes);
                 } catch (UserRecoverableAuthException e) {
                     // The user needs to grant permissions.
-                    Intent permissionIntent = e.getIntent();
-                    launchPermissionDialog(args, callbackContext, account, permissionIntent);
-                    return;
+                    // This can only be done in interactive mode.
+                    boolean interactive = false;
+                    try {
+                        interactive = args.getBoolean(1);
+                    } catch (JSONException jsonException) { }
+                    if (interactive) {
+                        Intent permissionIntent = e.getIntent();
+                        launchPermissionDialog(args, callbackContext, account, permissionIntent);
+                        return;
+                    } else {
+                        Log.e(LOG_TAG, "User interaction is required in order to obtain permission.", e);
+                        callbackContext.error(ERROR_INTERACTION_REQUIRED_FOR_PERMISSION);
+                        return;
+                    }
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error occurred while getting token.", e);
+                    callbackContext.error(ERROR_GENERAL);
                     return;
                 }
 
@@ -135,19 +202,24 @@ public class ChromeIdentity extends CordovaPlugin {
 
     private void passTokenDataToCallback(CallbackContext callbackContext, String account, String token) {
         try {
-            JSONObject jsonObject = new JSONObject();
+            if (this.tokenOnly) {
+                // Pass the token to the callback.
+                callbackContext.success(token);
+            } else {
+                JSONObject tokenData = new JSONObject();
 
-            // Add the account info.
-            JSONObject accountInfo = new JSONObject();
-            accountInfo.put("id", "NULL_ID");
-            accountInfo.put("email", account);
-            jsonObject.put("account", accountInfo);
+                // Add the account info.
+                JSONObject accountInfo = new JSONObject();
+                accountInfo.put("id", "NULL_ID");
+                accountInfo.put("email", account);
+                tokenData.put("account", accountInfo);
 
-            // Add the token.
-            jsonObject.put("token", token);
+                // Add the token.
+                tokenData.put("token", token);
 
-            // Pass the results to the callback.
-            callbackContext.success(jsonObject);
+                // Pass the token data to the callback.
+                callbackContext.success(tokenData);
+            }
         } catch (JSONException e) { }
     }
 
@@ -159,7 +231,8 @@ public class ChromeIdentity extends CordovaPlugin {
                 getAuthTokenForAccount(cachedCordovaArgs, cachedCallbackContext, intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
             } else {
                 // The user has declined to choose an account.
-                this.cachedCallbackContext.error("User declined to choose an account.");
+                Log.e(LOG_TAG, "User declined to choose an account.");
+                this.cachedCallbackContext.error(ERROR_ACCOUNT_SELECTION_DECLINED);
             }
         } else if (requestCode == REQUEST_CODE_PERMISSION_DIALOG) {
             if (resultCode == Activity.RESULT_OK && intent.hasExtra(AccountManager.KEY_AUTHTOKEN)) {
@@ -167,7 +240,8 @@ public class ChromeIdentity extends CordovaPlugin {
                 passTokenDataToCallback(this.cachedCallbackContext, this.cachedAccount, intent.getStringExtra(AccountManager.KEY_AUTHTOKEN));
             } else {
                 // Permissions were not granted.
-                this.cachedCallbackContext.error("User declined to grant permissions.");
+                Log.e(LOG_TAG, "User declined to grant permissions.");
+                this.cachedCallbackContext.error(ERROR_PERMISSION_NOT_GRANTED);
             }
         }
 

@@ -38,12 +38,30 @@ exports.getAccountAndAuthToken = function(callback) {
     var oAuthDetails = runtime && runtime.getManifest().oauth2;
 
     // Call the native code.
-    var args = [oAuthDetails];
+    // When this function is called, interactive is not specified, but we always act as though it's true.
+    var args = [oAuthDetails, true];
     exec(successCallback, errorCallback, 'ChromeIdentity', 'getAccountAndAuthToken', args);
 };
 
 exports.getAuthToken = function(details, callback) {
-    // TODO(maxw): Implement this.
+    var successCallback = function(token) {
+        callback(token);
+    };
+
+    var errorCallback = function(message) {
+        // TODO(maxw): If the message says Google Play Services is unavailable, fall back to web auth.
+        callbackWithError(message, callback);
+    };
+
+    // Fetch the OAuth details from the manifest.
+    var oAuthDetails = runtime && runtime.getManifest().oauth2;
+
+    // Call the native code.
+    var args = [oAuthDetails, !!details.interactive];
+    if (details.account && details.account.email) {
+        args.push(details.account.email);
+    }
+    exec(successCallback, errorCallback, 'ChromeIdentity', 'getAuthToken', args);
 };
 
 // Events

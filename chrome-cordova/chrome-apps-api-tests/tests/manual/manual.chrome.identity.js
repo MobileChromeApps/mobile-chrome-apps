@@ -18,5 +18,53 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
 
     chrome.identity.getAccountAndAuthToken(onGetAccountAndAuthTokenSuccess);
   });
+
+  addButton('Get auth token (interactive)', function() {
+    var details = { interactive: true };
+
+    var onGetAuthTokenSuccess = function(token) {
+      if (!token) {
+        logger('Failed to get a token.');
+        logger('lastError = ' + JSON.stringify(chrome.runtime.lastError));
+        return;
+      }
+
+      logger('Token: ' + token);
+    };
+
+    chrome.identity.getAuthToken(details, onGetAuthTokenSuccess);
+  });
+
+  addButton('Get auth token (non-interactive)', function() {
+    var details = { interactive: false };
+
+    var onGetAuthTokenSuccess = function(token) {
+      if (!token) {
+        logger('Failed to get a token.');
+        logger('lastError = ' + JSON.stringify(chrome.runtime.lastError));
+        return;
+      }
+
+      logger('Token: ' + token);
+    };
+
+    chrome.identity.getAuthToken(details, onGetAuthTokenSuccess);
+  });
+
+  addButton('Get auth token (non-interactive, cordovium1)', function() {
+    var details = { interactive: false, account: { id: 'TEST_ID', email: 'cordovium1@gmail.com' } };
+
+    var onGetAuthTokenSuccess = function(token) {
+      if (!token) {
+        logger('Failed to get a token.');
+        logger('lastError = ' + JSON.stringify(chrome.runtime.lastError));
+        return;
+      }
+
+      logger('Token: ' + token);
+    };
+
+    chrome.identity.getAuthToken(details, onGetAuthTokenSuccess);
+  });
 });
 
