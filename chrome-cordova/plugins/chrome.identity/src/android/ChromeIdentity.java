@@ -202,12 +202,12 @@ public class ChromeIdentity extends CordovaPlugin {
 
     private void passTokenDataToCallback(CallbackContext callbackContext, String account, String token) {
         try {
+            JSONObject tokenData = new JSONObject();
             if (this.tokenOnly) {
-                // Pass the token to the callback.
-                callbackContext.success(token);
+                // We're cheating.  For caching purposes, we also pass the account email.
+                tokenData.put("account", account);
+                tokenData.put("token", token);
             } else {
-                JSONObject tokenData = new JSONObject();
-
                 // Add the account info.
                 JSONObject accountInfo = new JSONObject();
                 accountInfo.put("id", "NULL_ID");
@@ -216,10 +216,10 @@ public class ChromeIdentity extends CordovaPlugin {
 
                 // Add the token.
                 tokenData.put("token", token);
-
-                // Pass the token data to the callback.
-                callbackContext.success(tokenData);
             }
+
+            // Pass the token data to the callback.
+            callbackContext.success(tokenData);
         } catch (JSONException e) { }
     }
 

@@ -14,6 +14,12 @@ var accountAddedListeners = [];
 var accountRemovedListeners = [];
 var signInChangedListeners = [];
 
+// Cached Data
+
+// We keep a map for multi-login apps.  However, we also need to keep a standalone cached token for use with single-login apps.
+var cachedTokenMap = { };
+var cachedToken;
+
 // Functions
 
 exports.getAccounts = function(callback) {
@@ -26,6 +32,11 @@ exports.signIn = function(accounts) {
 
 exports.getAccountAndAuthToken = function(callback) {
     var successCallback = function(tokenData) {
+        // Cache the token.
+        cachedTokenMap[tokenData.account] = tokenData.token;
+        cachedToken = tokenData.token;
+
+        // Call the given callback.
         callback(tokenData.account, tokenData.token);
     };
 
@@ -44,8 +55,31 @@ exports.getAccountAndAuthToken = function(callback) {
 };
 
 exports.getAuthToken = function(details, callback) {
-    var successCallback = function(token) {
-        callback(token);
+    // If an account is specified, check the cached token map.
+    // Otherwise, check the standalone cached token.
+    var accountEmail;
+    if (details.account && details.account.email) {
+        accountEmail = details.account.email;
+        if (cachedTokenMap[accountEmail]) {
+            callback(cachedTokenMap[accountEmail]);
+            return;
+        }
+    } else {
+        if (cachedToken) {
+            callback(cachedToken);
+            return;
+        }
+    }
+
+    var successCallback = function(tokenData) {
+        // Cache the token.
+        if (accountEmail) {
+            cachedTokenMap[accountEmail] = tokenData.token;
+        }
+        cachedToken = tokenData.token;
+
+        // Call the given callback.
+        callback(tokenData.token);
     };
 
     var errorCallback = function(message) {
