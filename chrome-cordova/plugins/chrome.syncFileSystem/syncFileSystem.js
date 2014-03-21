@@ -128,7 +128,7 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
             enableSyncabilityForFileEntry(fileEntry);
 
             // Only sync if the file is being created and not merely retrieved.
-            if (options.create) {
+            if (options && options.create) {
                 var onSyncSuccess = function() {
                     if (successCallback) {
                         successCallback(fileEntry);
