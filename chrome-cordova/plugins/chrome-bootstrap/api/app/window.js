@@ -129,45 +129,58 @@ function rewritePage(pageContent, filePath) {
   }
 }
 
-function fixLocationObjects() {
+function fixLocationObjects(wnd) {
   var hostDescriptor = {
-    configurable: false,
+    configurable: true,
     enumerable: true,
     get: function() {
       var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
       return parts[2];
     }
   };
+  var pathnameDescriptor = {
+    configurable: true,
+    enumerable: true,
+    get: function() {
+      var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
+      return parts[3];
+    }
+  };
+  var originDescriptor = {
+    configurable: true,
+    enumerable: true,
+    get: function() {
+      var parts = /^([^:]*:\/\/[^/]*)(\/[^#?]*)/.exec(this.href);
+      return parts[1];
+    }
+  };
+  function fixInstance(l) {
+    Object.defineProperty(l, 'host', hostDescriptor);
+    Object.defineProperty(l, 'hostname', hostDescriptor);
+    Object.defineProperty(l, 'pathname', pathnameDescriptor);
+    Object.defineProperty(l, 'origin', originDescriptor);
+  }
   // Android KK incorrectly parses chrome-extension:// URLs
-  if (document.location.host === "") {
-    Object.defineProperty(document.location, "host", hostDescriptor);
-    Object.defineProperty(document.location, "hostname", hostDescriptor);
-    Object.defineProperty(document.location, "pathname", {
-      configurable: false,
-      enumerable: true,
-      get: function() {
-        var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
-        return parts[3];
+  if (wnd.location.host === '') {
+    fixInstance(wnd.location);
+    var origCreateElement = wnd.document.createElement;
+    // Also fix up the methods for anchor tags. Angular's location object requires this.
+    wnd.document.createElement = function(tagName) {
+      var ret = origCreateElement.apply(this, arguments);
+      if (tagName === 'a' || tagName === 'A') {
+        fixInstance(ret);
       }
-    });
-    Object.defineProperty(document.location, "origin", {
-      configurable: false,
-      enumerable: true,
-      get: function() {
-        var parts = /^([^:]*:\/\/[^/]*)(\/[^#?]*)/.exec(this.href);
-        return parts[1];
-      }
-    });
+      return ret;
+    };
   }
   // This is needed for both pre- and post-KK Android, but throws an exception on Safari
-  if (document.domain === "") {
+  if (wnd.document.domain === '') {
     try {
-      Object.defineProperty(document, "domain", {
+      Object.defineProperty(wnd.document, 'domain', {
         configurable: false,
         enumerable: true,
         get: function() {
-          var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.location.href);
-          return parts[2];
+          return this.location.host;
         }
       });
     } catch (e) {}
@@ -191,7 +204,8 @@ exports.create = function(filePath, options, callback) {
   xhr.onload = xhr.onerror = function() {
     // Change the page URL before the callback.
     history.replaceState(null, null, resolvedUrl);
-    fixLocationObjects();
+    fixLocationObjects(mobile.fgWindow);
+    fixLocationObjects(mobile.bgWindow);
     // Call the callback before the page contents loads.
     if (callback) {
       callback(createdAppWindow);
@@ -205,3 +219,4 @@ exports.create = function(filePath, options, callback) {
 exports.current = function() {
   return window == mobile.fgWindow ? createdAppWindow : null;
 };
+
