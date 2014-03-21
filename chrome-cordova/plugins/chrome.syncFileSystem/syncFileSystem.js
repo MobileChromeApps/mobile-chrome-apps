@@ -437,7 +437,7 @@ function getDriveChanges(successCallback, errorCallback) {
                     console.log('Successfully retrieved ' + numChanges + ' changes.');
 
                     // Record the new change id, incrementing it to avoid retrieving a duplicate change later.
-                    var nextChangeId = parseInt(responseJson.largestChangeId) + 1;
+                    var nextChangeId = parseInt(responseJson.largestChangeId, 10) + 1;
                     var nextChangeIdObject = { };
                     nextChangeIdObject[NEXT_CHANGE_ID_KEY] = nextChangeId;
                     chrome.storage.internal.set(nextChangeIdObject);
