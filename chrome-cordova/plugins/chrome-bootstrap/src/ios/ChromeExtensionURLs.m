@@ -100,7 +100,13 @@ static NSString* pathPrefix;
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     // Create a new response rather than forwarding the parameter in order to fix up the URL.
-    NSURLResponse* resp = [[NSURLResponse alloc] initWithURL:[self.request URL] MIMEType:[response MIMEType] expectedContentLength:[response expectedContentLength] textEncodingName:[response textEncodingName]];
+    NSDictionary* headers = @{
+        @"Cache-Control": @"no-cache",
+        @"Content-Type":[response MIMEType],
+        @"Content-Length":[NSString stringWithFormat:@"%lld", [response expectedContentLength]]
+        };
+    NSURLResponse *resp = [[NSHTTPURLResponse alloc] initWithURL:[[self request] URL] statusCode:200 HTTPVersion:@"HTTP/1.1" headerFields:headers];
+
     [[self client] URLProtocol:self didReceiveResponse:resp cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 }
 
