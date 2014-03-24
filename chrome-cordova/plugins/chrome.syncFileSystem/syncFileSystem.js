@@ -21,6 +21,12 @@ var fileStatusListeners = [ ];
 // The conflict resolution policy is used to determine how to handle file sync conflicts.
 var conflictResolutionPolicy;
 
+//-------------
+// Local cache
+//-------------
+
+var localDirectoryEntry;
+
 //-----------
 // Constants
 //-----------
@@ -550,25 +556,9 @@ function deleteFile(fileName, callback) {
         console.log('Failed to get file.');
     };
 
-    var onGetDirectorySuccess = function(directoryEntry) {
-        var getFileFlags = { create: true, exclusive: false };
-        directoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
-    };
-    var onGetDirectoryError = function(e) {
-        console.log('Failed to get directory.');
-    };
-
-    var onRequestFileSystemSuccess = function(fileSystem) {
-        // TODO(maxw): Make the directory name app-specific.
-        var getDirectoryFlags = { create: false };
-        fileSystem.root.getDirectory(runtime.id, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
-    };
-    var onRequestFileSystemFailure = function(e) {
-        console.log("Failed to get file system.");
-    };
-
-    // Request the file system.
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, onRequestFileSystemFailure);
+    var getFileFlags = { create: true, exclusive: false };
+    //localDirectoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
+    DirectoryEntry.prototype.getFile.call(localDirectoryEntry, fileName, getFileFlags, onGetFileSuccess, onGetFileError);
 }
 
 // This function downloads the given Drive file.
@@ -610,25 +600,9 @@ function saveData(fileName, data, callback) {
         console.log('Failed to get file.');
     };
 
-    var onGetDirectorySuccess = function(directoryEntry) {
-        var getFileFlags = { create: true, exclusive: false };
-        directoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
-    };
-    var onGetDirectoryError = function(e) {
-        console.log('Failed to get directory.');
-    };
-
-    var onRequestFileSystemSuccess = function(fileSystem) {
-        // TODO(maxw): Make the directory name app-specific.
-        var getDirectoryFlags = { create: false };
-        fileSystem.root.getDirectory(runtime.id, getDirectoryFlags, onGetDirectorySuccess, onGetDirectoryError);
-    };
-    var onRequestFileSystemFailure = function(e) {
-        console.log("Failed to get file system.");
-    };
-
-    // Request the file system.
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, onRequestFileSystemFailure);
+    var getFileFlags = { create: true, exclusive: false };
+    //localDirectoryEntry.getFile(fileName, getFileFlags, onGetFileSuccess, onGetFileError);
+    DirectoryEntry.prototype.getFile.call(localDirectoryEntry, fileName, getFileFlags, onGetFileSuccess, onGetFileError);
 }
 
 //----------------------------
@@ -888,6 +862,7 @@ exports.requestFileSystem = function(callback) {
             callback(fileSystem);
         };
         var onGetDirectorySuccess = function(directoryEntry) {
+            localDirectoryEntry = directoryEntry;
             // We have to make some changes to this directory entry to enable syncability.
             // If a file is ever retrieved or created in this directory entry, we want to enable its syncability before passing it to a callback.
             enableSyncabilityForDirectoryEntry(directoryEntry);
