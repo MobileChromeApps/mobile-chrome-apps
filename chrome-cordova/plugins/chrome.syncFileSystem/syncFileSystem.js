@@ -195,11 +195,11 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
 //------------------
 
 // This function creates an app-specific directory on the user's Drive.
-function createAppDirectoryOnDrive(directoryEntry, callback) {
+function createAppDirectoryOnDrive(directoryEntry, successCallback, errorCallback) {
     var onGetSyncableAppDirectoryIdSuccess = function(syncableAppDirectoryId) {
         // Keep that directory id!  We'll need it.
         _syncableAppDirectoryId = syncableAppDirectoryId;
-        callback(directoryEntry);
+        successCallback(directoryEntry);
     };
     var onGetSyncableRootDirectoryIdSuccess = function(syncableRootDirectoryId) {
         // Get the app directory id.
@@ -210,7 +210,7 @@ function createAppDirectoryOnDrive(directoryEntry, callback) {
         getDirectoryId('Chrome Syncable FileSystem', null /* parentDirectoryId */, true /* shouldCreateDirectory */, onGetSyncableRootDirectoryIdSuccess);
     };
 
-    getTokenString(onGetTokenStringSuccess);
+    getTokenString(onGetTokenStringSuccess, errorCallback);
 }
 
 // This function syncs an entry to Drive, creating it if necessary.
@@ -424,6 +424,8 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
 //--------------------
 
 // This function checks for changes since the most recent change id.
+// successCallback: function(numChanges)
+// errorCallback: function()
 function getDriveChanges(successCallback, errorCallback) {
     var NEXT_CHANGE_ID_KEY = SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-next_change_id';
     var onGetTokenStringSuccess = function() {
@@ -513,7 +515,7 @@ function getDriveChanges(successCallback, errorCallback) {
         chrome.storage.internal.get(NEXT_CHANGE_ID_KEY, getCallback);
     };
 
-    getTokenString(onGetTokenStringSuccess);
+    getTokenString(onGetTokenStringSuccess, errorCallback);
 }
 
 // This function retrieves the file name for the given file id from local storage.
@@ -810,15 +812,15 @@ function removeDriveIdFromCache(fileName, callback) {
 //==========
 
 // This function initiates a web auth flow, eventually getting a token string and passing it to the given callback.
-function getTokenString(callback) {
+function getTokenString(successCallback, errorCallback) {
     // Get the auth token.
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
         if (token) {
             _tokenString = token;
-            callback();
+            successCallback();
         } else {
-            // TODO(maxw): Improve this failure case.
-            console.log('Authentication failed.');
+            chrome.runtime.lastError = { message: "Sync: authentication failed." };
+            errorCallback();
         }
     });
 }
@@ -889,10 +891,12 @@ exports.requestFileSystem = function(callback) {
             // We have to make some changes to this directory entry to enable syncability.
             // If a file is ever retrieved or created in this directory entry, we want to enable its syncability before passing it to a callback.
             enableSyncabilityForDirectoryEntry(directoryEntry);
-            createAppDirectoryOnDrive(directoryEntry, onCreateAppDirectoryOnDriveSuccess);
+            createAppDirectoryOnDrive(directoryEntry, onCreateAppDirectoryOnDriveSuccess, callback);
         };
         var onGetDirectoryFailure = function(e) {
             console.log('Failed to get directory.');
+            chrome.runtime.lastError = { message: "Sync: Failed to get local filesystem for app" };
+            callback();
         };
 
         // TODO(maxw): Make the directory name app-specific.
@@ -900,6 +904,8 @@ exports.requestFileSystem = function(callback) {
     };
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
+        chrome.runtime.lastError = { message: "Sync: Failed to get local filesystem" };
+        callback();
     };
 
     // Request the file system.
