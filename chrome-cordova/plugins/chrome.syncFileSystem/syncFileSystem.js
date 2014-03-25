@@ -21,6 +21,9 @@ var fileStatusListeners = [ ];
 // The conflict resolution policy is used to determine how to handle file sync conflicts.
 var conflictResolutionPolicy;
 
+// This timer triggers the poll for changes on Drive
+var pollTimer = null;
+
 //-------------
 // Local cache
 //-------------
@@ -844,7 +847,7 @@ exports.requestFileSystem = function(callback) {
             var remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
             var onGetDriveChangesError = function() {
                 // Use the same timeout.
-                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                pollTimer = window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
             var onGetDriveChangesSuccess = function(numChanges) {
                 console.log('Relevant changes: ' + numChanges + '.');
@@ -864,9 +867,9 @@ exports.requestFileSystem = function(callback) {
                     remoteToLocalSyncDelay = INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY;
                     console.log('  Remote-to-local sync delay reset.');
                 }
-                window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+                pollTimer = window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
             };
-            window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
+            pollTimer = window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
 
             // Pass on the file system!
             if (typeof callback === 'function') {
@@ -959,4 +962,22 @@ window.resolveLocalFileSystemURL = function(url, successCallback, errorCallback)
         }
         successCallback(entry);
     }, errorCallback);
+};
+
+
+exports.resetSyncFileSystem = function (callback) {
+  // Cancel any outstanding drive poll timeouts
+  window.clearTimeout(pollTimer);
+  // Remove the cached files
+  if (localDirectoryEntry) {
+    localDirectoryEntry.removeRecursively(function() {
+      // Reset the "next change" counter
+      reset = {};
+      reset[SYNC_FILE_SYSTEM_PREFIX + '-' + chrome.runtime.id + '-next_change_id'] = 1;
+      chrome.storage.internal.set(reset, function() {
+        // Restart the sync process
+        exports.requestFileSystem(callback);
+      });
+    });
+  }
 };
