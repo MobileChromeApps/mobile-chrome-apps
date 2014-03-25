@@ -80,7 +80,7 @@ function enableSyncabilityForEntry(entry) {
                 if (typeof successCallback === 'function') {
                     successCallback();
                 }
-            }
+            };
             removeDriveIdFromCache(entry.name, onRemoveDriveIdFromCacheSuccess);
         };
         var augmentedSuccessCallback = function() {
@@ -192,7 +192,7 @@ function enableSyncabilityForFileWriter(fileWriter, fileEntry) {
         } else {
             fileWriter.onwrite = function(evt) {
                 sync(fileEntry, null);
-            }
+            };
         }
 
         // Call the original function.  The augmented success callback will take care of the syncability addition work.
@@ -262,14 +262,16 @@ function sync(entry, callback) {
 // This function syncs an entry to Drive, given its path, creating it if necessary.
 function syncAtPath(entry, currentDirectoryId, pathRemainder, callback) {
     var slashIndex = pathRemainder.indexOf('/');
+    var nextDirectoryName;
+    var onGetDirectoryIdSuccess;
 
     if (slashIndex < 0) {
         // We're done diving and can sync the entry.
         if (entry.isFile) {
             uploadFile(entry, currentDirectoryId /* parentDirectoryId */, callback);
         } else if (entry.isDirectory) {
-            var nextDirectoryName = pathRemainder;
-            var onGetDirectoryIdSuccess = function(directoryId) {
+            nextDirectoryName = pathRemainder;
+            onGetDirectoryIdSuccess = function(directoryId) {
                 callback();
             };
             getDirectoryId(nextDirectoryName, currentDirectoryId, true /* shouldCreateDirectory */, onGetDirectoryIdSuccess);
@@ -278,8 +280,8 @@ function syncAtPath(entry, currentDirectoryId, pathRemainder, callback) {
             console.log('Attempted to sync entry that is neither a file nor a directory.');
         }
     } else {
-        var nextDirectoryName = pathRemainder.substring(0, slashIndex);
-        var onGetDirectoryIdSuccess = function(directoryId) {
+        nextDirectoryName = pathRemainder.substring(0, slashIndex);
+        onGetDirectoryIdSuccess = function(directoryId) {
             syncAtPath(entry, directoryId, pathRemainder.substring(slashIndex + 1), callback);
         };
         getDirectoryId(nextDirectoryName, currentDirectoryId, false /* shouldCreateDirectory */, onGetDirectoryIdSuccess);
@@ -404,7 +406,7 @@ function createDirectory(directoryName, parentDirectoryId, callback) {
         var data = { title: directoryName,
                      mimeType: 'application/vnd.google-apps.folder' };
         if (parentDirectoryId) {
-            data['parents'] = [{ id: parentDirectoryId }];
+            data.parents = [{ id: parentDirectoryId }];
         }
 
         // Send a request to upload the file.
@@ -629,7 +631,7 @@ function getDriveFileId(query, successCallback, errorCallback) {
                 if (xhr.status === 200) {
                     console.log('Successfully searched for file using query: ' + query + '.');
                     var items = JSON.parse(xhr.responseText).items;
-                    if (items.length == 0) {
+                    if (items.length === 0) {
                         console.log('  File not found.');
                         errorCallback(FILE_NOT_FOUND_ERROR);
                     } else if (items.length == 1) {
@@ -714,8 +716,9 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
             // If the file id has not been cached, query for it, cache it, and pass it on.
             // In order to support paths, we need to call this function recursively.
             var slashIndex = fileName.indexOf('/');
+            var query;
             if (slashIndex < 0) {
-                var query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+                query = 'title = "' + fileName + '" and "' + parentDirectoryId + '" in parents and trashed = false';
                 var augmentedSuccessCallback = function(fileId) {
                     var onCacheDriveIdSuccess = function() {
                         successCallback(fileId);
@@ -734,7 +737,7 @@ function getFileId(fileName, parentDirectoryId, successCallback) {
             } else {
                 var nextDirectory = fileName.substring(0, slashIndex);
                 var pathRemainder = fileName.substring(slashIndex + 1);
-                var query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + nextDirectory + '" and "' + parentDirectoryId + '" in parents and trashed = false';
+                query = 'mimeType = "application/vnd.google-apps.folder" and title = "' + nextDirectory + '" and "' + parentDirectoryId + '" in parents and trashed = false';
                 var onGetDriveFileIdSuccess = function(fileId) {
                     getFileId(pathRemainder, fileId, successCallback);
                 };
@@ -757,7 +760,6 @@ function constructFileIdKey(entryName) {
 // This function returns the file name associated with the given cached file id key.
 function extractFileName(key) {
     return key.substring(key.indexOf(runtime.id) + runtime.id.length + 1);
-    return SYNC_FILE_SYSTEM_PREFIX + '-' + runtime.id + '-' + entryName;
 }
 
 // This function caches the given Drive id.
@@ -824,7 +826,7 @@ exports.requestFileSystem = function(callback) {
         INITIAL_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.initial;
         MAXIMUM_REMOTE_TO_LOCAL_SYNC_DELAY = manifest.incoming_sync_delay.maximum;
     } else {
-        console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.")
+        console.log("Initial and maximum incoming sync delay not specified in manifest; using defaults.");
     }
     var onRequestFileSystemSuccess = function(entry) {
         var fileSystem = entry.filesystem;
@@ -931,7 +933,7 @@ exports.getFileStatuses = function(fileEntries, callback) {
 exports.onServiceStatusChanged = { };
 exports.onServiceStatusChanged.addListener = function(listener) {
     // TODO(maxw): Implement this!
-}
+};
 
 exports.onFileStatusChanged = { };
 exports.onFileStatusChanged.addListener = function(listener) {
@@ -940,7 +942,7 @@ exports.onFileStatusChanged.addListener = function(listener) {
     } else {
         console.log('Attempted to add a non-function listener.');
     }
-}
+};
 
 
 originalResolveLocalFileSystemURL = window.resolveLocalFileSystemURL;
