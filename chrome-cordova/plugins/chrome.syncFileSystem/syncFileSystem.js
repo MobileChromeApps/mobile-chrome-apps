@@ -61,7 +61,9 @@ function enableSyncabilityForEntry(entry) {
     entry.remove = function(successCallback, errorCallback) {
         // For now, directories cannot be added or created using syncFileSystem.
         if (entry.isDirectory) {
-            errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+            if (typeof errorCallback === 'function') {
+                errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+            }
         }
 
         var onRemoveSuccess = function() {
@@ -75,7 +77,7 @@ function enableSyncabilityForEntry(entry) {
                     }
                 }
 
-                if (successCallback) {
+                if (typeof successCallback === 'function') {
                     successCallback();
                 }
             }
@@ -97,7 +99,9 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
 
     directoryEntry.getDirectory = function(path, options, successCallback, errorCallback) {
         // For now, directories cannot be added or created using syncFileSystem.
-        errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+        if (typeof errorCallback === 'function') {
+            errorCallback(new FileError(FileError.INVALID_MODIFICATION_ERR));
+        }
 
         /*
         // When a directory is retrieved, enable syncability for it, sync it to Drive, and then call the given callback.
@@ -109,13 +113,13 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
             // Only sync if the directory is being created and not merely retrieved.
             if (options.create) {
                 var onSyncSuccess = function() {
-                    if (successCallback) {
+                    if (typeof successCallback === 'function') {
                         successCallback(directoryEntry);
                     }
                 };
                 sync(directoryEntry, onSyncSuccess);
             } else {
-                if (successCallback) {
+                if (typeof successCallback === 'function') {
                     successCallback(directoryEntry);
                 }
             }
@@ -134,15 +138,15 @@ function enableSyncabilityForDirectoryEntry(directoryEntry) {
             enableSyncabilityForFileEntry(fileEntry);
 
             // Only sync if the file is being created and not merely retrieved.
-            if (options && options.create) {
+            if (options.create) {
                 var onSyncSuccess = function() {
-                    if (successCallback) {
+                    if (typeof successCallback === 'function') {
                         successCallback(fileEntry);
                     }
                 };
                 sync(fileEntry, onSyncSuccess);
             } else {
-                if (successCallback) {
+                if (typeof successCallback === 'function') {
                     successCallback(fileEntry);
                 }
             }
@@ -791,10 +795,14 @@ function getTokenString(successCallback, errorCallback) {
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
         if (token) {
             _tokenString = token;
-            successCallback();
+            if (typeof successCallback === 'function') {
+                successCallback();
+            }
         } else {
             chrome.runtime.lastError = { message: "Sync: authentication failed." };
-            errorCallback();
+            if (typeof errorCallback === 'function') {
+                errorCallback();
+            }
         }
     });
 }
@@ -859,7 +867,9 @@ exports.requestFileSystem = function(callback) {
             window.setTimeout(getDriveChanges, remoteToLocalSyncDelay, onGetDriveChangesSuccess, onGetDriveChangesError);
 
             // Pass on the file system!
-            callback(fileSystem);
+            if (typeof callback === 'function') {
+                callback(fileSystem);
+            }
         };
         var onGetDirectorySuccess = function(directoryEntry) {
             localDirectoryEntry = directoryEntry;
@@ -871,7 +881,9 @@ exports.requestFileSystem = function(callback) {
         var onGetDirectoryFailure = function(e) {
             console.log('Failed to get directory.');
             chrome.runtime.lastError = { message: "Sync: Failed to get local filesystem for app" };
-            callback();
+            if (typeof callback === 'function') {
+                callback();
+            }
         };
 
         // TODO(maxw): Make the directory name app-specific.
@@ -880,7 +892,9 @@ exports.requestFileSystem = function(callback) {
     var onRequestFileSystemFailure = function(e) {
         console.log("Failed to get file system.");
         chrome.runtime.lastError = { message: "Sync: Failed to get local filesystem" };
-        callback();
+        if (typeof callback === 'function') {
+            callback();
+        }
     };
 
     // Request the file system.
