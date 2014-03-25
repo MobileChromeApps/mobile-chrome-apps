@@ -32,6 +32,10 @@ exports.signIn = function(accounts) {
 };
 
 exports.getAccountAndAuthToken = function(callback) {
+    if (typeof callback !== 'function') {
+        return callbackWithError('The first parameter must be a callback function.');
+    }
+
     var successCallback = function(tokenData) {
         // Cache the token.
         cachedTokenMap[tokenData.account] = tokenData.token;
@@ -56,6 +60,20 @@ exports.getAccountAndAuthToken = function(callback) {
 };
 
 exports.getAuthToken = function(details, callback) {
+    // `details` is options, so the first parameter might be the callback.
+    if (typeof details === 'function' && typeof callback === 'undefined') {
+        callback = details;
+        details = { interactive: false };
+    }
+
+    // At this point, our parameters should be an object and a function, respectively.
+    if (typeof callback !== 'function') {
+        return callbackWithError('A callback function is required.');
+    }
+    if (typeof details !== 'object') {
+        return callbackWithError('The first parameter must be an object or a function.', callback);
+    }
+
     // If an account is specified, check the cached token map.
     // Otherwise, check the standalone cached token.
     var accountEmail;
