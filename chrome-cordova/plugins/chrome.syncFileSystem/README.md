@@ -12,7 +12,7 @@ The API reference is [here](https://developer.chrome.com/apps/syncFileSystem.htm
 
 ## Registering Your App
 
-This plugin depends on the [chrome.identity plugin](), so the corresponding steps must be taken.
+This plugin depends on the [chrome.identity plugin](../chrome.identity), so the corresponding steps must be taken.
 
 In addition, the Drive API must be enabled.  On the left sidebar, navigate to "APIs & Auth" > "APIs" and turn on the Drive API.
 
