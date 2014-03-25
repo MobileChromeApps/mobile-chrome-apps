@@ -41,11 +41,11 @@ Revokes the permissions associated with an OAuth2 access token and removes it fr
 
 ### Android
 
-You will need to register your application in the [Google Cloud Console](https://cloud.google.com/console).  Create a project.
+You will need to register your application in the [Google Cloud Console](https://console.developers.google.com/).  Create a project.
 
-On the left sidebar, navigate to "APIs & Auth" > "Registered Apps".  Click the red `Register App` button.
+On the left sidebar, navigate to "APIs & auth" > "Credentials".  Click the red `Create new Client ID` button.
 
-Register your app as an "Android" app.  This requires a package name and a SHA1 fingerprint.  To obtain the fingerprint, enter the following the command in a console window:
+Register your app as an "Android" app (under "Installed application" type).  This requires a package name and a SHA1 fingerprint.  To obtain the fingerprint, enter the following the command in a console window:
 
     keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore -list -v
 
