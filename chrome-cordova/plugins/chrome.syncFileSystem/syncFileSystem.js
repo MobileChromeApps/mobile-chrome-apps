@@ -942,3 +942,19 @@ exports.onFileStatusChanged.addListener = function(listener) {
     }
 }
 
+
+originalResolveLocalFileSystemURL = window.resolveLocalFileSystemURL;
+window.resolveLocalFileSystemURL = function(url, successCallback, errorCallback) {
+    originalResolveLocalFileSystemURL(url, function(entry) {
+        if (entry && entry.filesystem && entry.filesystem.name === "syncable") {
+            if (entry.isFile) {
+                enableSyncabilityForFileEntry(entry);
+            } else if (entry.isDirectory) {
+                enableSyncabilityForDirectoryEntry(entry);
+            } else {
+                enableSyncabilityForEntry(entry);
+            }
+        }
+        successCallback(entry);
+    }, errorCallback);
+};
