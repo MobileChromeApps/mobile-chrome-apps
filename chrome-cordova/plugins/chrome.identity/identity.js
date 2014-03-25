@@ -4,6 +4,7 @@
 
 var exec = require('cordova/exec');
 var callbackWithError = require('org.chromium.common.errors').callbackWithError;
+var Event = require('org.chromium.common.events');
 try {
     var runtime = require('org.chromium.runtime.runtime');
 } catch(e) {}
@@ -100,30 +101,7 @@ exports.getAuthToken = function(details, callback) {
 
 // Events
 
-exports.onAccountAdded = { };
-exports.onAccountAdded.addListener = function(listener) {
-    if (typeof(listener) === 'function') {
-        accountAddedListeners.push(listener);
-    } else {
-        console.log('Attempted to add a non-function listener.');
-    }
-}
-
-exports.onAccountRemoved = { };
-exports.onAccountRemoved.addListener = function(listener) {
-    if (typeof(listener) === 'function') {
-        accountRemovedListeners.push(listener);
-    } else {
-        console.log('Attempted to add a non-function listener.');
-    }
-}
-
-exports.onSignInChanged = { };
-exports.onSignInChanged.addListener = function(listener) {
-    if (typeof(listener) === 'function') {
-        signInChangedListeners.push(listener);
-    } else {
-        console.log('Attempted to add a non-function listener.');
-    }
-}
+exports.onAccountAdded = new Event('onAccountAdded');
+exports.onAccountRemoved = new Event('onAccountRemoved');
+exports.onAccountSignInChanged = new Event('onAccountSignInChanged');
 
