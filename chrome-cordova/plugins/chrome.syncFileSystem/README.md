@@ -14,7 +14,11 @@ The API reference is [here](https://developer.chrome.com/apps/syncFileSystem.htm
 
 This plugin depends on the [chrome.identity plugin](), so the corresponding steps must be taken.
 
-In addition, the Drive API must be enabled.  On the left sidebar, navigate to "APIs & Auth" > "APIs" and turn on the Drive API.
+In addition, the Drive API must be enabled.  On the left sidebar, navigate to "APIs & auth" > "APIs" and turn on the Drive API.
+
+## Updating Your Manifest
+
+In addition to the manfest changes for `chrome.identity`, you will need to add the Google Drive scope `https://www.googleapis.com/auth/drive` to the "oauth2" item in your **manifest.json** file. You will also ned to set the "`key`" property of your manifest, in order to share data between instances of the application. See instructions [here](http://developer.chrome.com/apps/manifest/key) for information about how to get that key out of a packed packaged app.
 
 ## Notes
 
