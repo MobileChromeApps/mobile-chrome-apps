@@ -1,6 +1,7 @@
 ## Step 3: Develop
 
 You can build and run your application in two ways:
+
 * Option A: From the command line, using the `cca` tool, or
 * Option B: By using an IDE, like Eclipse or Xcode. The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 

@@ -32,7 +32,8 @@ We've made many of the core Chrome APIs available to Chrome Apps for Mobile, inc
 * [power](http://developer.chrome.com/apps/power.html) - override the system's power management features.
 
 However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desktop features are available on mobile:
-  * no &lt;webview&gt; tag
+
+  * no `&lt;webview&gt;` tag
   * no IndexedDB
   * no getUserMedia()
   * no NaCl

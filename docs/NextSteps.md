@@ -13,11 +13,13 @@ You should adjust the values here accordingly.
 Mobile apps need a few more icon resolutions than desktop Chrome Apps.
 
 For Android, these sizes are needed:
+
 * 36px, 48px, 78px, 96px
 
 For iOS apps, the required sizes differ depending on whether you support 
 [iOS 6](https://developer.apple.com/library/ios/qa/qa1686/_index.html) vs 
 [iOS 7](https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/IconMatrix.html). The minimum number of icons required are:
+
 * **iOS 6**: 57px, 72px, 114px, 144px
 * **iOS 7**: 72px, 120px, 152px
 
@@ -45,6 +47,7 @@ The icons will be copied to the appropriate places for each platform every time 
 Apps on iOS show a brief splash screen as the app is loading. A set of default Cordova splash screens are included in `platforms/ios/[AppName]/Resources/splash`.  
 
 The sizes needed are:
+
 * 320px x 480px + 2x
 * 768px x 1024px + 2x (iPad portrait)
 * 1024px x 768px + 2x (iPad landscape)
