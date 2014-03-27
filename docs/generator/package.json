@@ -1,0 +1,15 @@
+{
+  "name": "mobile-chrome-apps-doc-generator",
+  "version": "0.1.0",
+  "description": "A Node.js script to convert the mobile-chrome-apps Markdown docs into a HTML file to be included in the Chromium documents.",
+  "main": "htmlConvert.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pearl Chen <pearlchen@google.com>",
+  "license": "Apache",
+  "devDependencies": {
+    "markdown": "~0.5.0",
+    "jsdom": "~0.10.3"
+  }
+}
