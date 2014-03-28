@@ -788,8 +788,8 @@ public class ChromeSocket extends CordovaPlugin {
             public void run() {
                 try {
                     SocketData.this.tcpSocket = new Socket(this.address, this.port);
-
                     SocketData.this.init();
+                    
                     callbackContext.success();
                 } catch (Exception e) {
                     callbackContext.error("An error occurred");
