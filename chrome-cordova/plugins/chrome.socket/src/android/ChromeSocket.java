@@ -467,12 +467,16 @@ public class ChromeSocket extends CordovaPlugin {
                     this.connected = true;
                     udpSocket.connect(this.address, port);
                     init();
+
+                    callbackContext.success();
                 }
             } catch(UnknownHostException uhe) {
                 Log.e(LOG_TAG, "Unknown host exception while connecting socket", uhe);
+                callbackContext.error("Unknown Host");
                 return false;
             } catch(IOException ioe) {
                 Log.e(LOG_TAG, "IOException while connecting socket", ioe);
+                callbackContext.error("IOException");
                 return false;
             }
             return true;
@@ -789,7 +793,7 @@ public class ChromeSocket extends CordovaPlugin {
                 try {
                     SocketData.this.tcpSocket = new Socket(this.address, this.port);
                     SocketData.this.init();
-                    
+
                     callbackContext.success();
                 } catch (Exception e) {
                     callbackContext.error("An error occurred");
