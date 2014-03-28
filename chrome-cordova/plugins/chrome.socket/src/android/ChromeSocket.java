@@ -113,9 +113,8 @@ public class ChromeSocket extends CordovaPlugin {
             return;
         }
 
-        boolean success = sd.connect(address, port);
-        if(success) callbackContext.success();
-        else callbackContext.error("Failed to connect");
+        // The SocketData.connect() method will callback appropriately
+        sd.connect(address, port, callbackContext);
     }
 
     private void bind(CordovaArgs args, final CallbackContext context) throws JSONException {
@@ -395,6 +394,8 @@ public class ChromeSocket extends CordovaPlugin {
 
         private boolean multicast = false;
 
+        private ConnectThread connectThread;
+
         BlockingQueue<ReadData> readQueue;
         private ReadThread readThread;
 
@@ -447,14 +448,16 @@ public class ChromeSocket extends CordovaPlugin {
             return info;
         }
 
-        public boolean connect(String address, int port) {
+        public boolean connect(String address, int port, CallbackContext callbackContext) {
             if (isServer) return false;
             try {
                 if (type == Type.TCP) {
                     connected = true;
                     this.address = InetAddress.getByName(address);
                     this.port = port;
-                    tcpSocket = new Socket(address, port);
+                    
+                    this.connectThread = new ConnectThread(this.address, port, callbackContext);
+                    this.connectThread.start();
                 } else {
                     if (udpSocket == null) {
                         udpSocket = new DatagramSocket();
@@ -463,8 +466,8 @@ public class ChromeSocket extends CordovaPlugin {
                     this.address = InetAddress.getByName(address);
                     this.connected = true;
                     udpSocket.connect(this.address, port);
+                    init();
                 }
-                init();
             } catch(UnknownHostException uhe) {
                 Log.e(LOG_TAG, "Unknown host exception while connecting socket", uhe);
                 return false;
@@ -475,7 +478,7 @@ public class ChromeSocket extends CordovaPlugin {
             return true;
         }
 
-        private void init() {
+        public void init() {
             readQueue = new LinkedBlockingQueue<ReadData>();
             readThread = new ReadThread();
             readThread.start();
@@ -771,6 +774,30 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
 
+        private class ConnectThread extends Thread {
+            private CallbackContext callbackContext;
+            private InetAddress address;
+            private int port;
+
+            public ConnectThread(InetAddress address, int port, CallbackContext callbackContext) {
+                this.address = address;
+                this.port = port;
+                this.callbackContext = callbackContext;
+            }
+
+            public void run() {
+                try {
+                    SocketData.this.tcpSocket = new Socket(this.address, this.port);
+
+                    SocketData.this.init();
+                    callbackContext.success();
+                } catch (Exception e) {
+                    callbackContext.error("An error occurred");
+                }
+            }
+        }
+
+
         private static class ReadData {
             public int size;
             public boolean killThread;
@@ -811,29 +838,35 @@ public class ChromeSocket extends CordovaPlugin {
                         int bytesRead;
 
                         if (type == Type.TCP) {
-                            if (toRead > 0) {
-                                out = new byte[toRead];
-                                bytesRead = SocketData.this.tcpSocket.getInputStream().read(out);
-                            } else {
-                                int firstByte = SocketData.this.tcpSocket.getInputStream().read();
-                                out = new byte[SocketData.this.tcpSocket.getInputStream().available() + 1];
-                                out[0] = (byte) firstByte;
-                                bytesRead = SocketData.this.tcpSocket.getInputStream().read(out, 1, out.length - 1);
-                                bytesRead++;
-                            }
+                            try {
+                                if (toRead > 0) {
+                                    out = new byte[toRead];
+                                    bytesRead = SocketData.this.tcpSocket.getInputStream().read(out);
+                                } else {
+                                    int firstByte = SocketData.this.tcpSocket.getInputStream().read();
+                                    out = new byte[SocketData.this.tcpSocket.getInputStream().available() + 1];
+                                    out[0] = (byte) firstByte;
+                                    bytesRead = SocketData.this.tcpSocket.getInputStream().read(out, 1, out.length - 1);
+                                    bytesRead++;
+                                }
 
-                            // Check for EOF
-                            if (bytesRead < 0) {
-                                SocketData.this.disconnect();
-                                return;
-                            }
+                                // Check for EOF
+                                if (bytesRead < 0) {
+                                    SocketData.this.disconnect();
+                                    return;
+                                }
 
-                            if (bytesRead < toRead) {
-                                outResized = new byte[bytesRead];
-                                System.arraycopy(out, 0, outResized, 0, bytesRead);
-                                readData.context.success(outResized);
-                            } else {
-                                readData.context.success(out);
+                                if (bytesRead < toRead) {
+                                    outResized = new byte[bytesRead];
+                                    System.arraycopy(out, 0, outResized, 0, bytesRead);
+                                    readData.context.success(outResized);
+                                } else {
+                                    readData.context.success(out);
+                                }
+                            } catch (NullPointerException e) {
+                                SocketData.this.readQueue.put(readData);
+                            } catch (SocketException e) {
+                                readData.context.error("Socket closed");
                             }
                         } else {
                             if (toRead > 0) {
