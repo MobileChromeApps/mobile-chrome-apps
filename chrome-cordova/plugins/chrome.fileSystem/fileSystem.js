@@ -106,12 +106,12 @@ function getFileAndroid(options, callback) {
   // It creates a file entry and passes it to the chooseEntry callback.
   var onFileReceived = function(nativeUri) {
 
-    var onUriResolveError = function(e) {
-      fail(e.target.error.code);
+    var onUriResolveError = function(error) {
+      fail(error.code);
     };
 
     if (!chrome.runtime.lastError) {
-      resolveLocalFileSystemURI(nativeUri, callback, onUriResolveError);
+      resolveLocalFileSystemURL(nativeUri, callback, onUriResolveError);
     } else {
       callback && callback();
     }
