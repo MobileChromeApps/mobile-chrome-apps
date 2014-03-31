@@ -24,7 +24,7 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
     if (!('iconUrl' in options)) {
       options.iconUrl = 'assets/inbox-64x64.png';
     }
-    options.message = 'notificationId = ' + notificationId;
+    options.message = options.message || 'notificationId = ' + notificationId;
     chrome.notifications.create(notificationId, options, function(notificationId) {});
   }
 
@@ -34,6 +34,15 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
       title:'Basic Notification',
     });
   });
+
+  addButton('Long Basic Notification', function() {
+    createNotification({
+      type:'basic',
+      title:'Basic Notification',
+      message: 'the quick slick thick brown fox jumps over the gosh darned lazy hazy brazy mazy dog.'
+    });
+  });
+
 
   addButton('Image Notification', function() {
     createNotification({
