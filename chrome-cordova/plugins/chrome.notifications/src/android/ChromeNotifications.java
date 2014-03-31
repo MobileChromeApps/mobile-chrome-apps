@@ -245,7 +245,9 @@ public class ChromeNotifications extends CordovaPlugin {
             }
             notification = inboxStyle.build();
         } else {
-            notification = builder.build();
+            NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle(builder);
+            bigTextStyle.bigText(options.getString("message"));
+            notification = bigTextStyle.build();
         }
         notificationManager.notify(notificationId.hashCode(), notification);
     }
