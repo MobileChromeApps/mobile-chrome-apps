@@ -38,8 +38,8 @@
 
 * For each plugin within chrome-cordova/plugins:
 
+    git log path/to/plugin # See what's changed since the previous release.
     cd path/to/plugin
-    git log . # See what's changed since the previous release.
     vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
     git commit -am "Updated plugin release notes and version numbers for release."
 
@@ -66,18 +66,35 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
 
     git status
     # Things are good.
-    vim package.json # and set version to "x.x.x-rc1"
+    vim package.json # set "version": "x.x.x-rc1"
     # Update shrinkwrap file:
     npm shrinkwrap
     git commit -am "Set version to x.x.x-rc1"
     dev-bin/prepfornpm.sh
-    npm publish --tag=rc
+    # Just temporary during push.
+    vim package.json # set "publishConfig": { "tag": "rc" }
+    npm publish
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
     git push origin master
-    # Double check that the previous command doesn't change the "latest" tag:
+    # Double check that the tags point to the right things:
     npm info cca
-    # If it did, set it back via:
-    npm tag cca@### latest
+    git checkout -- package.json # Revert publishConfig.
+
+## How to Test Release Candidate:
+
+The following is the full set of tests. Vary accordingly depending on the magnitude of changes in the release.
+
+* Install cca RC from npm: `npm install cca@rc`
+* Ensure [CIRC](https://github.com/flackr/circ.git) works:
+  * On iOS
+  * On Android
+  * Joining a room:
+    * `/nick tester`
+    * `/server chat.freenode.net`
+    * `/join #cordova`
+  * Check that killing & re-running the app auto-joins
+* Ensure that ChromeSpec passes all tests on iOS & Android
+* Ensure that ChromeSpec on Android can be run from Windows host (via VirtualBox + modern.ie is easiest).
 
 ## Publish full release:
 
