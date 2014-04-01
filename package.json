@@ -1,7 +1,7 @@
 {
   "name": "cca",
   "author": "The Chrome Team",
-  "version": "0.0.8",
+  "version": "0.0.9-rc1",
   "description": "Run Chrome Apps on mobile using Apache Cordova",
   "preferGlobal": "true",
   "keywords": [
@@ -20,14 +20,15 @@
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
+    "cca-push": "~1.0.0",
     "cordova": "latest",
-    "optimist": "~0.5",
     "cryptojs": "~2",
-    "elementtree": "0.1.5",
-    "shelljs": "~0.2.6",
+    "elementtree": "0.1.6",
     "node.extend": "",
-    "cca-push": "~0.0.3",
-    "q": "~1"
+    "optimist": "~0.6.1",
+    "q": "~1",
+    "semver": "^2.2.1",
+    "shelljs": "~0.2.6"
   },
   "files": [
     "README.md",

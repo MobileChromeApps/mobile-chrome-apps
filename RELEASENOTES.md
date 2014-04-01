@@ -5,6 +5,21 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.0.9 (April 1, 2014)
+* Lots of updated documentation
+* chrome.fileSystem: Updated error handling
+* chrome.identity: Added an account hint
+* chrome.identity: Added the account to the getAuthToken callback
+* chrome.notifications: Expand basic notification when message text overflows
+* chrome.socket: Moved connection to its own thread
+* chrome.socket: Fix up Android's getNetworkList() to match desktop
+* chrome.syncFileSystem: Added a reset method to clear the internal cache
+* chrome.syncFileSystem: Improved error handling
+* chrome-bootstrap: Fix angular apps having the extensionID in their hash on start-up on KitKat
+* chrome-bootstrap: Fix chrome-extension: URLs not setting no-cache headers
+* cca: Added a run platform target of 'chrome'
+* cca: Fix handling of path components in host permissions
+
 ### v0.0.8 (Mar 11, 2014)
 * Fixed googleplayservices plugin (previous update crashes apps)
 
