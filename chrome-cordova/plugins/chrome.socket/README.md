@@ -16,6 +16,10 @@ The API reference is [here](http://developer.chrome.com/apps/socket.html).
 * Multicast support is only implemented in Android, and is not yet stable.
 
 # Release Notes
+## 1.1.2 (April 1, 2014)
+- Fixed `getNetworkList()` on Android to match desktop's implementation.
+- Moved connecting into its own thread.
+
 ## 1.1.1 (March 10, 2014)
 - Fix TCP chrome.socket.read behavior for reads smaller than the requested read size (Issue #64)
 - Allow chrome.socket.read for connected UDP socket

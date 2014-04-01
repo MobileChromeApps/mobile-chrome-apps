@@ -123,6 +123,11 @@ When using this plugin outside the context of a Chrome App, this information mus
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
 
 # Release Notes
+## 1.2.0 (April 1, 2014)
+- Documentation updates.
+- Added `accountHint` to `chrome.identity.getAuthToken`.
+- Added the logged-in account to the callback of `chrome.identity.getAuthToken`.
+
 ## 1.1.0 (March 10, 2014)
 - Documentation updates.
 - Android: Use of the web auth flow when Play Services is unavailable

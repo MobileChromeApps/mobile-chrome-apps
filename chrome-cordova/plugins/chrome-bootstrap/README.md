@@ -5,6 +5,10 @@ Cordova. It is meant to be used with the `cca` tool, and isn't useful outside
 the context of a mobile Chrome App.
 
 # Release Notes
+## 1.0.2 (April 1, 2014)
+- Fix chrome-extension: URLs not setting no-cache headers.
+- Fix AngularJS apps having the extension ID in their hash on start-up on KitKat.
+
 ## 1.0.1 (March 10, 2014)
 - Support scripts with type application/javascript
 - Fixes #76 - Don't detect hash changes as page reloads.
