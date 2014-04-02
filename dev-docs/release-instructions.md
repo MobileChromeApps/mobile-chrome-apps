@@ -38,14 +38,16 @@
 
 * For each plugin within chrome-cordova/plugins:
 
-    git log path/to/plugin # See what's changed since the previous release.
-    cd path/to/plugin
-    vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
-    git commit -am "Updated plugin release notes and version numbers for release."
+        git log path/to/plugin # See what's changed since the previous release.
+        cd path/to/plugin
+        vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
+        git commit -am "Updated plugin release notes and version numbers for release."
 
 * For each plugin found by: `plugman search org.chromium`:
 
-    plugman publish path/to/plugin
+        plugman publish path/to/plugin
+    
+    **Note:** You may need to search [the registry website](plugins.cordova.io).
 
 ## Update npm Dependencies
 
@@ -69,7 +71,7 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     vim package.json # set "version": "x.x.x-rc1"
     # Update shrinkwrap file:
     npm shrinkwrap
-    git commit -am "Set version to x.x.x-rc1"
+    git commit -am "Set version to x.x.x-rc1."
     dev-bin/prepfornpm.sh
     # Just temporary during push.
     vim package.json # set "publishConfig": { "tag": "rc" }
@@ -101,7 +103,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     vim package.json # and remove -rc1 from version
     # Update shrinkwrap file:
     npm shrinkwrap
-    git commit -am "Set version to x.x.x"
+    git commit -am "Set version to x.x.x."
     git tag vx.x.x
     dev-bin/prepfornpm.sh
     npm publish
@@ -111,7 +113,8 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     npm tag cca@0.0.0 rc
     npm unpublish cca@x.x.x-rc1
 
-2. Send an email to chromium-apps@ with version & release notes
-3. Post on G+ (using corp G+, but setting as public) then ask for it to be re-shared ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).
+2. Send an email to chromium-apps@chromium.org with version & release notes.
+3. Post on G+ (using corp G+, but setting as public), then ask for it to be re-shared. ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).
+    * **Tip:** Include an image or video with the post to increase engagement.
 4. TODO: Is there merit in adding a "release" to our GitHub?
 
