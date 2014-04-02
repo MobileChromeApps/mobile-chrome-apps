@@ -1,6 +1,6 @@
 {
   "name": "cca",
-  "version": "0.0.9-rc1",
+  "version": "0.0.9-rc2",
   "dependencies": {
     "cca-push": {
       "version": "1.0.0",
@@ -72,13 +72,15 @@
                 },
                 "async": {
                   "version": "0.2.10",
-                  "from": "async@~0.2.9"
+                  "from": "async@0.2.10",
+                  "resolved": "https://registry.npmjs.org/async/-/async-0.2.10.tgz"
                 }
               }
             },
             "tunnel-agent": {
               "version": "0.3.0",
-              "from": "tunnel-agent@~0.3.0"
+              "from": "tunnel-agent@0.3.0",
+              "resolved": "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.3.0.tgz"
             },
             "http-signature": {
               "version": "0.10.0",
@@ -100,11 +102,13 @@
             },
             "oauth-sign": {
               "version": "0.3.0",
-              "from": "oauth-sign@~0.3.0"
+              "from": "oauth-sign@0.3.0",
+              "resolved": "https://registry.npmjs.org/oauth-sign/-/oauth-sign-0.3.0.tgz"
             },
             "hawk": {
               "version": "1.0.0",
-              "from": "hawk@~1.0.0",
+              "from": "hawk@1.0.0",
+              "resolved": "https://registry.npmjs.org/hawk/-/hawk-1.0.0.tgz",
               "dependencies": {
                 "hoek": {
                   "version": "0.9.1",
@@ -163,7 +167,8 @@
           "dependencies": {
             "nopt": {
               "version": "1.0.10",
-              "from": "nopt@1.0.x",
+              "from": "nopt@1.0.10",
+              "resolved": "https://registry.npmjs.org/nopt/-/nopt-1.0.10.tgz",
               "dependencies": {
                 "abbrev": {
                   "version": "1.0.4",
@@ -195,9 +200,28 @@
                 }
               }
             },
+            "elementtree": {
+              "version": "0.1.5",
+              "from": "elementtree@0.1.5",
+              "dependencies": {
+                "sax": {
+                  "version": "0.3.5",
+                  "from": "sax@0.3.5"
+                }
+              }
+            },
             "bplist-parser": {
               "version": "0.0.5",
               "from": "bplist-parser@0.0.x"
+            },
+            "shelljs": {
+              "version": "0.1.4",
+              "from": "shelljs@0.1.4",
+              "resolved": "https://registry.npmjs.org/shelljs/-/shelljs-0.1.4.tgz"
+            },
+            "underscore": {
+              "version": "1.4.4",
+              "from": "underscore@1.4.4"
             },
             "dep-graph": {
               "version": "1.1.0",
@@ -208,6 +232,16 @@
                   "from": "underscore@1.2.1"
                 }
               }
+            },
+            "semver": {
+              "version": "2.0.11",
+              "from": "semver@2.0.11",
+              "resolved": "https://registry.npmjs.org/semver/-/semver-2.0.11.tgz"
+            },
+            "q": {
+              "version": "0.9.7",
+              "from": "q@0.9.7",
+              "resolved": "https://registry.npmjs.org/q/-/q-0.9.7.tgz"
             },
             "npm": {
               "version": "1.3.4",
@@ -598,7 +632,8 @@
                 },
                 "tunnel-agent": {
                   "version": "0.3.0",
-                  "from": "tunnel-agent@~0.3.0"
+                  "from": "tunnel-agent@~0.3.0",
+                  "resolved": "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.3.0.tgz"
                 },
                 "http-signature": {
                   "version": "0.10.0",
@@ -658,7 +693,8 @@
                 },
                 "oauth-sign": {
                   "version": "0.3.0",
-                  "from": "oauth-sign@~0.3.0"
+                  "from": "oauth-sign@~0.3.0",
+                  "resolved": "https://registry.npmjs.org/oauth-sign/-/oauth-sign-0.3.0.tgz"
                 },
                 "cookie-jar": {
                   "version": "0.3.0",
@@ -667,6 +703,10 @@
                 "node-uuid": {
                   "version": "1.4.1",
                   "from": "node-uuid@~1.4.0"
+                },
+                "mime": {
+                  "version": "1.2.11",
+                  "from": "mime@~1.2.9"
                 },
                 "form-data": {
                   "version": "0.0.8",
@@ -684,7 +724,8 @@
                     },
                     "async": {
                       "version": "0.2.10",
-                      "from": "async@~0.2.7"
+                      "from": "async@~0.2.7",
+                      "resolved": "https://registry.npmjs.org/async/-/async-0.2.10.tgz"
                     }
                   }
                 }
@@ -698,7 +739,8 @@
           "dependencies": {
             "xmlbuilder": {
               "version": "0.4.3",
-              "from": "xmlbuilder@0.4.x"
+              "from": "xmlbuilder@0.4.3",
+              "resolved": "https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-0.4.3.tgz"
             },
             "xmldom": {
               "version": "0.1.19",
@@ -722,11 +764,13 @@
         },
         "shelljs": {
           "version": "0.1.4",
-          "from": "shelljs@0.1.x"
+          "from": "shelljs@0.1.4",
+          "resolved": "https://registry.npmjs.org/shelljs/-/shelljs-0.1.4.tgz"
         },
         "request": {
           "version": "2.21.0",
-          "from": "request@~2.21.0",
+          "from": "request@2.21.0",
+          "resolved": "https://registry.npmjs.org/request/-/request-2.21.0.tgz",
           "dependencies": {
             "qs": {
               "version": "0.6.6",
@@ -742,7 +786,8 @@
             },
             "tunnel-agent": {
               "version": "0.3.0",
-              "from": "tunnel-agent@~0.3.0"
+              "from": "tunnel-agent@~0.3.0",
+              "resolved": "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.3.0.tgz"
             },
             "http-signature": {
               "version": "0.9.11",
@@ -802,7 +847,8 @@
             },
             "oauth-sign": {
               "version": "0.3.0",
-              "from": "oauth-sign@~0.3.0"
+              "from": "oauth-sign@~0.3.0",
+              "resolved": "https://registry.npmjs.org/oauth-sign/-/oauth-sign-0.3.0.tgz"
             },
             "cookie-jar": {
               "version": "0.3.0",
@@ -828,7 +874,8 @@
                 },
                 "async": {
                   "version": "0.2.10",
-                  "from": "async@~0.2.7"
+                  "from": "async@~0.2.7",
+                  "resolved": "https://registry.npmjs.org/async/-/async-0.2.10.tgz"
                 }
               }
             }
@@ -836,7 +883,8 @@
         },
         "semver": {
           "version": "2.0.11",
-          "from": "semver@2.0.x"
+          "from": "semver@2.0.11",
+          "resolved": "https://registry.npmjs.org/semver/-/semver-2.0.11.tgz"
         },
         "tar": {
           "version": "0.1.19",
@@ -923,7 +971,8 @@
         },
         "q": {
           "version": "0.9.7",
-          "from": "q@~0.9"
+          "from": "q@0.9.7",
+          "resolved": "https://registry.npmjs.org/q/-/q-0.9.7.tgz"
         },
         "optimist": {
           "version": "0.6.0",
