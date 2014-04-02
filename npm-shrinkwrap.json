@@ -1,6 +1,6 @@
 {
   "name": "cca",
-  "version": "0.0.9-rc3",
+  "version": "0.0.9",
   "dependencies": {
     "cca-push": {
       "version": "1.0.0",
