@@ -4,7 +4,7 @@ The Chrome Apps for mobile toolchain can target iOS 6+ and Android 4.x+.
 
 ### Development dependencies for all platforms
 
-* [Node.js](http://nodejs.org) version 0.10.0+ (comes with `npm`) is required:
+* [Node.js](http://nodejs.org) version 0.10.0 (or higher) with `npm` is required:
   * **Windows**: Install Node.js using the installation executables downloadable from [nodejs.org](http://nodejs.org).
   * **OS X** or **Linux**: Installation executables are also available from [nodejs.org](http://nodejs.org). If you wish to avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm). Example:
 
@@ -17,7 +17,7 @@ The Chrome Apps for mobile toolchain can target iOS 6+ and Android 4.x+.
 
 When developing an application for Android, you will also need to install:
 
-* [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) 7 (or higher)
 * [Android SDK](http://developer.android.com/sdk/index.html) version 4.4.2 (or higher)
   * Install the Android SDK and Android Developer Tools which come bundled with Android ADT Bundle.
   * Add `sdk/tools` and `sdk/platform-tools` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable. 
@@ -30,7 +30,7 @@ When developing an application for Android, you will also need to install:
 
 Please note that iOS development can only be done on OS X. In addition, you will need to install:
 
-* [Xcode 5](https://developer.apple.com/xcode/) which includes the Xcode command line tools
+* [Xcode](https://developer.apple.com/xcode/) 5 (or higher) which includes the Xcode command line tools
 * [ios-deploy](https://github.com/phonegap/ios-deploy) (needed to deploy to an iOS device)
   * `npm install -g ios-deploy`
 * [ios-sim](https://github.com/phonegap/ios-sim) (needed to deploy to iOS Simulator)
@@ -39,7 +39,7 @@ Please note that iOS development can only be done on OS X. In addition, you will
   * This is necessary for testing on real devices and for submitting to the app store.
   * You can skip registration if you only plan to use the iPhone/iPad simulators.
 
-### Install the `cca` Command-line Tool
+### Install the `cca` command-line tool
 
 Install `cca` via npm:
 

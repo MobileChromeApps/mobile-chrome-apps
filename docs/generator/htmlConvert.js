@@ -51,8 +51,8 @@ var pages = [ {file:'../README.md', anchor:'overview'},
               {file:'CreateProject.md', anchor:'step-2-create-a-project'},
               {file:'Develop.md', anchor:'step-3-develop'},
               {file:'NextSteps.md', anchor:'step-4-next-steps'},
-              {file:'CordovaConsiderations.md', anchor:'special-considerations-when-developing-with-cordova'},
               {file:'Publish.md', anchor:'step-5-publish'},
+              {file:'CordovaConsiderations.md', anchor:'special-considerations-when-developing-with-cordova'},
               {file:'ChromeADT.md', anchor:'chrome-apps-developer-tool-adt-for-android'} ];
 
 var numPages = pages.length,
@@ -92,12 +92,19 @@ pages.forEach(function(page, i){
       // Strip out all paragraphs that start with "Done? Continue to"
       $('p:contains("Done? Continue to")').remove();
 
-      // Re-word opening paragraph that starts with "Let's get started. Continue to"
-      $('h2:contains("Let\'s get started")').remove();
-      $('p:contains("Continue to")').text('Let\'s get started.');
+      if ( page.file === '../README.md' ) {
+        // Get rid of table of contents
+        $('p:contains("by following these steps")').remove();
+        $('ul:contains("Step 1:")').remove();
 
-      // markdown converter messes around with my HTML-entities
-      $('code:contains("webview")').text('<webview>');
+        // Re-word opening paragraph that starts with "Let's get started. Continue to"
+        $('h2:contains("Let\'s get started")').remove();
+        $('p:contains("Continue to")').text('Let\'s get started.');
+      }
+      else if ( page.file === 'CordovaConsiderations.md' ) {
+        // markdown converter messes around with my HTML-entities
+        $('code:contains("webview")').text('<webview>');
+      }
 
       // For all important headers, add in an id attribute so it shows up in sidebar
       $('h2, h3').each(function(index, element) {
@@ -140,7 +147,7 @@ pages.forEach(function(page, i){
       $('img').each(function(index, element) {
         var imgSrc = $(element).attr('src');
         console.log( 'Note: An image (' + imgSrc + ') was found. Make sure it\'s been copied over to the chromium repo too.');
-        imgSrc = imgSrc.replace('docs/images/','/static/images/');
+        imgSrc = imgSrc.replace('docs/images/','{{static}}/images/');
         $(element).attr('src', imgSrc);
       });
 

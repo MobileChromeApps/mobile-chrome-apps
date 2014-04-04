@@ -1,4 +1,4 @@
-## Special considerations when developing with Cordova
+## Special considerations
 
 If you're new to Chrome Apps, the biggest gotcha is that some [web features are disabled](http://developer.chrome.com/apps/app_deprecated). However, several of these do currently work within Cordova.
 
@@ -28,8 +28,8 @@ We've made many of the core Chrome APIs available to Chrome Apps for Mobile, inc
 * [storage](http://developer.chrome.com/apps/storage.html) - store and retrieve key-value data locally
 * [syncFileSystem](http://developer.chrome.com/apps/syncFileSystem.html) - store and retrieve files backed by Google Drive
 * [alarms](http://developer.chrome.com/apps/alarms.html) - run tasks periodically
-* [idle](http://developer.chrome.com/apps/idle.html) -  detect when the machine's idle state changes.
-* [power](http://developer.chrome.com/apps/power.html) - override the system's power management features.
+* [idle](http://developer.chrome.com/apps/idle.html) -  detect when the machine's idle state changes
+* [power](http://developer.chrome.com/apps/power.html) - override the system's power management features
 
 However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desktop features are available on mobile:
 

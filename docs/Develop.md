@@ -41,7 +41,7 @@ From the root of your `cca`-generated project folder:
 
 2.  Make sure you are building the right target.
   
-    In the top left (beside Run and Stop buttons) there is a dropdown to select target project and device. Ensure that `YourApp` is selected and not `CordovaLib`. 
+    In the top left (beside Run and Stop buttons), there is a dropdown to select target project and device. Ensure that `YourApp` is selected and not `CordovaLib`. 
 
 3.  Click the Play button.
 
