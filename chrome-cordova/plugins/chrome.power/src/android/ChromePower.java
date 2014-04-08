@@ -28,11 +28,19 @@ public class ChromePower extends CordovaPlugin {
     }
 
     private void requestKeepAwake(final CordovaArgs args, final CallbackContext callbackContext) {
-        this.cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+        });
     }
 
     private void releaseKeepAwake(final CordovaArgs args, final CallbackContext callbackContext) {
-        this.cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+        });
     }
 }
 
