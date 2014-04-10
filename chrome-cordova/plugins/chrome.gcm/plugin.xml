@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"    xmlns:android="http://schemas.android.com/apk/res/android"    id="org.chromium.gcm"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Google Cloud Messaging API</name>
+  
+  <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.storage" />
+  <dependency id="com.google.playservices" />
+
+  <js-module src="gcm.js" name="gcm">
+    <clobbers target="chrome.gcm" />
+  </js-module>
+
+  <name>Chrome Apps GCM API</name>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeGcm.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/GcmReceiver.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/GcmIntentService.java" target-dir="src/org/chromium" />
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeGcm">
+        <param name="android-package" value="org.chromium.ChromeGcm"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <receiver android:name="org.chromium.GcmReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+        <intent-filter>
+          <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+        </intent-filter>
+      </receiver>
+      <service android:name="org.chromium.GcmIntentService" />
+    </config-file>
+  </platform>
+
+</plugin>
