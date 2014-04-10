@@ -23,6 +23,7 @@
     "idle",
     "notifications",
     "pushMessaging",
+    "gcm",
     {
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
     },
