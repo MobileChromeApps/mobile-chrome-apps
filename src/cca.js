@@ -64,6 +64,7 @@ var PLUGIN_MAP = {
   'alarms': ['org.chromium.alarms'],
   'fileSystem': ['org.chromium.fileSystem',
                  'org.chromium.FileChooser'],
+  'gcm': ['org.chromium.gcm'],
   'identity': ['org.chromium.identity'],
   'idle': ['org.chromium.idle'],
   'notifications': ['org.chromium.notifications'],
