@@ -14,6 +14,7 @@
   <name>Google Plus iOS Framework Plugin</name>
 
   <platform name="ios">
+    <dependency id="org.chromium.frameworks.googleopensource" />
     <framework src="src/ios/GooglePlus.framework" custom="true" />
     <framework src="AssetsLibrary.framework" />
     <framework src="Foundation.framework" />
