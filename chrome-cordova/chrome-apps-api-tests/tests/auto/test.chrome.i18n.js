@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerAutoTests('chrome.i18n', function(runningInBackground) {
+registerAutoTests('chrome.i18n', function() {
   'use strict';
   var testNode = null;
   var langEnUs = navigator.language.toLowerCase() == 'en-us';
@@ -18,6 +18,8 @@ registerAutoTests('chrome.i18n', function(runningInBackground) {
     expect(navigator.language.toLowerCase()).toMatch(/^en-.*$/);
   });
 
+  // TODO: implement runningInBackground
+  var runningInBackground = false;
   if (!runningInBackground) {
     it('should not replace placeholders in html', function() {
       expect(document.getElementById('i18n-html-test').innerHTML).toBe('__MSG_description__');

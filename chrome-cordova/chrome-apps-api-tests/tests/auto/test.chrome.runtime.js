@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerAutoTests("chrome.runtime", function(runningInBackground) {
+registerAutoTests("chrome.runtime", function() {
   'use strict';
 
   it('getManifest() should have a name that is a string', function() {
@@ -17,6 +17,8 @@ registerAutoTests("chrome.runtime", function(runningInBackground) {
     var bgPage = null;
     chrome.runtime.getBackgroundPage(function(wnd) {
       bgPage = wnd;
+      // TODO: implement runningInBackground
+      var runningInBackground = false;
       if (runningInBackground) {
         expect(window == bgPage).toBe(true, 'window should == bgPage');
       } else {

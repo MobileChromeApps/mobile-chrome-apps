@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerAutoTests('chrome.socket', function(runningInBackground) {
+registerAutoTests('chrome.socket', function() {
   'use strict';
   // constants
   var bindAddr = '0.0.0.0';

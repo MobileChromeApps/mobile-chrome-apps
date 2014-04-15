@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerAutoTests('xhr', function(runningInBackground) {
+registerAutoTests('xhr', function() {
   'use strict';
   describe('CORS XHR', function() {
     it('should xhr to apache.org', function(done) {

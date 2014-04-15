@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerAutoTests('pageload', function(runningInBackground) {
+registerAutoTests('pageload', function() {
   'use strict';
+  // TODO: implement runningInBackground
+  var runningInBackground = false;
   if (!runningInBackground) {
     describe('page loading', function() {
       // Attributes are stripped off of the head tag in desktop Chrome, so don't test that.
