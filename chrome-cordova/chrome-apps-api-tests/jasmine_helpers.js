@@ -47,11 +47,7 @@ exports.setUpJasmine = function() {
     return true;
   };
 
-  // Attach jasmineInterface to global object
-  var target = window;
-  for (var property in jasmineInterface) {
-    target[property] = jasmineInterface[property];
-  }
+  return jasmineInterface;
 }
 
 function addJasmineHelpers(jasmineInterface) {

@@ -19,8 +19,20 @@ function getTestsObject(api) {
 exports.registerAutoTests = function(api, fn) {
   var apiTests = getTestsObject(api);
   apiTests.defineAutoTests = function(jasmineInterface) {
-    jasmineInterface.describe(api + ' >>', fn);
+    jasmineInterface.describe(api + ' >>', function() {
+      fn(jasmineInterface); // Note: don't pass fn directly to jasmine.describe, since describe does async magic if fn takes an arg
+    });
   };
+};
+
+exports.defineAutoTests = function(jasmineInterface) {
+  Object.keys(exports.tests).forEach(function(key) {
+    if (!exports.tests[key].enabled)
+      return;
+    if (!exports.tests[key].hasOwnProperty('defineAutoTests'))
+      return;
+    exports.tests[key].defineAutoTests(jasmineInterface);
+  });
 };
 
 // Usage:
@@ -35,5 +47,18 @@ exports.registerManualTests = function(api, fn) {
     fn(contentEl, addButton);
   };
 }
+
+exports.defineManualTests = function(contentEl, beforeEach, createActionButton) {
+  Object.keys(exports.tests).forEach(function(key) {
+    if (!exports.tests[key].enabled)
+      return;
+    if (!exports.tests[key].hasOwnProperty('defineManualTests'))
+      return;
+    createActionButton(key, function() {
+      beforeEach();
+      exports.tests[key].defineManualTests(contentEl, createActionButton);
+    });
+  });
+};
 
 }());

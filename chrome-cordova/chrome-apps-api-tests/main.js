@@ -82,16 +82,12 @@ function runAutoTests() {
   createActionButton('Reset App', chrome.runtime.reload);
   createActionButton('Back', setMode.bind(null, 'main'));
 
-  window.setUpJasmine();
-
-  var jasmineInterface = window;
-  Object.keys(window.tests).forEach(function(key) {
-    if (!window.tests[key].enabled)
-      return;
-    if (!window.tests[key].hasOwnProperty('defineAutoTests'))
-      return;
-    window.tests[key].defineAutoTests(jasmineInterface);
-  });
+  var jasmineInterface = window.setUpJasmine();
+  // Attach jasmineInterface to global object
+  for (var property in jasmineInterface) {
+    window[property] = jasmineInterface[property];
+  }
+  window.defineAutoTests(jasmineInterface);
 
   // Run the tests!
   var jasmineEnv = jasmine.getEnv();
@@ -107,19 +103,12 @@ function runManualTests() {
   createActionButton('Back', setMode.bind(null, 'main'));
 
   var contentEl = document.getElementById('content');
-  Object.keys(window.tests).forEach(function(key) {
-    if (!window.tests[key].enabled)
-      return;
-    if (!window.tests[key].hasOwnProperty('defineManualTests'))
-      return;
-    createActionButton(key, function() {
-      window.clearContent();
-      createActionButton('Reset App', chrome.runtime.reload);
-      createActionButton('Back', setMode.bind(null, 'manual'));
-
-      window.tests[key].defineManualTests(contentEl, createActionButton);
-    });
-  });
+  var beforeEach = function() {
+    window.clearContent();
+    createActionButton('Reset App', chrome.runtime.reload);
+    createActionButton('Back', setMode.bind(null, 'manual'));
+  }
+  window.defineManualTests(contentEl, beforeEach, createActionButton);
 }
 
 /******************************************************************************/
