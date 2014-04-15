@@ -103,7 +103,6 @@ function runAutoTests() {
 function runManualTests() {
   setTitle('Manual Tests');
 
-  createActionButton('Again', setMode.bind(null, 'auto'));
   createActionButton('Reset App', chrome.runtime.reload);
   createActionButton('Back', setMode.bind(null, 'main'));
 
