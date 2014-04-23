@@ -16,6 +16,9 @@ var cachedAccount;
 // This constant is used as an error message when Google Play Services is unavailable during an attempt to get an auth token natively.
 var GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
 
+// We use this constant to note when we don't know which account the token belongs to.  This happens when using the web auth flow.
+var UNKNOWN_ACCOUNT = "Unknown account";
+
 exports.getAuthToken = function(details, callback) {
     if (typeof details === 'function' && typeof callback === 'undefined') {
         callback = details;
@@ -85,12 +88,16 @@ exports.getAuthToken = function(details, callback) {
             var launchWebAuthFlowCallback = function(responseUrl) {
                 var token = extractToken(responseUrl);
 
-                // If we weren't able to extract a token, error out.  Otherwise, call the callback.
+                // If we weren't able to extract a token, error out.
                 if (!token) {
                     callbackWithError('URL did not contain a token.', callback);
                     return;
                 }
-                augmentedCallback(token);
+
+                // Our augmented callback expects a token data object containing the token and the account.
+                // We don't know the account, so we say so.
+                var tokenData = { token: token, account: UNKNOWN_ACCOUNT };
+                augmentedCallback(tokenData);
             };
 
             // Launch the web auth flow!
