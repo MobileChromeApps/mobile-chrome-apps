@@ -42,6 +42,7 @@
     self = [super initWithWebView:theWebView];
 
     GPPSignIn *signIn = [GPPSignIn sharedInstance];
+    [signIn setShouldFetchGoogleUserEmail:YES];
     [signIn setShouldFetchGooglePlusUser:YES];
     [signIn setDelegate:self];
 
@@ -86,8 +87,13 @@
 
 - (void)finishedWithAuth:(GTMOAuth2Authentication *)auth error:(NSError *) error
 {
-    // Pass the token to the callback.
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[auth accessToken]];
+    // Compile the results.
+    NSDictionary *resultDictionary = [[NSMutableDictionary alloc] init];
+    [resultDictionary setValue:[auth userEmail] forKey:@"account"];
+    [resultDictionary setValue:[auth accessToken] forKey:@"token"];
+
+    // Pass the results to the callback.
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDictionary];
     [[self commandDelegate] sendPluginResult:pluginResult callbackId:[self callbackId]];
 
     // Clear the callback id.
