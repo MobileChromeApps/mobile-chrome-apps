@@ -70,23 +70,22 @@ public class ChromeGcm extends CordovaPlugin {
         }
         return false;
     }
-    static private void startApp(){
-        try {
+    static public void startApp(Context context){
+        if(webView==null) {
+            try {
                 String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
                 Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
                 activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 activityIntent.putExtra(PAYLOAD_LABEL, "dummy");
-//                activityIntent.putExtra(PAYLOAD_LABEL, payloadString);
                 context.startActivity(activityIntent);
-        } catch (Exception e) {
+            } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to make startActivity intent: " + e);
+            }
         }
     }
 
     static public void handleSendError(String payloadString) {
-        if (webView == null) {
-            startApp();
-        } else if (!safeToFireMessages) {
+        if (!safeToFireMessages) {
             pendingSendErrors.add(payloadString);
         } else {
             fireOnSendError(payloadString);
@@ -94,9 +93,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     static public void handleDeletedMessages(String payloadString) {
-        if (webView == null) {
-            startApp();
-        } else if (!safeToFireMessages) {
+        if (!safeToFireMessages) {
             pendingDeleteMessages.add(payloadString);
         } else {
             fireOnMessagesDeleted(payloadString);
@@ -104,9 +101,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     static public void handleRxMessage(String payloadString) {
-        if (webView == null) {
-            startApp();
-        } else if (!safeToFireMessages) {
+        if (!safeToFireMessages) {
             pendingMessages.add(payloadString);
         } else {
             fireOnMessage(payloadString);
@@ -128,6 +123,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     private void fireQueuedMessages(final CordovaArgs args, final CallbackContext callbackContext) {
+        Log.d(LOG_TAG,"Firing "+pendingMessages.size()+" pending messages");
         safeToFireMessages = true;
         for (int i = 0; i < pendingMessages.size(); i++) {
             fireOnMessage(pendingMessages.get(i));

@@ -40,6 +40,7 @@ public class GcmIntentService extends IntentService {
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
         String messageType = gcm.getMessageType(intent);
 
+        ChromeGcm.startApp(this);
         if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
             ChromeGcm.handleSendError( payloadString);
         } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
