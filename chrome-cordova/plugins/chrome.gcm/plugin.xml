@@ -15,7 +15,6 @@
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.storage" />
   <dependency id="com.google.playservices" />
-  <dependency id="com.google.androidsupport" />
 
   <js-module src="gcm.js" name="gcm">
     <clobbers target="chrome.gcm" />
