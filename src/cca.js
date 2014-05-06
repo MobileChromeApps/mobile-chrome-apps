@@ -645,11 +645,10 @@ function prePrepareCommand() {
     var content = tree.find('./content');
     if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
 
-    var access = widget.findall('access');
-    access.forEach(function(elem, index) {
-      /* The useless '0' parameter here will be removed with elementtree 0.1.6 */
-      widget.remove(0, elem);
-    });
+    var access;
+    while (access = widget.find('./access')) {
+      widget.remove(access);
+    }
     whitelist.forEach(function(pattern, index) {
       var tag = et.SubElement(widget, 'access');
       tag.attrib.origin = pattern;
