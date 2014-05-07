@@ -74,7 +74,9 @@ var PLUGIN_MAP = {
   'socket': ['org.chromium.socket'],
   'storage': ['org.chromium.storage'],
   'syncFileSystem': ['org.chromium.syncFileSystem'],
-  'unlimitedStorage': []
+  'unlimitedStorage': [],
+  'background': [],
+  'fullscreen': [],
 };
 
 var CORDOVA_CONFIG_JSON = {
