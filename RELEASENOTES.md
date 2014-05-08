@@ -1,9 +1,21 @@
-
 ## Release Notes
 
 For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
+
+### v0.0.10 (May 08, 2014)
+* Lots of updated documentation
+* Move cordova-android and cordova-ios submodules to 3.5.0-rc1 and 3.4.1 tags, respectively
+* Move cordova npm dependancy to 3.4.1-0.1.0
+* cca: Fix #126 cca create with absolute paths
+* cca: Ignore fullscreen and background permissions in manifest.json
+* cca: Fix #151 <access> tags never being removed on prepare
+* chrome.gcm: Initial Release!
+* chrome.gcm: Fix #150 Handle gcm messages when app not active
+* chrome.identity: Added account to iOS authentication.
+* chrome.identity: Fixed Android web authentication.
+* chrome.power: requestKeepAwake and releaseKeepAwake must run on the UI thread
 
 ### v0.0.9 (April 1, 2014)
 * Lots of updated documentation
