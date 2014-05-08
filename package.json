@@ -20,15 +20,15 @@
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
-    "cca-push": "~1.0.0",
-    "cordova": "latest",
+    "cca-push": "^1.0.1",
+    "cordova": "^3.4.1-0.1.0",
     "cryptojs": "~2",
     "elementtree": "0.1.6",
     "node.extend": "",
     "optimist": "~0.6.1",
     "q": "~1",
-    "semver": "^2.2.1",
-    "shelljs": "~0.2.6"
+    "semver": "^2.3.0",
+    "shelljs": "^0.3.0"
   },
   "files": [
     "README.md",
