@@ -26,4 +26,6 @@ The API reference is [here](https://developer.chrome.com/apps/cloudMessagingV2).
 * The sender ID and registration is cached in local storage
 * You require the 'gcm' permission to use this API
 
-
+# Release Notes
+## 1.0.0 (May 8, 2014)
+- Initial Release
