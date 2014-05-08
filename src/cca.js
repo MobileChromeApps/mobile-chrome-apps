@@ -487,7 +487,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 
     return runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
   }).then(function() {
-    chdir(path.join(origDir, destAppDir));
+    chdir(destAppDir);
     console.log("Generating config.xml from manifest.json");
     return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
   }).then(function(data) {
@@ -582,7 +582,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 
   // Run prepare.
   .then(function() {
-    var wwwPath = path.join(origDir, destAppDir, 'www');
+    var wwwPath = path.join(destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
     // Strip off manifest.json from path (its containing dir must be the root of the app)
     if (path.basename(sourceArg) === 'manifest.json') {
@@ -1110,6 +1110,8 @@ function main() {
         optimist.showHelp(console.log);
         process.exit(1);
       }
+      // resolve turns relative paths into absolute
+      destAppDir = path.resolve(destAppDir);
       return ensureHasRunInit()
       .then(toolsCheck)
       .then(function() {
