@@ -437,6 +437,9 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
       fs.chmodSync('cca', '777');
     }
+
+    // Create a convenience gitignore
+    shelljs.cp('-f', path.join(ccaRoot, 'templates', '.gitignore'), path.join('.', '.gitignore'));
   })
 
   // Ensure the mobile manifest exists.
