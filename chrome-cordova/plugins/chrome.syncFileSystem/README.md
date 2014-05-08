@@ -29,6 +29,9 @@ In addition to the manfest changes for `chrome.identity`, you will need to add t
 * FileEntry.moveTo and FileEntry.copyTo do not trigger syncs.
 
 # Release Notes
+## 0.1.2 (May 8, 2014)
+- Updated documentation.
+
 ## 0.1.1 (April 1, 2014)
 - Updated documentation.
 - Improved error checking and handling.
