@@ -88,6 +88,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
 * Install cca RC from npm: `npm install cca@rc`
 * Ensure [CIRC](https://github.com/flackr/circ.git) works:
+  * Note: `chrome.sockets` is now required for circ.  Until we implement it, checkout `7a262a7`.
   * On iOS
   * On Android
   * Joining a room:
