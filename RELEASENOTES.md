@@ -5,6 +5,9 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
 ### v0.0.10 (May 08, 2014)
+* Re-publishing 0.0.10 exectly as is to work around npm publish error.
+
+### v0.0.10 (May 08, 2014)
 * Lots of updated documentation
 * Move cordova-android and cordova-ios submodules to 3.5.0-rc1 and 3.4.1 tags, respectively
 * Move cordova npm dependancy to 3.4.1-0.1.0
