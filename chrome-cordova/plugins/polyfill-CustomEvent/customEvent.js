@@ -8,7 +8,7 @@ if (typeof window.CustomEvent !== 'function') {
         newEvent.initCustomEvent(type,
                                  !!(eventInitDict && eventInitDict.bubbles),
                                  !!(eventInitDict && eventInitDict.cancelable),
-                                 (eventInitDict ? initargs.details : null));
+                                 (eventInitDict ? eventInitDict.details : null));
         return newEvent;
     };
 }
