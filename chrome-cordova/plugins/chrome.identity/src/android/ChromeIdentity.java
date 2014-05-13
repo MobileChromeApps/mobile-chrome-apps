@@ -36,6 +36,7 @@ public class ChromeIdentity extends CordovaPlugin {
     private static final int AUTH_REQUEST_CODE = 5;
     private static final int ACCOUNT_CHOOSER_INTENT = 6;
     private static final int OAUTH_PERMISSIONS_GRANT_INTENT = 7;
+    private static final int UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE = 8;
 
     // Error codes.
     private static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
@@ -91,12 +92,21 @@ public class ChromeIdentity extends CordovaPlugin {
         if (availabilityCode == ConnectionResult.SUCCESS) {
             this.savedCordovaArgs = cordovaArgsToSave;
             this.savedCallbackContext = callbackContextToSave;
-            this.savedContent  = true;
+            this.savedContent = true;
 
             // The "google.com" filter accepts both Google and Gmail accounts.
             Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
             this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
+        } else if (availabilityCode == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
+            // Save our data.
+            this.savedCordovaArgs = cordovaArgsToSave;
+            this.savedCallbackContext = callbackContextToSave;
+            this.savedContent = true;
+
+            // Prompt the user to update Google Play Services.
+            GooglePlayServicesUtil.getErrorDialog(availabilityCode, this.cordova.getActivity(), UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE).show();
         } else {
+            // Fall back to the web auth flow.
             callbackContextToSave.error(GOOGLE_PLAY_SERVICES_UNAVAILABLE);
         }
     }
@@ -111,9 +121,9 @@ public class ChromeIdentity extends CordovaPlugin {
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         // Enter only if we have requests waiting
-        if(savedContent) {
-            if(requestCode == ACCOUNT_CHOOSER_INTENT) {
-                if(resultCode == Activity.RESULT_OK && intent.hasExtra(AccountManager.KEY_ACCOUNT_NAME)) {
+        if (savedContent) {
+            if (requestCode == ACCOUNT_CHOOSER_INTENT) {
+                if (resultCode == Activity.RESULT_OK && intent.hasExtra(AccountManager.KEY_ACCOUNT_NAME)) {
                     accountName = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     getAuthToken(this.savedCordovaArgs, this.savedCallbackContext);
                 } else {
@@ -122,7 +132,7 @@ public class ChromeIdentity extends CordovaPlugin {
                 this.savedContent = false;
                 this.savedCallbackContext = null;
                 this.savedCordovaArgs = null;
-            } else if(requestCode == OAUTH_PERMISSIONS_GRANT_INTENT) {
+            } else if (requestCode == OAUTH_PERMISSIONS_GRANT_INTENT) {
                 cordova.getThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -155,11 +165,23 @@ public class ChromeIdentity extends CordovaPlugin {
                         } else {
                             savedCallbackContext.error("User did not approve oAuth permissions request");
                         }
-                        savedContent  = false;
+                        savedContent = false;
                         savedCallbackContext = null;
                         savedCordovaArgs = null;
                     }
                 });
+            } else if (requestCode == UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE) {
+                if (resultCode == Activity.RESULT_OK) {
+                    // The user has updated Google Play Services.  Try again!
+                    launchAccountChooserAndCallback(savedCordovaArgs, savedCallbackContext);
+                } else {
+                    // Google Play Services was not updated.
+                    savedCallbackContext.error("Google Play Services is out of date.");
+
+                    savedContent = false;
+                    savedCallbackContext = null;
+                    savedCordovaArgs = null;
+                }
             }
         }
     }
