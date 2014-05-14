@@ -306,6 +306,8 @@ static NSString* stringFromData(NSData* data) {
 
     if ([socket->_mode isEqualToString:@"udp"]) {
         [socket->_socket closeAfterSending];
+    } else {
+        [socket->_socket disconnect];
     }
 
     [_sockets removeObjectForKey:[NSNumber numberWithUnsignedInteger:socket->_socketId]];
