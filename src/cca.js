@@ -46,39 +46,6 @@ var hasXcode = false;
 /******************************************************************************/
 /******************************************************************************/
 
-var DEFAULT_PLUGINS = [
-    'org.apache.cordova.file',
-    'org.apache.cordova.inappbrowser',
-    'org.apache.cordova.network-information',
-    'org.apache.cordova.keyboard',
-    'org.apache.cordova.statusbar',
-    'org.chromium.navigation',
-    'org.chromium.bootstrap',
-    'org.chromium.i18n',
-    'org.chromium.polyfill.CustomEvent',
-    'org.chromium.polyfill.xhr_features',
-    'org.chromium.polyfill.blob_constructor',
-];
-
-var PLUGIN_MAP = {
-  'alarms': ['org.chromium.alarms'],
-  'fileSystem': ['org.chromium.fileSystem',
-                 'org.chromium.FileChooser'],
-  'gcm': ['org.chromium.gcm'],
-  'identity': ['org.chromium.identity'],
-  'idle': ['org.chromium.idle'],
-  'notifications': ['org.chromium.notifications'],
-  'payments': ['com.google.payments'],
-  'power': ['org.chromium.power'],
-  'pushMessaging': ['org.chromium.pushMessaging'],
-  'socket': ['org.chromium.socket'],
-  'storage': ['org.chromium.storage'],
-  'syncFileSystem': ['org.chromium.syncFileSystem'],
-  'unlimitedStorage': [],
-  'background': [],
-  'fullscreen': [],
-};
-
 var CORDOVA_CONFIG_JSON = {
   plugin_search_path: [
       path.join(ccaRoot, 'cordova'),
@@ -221,65 +188,6 @@ function getManifest(manifestDir, platform) {
     });
   }, function(err) {
     return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.');
-  });
-}
-
-function mapAppKeyToAppId(key) {
-  var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
-               '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
-  return (Crypto.SHA256(new Buffer(key, 'base64'))
-          .substr(0,32)
-          .replace(/[a-f0-9]/g, function(char) {
-             return mpdec[char];
-          }));
-}
-
-// Returns a promise for an object with three keys: appId, whitelist, and plugins.
-function parseManifest(manifest) {
-  var permissions = [],
-      chromeAppId,
-      whitelist = [],
-      plugins = [],
-      i;
-  if (manifest && manifest.permissions) {
-    for (i = 0; i < manifest.permissions.length; ++i) {
-      if (typeof manifest.permissions[i] === "string") {
-        var matchPatternParts = /([^:]+:\/\/[^\/]+)(\/.*)$/.exec(manifest.permissions[i]);
-        if (matchPatternParts) {
-          // Disregard paths in host permissions: path is required, but
-          // <scheme>://<host>/<any path> should translate to <scheme>://<host>/*
-          whitelist.push(matchPatternParts[1] + "/*");
-        } else if (manifest.permissions[i] === "<all_urls>") {
-          whitelist.push("*");
-        } else {
-          permissions.push(manifest.permissions[i]);
-        }
-      } else {
-        permissions = permissions.concat(Object.keys(manifest.permissions[i]));
-      }
-    }
-  }
-  for (i = 0; i < permissions.length; i++) {
-    var pluginsForPermission = PLUGIN_MAP[permissions[i]];
-    if (pluginsForPermission) {
-      for (var j = 0; j < pluginsForPermission.length; ++j) {
-        plugins.push(pluginsForPermission[j]);
-      }
-    } else {
-      console.warn('Permission not supported by cca: ' + permissions[i] + ' (skipping)');
-    }
-  }
-  // Note: chromeAppId is not currently used.
-  if (manifest.key) {
-    chromeAppId = mapAppKeyToAppId(manifest.key);
-  } else {
-    // All zeroes -- should we use rand() here instead?
-    chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-  }
-  return Q.when({
-    appId: chromeAppId,
-    whitelist: whitelist,
-    plugins: plugins
   });
 }
 
@@ -457,7 +365,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       fatal('No background scripts found in your manifest.json file. Your manifest must contain at least one script in the "app.background.scripts" array.');
     }
     manifest = manifestData;
-    return parseManifest(manifest);
+    return Q.when(require('./parse_manifest')(manifest));
   }).then(function(parsed) {
     chromeAppId = parsed.appId;
     whitelist = parsed.whitelist;
@@ -477,7 +385,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    cmds.push(['plugin', 'add', DEFAULT_PLUGINS.concat(plugins)]);
+    cmds.push(['plugin', 'add', require('./plugin_map').DEFAULT_PLUGINS.concat(plugins)]);
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
@@ -620,7 +528,7 @@ function prePrepareCommand() {
   return getManifest('www')
   .then(function(m) {
     manifest = m;
-    return parseManifest(m);
+    return Q.when(require('./parse_manifest')(manifest));
   }).then(function(manifestData) {
     plugins = manifestData.plugins;
     whitelist = manifestData.whitelist;
