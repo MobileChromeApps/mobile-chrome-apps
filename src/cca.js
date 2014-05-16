@@ -26,7 +26,6 @@ var path = require('path');
 
 // Third-party modules.
 var optimist = require('optimist');
-var Crypto = require('cryptojs').Crypto;
 var et = require('elementtree');
 var shelljs = require('shelljs');
 var cordova = require('cordova');
@@ -385,7 +384,6 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     if ((!platformSpecified && hasAndroidSdk) || addAndroidPlatform) {
       cmds.push(['platform', 'add', 'android']);
     }
-    cmds.push(['plugin', 'add', require('./plugin_map').DEFAULT_PLUGINS.concat(plugins)]);
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
@@ -530,7 +528,7 @@ function prePrepareCommand() {
     manifest = m;
     return Q.when(require('./parse_manifest')(manifest));
   }).then(function(manifestData) {
-    plugins = manifestData.plugins;
+    plugins = require('./plugin_map').DEFAULT_PLUGINS.concat(manifestData.plugins);
     whitelist = manifestData.whitelist;
     console.log('## Updating config.xml from manifest.json');
     return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'});
