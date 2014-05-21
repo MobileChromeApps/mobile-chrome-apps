@@ -54,7 +54,7 @@ module.exports = function parseManifest(manifest) {
     }
   }
 
-  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.engine || "system"];
+  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.engine || "crosswalk"];
   if (pluginsForEngine) {
     for (var k = 0; k < pluginsForEngine.length; ++k) {
       plugins.push(pluginsForEngine[k]);
