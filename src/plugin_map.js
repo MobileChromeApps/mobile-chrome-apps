@@ -51,3 +51,8 @@ exports.PLUGIN_MAP = {
   'background': [],
   'fullscreen': [],
 };
+
+exports.ENGINE_MAP = {
+  'crosswalk': ['org.apache.cordova.engine.crosswalk'],
+  'system': []
+};

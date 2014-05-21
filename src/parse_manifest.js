@@ -54,6 +54,15 @@ module.exports = function parseManifest(manifest) {
     }
   }
 
+  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.engine || "system"];
+  if (pluginsForEngine) {
+    for (var k = 0; k < pluginsForEngine.length; ++k) {
+      plugins.push(pluginsForEngine[k]);
+    }
+  } else {
+    console.warn('Rendering engine not supported by cca: ' + manifest.engine + ' (ignoring)');
+  }
+
   // Note: chromeAppId is not currently used.
   if (manifest.key) {
     chromeAppId = require('./util/chrome_app_key_to_id')(manifest.key);
