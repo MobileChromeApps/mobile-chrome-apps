@@ -5,7 +5,7 @@
 
 // Support was added in iOS7.
 var xhr = new XMLHttpRequest();
-xhr.open('GET', '', false);
+xhr.open('GET', '', true);
 xhr.responseType = 'blob';
 if (xhr.responseType == 'blob') {
     return;
