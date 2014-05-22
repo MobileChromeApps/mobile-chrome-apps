@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "cca-push": "^1.0.1",
-    "cordova": "^3.5.0-0.2.4",
+    "cordova": "^3.4.1-0.1.0",
     "cryptojs": "~2",
     "elementtree": "0.1.6",
     "node.extend": "",
