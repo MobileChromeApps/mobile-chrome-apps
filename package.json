@@ -13,6 +13,7 @@
   "bin": {
     "cca": "src/cca.js"
   },
+  "main": "src/cca.js",
   "man": "./docs/man/cca.7",
   "license": "Apache version 2.0",
   "repository": {
@@ -43,8 +44,10 @@
   "devDependencies": {
     "chai": "^1.9.1",
     "gulp": "^3.6.2",
+    "gulp-jshint": "^1.6.1",
     "gulp-mocha": "^0.4.1",
-    "gulp-util": "^2.2.14"
+    "gulp-util": "^2.2.14",
+    "walk": "^2.3.3"
   },
   "scripts": {
     "test": "gulp test"

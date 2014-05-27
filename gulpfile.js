@@ -1,28 +1,29 @@
 var gulp = require("gulp");
 var gutil = require("gulp-util");
+var jshint = require('gulp-jshint');
 var mocha = require('gulp-mocha');
 
-var testFiles = [
-  'tests/**/*.js'
-];
+gulp.task('lint', function() {
+  return gulp.src(['src/**/*.js', 'tests/**/*.js'])
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'))
+    .pipe(jshint.reporter('fail'));
+});
 
 gulp.task('test', function() {
-  // Be sure to return the stream
-  return gulp.src(testFiles)
+  return gulp.src(['tests/**/*.js'])
     .pipe(mocha({
       reporter: 'spec', //'nyan'
       ui: 'bdd',
-    }));
-    /*
+    }))
     .on('error', function(err) {
-      // Make sure failed tests cause gulp to exit non-zero
-      throw err;
-    });*/
+      throw err; // Make sure failed tests cause gulp to exit non-zero
+    });
 });
 
-gulp.task('--help', function() {
-  console.log('Usage:');
-  console.log('  gulp test');
+gulp.task('default', ['lint', 'test'], function() {
+  gulp.watch([
+      'src/**/*.js',
+      'tests/**/*.js',
+    ], ['lint', 'test']);
 });
-
-gulp.task('default', ['--help']);
