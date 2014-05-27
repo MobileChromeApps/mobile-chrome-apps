@@ -39,5 +39,14 @@
     "docs",
     "src",
     "templates"
-  ]
+  ],
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "gulp": "^3.6.2",
+    "gulp-mocha": "^0.4.1",
+    "gulp-util": "^2.2.14"
+  },
+  "scripts": {
+    "test": "gulp test"
+  }
 }
