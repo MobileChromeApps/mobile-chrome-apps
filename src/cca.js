@@ -439,7 +439,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     }
 
     // Create a convenience gitignore
-    shelljs.cp('-f', path.join(ccaRoot, 'templates', '.gitignore'), path.join('.', '.gitignore'));
+    shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
   })
 
   // Ensure the mobile manifest exists.
