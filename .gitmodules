@@ -22,3 +22,6 @@
 [submodule "cordova/cordova-plugin-android-support-v4"]
 	path = cordova/cordova-plugin-android-support-v4
 	url = https://github.com/MobileChromeApps/cordova-plugin-android-support-v4.git
+[submodule "cordova/cordova-plugin-statusbar"]
+	path = cordova/cordova-plugin-statusbar
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-statusbar.git
