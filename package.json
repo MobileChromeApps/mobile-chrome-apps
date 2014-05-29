@@ -1,7 +1,7 @@
 {
   "name": "cca",
   "author": "The Chrome Team",
-  "version": "0.0.11",
+  "version": "0.1.0",
   "description": "Run Chrome Apps on mobile using Apache Cordova",
   "preferGlobal": "true",
   "keywords": [
@@ -13,6 +13,7 @@
   "bin": {
     "cca": "src/cca.js"
   },
+  "main": "src/cca.js",
   "man": "./docs/man/cca.7",
   "license": "Apache version 2.0",
   "repository": {
@@ -21,8 +22,8 @@
   },
   "dependencies": {
     "cca-push": "^1.0.1",
-    "cordova": "^3.4.1-0.1.0",
-    "cryptojs": "~2",
+    "cordova": "^3.5.0-0.2.4",
+    "crypto-js": "^3.1.2-3",
     "elementtree": "0.1.6",
     "node.extend": "",
     "optimist": "~0.6.1",
@@ -39,5 +40,16 @@
     "docs",
     "src",
     "templates"
-  ]
+  ],
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "gulp": "^3.6.2",
+    "gulp-jshint": "^1.6.1",
+    "gulp-mocha": "^0.4.1",
+    "gulp-util": "^2.2.14",
+    "walk": "^2.3.3"
+  },
+  "scripts": {
+    "test": "gulp test"
+  }
 }

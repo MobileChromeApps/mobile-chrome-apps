@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -18,14 +17,15 @@
   under the License.
  */
 
-var Crypto = require('cryptojs').Crypto;
+var SHA256 = require("crypto-js/sha256");
 
 module.exports = function(key) {
   var mpdec = {'0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e', '5': 'f', '6': 'g', '7': 'h',
                '8': 'i', '9': 'j', 'a': 'k', 'b': 'l', 'c': 'm', 'd': 'n', 'e': 'o', 'f': 'p' };
-  return (Crypto.SHA256(new Buffer(key, 'base64'))
-          .substr(0,32)
-          .replace(/[a-f0-9]/g, function(char) {
-             return mpdec[char];
-          }));
+  return SHA256(new Buffer(key, 'base64').toString('ascii'))
+            .toString()
+            .substr(0,32)
+            .replace(/[a-f0-9]/g, function(char) {
+               return mpdec[char];
+            });
 }

@@ -454,6 +454,9 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
       fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
       fs.chmodSync('cca', '777');
     }
+
+    // Create a convenience gitignore
+    shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
   })
 
   // Ensure the mobile manifest exists.
@@ -470,7 +473,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   .then(function() {
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
     if (hasIos) {
-      var platforms = require('cordova/platforms');
+      var platforms = require('cordova/node_modules/cordova-lib').cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
       var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
@@ -718,7 +721,7 @@ function postPrepareInternal(platform) {
         "192": [path.join('res','drawable-xxxhdpi','icon.png')]
       };
     } else if (platform === "ios") {
-      var platforms = require('cordova/platforms');
+      var platforms = require('cordova/node_modules/cordova-lib').cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       iconMap = {
         "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.
@@ -845,7 +848,7 @@ function postPrepareInternal(platform) {
     // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
     // so if manifest.CFBundleVersion is not specifically set, we'll default to manifest.version
     if (platform === 'ios' && manifest && (manifest.version || manifest.CFBundleVersion)) {
-      var platforms = require('cordova/platforms');
+      var platforms = require('cordova/node_modules/cordova-lib').cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
       var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -23,8 +22,8 @@ exports.DEFAULT_PLUGINS = [
     'org.apache.cordova.file',
     'org.apache.cordova.inappbrowser',
     'org.apache.cordova.network-information',
-    'org.apache.cordova.keyboard',
     'org.apache.cordova.statusbar',
+    'org.apache.cordova.labs.keyboard',
     'org.chromium.navigation',
     'org.chromium.bootstrap',
     'org.chromium.i18n',

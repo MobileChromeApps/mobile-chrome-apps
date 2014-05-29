@@ -4,7 +4,18 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
-### v0.0.10 (May 08, 2014)
+### v0.1.0 (May 28, 2014)
+* Quick release since 0.0.11 is no longer installing fine due to changes to cordova npm modules and plugin registry.
+* First MINOR version number bump, but long overdue. A lot has changed since our first release.
+* cca: Updating cordova to 3.5 release
+* cca: Updating cca to work with cordova-cli & cordova-lib split
+* cca: Create a default .gitignore file for new projects
+* cca: Install default plugins on prepare
+* chrome.socket: ios: Fix socket.read() not respecting maxLength
+* chrome.socket: ios: Make chrome.socket.destroy call disconnect
+* google-play-services: Update google-play-services to v16
+
+### v0.0.11 (May 08, 2014)
 * Re-publishing 0.0.10 exectly as is to work around npm publish error.
 
 ### v0.0.10 (May 08, 2014)

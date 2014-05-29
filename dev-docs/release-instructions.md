@@ -52,7 +52,7 @@
 ## Update npm Dependencies
 
     # See what is stale
-    npm outdated
+    npm outdated --depth=0
     # Update them by:
     npm install foo@version --save
 
@@ -66,21 +66,37 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
 
 ## How to Publish a Release Candidate:
 
+    # Things are good?
     git status
-    # Things are good.
-    vim package.json # set "version": "x.x.x-rc1"
-    # Update shrinkwrap file:
+
+    # set "version": "x.x.x-rc#"
+    vim package.json
+
+    # Update shrinkwrap dependancies
     npm shrinkwrap
-    git commit -am "Set version to x.x.x-rc1."
+    git add npm-shrinkwrap.json
+
+    # Commit so that no-one re-uses this version of the rc
+    git commit -am "Set version to x.x.x-rc#."
+
+    # Publish rc to npm
+    # set "publishConfig": { "tag": "rc" }
+    vim package.json
     dev-bin/prepfornpm.sh
-    # Just temporary during push.
-    vim package.json # set "publishConfig": { "tag": "rc" }
     npm publish
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    git checkout -- package.json
+
+    # Double check things are still good
+    git status
     git push origin master
+
     # Double check that the tags point to the right things:
     npm info cca
-    git checkout -- package.json # Revert publishConfig.
+
+    # If anything goes wrong, unpublish rc
+    npm tag cca@0.0.0 rc
+    npm unpublish cca@x.x.x-rc#
 
 ## How to Test Release Candidate:
 
@@ -101,18 +117,31 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
 ## Publish full release:
 
-    vim package.json # and remove -rc1 from version
-    # Update shrinkwrap file:
-    npm shrinkwrap
+    # Things are good?
+    git status
+
+    # remove -rc# from "version"
+    vim package.json
     git commit -am "Set version to x.x.x."
     git tag vx.x.x
+
+    # Publish to npm
+    # Confirm "publishConfig": { "tag": "rc" } is not set in package.json
     dev-bin/prepfornpm.sh
     npm publish
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
-    git push origin master --tags
+
+    # Double check that the tags point to the right things:
+    npm info cca
+
     # Unpublish rc
     npm tag cca@0.0.0 rc
-    npm unpublish cca@x.x.x-rc1
+    npm unpublish cca@x.x.x-rc#
+
+    # Remove shrinkwrap file, and push changed to master
+    git rm npm-shrinkwrap.json
+    git commit -m "Removing shrinkwrap file after release"
+    git push origin master --tags
 
 2. Send an email to chromium-apps@chromium.org with version & release notes.
 3. Post on G+ (using corp G+, but setting as public), then ask for it to be re-shared. ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).

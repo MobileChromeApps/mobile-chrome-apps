@@ -25,3 +25,6 @@
 [submodule "cordova/cordova-crosswalk-engine"]
 	path = cordova/cordova-crosswalk-engine
 	url = https://github.com/clelland/cordova-crosswalk-engine/
+[submodule "cordova/cordova-plugin-statusbar"]
+	path = cordova/cordova-plugin-statusbar
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-statusbar.git
