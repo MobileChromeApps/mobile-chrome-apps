@@ -49,6 +49,7 @@ exports.PLUGIN_MAP = {
   'unlimitedStorage': [],
   'background': [],
   'fullscreen': [],
+  'geolocation': ['org.apache.cordova.geolocation'],
 };
 
 exports.ENGINE_MAP = {
