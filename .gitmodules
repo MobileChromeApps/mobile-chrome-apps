@@ -25,3 +25,6 @@
 [submodule "cordova/cordova-plugin-statusbar"]
 	path = cordova/cordova-plugin-statusbar
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-statusbar.git
+[submodule "cordova/cordova-plugin-geolocation"]
+	path = cordova/cordova-plugin-geolocation
+	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-geolocation.git
