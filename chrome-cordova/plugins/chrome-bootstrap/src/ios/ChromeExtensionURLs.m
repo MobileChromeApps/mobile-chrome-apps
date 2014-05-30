@@ -18,22 +18,29 @@
 @end
 
 static NSString* const kChromeExtensionURLScheme = @"chrome-extension";
-static ChromeURLProtocol *outstandingDelayRequest;
-static NSString* pathPrefix;
-
+static ChromeURLProtocol *outstandingDelayRequest = nil;
+static NSString* pathPrefix = nil;
+static BOOL registeredProtocol = NO;
 
 #pragma mark ChromeExtensionURLs
 
 @implementation ChromeExtensionURLs
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
-{
-    self = [super initWithWebView:theWebView];
-    if (self) {
+- (void)pluginInitialize {
+    if (!registeredProtocol) {
+        registeredProtocol = YES;
         [NSURLProtocol registerClass:[ChromeURLProtocol class]];
-        pathPrefix = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"www"];
     }
-    return self;
+    pathPrefix = nil;
+}
+
+- (BOOL)shouldOverrideLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType {
+    if (pathPrefix == nil) {
+        if ([request.mainDocumentURL.path hasSuffix:@"www/plugins/org.chromium.bootstrap/chromeapp.html"]) {
+            pathPrefix = [[[request.mainDocumentURL.path stringByDeletingLastPathComponent] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+        }
+    }
+    return NO;
 }
 
 // On a "release" command, trigger the chrome-content-loaded url to finish loading immediately.
@@ -68,7 +75,7 @@ static NSString* pathPrefix;
 + (BOOL)canInitWithRequest:(NSURLRequest*)request
 {
     NSURL* url = [request URL];
-    return [[url scheme] isEqualToString:kChromeExtensionURLScheme] && ![[url path] isEqualToString:@"/!gap_exec"];
+    return pathPrefix != nil && [[url scheme] isEqualToString:kChromeExtensionURLScheme] && ![[url path] isEqualToString:@"/!gap_exec"];
 }
 
 + (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
