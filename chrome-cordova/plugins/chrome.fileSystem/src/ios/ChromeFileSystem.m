@@ -26,7 +26,7 @@
         [self.popoverController presentPopoverFromRect:CGRectMake(50,100,320,568) inView:self.webView permittedArrowDirections:0 animated:YES];
     } else {
         pickerController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-        [self.viewController presentModalViewController:pickerController animated:YES];
+        [self.viewController presentViewController:pickerController animated:YES completion:nil];
     }
 }
 
@@ -35,7 +35,7 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         [self.popoverController dismissPopoverAnimated:YES];
     } else {
-        [self.viewController dismissModalViewControllerAnimated:YES];
+        [self.viewController dismissViewControllerAnimated:YES completion:nil];
     }
     NSLog(@"File: %@",file);
     NSString *pathURI = [NSString stringWithFormat:@"file://%@", path];
@@ -49,7 +49,7 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         [self.popoverController dismissPopoverAnimated:YES];
     } else {
-        [self.viewController dismissModalViewControllerAnimated:YES];
+        [self.viewController dismissViewControllerAnimated:YES completion:nil];
     }
     NSLog(@"Canceled");
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:false];
@@ -96,7 +96,8 @@ acceptsAllTypes=_acceptsAllTypes,
 sectionDescriptions=_sectionDescriptions;
 
 - (ChromeFilePickerViewController *)initWithOptions:(NSDictionary *)options andStyle:(UITableViewStyle)style {
-  if ([super initWithNibName:nil bundle:nil] != nil) {
+  self = [super initWithNibName:nil bundle:nil];
+  if (self != nil) {
 
     [self parseOptions:options];
 
@@ -257,7 +258,7 @@ sectionDescriptions=_sectionDescriptions;
   label.text = self.dialogTitle;
   label.backgroundColor = [UIColor blackColor];
   label.textColor = [UIColor whiteColor];
-  label.textAlignment = UITextAlignmentCenter;
+  label.textAlignment = NSTextAlignmentCenter;
   [[self view] addSubview:label];
 
   if (self.includeTextInput) {
@@ -392,3 +393,4 @@ sectionDescriptions=_sectionDescriptions;
   self.okButton.enabled = YES;
 }
 @end
+
