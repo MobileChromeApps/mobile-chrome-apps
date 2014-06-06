@@ -53,13 +53,13 @@ module.exports = function parseManifest(manifest) {
     }
   }
 
-  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.engine || "crosswalk"];
+  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.webview || "crosswalk"];
   if (pluginsForEngine) {
     for (var k = 0; k < pluginsForEngine.length; ++k) {
       plugins.push(pluginsForEngine[k]);
     }
   } else {
-    console.warn('Rendering engine not supported by cca: ' + manifest.engine + ' (ignoring)');
+    console.warn('Rendering engine not supported by cca: ' + manifest.webview + ' (ignoring)');
   }
 
   // Note: chromeAppId is not currently used.
