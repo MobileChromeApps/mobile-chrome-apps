@@ -21,6 +21,9 @@ var cordova = require('cordova');
 var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
+var path = require('path');
+
+var utils = require('./utils');
 
 // Returns a promise.
 module.exports = exports = function prePrepareCommand() {
@@ -104,13 +107,13 @@ module.exports = exports = function prePrepareCommand() {
 
   // If the Crosswalk rendering engine is installed, link the library
   .then(function() {
-    cordova.raw.plugin('ls').then(function(installedPlugins) {
-      if (installedPlugins.indexOf('org.apache.cordova.engine.crosswalk') >= 0) {
-        return Q.then(addXwalkLibraryCommand());
-      } else {
-        return Q.then(removeXwalkLibraryCommand());
-      }
-    });
+    return cordova.raw.plugin('ls');
+  }).then(function(installedPlugins) {
+    if (installedPlugins.indexOf('org.apache.cordova.engine.crosswalk') >= 0) {
+      return addXwalkLibraryCommand();
+    } else {
+      return removeXwalkLibraryCommand();
+    }
   });
 };
 
@@ -120,9 +123,11 @@ function addXwalkLibraryCommand() {
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
   }
   var p = Q();
+  console.log('here:', process.cwd());
   if (fs.existsSync(path.join('platforms', 'android'))) {
+    console.log('here');
     p = p.then(function() {
-      return processFile(path.join('platforms','android','project.properties'), function(lines) {
+      return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
         var largestReference = 0;
         var found_xwalk = false;
         for (var i=0; i < lines.length; ++i) {
@@ -153,7 +158,7 @@ function removeXwalkLibraryCommand() {
   var p = Q();
   if (fs.existsSync(path.join('platforms', 'android'))) {
     p = p.then(function() {
-      return processFile(path.join('platforms','android','project.properties'), function(lines) {
+      return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
         for (var i=lines.length-1; i >= 0; --i) {
           var xwalk_library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)xwalk_core_library$/);
           if (xwalk_library_reference) {
