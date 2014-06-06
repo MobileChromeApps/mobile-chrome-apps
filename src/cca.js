@@ -25,7 +25,6 @@ var os = require('os');
 var path = require('path');
 
 // Third-party modules.
-var optimist = require('optimist');
 var et = require('elementtree');
 var shelljs = require('shelljs');
 var cordova = require('cordova');
@@ -33,7 +32,6 @@ var Q = require('q');
 
 // Globals
 var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
-var commandLineFlags = null;
 var origDir = process.cwd();
 var isWindows = process.platform.slice(0, 3) == 'win';
 var ccaRoot = path.join(__dirname, '..');
@@ -41,6 +39,7 @@ var scriptName = path.basename(process.argv[1]);
 var hasAndroidSdk = false;
 var hasAndroidPlatform = false;
 var hasXcode = false;
+var pause_on_exit = false;
 
 /******************************************************************************/
 /******************************************************************************/
@@ -66,7 +65,7 @@ var CORDOVA_CONFIG_JSON = {
 // Utility Functions
 
 function exit(code) {
-  if (commandLineFlags.pause_on_exit) {
+  if (pause_on_exit) {
     waitForKey(function() {
       process.exit(code);
     });
@@ -155,41 +154,6 @@ function waitForKey(opt_prompt) {
   return d.promise;
 }
 
-// Returns a promise for the manifest contents.
-function getManifest(manifestDir, platform) {
-  var manifestFilename = path.join(manifestDir, 'manifest.json');
-  var manifestMobileFilename = path.join(manifestDir, 'manifest.mobile.json');
-
-  return Q.ninvoke(fs, 'readFile', manifestFilename, { encoding: 'utf-8' }).then(function(manifestData) {
-    var manifestMobileData = '{}';
-    return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' })
-    .then(function(mobile) {
-      manifestMobileData = mobile;
-    }, function(err) {
-      // Swallow any errors opening the mobile manifest, it's not required.
-    }).then(function() {
-      try {
-        // jshint evil:true
-        var manifest = eval('(' + manifestData + ')');
-        var manifestMobile = eval('(' + manifestMobileData + ')');
-        // jshint evil:false
-        var extend = require('node.extend');
-        manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
-        // If you want a specific platform manifest, also merge in its platform specific settings
-        if (typeof platform !== 'undefined' && platform in manifest) {
-          manifest = extend(true, manifest, manifest[platform]);
-        }
-        return manifest;
-      } catch (e) {
-        console.error(e);
-        return Q.reject('Unable to parse manifest ' + manifestFilename);
-      }
-    });
-  }, function(err) {
-    return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.');
-  });
-}
-
 /******************************************************************************/
 /******************************************************************************/
 // Tools Check
@@ -198,7 +162,7 @@ function parseTargetOutput(targetOutput) {
   var targets = [];
   var target;
   var targetRe = /^id: (\d+) or "([^"]*)"/gm;
-  while (target = targetRe.exec(targetOutput)) {
+  while ((target = targetRe.exec(targetOutput))) {
     targets.push(target[2]);
   }
   return targets;
@@ -269,41 +233,10 @@ function ensureHasRunInit() {
 
 /******************************************************************************/
 /******************************************************************************/
-
-// Returns the promise from the raw Cordova command.
-function runCmd(cmd) {
-  var msg = cmd[0];
-  cmd.slice(1).forEach(function(arg) {
-    if (typeof arg != 'string') {
-      return;
-    }
-    if (arg.indexOf(' ') != -1) {
-      msg += ' "' + arg + '"';
-    } else {
-      msg += ' ' + arg;
-    }
-  });
-  // Hack to remove the obj passed to the cordova create command.
-  console.log('## Running Cordova Command: ' + msg);
-  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
-}
-
-// Chains a list of cordova commands, returning a promise.
-function runAllCmds(commands) {
-  return commands.reduce(function(soFar, f) {
-    return soFar.then(function() {
-      return runCmd(f);
-    });
-  }, Q());
-}
-
-
-/******************************************************************************/
-/******************************************************************************/
 // Create App
 
 // Returns a promise.
-function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
+function createCommand(destAppDir, addAndroidPlatform, addIosPlatform, flags) {
   var srcAppDir = null;
   var manifest = null;
 
@@ -320,7 +253,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   }
 
   // Validate source arg.
-  sourceArg = commandLineFlags['copy-from'] || commandLineFlags['link-to'];
+  sourceArg = flags['copy-from'] || flags['link-to'];
   if (!sourceArg) {
     srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
   } else {
@@ -359,7 +292,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
   }
 
   // Get the manifest.
-  return getManifest(srcAppDir).then(function(manifestData) {
+  return require('./get-manifest')(srcAppDir).then(function(manifestData) {
     if (!(manifestData.app && manifestData.app.background && manifestData.app.background.scripts && manifestData.app.background.scripts.length)) {
       fatal('No background scripts found in your manifest.json file. Your manifest must contain at least one script in the "app.background.scripts" array.');
     }
@@ -387,11 +320,11 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 
     var config_default = JSON.parse(JSON.stringify(CORDOVA_CONFIG_JSON));
     config_default.lib.www = { uri: srcAppDir };
-    if (commandLineFlags['link-to']) {
+    if (flags['link-to']) {
       config_default.lib.www.link = true;
     }
 
-    return runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
+    return require('./cordova-commands').runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
   }).then(function() {
     chdir(destAppDir);
     console.log("Generating config.xml from manifest.json");
@@ -405,7 +338,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
         .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
     return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
   }).then(function() {
-    return runAllCmds(cmds);
+    return require('./cordova-commands').runAllCmds(cmds);
   })
   .then(function() {
     // Create scripts that update the cordova app on prepare
@@ -497,10 +430,10 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     if (path.basename(sourceArg) === 'manifest.json') {
       sourceArg = path.dirname(sourceArg);
     }
-    if (commandLineFlags['link-to']) {
+    if (flags['link-to']) {
       welcomeText += 'Your project has been created, with web assets symlinked to the following chrome app:\n' +
                      wwwPath + ' --> ' + srcAppDir + '\n\n';
-    } else if (commandLineFlags['copy-from']) {
+    } else if (flags['copy-from']) {
       welcomeText += 'Your project has been created, with web assets copied from the following chrome app:\n'+
                      srcAppDir + ' --> ' + wwwPath + '\n\n';
     } else {
@@ -510,7 +443,7 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
     welcomeText += 'Remember to run `cca prepare` after making changes\n';
     welcomeText += 'Full instructions: https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md#making-changes-to-your-app-source-code';
 
-    return runCmd(['prepare']).then(function() {
+    return require('./cordova-commands').runCmd(['prepare']).then(function() {
       console.log(welcomeText);
     });
   });
@@ -519,87 +452,6 @@ function createCommand(destAppDir, addAndroidPlatform, addIosPlatform) {
 /******************************************************************************/
 /******************************************************************************/
 // Update App
-
-// Returns a promise.
-function prePrepareCommand() {
-  var plugins = [];
-  var manifest, whitelist;
-
-  // Pre-prepare manifest check and project munger
-  return getManifest('www')
-  .then(function(m) {
-    manifest = m;
-    return Q.when(require('./parse_manifest')(manifest));
-  }).then(function(manifestData) {
-    plugins = require('./plugin_map').DEFAULT_PLUGINS.concat(manifestData.plugins);
-    whitelist = manifestData.whitelist;
-    console.log('## Updating config.xml from manifest.json');
-    return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'});
-  }).then(function(data) {
-    var tree = et.parse(data);
-
-    var widget = tree.getroot();
-    if (widget.tag == 'widget') {
-      widget.attrib.version = manifest.version;
-      widget.attrib.id = manifest.packageId;
-    }
-
-    var name = tree.find('./name');
-    if (name) name.text = manifest.name;
-
-    var description = tree.find('./description');
-    if (description) description.text = manifest.description;
-
-    var author = tree.find('./author');
-    if (author) author.text = manifest.author;
-
-    var content = tree.find('./content');
-    if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
-
-    var access;
-    while (access = widget.find('./access')) {
-      widget.remove(access);
-    }
-    whitelist.forEach(function(pattern, index) {
-      var tag = et.SubElement(widget, 'access');
-      tag.attrib.origin = pattern;
-    });
-
-    var configfile = et.tostring(tree.getroot(), {indent: 4});
-    return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
-  })
-
-  // Install plugins
-  .then(function() {
-    cordova.off('results', console.log); // Hack :(.
-    cordova.raw.plugin('ls').then(function(installedPlugins) {
-      cordova.on('results', console.log);
-      var missingPlugins = plugins.filter(function(p) {
-        return installedPlugins.indexOf(p) == -1;
-      });
-      if (missingPlugins.length) {
-        console.log('## Adding in new plugins based on manifest.json');
-        var cmds = missingPlugins.map(function(pluginPath) {
-          return ['plugin', 'add', pluginPath];
-        });
-        return runAllCmds(cmds);
-      }
-    }, function() {
-      console.log = oldLog;
-    });
-  })
-
-  // If chrome.identity is installed, we need a client id.
-  .then(function() {
-    cordova.raw.plugin('ls').then(function(installedPlugins) {
-      if (installedPlugins.indexOf('org.chromium.identity') >= 0) {
-        if (!manifest.oauth2 || !manifest.oauth2.client_id) {
-          console.warn('Warning: chrome.identity requires a client ID to be specified in the manifest.');
-        }
-      }
-    });
-  });
-}
 
 /******************************************************************************/
 
@@ -657,7 +509,7 @@ function postPrepareInternal(platform) {
   }
 
   return promise.then(function() {
-    return getManifest('www');
+    return require('./get-manifest')('www');
   }).then(function(manifest) {
     if (!manifest || !manifest.icons) return;
     var iconMap = {};
@@ -723,11 +575,12 @@ function postPrepareInternal(platform) {
       }
     }
     var missingIcons = [];
+    var dstPath;
     if (iconMap) {
       //console.log('## Copying icons for ' + platform);
       for (var size in iconMap) {
         for (var i=0; i < iconMap[size].length; i++) {
-          var dstPath = path.join('platforms', platform, iconMap[size][i]);
+          dstPath = path.join('platforms', platform, iconMap[size][i]);
           if (manifest.icons[size]) {
             //console.log("Copying " + size + "px icon file");
             copyIcon(size, dstPath);
@@ -758,11 +611,11 @@ function postPrepareInternal(platform) {
       });
       // Use the largest icon as the default Android one.
       if (platform == 'android') {
-        var dstPath = path.join('platforms', platform, 'res', 'drawable', 'icon.png');
+        dstPath = path.join('platforms', platform, 'res', 'drawable', 'icon.png');
         copyIcon(bestSize, dstPath);
       }
       if (infoPlistXml) {
-        function findArrayNode(key) {
+        var findArrayNode = function(key) {
           var foundNode = null;
           var foundKey = 0;
           infoPlistXml.iter('*', function(e) {
@@ -783,7 +636,7 @@ function postPrepareInternal(platform) {
           });
           return foundNode;
         }
-        function setValues(key, vals) {
+        var setValues = function(key, vals) {
           var node = findArrayNode(key);
           node.clear();
           for (var imgName in vals) {
@@ -799,7 +652,7 @@ function postPrepareInternal(platform) {
 
   // Merge the manifests.
   .then(function() {
-    return getManifest(root, platform);
+    return require('./get-manifest')(root, platform);
   }).then(function(manifest) {
     return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
   })
@@ -807,7 +660,7 @@ function postPrepareInternal(platform) {
   // Set the "other" version values if defined in the manifest.
   // CFBundleVersion on iOS and versionCode on Android.
   .then(function() {
-    return getManifest(root);
+    return require('./get-manifest')(root);
   }).then(function(manifest) {
     // Android
     if (platform === 'android' && manifest && manifest.versionCode) {
@@ -869,70 +722,6 @@ function push(platform, url) {
 /******************************************************************************/
 /******************************************************************************/
 
-function parseCommandLine() {
-  var pathToApp = '<' + path.join('path', 'to', 'app') + '>';
-  commandLineFlags = optimist
-      .usage('Usage: $0 <command> [commandArgs]\n' +
-             '\n' +
-             'checkenv - Ensures that your environment is setup correctly.\n' +
-             '    Example:\n' +
-             '        cca checkenv\n' +
-             '\n' +
-             'create <directory> [--android] [--ios] [--copy-from=' + pathToApp + ' | --link-to=' + pathToApp + '] - Creates a project.\n' +
-             '    Details:\n' +
-             '        <directory>: The directory to create the project in.\n' +
-             '        --android: Add the Android platform (default if android SDK is detected).\n' +
-             '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
-             '        --copy-from=' + pathToApp + ': Create a project based on the given Chrome App.\n' +
-             '        --link-to=' + pathToApp + ': Create a project that symlinks to the given Chrome App.\n' +
-             '\n' +
-             'platform [{add|remove|rm} <PLATFORM>] ..... add or remove a specified PLATFORM, OR\n' +
-             '         [{list|ls}] ...................... list all installed and available platforms\n' +
-             '         [{update|up} <PLATFORM>] ......... update the version of Cordova used for a specific\n' +
-             '                                            PLATFORM; use after updating the CLI.\n' +
-             '\n' +
-             'plugin [{add|remove|rm} <PATH|URI>] ....... add or remove a plugin from the specified PATH or URI, OR\n' +
-             '       [{ls|list}] ........................ list all currently installed plugins\n' +
-             '       [search <keyword1 keyword2...>] .... search the plugin registry for plugins matching the keywords\n' +
-             '\n' +
-             'prepare [PLATFORM..] ...................... copies files for specified platforms, or all platforms,\n' +
-             '                                            so that the project is ready to build in each SDK\n' +
-             '\n' +
-             'build [PLATFORM...] ....................... shortcut for prepare, then compile\n' +
-             '\n' +
-             'run [--debug|--release]\n' +
-             '    [--device|--emulator|--target=FOO]\n' +
-             '    [PLATFORM] ............................ deploys app on specified platform devices / emulators\n' +
-             '\n' +
-             'serve [PORT] .............................. runs a local web server for www/ assets. Port defaults to 8000.\n' +
-             '                                            Access projects at: http://HOST_IP:PORT/PLATFORM/www\n' +
-             'Examples:\n' +
-             '    cca create MyApp\n' +
-             '    cca create MyApp --link-to=' + pathToApp + '\n' +
-             '    cca prepare\n' +
-             '    cca run android --device\n' +
-             '    cca run ios --emulator\n' +
-             '    cca plugin ls'
-      ).options('h', {
-          type: 'boolean',
-          alias: 'help',
-          desc: 'Show usage message.'
-      }).options('d', {
-          type: 'boolean',
-          alias: 'verbose',
-          desc: 'Enable verbose logging.'
-      }).options('v', {
-          type: 'boolean',
-          alias: 'version',
-          desc: 'Show version.'
-      }).options('android', { type: 'boolean'
-      }).options('ios', { type: 'boolean'
-      }).options('pause_on_exit', { type: 'boolean'
-      }).options('copy-from', { type: 'string'
-      }).options('link-to', { type: 'string'
-      }).argv;
-}
-
 function fixEnv() {
   if (isWindows) {
     // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
@@ -957,7 +746,9 @@ function fixEnv() {
 }
 
 function main() {
-  parseCommandLine();
+  var commandLineFlags = require('./parse_command_line')();
+  pause_on_exit = commandLineFlags.pause_on_exit;
+
   var command = commandLineFlags._[0];
   var packageVersion = require('../package').version;
 
@@ -977,7 +768,7 @@ function main() {
   var commandActions = {
     // Secret command used by our prepare hook.
     'pre-prepare': function() {
-      return prePrepareCommand();
+      return require('./pre-prepare')();
     },
     'update-app': function() {
       return postPrepareCommand();
@@ -1001,8 +792,7 @@ function main() {
       console.log('cca v' + packageVersion);
       var platform = commandLineFlags._[1];
       if (platform !== 'chrome') {
-        var CLI = require('../node_modules/cordova/src/cli');
-        CLI(process.argv);
+        require('../node_modules/cordova/src/cli')(process.argv);
       } else {
         // TODO: improve
         var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
@@ -1016,7 +806,7 @@ function main() {
       var destAppDir = commandLineFlags._[1] || '';
       if (!destAppDir) {
         console.error('No output directory given.');
-        optimist.showHelp(console.log);
+        require('optimist').showHelp(console.log);
         process.exit(1);
       }
       // resolve turns relative paths into absolute
@@ -1024,7 +814,7 @@ function main() {
       return ensureHasRunInit()
       .then(toolsCheck)
       .then(function() {
-        return createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios);
+        return createCommand(destAppDir, commandLineFlags.android, commandLineFlags.ios, commandLineFlags);
       });
     },
     'version': function() {
@@ -1033,7 +823,7 @@ function main() {
     },
     'help': function() {
       console.log('cca v' + packageVersion);
-      optimist.showHelp(console.log);
+      require('optimist').showHelp(console.log);
       return Q();
     }
   };
@@ -1063,16 +853,14 @@ function main() {
       cliDummyArgs.push('--verbose');
     }
     // Hack to enable logging :(.
-    var CLI = require('../node_modules/cordova/src/cli');
     try {
-      CLI(cliDummyArgs);
+      require('../node_modules/cordova/src/cli')(cliDummyArgs);
     } catch(e) {}
     commandActions[command]().done(null, fatal);
   } else if (cordovaCommands[command]) {
     console.log('cca v' + packageVersion);
     // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
-    var CLI = require('../node_modules/cordova/src/cli');
-    CLI(process.argv);
+    require('../node_modules/cordova/src/cli')(process.argv);
   } else {
     fatal('Invalid command: ' + command + '. Use --help for usage.');
   }

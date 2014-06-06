@@ -28,4 +28,4 @@ module.exports = function(key) {
             .replace(/[a-f0-9]/g, function(char) {
                return mpdec[char];
             });
-}
+};

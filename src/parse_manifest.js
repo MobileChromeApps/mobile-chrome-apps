@@ -67,4 +67,4 @@ module.exports = function parseManifest(manifest) {
     plugins: plugins,
     permissions: permissions,
   };
-}
+};
