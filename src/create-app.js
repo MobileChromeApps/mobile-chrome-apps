@@ -221,4 +221,4 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
       console.log(welcomeText);
     });
   });
-}
+};

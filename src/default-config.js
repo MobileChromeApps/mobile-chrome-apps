@@ -15,5 +15,5 @@ module.exports = exports = function defaultConfig(ccaRoot) {
         uri: path.join(ccaRoot, 'cordova', 'cordova-ios')
       }
     }
-  }
+  };
 };

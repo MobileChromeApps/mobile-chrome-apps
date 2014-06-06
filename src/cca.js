@@ -231,14 +231,14 @@ function postPrepareInternal(platform) {
             }
           });
           return foundNode;
-        }
+        };
         var setValues = function(key, vals) {
           var node = findArrayNode(key);
           node.clear();
           for (var imgName in vals) {
             et.SubElement(node, 'string').text = imgName;
           }
-        }
+        };
         setValues('CFBundleIcons', iPhoneFiles);
         setValues('CFBundleIcons~ipad', iPadFiles);
         fs.writeFileSync(infoPlistPath, et.tostring(infoPlistXml.getroot(), {indent: 8}), 'utf8');
