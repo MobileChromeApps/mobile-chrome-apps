@@ -21,13 +21,11 @@
 // System modules.
 var childProcess = require('child_process');
 var fs = require('fs');
-var os = require('os');
 var path = require('path');
 
 // Third-party modules.
 var et = require('elementtree');
 var shelljs = require('shelljs');
-var cordova = require('cordova');
 var Q = require('q');
 
 var utils = require('./utils');
@@ -35,7 +33,6 @@ var utils = require('./utils');
 // Globals
 var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
-var scriptName = path.basename(process.argv[1]);
 
 /******************************************************************************/
 /******************************************************************************/
@@ -438,6 +435,7 @@ function main() {
     'serve': 1
   };
 
+  var cordova = require('cordova');
   cordova.config.setAutoPersist(false);
   var projectRoot = cordova.findProjectRoot();
   if (projectRoot) {
