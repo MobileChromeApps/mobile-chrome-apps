@@ -123,9 +123,7 @@ function addXwalkLibraryCommand() {
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
   }
   var p = Q();
-  console.log('here:', process.cwd());
   if (fs.existsSync(path.join('platforms', 'android'))) {
-    console.log('here');
     p = p.then(function() {
       return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
         var largestReference = 0;
