@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// TODO: no-op all of these when on iOS
+var platform = cordova.require('cordova/platform');
+
 var GCM_STORAGE_PREFIX = 'gcm-';
 var GCM_REGKEY = GCM_STORAGE_PREFIX+'RegID';
 
@@ -112,4 +115,6 @@ function fireQueuedMessages() {
    exec(undefined, undefined, 'ChromeGcm', 'fireQueuedMessages', []);
 }
 
-require('org.chromium.common.helpers').runAtStartUp(fireQueuedMessages);
+if (platform.id == 'android') {
+  require('org.chromium.common.helpers').runAtStartUp(fireQueuedMessages);
+}

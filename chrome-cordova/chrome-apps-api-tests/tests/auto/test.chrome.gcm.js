@@ -9,7 +9,7 @@ registerAutoTests("chrome.gcm", function() {
 //  var senderid = '594483801284';
   var sender = senderid+ "@gcm.googleapis.com";
 
-  describe('testing registration', function() {
+  describeAndroidOnly('testing registration', function() {
     it('should contain definitions', function(done) {
       expect(chrome.gcm).toBeDefined();
       expect(chrome.gcm.send).toBeDefined();
@@ -20,7 +20,7 @@ registerAutoTests("chrome.gcm", function() {
       expect(chrome.gcm.onMessagesDeleted).toBeDefined();
       done();
     });
-  
+
     it('should register and unregister', function(done) {
       chrome.gcm.register([senderid], function(regid) {
         expect(regid.length).toBeGreaterThan(1);
@@ -30,8 +30,8 @@ registerAutoTests("chrome.gcm", function() {
           done();
         });
       });
-    }); 
-    
+    });
+
     it('should fail to register with a blank sender', function(done) {
       try {
         chrome.gcm.register([''], function(regid) {
@@ -42,7 +42,7 @@ registerAutoTests("chrome.gcm", function() {
         expect(chrome.runtime.lastError).not.toBeDefined();
       }
       done();
-    }); 
+    });
 
     it('should re-register', function(done) {
       chrome.gcm.register([senderid], function(regid) {
@@ -50,7 +50,7 @@ registerAutoTests("chrome.gcm", function() {
         expect(chrome.runtime.lastError).not.toBeDefined();
         done();
       });
-    }); 
+    });
 
     it('should error for invalid data', function(done) {
       var message = {
@@ -71,7 +71,7 @@ registerAutoTests("chrome.gcm", function() {
     });
   });
 
-  describe('testing sending', function() {
+  describeAndroidOnly('testing sending', function() {
 
     var msgcount=0;
     var globdone=null;
@@ -81,11 +81,11 @@ registerAutoTests("chrome.gcm", function() {
       if(globdone) globdone();
     }
     beforeEach( function() {
-      chrome.gcm.onMessage.addListener(listener); 
+      chrome.gcm.onMessage.addListener(listener);
     })
 
     afterEach( function() {
-      chrome.gcm.onMessage.removeListener(listener); 
+      chrome.gcm.onMessage.removeListener(listener);
       expect(msgcount=1);
     })
 

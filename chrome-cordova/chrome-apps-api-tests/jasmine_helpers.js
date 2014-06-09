@@ -59,9 +59,23 @@ function addJasmineHelpers(jasmineInterface) {
     return typeof window.chrome.runtime !== 'undefined';
   };
 
-  jasmineInterface.describeCordovaOnly = (jasmineInterface.isOnCordova() ? jasmineInterface.describe : function(){});
+  jasmineInterface.describeCordovaOnly = function(){};
+  jasmineInterface.describeAndroidOnly = function(){};
+  jasmineInterface.describeIosOnly = function(){};
+  jasmineInterface.describeChromeRuntimeOnly = function(){};
 
-  jasmineInterface.describeChromeRuntimeOnly = (jasmineInterface.isOnChromeRuntime() ? jasmineInterface.describe : function(){});
+  if (!jasmineInterface.isOnCordova()) {
+    jasmineInterface.describeChromeRuntimeOnly = jasmineInterface.describe;
+  } else {
+    jasmineInterface.describeCordovaOnly = jasmineInterface.describe;
+
+    var platform = cordova.require('cordova/platform');
+    if (platform.id == "android") {
+      jasmineInterface.describeAndroidOnly = jasmineInterface.describe;
+    } else if (platform.id == "ios") {
+      jasmineInterface.describeIosOnly = jasmineInterface.describe;
+    }
+  }
 
   jasmineInterface.itShouldHaveAnEvent = function(obj, eventName) {
     jasmineInterface.it('should have an event called ' + eventName, function() {
