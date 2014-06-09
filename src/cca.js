@@ -91,6 +91,9 @@ function main() {
     if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
       return Q();
     }
+    // TODO(mmocny): If plugins/ does exist, those don't get re-installed properly.
+    //               But that is not a typicalal a scenario.  Usually either you have both, or you have no plugins.
+
     // Othwerwise, auto-add platforms
     // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
     // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
