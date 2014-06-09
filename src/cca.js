@@ -180,6 +180,25 @@ function main() {
           .then(require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags));
       });
     },
+    'upgrade': function() {
+      return utils.waitForKey('Please Confirm: This will delete platforms/ and plugins/?  Continue? [y/N] ')
+      .then(function(key) {
+        if (key != 'y' && key != 'Y') {
+          return Q.reject('Okay, nevermind.');
+        }
+        var shelljs = require('shelljs');
+        shelljs.rm('-rf', path.join('platforms'));
+        shelljs.rm('-rf', path.join('plugins'));
+        // TODO(mmocny): this hack changes the "upgrade" argument to "prepare", since we forward all argv over to cordova-cli
+        for (var i = 0; i < process.argv.length; i++) {
+          if (process.argv[i].toLowerCase() == 'upgrade') {
+            process.argv[i] = "prepare";
+            break;
+          }
+        }
+        return commandActions['prepare']();
+      });
+    },
     'version': function() {
       console.log(packageVersion);
       return Q();
@@ -210,6 +229,7 @@ function main() {
   if (projectRoot) {
     cordova.config(projectRoot, require('./default-config')(ccaRoot));
   }
+  process.chdir(projectRoot);
 
   if (!commandActions.hasOwnProperty(command)) {
     utils.fatal('Invalid command: ' + command + '. Use --help for usage.');
