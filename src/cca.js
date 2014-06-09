@@ -19,15 +19,12 @@
  */
 
 // System modules.
-var childProcess = require('child_process');
-var fs = require('fs');
 var path = require('path');
 
 // Third-party modules.
-var et = require('elementtree');
-var shelljs = require('shelljs');
 var Q = require('q');
 
+// Local modules.
 var utils = require('./utils');
 
 // Globals
@@ -35,19 +32,9 @@ var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
 
 /******************************************************************************/
-/******************************************************************************/
-
-// Returns a promise.
-function ensureHasRunInit() {
-  if (!fs.existsSync(path.join(ccaRoot, path.join('chrome-cordova', 'README.md'))))
-    return Q.reject('Node submodules not initialized. Please run "dev-bin/git-up.js"');
-  return Q();
-}
-
-/******************************************************************************/
-/******************************************************************************/
 
 function fixEnv() {
+  var shelljs = require('shelljs');
   if (utils.isWindows()) {
     // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
     var javacInPath = !shelljs.which('javac');
@@ -69,6 +56,8 @@ function fixEnv() {
     }
   }
 }
+
+/******************************************************************************/
 
 function main() {
   var commandLineFlags = require('./parse_command_line')();
@@ -122,6 +111,7 @@ function main() {
         // TODO: improve
         var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
         var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
+        var childProcess = require('child_process');
         childProcess.spawn(chromePath, args);
       }
       return Q();
@@ -136,11 +126,8 @@ function main() {
       }
       // resolve turns relative paths into absolute
       destAppDir = path.resolve(destAppDir);
-      return ensureHasRunInit()
-      .then(require('./tools-check'))
-      .then(function() {
-        return require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags);
-      });
+      return require('./tools-check')()
+        .then(require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags));
     },
     'version': function() {
       console.log(packageVersion);
@@ -167,12 +154,15 @@ function main() {
     'serve': 1
   };
 
+  // TODO(mmocny): The following few lines seem to make global changes that affect all other subcommands.
+  // May want to break this out to a module as an "init" step that every other step ensures has been called.
   var cordova = require('cordova');
   cordova.config.setAutoPersist(false);
   var projectRoot = cordova.findProjectRoot();
   if (projectRoot) {
     cordova.config(projectRoot, require('./default-config')(ccaRoot));
   }
+
   if (commandActions.hasOwnProperty(command)) {
     var cliDummyArgs = [0, 0, 'foo'];
     if (commandLineFlags.d) {
