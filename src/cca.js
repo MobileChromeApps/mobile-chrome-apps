@@ -88,7 +88,7 @@ function main() {
   function beforeCordovaPrepare() {
     // If you have at least one platform, do nothing
     // TODO(mmocny): what if run from non root?
-    if (fs.existsSync(path.join('platforms')) && (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'android')))) {
+    if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
       return Q();
     }
     // Othwerwise, auto-add platforms
