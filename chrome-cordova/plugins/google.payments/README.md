@@ -10,6 +10,10 @@ Beta on Android and iOS.
 
 To install in a mobile chrome app, add the string "payments" to your applications permissions list in manifest.json. The plugin will be installed the next time your app is built.
 
+```
+"permissions": ["payments"],
+```
+
 For Cordova apps, install with the cordova command-line tool:
 
     cordova plugin add com.google.payments
@@ -48,19 +52,21 @@ On Android, any item may be purchased as a consumable item. The `buy()` method a
 
 On iOS, consumability is set for each product in iTunes Connect.
 
-## Reference
+## API Reference
+
+### buy()
 
 `google.payments.inapp.buy(<options>)`
 
 `options` is an object with the following members:
 
-`sku`: The product id of the item to purchase
+- `sku`: The product id of the item to purchase
 
-`consume`: A boolean value indicating whether the purchased product is to be consumed
+- `consume`: A boolean value indicating whether the purchased product is to be consumed
 
-`success`: Success callback
+- `success`: Success callback
 
-`failure`: Failure callback
+- `failure`: Failure callback
 
 If the purchase is successful, `options.success` will be called with a `purchaseResult` as its single argument.
 
@@ -97,11 +103,15 @@ If the purchase fails for any reason (including cancellation), `options.failure`
 
 `errorType` may be one of these values:
 
-`MERCHANT_ERROR`: The billing system is unavailable, or the the `buy()` arguments are incorrect.
-`PURCHASE_CANCELLED`: No error occurred, but the purchase was not completed. The purchaser cancelled the payment, or the payment was declined by the store.
-`INTERNAL_SERVER_ERROR`: An error occurred within the plugin or at the back-end store.
+- `MERCHANT_ERROR`: The billing system is unavailable, or the the `buy()` arguments are incorrect.
+
+- `PURCHASE_CANCELLED`: No error occurred, but the purchase was not completed. The purchaser cancelled the payment, or the payment was declined by the store.
+
+- `INTERNAL_SERVER_ERROR`: An error occurred within the plugin or at the back-end store.
 
 `errorCode` and `errorText` come from the back-end store when possible, and can be useful for troubleshooting purchasing issues. Their values depend on the store used, and so can't be fully enumerated here. See the appropriate store documentation for details.
+
+### getSkuDetails()
 
 `google.payments.inapp.getSkuDetails(<skuList>, <successCallback>, <failureCallback>)`
 
