@@ -228,8 +228,8 @@ function main() {
   var projectRoot = cordova.findProjectRoot();
   if (projectRoot) {
     cordova.config(projectRoot, require('./default-config')(ccaRoot));
+    process.chdir(projectRoot);
   }
-  process.chdir(projectRoot);
 
   if (!commandActions.hasOwnProperty(command)) {
     utils.fatal('Invalid command: ' + command + '. Use --help for usage.');
