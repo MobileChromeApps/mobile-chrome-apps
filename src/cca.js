@@ -150,11 +150,6 @@ function main() {
         return require('./push-to-harness')(platform, url);
       });
     },
-    'prepare': function() {
-      return printCcaVersionPrefix()
-      .then(beforeCordovaPrepare)
-      .then(forwardCurrentCommandToCordova);
-    },
     'run': function() {
       return printCcaVersionPrefix()
       .then(beforeCordovaPrepare)
@@ -203,6 +198,7 @@ function main() {
     'platforms': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'plugin': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'plugins': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'prepare': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'serve': printVersionThenPrePrePrepareThenForwardCommandToCordova,
   };
 
