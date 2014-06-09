@@ -131,6 +131,9 @@ On failure, `failureCallback` will be called with a `failureResult` as its singl
 
 ## External References
 
+### Sample app
+* [In-App Purchases Test App](https://github.com/MobileChromeApps/mobile-chrome-app-samples/tree/master/iaptest)
+
 ### API
 * [Monetize your Chrome App](http://developer.chrome.com/apps/google_wallet.html)
 * [Google Wallet for Digital Goods API](https://developers.google.com/wallet/digital/docs/jsreference)
