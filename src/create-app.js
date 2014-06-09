@@ -9,8 +9,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   var srcAppDir = null;
   var manifest = null;
 
-  var cmds = [];
-
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
 
   function resolveTilde(string) {
@@ -72,14 +70,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   // Create step.
   .then(function(toolsCheckResults) {
     console.log('## Creating Your Application');
-
-    if (flags.ios) {
-      cmds.push(['platform', 'add', 'ios']);
-    }
-    if (flags.android) {
-      cmds.push(['platform', 'add', 'android']);
-    }
-
     var config_default = JSON.parse(JSON.stringify(require('./default-config')(ccaRoot)));
     config_default.lib.www = { uri: srcAppDir };
     config_default.lib.www.link = !!flags['link-to'];
@@ -99,7 +89,19 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
         .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
     return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
   }).then(function() {
+    // Add default platforms:
+    var cmds = [];
+    if (flags.ios) {
+      cmds.push(['platform', 'add', 'ios']);
+    }
+    if (flags.android) {
+      cmds.push(['platform', 'add', 'android']);
+    }
     return require('./cordova-commands').runAllCmds(cmds);
+  })
+  .then(function() {
+    var packageVersion = require('../package').version;
+    return Q.ninvoke(fs, 'writeFile', path.join('platforms', 'created-with-cca-version'), packageVersion, { encoding: 'utf-8' });
   })
   .then(function() {
     // Create scripts that update the cordova app on prepare

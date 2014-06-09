@@ -86,9 +86,14 @@ function main() {
   }
 
   function beforeCordovaPrepare() {
-    // If you have at least one platform, do nothing
-    // TODO(mmocny): what if run from non root?
+    // If you have at least one platform, make sure you don't need to do an upgrade
     if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
+      var projectIsStale = !fs.existsSync(path.join('platforms', 'created-with-cca-version')) ||
+                            fs.readFileSync(path.join('platforms', 'created-with-cca-version'), 'utf-8') != packageVersion;
+      if (projectIsStale) {
+        console.log('It looks like this project was not yet upgraded to cca v' + packageVersion + '.  Please upgrade now:');
+        return commandActions['upgrade']();
+      }
       return Q();
     }
     // TODO(mmocny): If plugins/ does exist, those don't get re-installed properly.
@@ -108,6 +113,10 @@ function main() {
          cmds.push(['platform', 'add', 'android']);
       }
       return require('./cordova-commands').runAllCmds(cmds);
+    })
+    .then(function() {
+      // TODO(mmocny): break all this out into a module and share with the create-app step
+      return Q.ninvoke(fs, 'writeFile', path.join('platforms', 'created-with-cca-version'), packageVersion, { encoding: 'utf-8' });
     });
   }
 
@@ -177,11 +186,13 @@ function main() {
         // resolve turns relative paths into absolute
         destAppDir = path.resolve(destAppDir);
         return require('./tools-check')()
-          .then(require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags));
+          .then(function() {
+            return require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags)
+          });
       });
     },
     'upgrade': function() {
-      return utils.waitForKey('Please Confirm: This will delete platforms/ and plugins/?  Continue? [y/N] ')
+      return utils.waitForKey('Upgrading will delete platforms/ and plugins/ - Continue? [y/N] ')
       .then(function(key) {
         if (key != 'y' && key != 'Y') {
           return Q.reject('Okay, nevermind.');
