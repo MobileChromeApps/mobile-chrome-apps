@@ -16,7 +16,7 @@ exports.exit.pause_on_exit = false;
 exports.fatal = function fatal(msg) {
   console.error(msg);
   if (msg.stack) console.error(msg.stack);
-  exit(1);
+  exports.exit(1);
 };
 
 exports.fixPathSlashes = function fixPathSlashes(p) {
