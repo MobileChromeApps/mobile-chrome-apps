@@ -20,6 +20,7 @@
 
 // System modules.
 var path = require('path');
+var fs = require('fs');
 
 // Third-party modules.
 var Q = require('q');
@@ -79,79 +80,127 @@ function main() {
   // TODO: Add env detection to Cordova.
   fixEnv();
 
+  function printCcaVersionPrefix() {
+    console.log('cca v' + packageVersion);
+    return Q();
+  }
+
+  function beforeCordovaPrepare() {
+    // If you have at least one platform, do nothing
+    // TODO(mmocny): what if run from non root?
+    if (fs.existsSync(path.join('platforms')) && (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'android')))) {
+      return Q();
+    }
+    // Othwerwise, auto-add platforms
+    // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
+    // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
+    return require('./tools-check')()
+    .then(function(toolsCheckResults) {
+      var cmds = [];
+      // TODO(mmocny): any way to use .raw so as not to also call prepare after each platform add?
+      if (toolsCheckResults.hasXcode) {
+        cmds.push(['platform', 'add', 'ios']);
+      }
+      if (toolsCheckResults.hasAndroidPlatform) {
+         cmds.push(['platform', 'add', 'android']);
+      }
+      return require('./cordova-commands').runAllCmds(cmds);
+    });
+  }
+
+  function forwardCurrentCommandToCordova() {
+    require('../node_modules/cordova/src/cli')(process.argv);
+    return Q();
+  }
+
+  function printVersionThenPrePrePrepareThenForwardCommandToCordova() {
+    return printCcaVersionPrefix()
+      .then(beforeCordovaPrepare)
+      .then(forwardCurrentCommandToCordova);
+  }
+
   var commandActions = {
-    // Secret command used by our prepare hook.
     'pre-prepare': function() {
       return require('./pre-prepare')();
     },
     'update-app': function() {
+      // TODO(mmocny): deprecated command, use post-prepare instead
+      return commandActions['post-prepare']();
+    },
+    'post-prepare': function() {
       return require('./post-prepare')();
     },
     'checkenv': function() {
-      console.log('cca v' + packageVersion);
-      return require('./tools-check')();
+      return printCcaVersionPrefix()
+      .then(require('./tools-check'));
     },
     'push': function() {
-      console.log('cca v' + packageVersion);
-      var platform = commandLineFlags._[1];
-      var url = commandLineFlags._[2];
-      if (!platform) {
-        return Q.reject('You must specify a platform: cca push <platform> <url>');
-      } else if (!url) {
-        return Q.reject('You must specify the destination URL: cca push <platform> <url>');
-      }
-      return require('./push-to-harness')(platform, url);
+      printCcaVersionPrefix()
+      .then(function() {
+        var platform = commandLineFlags._[1];
+        var url = commandLineFlags._[2];
+        if (!platform) {
+          return Q.reject('You must specify a platform: cca push <platform> <url>');
+        } else if (!url) {
+          return Q.reject('You must specify the destination URL: cca push <platform> <url>');
+        }
+        return require('./push-to-harness')(platform, url);
+      });
+    },
+    'prepare': function() {
+      return printCcaVersionPrefix()
+      .then(beforeCordovaPrepare)
+      .then(forwardCurrentCommandToCordova);
     },
     'run': function() {
-      console.log('cca v' + packageVersion);
-      var platform = commandLineFlags._[1];
-      if (platform !== 'chrome') {
-        require('../node_modules/cordova/src/cli')(process.argv);
-      } else {
-        // TODO: improve
-        var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
-        var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
-        var childProcess = require('child_process');
-        childProcess.spawn(chromePath, args);
-      }
-      return Q();
+      return printCcaVersionPrefix()
+      .then(beforeCordovaPrepare)
+      .then(function() {
+        var platform = commandLineFlags._[1];
+        if (platform === 'chrome') {
+          // TODO: improve
+          var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
+          var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
+          var childProcess = require('child_process');
+          childProcess.spawn(chromePath, args);
+          return Q();
+        }
+        return forwardCurrentCommandToCordova();
+      });
     },
     'create': function() {
-      console.log('cca v' + packageVersion);
-      var destAppDir = commandLineFlags._[1] || '';
-      if (!destAppDir) {
-        console.error('No output directory given.');
-        require('optimist').showHelp(console.log);
-        process.exit(1);
-      }
-      // resolve turns relative paths into absolute
-      destAppDir = path.resolve(destAppDir);
-      return require('./tools-check')()
-        .then(require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags));
+      return printCcaVersionPrefix()
+      .then(function() {
+        var destAppDir = commandLineFlags._[1] || '';
+        if (!destAppDir) {
+          require('optimist').showHelp(console.log);
+          return Q.reject('No output directory given.');
+        }
+        // resolve turns relative paths into absolute
+        destAppDir = path.resolve(destAppDir);
+        return require('./tools-check')()
+          .then(require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags));
+      });
     },
     'version': function() {
       console.log(packageVersion);
       return Q();
     },
     'help': function() {
-      console.log('cca v' + packageVersion);
-      require('optimist').showHelp(console.log);
-      return Q();
-    }
-  };
-
-  // The following commands are forwarded to cordova with all args.
-  var cordovaCommands = {
-    'build': 1,
-    'compile': 1,
-    'emulate': 1,
-    'platform': 1,
-    'platforms': 1,
-    'plugin': 1,
-    'plugins': 1,
-    'prepare': 1,
-    'run': 1,
-    'serve': 1
+      return printCcaVersionPrefix()
+      .then(function() {
+        require('optimist').showHelp(console.log);
+        return Q();
+      });
+    },
+    'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'compile': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'emulate': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'platform': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'platforms': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'plugin': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'plugins': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'serve': printVersionThenPrePrePrepareThenForwardCommandToCordova,
   };
 
   // TODO(mmocny): The following few lines seem to make global changes that affect all other subcommands.
@@ -163,23 +212,21 @@ function main() {
     cordova.config(projectRoot, require('./default-config')(ccaRoot));
   }
 
-  if (commandActions.hasOwnProperty(command)) {
-    var cliDummyArgs = [0, 0, 'foo'];
-    if (commandLineFlags.d) {
-      cliDummyArgs.push('--verbose');
-    }
-    // Hack to enable logging :(.
-    try {
-      require('../node_modules/cordova/src/cli')(cliDummyArgs);
-    } catch(e) {}
-    commandActions[command]().done(null, utils.fatal);
-  } else if (cordovaCommands[command]) {
-    console.log('cca v' + packageVersion);
-    // TODO (kamrik): to avoid this hackish require, add require('cli') in cordova.js
-    require('../node_modules/cordova/src/cli')(process.argv);
-  } else {
+  if (!commandActions.hasOwnProperty(command)) {
     utils.fatal('Invalid command: ' + command + '. Use --help for usage.');
   }
+
+  // start hack to enable logging :(.
+  var cliDummyArgs = [0, 0, 'foo'];
+  if (commandLineFlags.d) {
+    cliDummyArgs.push('--verbose');
+  }
+  try {
+    require('../node_modules/cordova/src/cli')(cliDummyArgs);
+  } catch(e) {}
+  // end hack
+
+  commandActions[command]().done(null, utils.fatal);
 }
 
 if (require.main === module) {

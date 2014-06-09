@@ -9,13 +9,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   var srcAppDir = null;
   var manifest = null;
 
-  var whitelist = [];
-  var plugins = [];
   var cmds = [];
-  var chromeAppId;
-
-  var addAndroidPlatform = flags.android;
-  var addIosPlatform = flags.ios;
 
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
 
@@ -72,10 +66,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     }
     manifest = manifestData;
     return Q.when(require('./parse_manifest')(manifest));
-  }).then(function(parsed) {
-    chromeAppId = parsed.appId;
-    whitelist = parsed.whitelist;
-    plugins = parsed.plugins;
   })
   .then(require('./tools-check'))
 
@@ -83,25 +73,22 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   .then(function(toolsCheckResults) {
     console.log('## Creating Your Application');
 
-    var platformSpecified = addAndroidPlatform || addIosPlatform;
-
-    if ((!platformSpecified && toolsCheckResults.hasXcode) || addIosPlatform) {
+    if (flags.ios) {
       cmds.push(['platform', 'add', 'ios']);
     }
-    if ((!platformSpecified && toolsCheckResults.hasAndroidPlatform) || addAndroidPlatform) {
+    if (flags.android) {
       cmds.push(['platform', 'add', 'android']);
     }
 
     var config_default = JSON.parse(JSON.stringify(require('./default-config')(ccaRoot)));
     config_default.lib.www = { uri: srcAppDir };
-    if (flags['link-to']) {
-      config_default.lib.www.link = true;
-    }
+    config_default.lib.www.link = !!flags['link-to'];
 
     return require('./cordova-commands').runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
   }).then(function() {
     process.chdir(destAppDir);
     console.log("Generating config.xml from manifest.json");
+    // TODO(mmocny): if cordova support --link-to/--opy-from to root folders, i.e. apps with existing config.xml, won't this overwrite a good config.xml?
     return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
   }).then(function(data) {
     var configfile = data
@@ -134,7 +121,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
       fs.chmodSync(path, '777');
     }
     writeHook(path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'), 'pre-prepare');
-    writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'update-app');
+    writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'post-prepare');
 
     // Create a convenience link to cca
     if (isGitRepo || !shelljs.which('cca')) {
@@ -144,9 +131,11 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
       fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
       fs.chmodSync('cca', '777');
     }
-
+  })
+  .then(function() {
     // Create a convenience gitignore
     shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
+    return Q();
   })
 
   // Ensure the mobile manifest exists.
@@ -158,52 +147,10 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
   })
 
-  // Add a URL type to the iOS project's .plist file.
-  // This is necessary for chrome.identity to redirect back to the app after authentication.
-  .then(function() {
-    var hasIos = fs.existsSync(path.join('platforms', 'ios'));
-    if (hasIos) {
-      var platforms = require('cordova/node_modules/cordova-lib').cordova_platforms;
-      var parser = new platforms.ios.parser(path.join('platforms','ios'));
-      var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
-      var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
-
-      var rootPlistElement = infoPlistXml.getroot();
-      var rootDictElement = rootPlistElement.getItem(0);
-
-      var bundleUrlTypesKey = et.SubElement(rootDictElement, 'key');
-      bundleUrlTypesKey.text = 'CFBundleURLTypes';
-      var bundleUrlTypesArray = et.SubElement(rootDictElement, 'array');
-      var bundleUrlTypesDict = et.SubElement(bundleUrlTypesArray, 'dict');
-
-      var bundleTypeRoleKey = et.SubElement(bundleUrlTypesDict, 'key');
-      bundleTypeRoleKey.text = 'CFBundleTypeRole';
-      var bundleTypeRoleString = et.SubElement(bundleUrlTypesDict, 'string');
-      bundleTypeRoleString.text = 'Editor';
-
-      var bundleUrlNameKey = et.SubElement(bundleUrlTypesDict, 'key');
-      bundleUrlNameKey.text = 'CFBundleURLName';
-      var bundleUrlNameString = et.SubElement(bundleUrlTypesDict, 'string');
-      bundleUrlNameString.text = manifest.packageId;
-
-      var bundleUrlSchemesKey = et.SubElement(bundleUrlTypesDict, 'key');
-      bundleUrlSchemesKey.text = 'CFBundleURLSchemes';
-      var bundleUrlSchemesArray = et.SubElement(bundleUrlTypesDict, 'array');
-      var bundleUrlSchemeString = et.SubElement(bundleUrlSchemesArray, 'string');
-      bundleUrlSchemeString.text = manifest.packageId;
-
-      fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
-    }
-  })
-
   // Run prepare.
   .then(function() {
     var wwwPath = path.join(destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
-    // Strip off manifest.json from path (its containing dir must be the root of the app)
-    if (path.basename(sourceArg) === 'manifest.json') {
-      sourceArg = path.dirname(sourceArg);
-    }
     if (flags['link-to']) {
       welcomeText += 'Your project has been created, with web assets symlinked to the following chrome app:\n' +
                      wwwPath + ' --> ' + srcAppDir + '\n\n';
@@ -216,9 +163,8 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     }
     welcomeText += 'Remember to run `cca prepare` after making changes\n';
     welcomeText += 'Full instructions: https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md#making-changes-to-your-app-source-code';
+    console.log(welcomeText);
 
-    return require('./cordova-commands').runCmd(['prepare']).then(function() {
-      console.log(welcomeText);
-    });
+    return Q();
   });
 };
