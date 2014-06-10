@@ -96,10 +96,15 @@ function main() {
       }
       return Q();
     }
-    // TODO(mmocny): If plugins/ does exist, those don't get re-installed properly.
-    //               But that is not a typicalal a scenario.  Usually either you have both, or you have no plugins.
 
-    // Othwerwise, auto-add platforms
+    // If you have plugins/ folder, re-installing platforms won't reinstall plugins unless you delete these files.
+    // TODO: There is some concern that doing this will not maintain plugin explicit/implicit install history,
+    //       But that should not be a problem for cca apps which don't really use those concepts.
+    var shelljs = require('shelljs');
+    shelljs.rm('-f', path.join('plugins', 'android.json'));
+    shelljs.rm('-f', path.join('plugins', 'ios.json'));
+
+    // Otherwise, auto-add platforms
     // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
     // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
     return require('./tools-check')()
@@ -136,7 +141,7 @@ function main() {
       return require('./pre-prepare')();
     },
     'update-app': function() {
-      // TODO(mmocny): deprecated command, use post-prepare instead
+      // TODO: deprecated command, use post-prepare instead
       return commandActions['post-prepare']();
     },
     'post-prepare': function() {
@@ -192,7 +197,10 @@ function main() {
       });
     },
     'upgrade': function() {
-      return utils.waitForKey('Upgrading will delete platforms/ and plugins/ - Continue? [y/N] ')
+      return printCcaVersionPrefix()
+      .then(function() {
+        return utils.waitForKey('Upgrading will delete platforms/ and plugins/ - Continue? [y/N] ');
+      })
       .then(function(key) {
         if (key != 'y' && key != 'Y') {
           return Q.reject('Okay, nevermind.');
