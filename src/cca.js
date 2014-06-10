@@ -152,16 +152,9 @@ function main() {
       .then(require('./tools-check'));
     },
     'push': function() {
-      printCcaVersionPrefix()
+      return printCcaVersionPrefix()
       .then(function() {
-        var platform = commandLineFlags._[1];
-        var url = commandLineFlags._[2];
-        if (!platform) {
-          return Q.reject('You must specify a platform: cca push <platform> <url>');
-        } else if (!url) {
-          return Q.reject('You must specify the destination URL: cca push <platform> <url>');
-        }
-        return require('./push-to-harness')(platform, url);
+        return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
       });
     },
     'run': function() {

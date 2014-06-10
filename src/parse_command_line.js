@@ -55,8 +55,9 @@ module.exports = exports = function parseCommandLine() {
              '    [--device|--emulator|--target=FOO]\n' +
              '    [PLATFORM] ............................ deploys app on specified platform devices / emulators\n' +
              '\n' +
-             'serve [PORT] .............................. runs a local web server for www/ assets. Port defaults to 8000.\n' +
-             '                                            Access projects at: http://HOST_IP:PORT/PLATFORM/www\n' +
+             'push [--target=IP_ADDRESS:PORT] [--watch] . Pushes the app to one or more Chrome App Developer Tool instances.\n' +
+             '                                            --target defaults to localhost:2424; can be specified multiple times.\n' +
+             '                                            --watch enables a file watcher that auto-pushes when files change.\n' +
              'Examples:\n' +
              '    cca create MyApp\n' +
              '    cca create MyApp --link-to=' + pathToApp + '\n' +
@@ -81,5 +82,7 @@ module.exports = exports = function parseCommandLine() {
       }).options('pause_on_exit', { type: 'boolean'
       }).options('copy-from', { type: 'string'
       }).options('link-to', { type: 'string'
+      }).options('target', { type: 'string'
+      }).options('watch', { type: 'boolean'
       }).argv;
 };
