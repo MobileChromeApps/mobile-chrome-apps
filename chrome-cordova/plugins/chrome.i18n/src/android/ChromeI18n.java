@@ -4,6 +4,8 @@
 
 package org.chromium;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,6 +26,7 @@ import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,7 +53,18 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        ChromeExtensionURLs extPlugin = (ChromeExtensionURLs)webView.getPluginManager().getPlugin("ChromeExtensionURLs");
+        PluginManager pm = null;
+        try {
+            Method gpm = webView.getClass().getMethod("getPluginManager");
+            pm = (PluginManager) gpm.invoke(webView);
+        } catch (Exception e) {}
+        if (pm == null) {
+            try {
+                Field pmf = webView.getClass().getField("pluginManager");
+                pm = (PluginManager)pmf.get(webView);
+            } catch (Exception e) {}
+        }
+        ChromeExtensionURLs extPlugin = (ChromeExtensionURLs)pm.getPlugin("ChromeExtensionURLs");
         extPlugin.i18nPlugin = this;
     }
 

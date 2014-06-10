@@ -5,12 +5,15 @@
 package org.chromium;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.file.FileUtils;
 import org.apache.cordova.file.LocalFilesystem;
@@ -24,7 +27,19 @@ public class SyncFileSystem extends CordovaPlugin {
     	super.initialize(cordova, webView);
         String syncableRoot = cordova.getActivity().getFilesDir().getAbsolutePath() + "/syncfs/";
         new File(syncableRoot).mkdirs();
-        FileUtils filePlugin = (FileUtils)webView.getPluginManager().getPlugin("File");
+
+        PluginManager pm = null;
+        try {
+            Method gpm = webView.getClass().getMethod("getPluginManager");
+            pm = (PluginManager) gpm.invoke(webView);
+        } catch (Exception e) {}
+        if (pm == null) {
+            try {
+                Field pmf = webView.getClass().getField("pluginManager");
+                pm = (PluginManager)pmf.get(webView);
+            } catch (Exception e) {}
+        }
+        FileUtils filePlugin = (FileUtils) pm.getPlugin("File");
         LocalFilesystem syncFs = new LocalFilesystem("syncable", cordova, syncableRoot);
         filePlugin.registerFilesystem(syncFs);
     }
