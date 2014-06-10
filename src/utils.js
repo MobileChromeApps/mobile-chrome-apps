@@ -1,6 +1,7 @@
 var Q = require('q');
 var path = require('path');
 var childProcess = require('child_process');
+var fs = require('fs');
 
 exports.exit = function exit(code) {
   if (exports.exit.pause_on_exit) {
@@ -88,3 +89,21 @@ exports.waitForKey = function waitForKey(opt_prompt) {
 exports.isWindows = function isWindows() {
   return process.platform.slice(0, 3) == 'win';
 };
+
+/*
+ * Open the named file, read the contents into a list of lines, then perform the
+ * action function on that list. Write the list of lines returned by the action
+ * back into the file.
+ */
+exports.processFile = function processFile(filename, action) {
+  return Q.ninvoke(fs, 'readFile', filename, { encoding: 'utf-8' }).then(function(fileData) {
+    if (fileData.substr(-1) === "\n") {
+      fileData = fileData.substr(0,fileData.length-1);
+    }
+    var lines = fileData.split("\n");
+    return Q.when(action(lines.slice()));
+  }).then(function(lines) {
+    return Q.ninvoke(fs, 'writeFile', filename, lines.join("\n")+"\n", { encoding: 'utf-8' });
+  });
+}
+

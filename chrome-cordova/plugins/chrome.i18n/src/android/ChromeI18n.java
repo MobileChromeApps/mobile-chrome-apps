@@ -50,7 +50,7 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        ChromeExtensionURLs extPlugin = (ChromeExtensionURLs)webView.pluginManager.getPlugin("ChromeExtensionURLs");
+        ChromeExtensionURLs extPlugin = (ChromeExtensionURLs)webView.getPluginManager().getPlugin("ChromeExtensionURLs");
         extPlugin.i18nPlugin = this;
     }
 

@@ -51,3 +51,8 @@ exports.PLUGIN_MAP = {
   'fullscreen': [],
   'geolocation': ['org.apache.cordova.geolocation'],
 };
+
+exports.ENGINE_MAP = {
+  'crosswalk': ['org.apache.cordova.engine.crosswalk'],
+  'system': []
+};
