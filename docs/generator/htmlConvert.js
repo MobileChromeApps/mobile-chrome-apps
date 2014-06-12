@@ -67,7 +67,7 @@ var numPages = pages.length,
 var meta = '<meta name="doc-family" content="apps"> \n\n\ \
 <!-- \n \
   Warning: This document is auto-generated and should not be edited by hand. \n \
-  Please see https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/docs/htmlConvert.js \n \
+  Please see https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/generator/htmlConvert.js \n \
 --> \n\n\ ';
 fs.writeFileSync(outputFile, meta, 'utf8');
 
