@@ -1,7 +1,7 @@
 # Run Chrome Apps on Mobile Using Apache Cordova
 _**The toolchain for running Chrome Apps on mobile is in early developer preview. Feel free to give us your feedback using the [Github issue tracker](https://github.com/MobileChromeApps/mobile-chrome-apps/issues), our [Chrome Apps developer forum](http://groups.google.com/a/chromium.org/group/chromium-apps/topics), on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-chrome-app), or our [G+ Developers page](https://plus.google.com/+GoogleChromeDevelopers/).**_
 
-![A Chrome App running on both desktop and mobile](docs/images/cca-desktop-and-mobile.jpg)
+![A Chrome App running on both desktop and mobile](docs/images/todomvc-chromebook.png)
 
 ## Overview
 
