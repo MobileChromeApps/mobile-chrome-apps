@@ -20,7 +20,6 @@
 
 // System modules.
 var path = require('path');
-var fs = require('fs');
 
 // Third-party modules.
 var Q = require('q');
@@ -86,43 +85,7 @@ function main() {
   }
 
   function beforeCordovaPrepare() {
-    // If you have at least one platform, make sure you don't need to do an upgrade
-    if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
-      var projectIsStale = !fs.existsSync(path.join('platforms', 'created-with-cca-version')) ||
-                            fs.readFileSync(path.join('platforms', 'created-with-cca-version'), 'utf-8') != packageVersion;
-      if (projectIsStale) {
-        console.log('It looks like this project was not yet upgraded to cca v' + packageVersion + '.  Please upgrade now:');
-        return commandActions['upgrade']();
-      }
-      return Q();
-    }
-
-    // If you have plugins/ folder, re-installing platforms won't reinstall plugins unless you delete these files.
-    // TODO: There is some concern that doing this will not maintain plugin explicit/implicit install history,
-    //       But that should not be a problem for cca apps which don't really use those concepts.
-    var shelljs = require('shelljs');
-    shelljs.rm('-f', path.join('plugins', 'android.json'));
-    shelljs.rm('-f', path.join('plugins', 'ios.json'));
-
-    // Otherwise, auto-add platforms
-    // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
-    // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
-    return require('./tools-check')()
-    .then(function(toolsCheckResults) {
-      var cmds = [];
-      // TODO(mmocny): any way to use .raw so as not to also call prepare after each platform add?
-      if (toolsCheckResults.hasXcode) {
-        cmds.push(['platform', 'add', 'ios']);
-      }
-      if (toolsCheckResults.hasAndroidPlatform) {
-         cmds.push(['platform', 'add', 'android']);
-      }
-      return require('./cordova-commands').runAllCmds(cmds);
-    })
-    .then(function() {
-      // TODO(mmocny): break all this out into a module and share with the create-app step
-      return Q.ninvoke(fs, 'writeFile', path.join('platforms', 'created-with-cca-version'), packageVersion, { encoding: 'utf-8' });
-    });
+    return require('./auto-upgrade')();
   }
 
   function forwardCurrentCommandToCordova() {

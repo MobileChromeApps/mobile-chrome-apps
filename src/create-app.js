@@ -100,8 +100,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     return require('./cordova-commands').runAllCmds(cmds);
   })
   .then(function() {
-    var packageVersion = require('../package').version;
-    return Q.ninvoke(fs, 'writeFile', path.join('platforms', 'created-with-cca-version'), packageVersion, { encoding: 'utf-8' });
+    return require('./write-out-cca-version')();
   })
   .then(function() {
     // Create scripts that update the cordova app on prepare
