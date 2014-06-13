@@ -85,6 +85,9 @@ function main() {
   }
 
   function beforeCordovaPrepare() {
+    if (commandLineFlags['skip-upgrade']) {
+      return Q();
+    }
     return require('./auto-upgrade')();
   }
 

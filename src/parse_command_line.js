@@ -64,25 +64,32 @@ module.exports = exports = function parseCommandLine() {
              '    cca prepare\n' +
              '    cca run android --device\n' +
              '    cca run ios --emulator\n' +
-             '    cca plugin ls'
-      ).options('h', {
+             '    cca plugin ls')
+      .options('h', {
           type: 'boolean',
           alias: 'help',
           desc: 'Show usage message.'
-      }).options('d', {
+      })
+      .options('d', {
           type: 'boolean',
           alias: 'verbose',
           desc: 'Enable verbose logging.'
-      }).options('v', {
+      })
+      .options('v', {
           type: 'boolean',
           alias: 'version',
           desc: 'Show version.'
-      }).options('android', { type: 'boolean'
-      }).options('ios', { type: 'boolean'
-      }).options('pause_on_exit', { type: 'boolean'
-      }).options('copy-from', { type: 'string'
-      }).options('link-to', { type: 'string'
-      }).options('target', { type: 'string'
-      }).options('watch', { type: 'boolean'
-      }).argv;
+      })
+      .options('skip-upgrade', {
+        type: 'boolean',
+        desc: 'Don\'t upgrade platforms and plugins.',
+      })
+      .options('android', { type: 'boolean' })
+      .options('ios', { type: 'boolean' })
+      .options('pause_on_exit', { type: 'boolean' })
+      .options('copy-from', { type: 'string' })
+      .options('link-to', { type: 'string' })
+      .options('target', { type: 'string' })
+      .options('watch', { type: 'boolean' })
+      .argv;
 };
