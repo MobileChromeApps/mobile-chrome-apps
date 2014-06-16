@@ -157,25 +157,7 @@ function main() {
     },
     'upgrade': function() {
       return printCcaVersionPrefix()
-      .then(function() {
-        return utils.waitForKey('Upgrading will delete platforms/ and plugins/ - Continue? [y/N] ');
-      })
-      .then(function(key) {
-        if (key != 'y' && key != 'Y') {
-          return Q.reject('Okay, nevermind.');
-        }
-        var shelljs = require('shelljs');
-        shelljs.rm('-rf', path.join('platforms'));
-        shelljs.rm('-rf', path.join('plugins'));
-        // TODO(mmocny): this hack changes the "upgrade" argument to "prepare", since we forward all argv over to cordova-cli
-        for (var i = 0; i < process.argv.length; i++) {
-          if (process.argv[i].toLowerCase() == 'upgrade') {
-            process.argv[i] = "prepare";
-            break;
-          }
-        }
-        return commandActions['prepare']();
-      });
+      .then(require('./upgrade-project'));
     },
     'version': function() {
       console.log(packageVersion);
@@ -188,11 +170,15 @@ function main() {
         return Q();
       });
     },
+    'platform': function() {
+      return printCcaVersionPrefix().then(forwardCurrentCommandToCordova);
+    },
+    'platforms': function() {
+      return printCcaVersionPrefix().then(forwardCurrentCommandToCordova);
+    },
     'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'compile': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'emulate': printVersionThenPrePrePrepareThenForwardCommandToCordova,
-    'platform': printVersionThenPrePrePrepareThenForwardCommandToCordova,
-    'platforms': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'plugin': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'plugins': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'prepare': printVersionThenPrePrePrepareThenForwardCommandToCordova,

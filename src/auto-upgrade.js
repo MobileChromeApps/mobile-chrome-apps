@@ -5,16 +5,20 @@ var Q = require('q');
 module.exports = exports = function autoUpgrade() {
   var packageVersion = require('../package').version;
 
-  // If you have at least one platform, make sure you don't need to do an upgrade
+  // If you have at least one platform already installed, check to see if you need to do an upgrade
   if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
     var projectIsStale = !fs.existsSync(path.join('platforms', 'created-with-cca-version')) ||
                           fs.readFileSync(path.join('platforms', 'created-with-cca-version'), 'utf-8') != packageVersion;
     if (projectIsStale) {
       console.log('It looks like this project was not yet upgraded to cca v' + packageVersion + '.  Please upgrade now:');
-      return commandActions['upgrade']();
+      return require('./upgrade-project')();
     }
     return Q();
   }
+
+  // If you don't have any platforms installed, lets add some default ones
+  // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
+  // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
 
   // If you have plugins/ folder, re-installing platforms won't reinstall plugins unless you delete these files.
   // TODO: There is some concern that doing this will not maintain plugin explicit/implicit install history,
@@ -23,9 +27,6 @@ module.exports = exports = function autoUpgrade() {
   shelljs.rm('-f', path.join('plugins', 'android.json'));
   shelljs.rm('-f', path.join('plugins', 'ios.json'));
 
-  // Otherwise, auto-add platforms
-  // Ideally we just do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there are no target platforms,
-  // and its unclear how to make it do so with a difference concept for pre-prepare scripts.
   return require('./tools-check')()
   .then(function(toolsCheckResults) {
     var cmds = [];
