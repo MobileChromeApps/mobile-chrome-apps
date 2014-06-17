@@ -38,8 +38,8 @@ public class ChromeSocket extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeSocket";
 
-    private static Map<Integer, SocketData> sockets = new HashMap<Integer, SocketData>();
-    private static int nextSocket = 1;
+    private Map<Integer, SocketData> sockets = new HashMap<Integer, SocketData>();
+    private int nextSocket = 1;
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -85,7 +85,7 @@ public class ChromeSocket extends CordovaPlugin {
         return true;
     }
 
-    public void onStop() {
+    public void onDestroy() {
         destroyAllSockets();
     }
 
@@ -94,6 +94,8 @@ public class ChromeSocket extends CordovaPlugin {
     }
 
     private void destroyAllSockets() {
+        if (sockets.isEmpty()) return;
+
         Log.i(LOG_TAG, "Destroying all open sockets");
 
         for (Map.Entry<Integer, SocketData> entry : sockets.entrySet())
@@ -108,7 +110,7 @@ public class ChromeSocket extends CordovaPlugin {
     private void create(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         String socketType = args.getString(0);
         if (socketType.equals("tcp") || socketType.equals("udp")) {
-            SocketData sd = new SocketData(socketType.equals("tcp") ? SocketData.Type.TCP : SocketData.Type.UDP);
+            SocketData sd = new SocketData(socketType.equals("tcp") ? SocketType.TCP : SocketType.UDP);
             int id = addSocket(sd);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, id));
         } else {
@@ -116,7 +118,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
     }
 
-    private static int addSocket(SocketData sd) {
+    private int addSocket(SocketData sd) {
         sockets.put(Integer.valueOf(nextSocket), sd);
         return nextSocket++;
     }
@@ -389,15 +391,15 @@ public class ChromeSocket extends CordovaPlugin {
         callbackContext.success(new JSONArray(ret));
     }
 
+    private enum SocketType { TCP, UDP; }
 
-    private static class SocketData {
+    private class SocketData {
         Socket tcpSocket;
         DatagramSocket udpSocket;
         MulticastSocket multicastSocket;
         ServerSocket serverSocket;
 
-        public enum Type { TCP, UDP; }
-        private Type type;
+        private SocketType type;
 
         // Cached values used by UDP read()/write().
         // These are the REMOTE address and port.
@@ -424,12 +426,12 @@ public class ChromeSocket extends CordovaPlugin {
         private HashSet<String> multicastGroups;
 
 
-        public SocketData(Type type) {
+        public SocketData(SocketType type) {
             this.type = type;
         }
 
         public SocketData(Socket incoming) {
-            this.type = Type.TCP;
+            this.type = SocketType.TCP;
             tcpSocket = incoming;
             connected = true;
             address = incoming.getInetAddress();
@@ -439,7 +441,7 @@ public class ChromeSocket extends CordovaPlugin {
 
         public JSONObject getInfo() throws JSONException {
             JSONObject info = new JSONObject();
-            info.put("socketType", type == Type.TCP ? "tcp" : "udp");
+            info.put("socketType", type == SocketType.TCP ? "tcp" : "udp");
 
             // According to the chrome.socket docs, this is always true for TCP sockets post-connect calls,
             // and for UDP it's true iff the connect() call has been used to set default remotes.
@@ -455,7 +457,7 @@ public class ChromeSocket extends CordovaPlugin {
                 if (isServer) { // TCP server socket
                     info.put("localAddress", serverSocket.getInetAddress().getHostAddress());
                     info.put("localPort", serverSocket.getLocalPort());
-                } else if (type == Type.TCP) {
+                } else if (type == SocketType.TCP) {
                     info.put("localAddress", tcpSocket.getLocalAddress().getHostAddress());
                     info.put("localPort", tcpSocket.getLocalPort());
                 } else { // UDP socket
@@ -470,7 +472,7 @@ public class ChromeSocket extends CordovaPlugin {
         public boolean connect(String address, int port, CallbackContext callbackContext) {
             if (isServer) return false;
             try {
-                if (type == Type.TCP) {
+                if (type == SocketType.TCP) {
                     connected = true;
                     this.address = InetAddress.getByName(address);
                     this.port = port;
@@ -518,7 +520,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         public boolean bind(String address, int port) {
-            if (type != Type.UDP) {
+            if (type != SocketType.UDP) {
                 Log.e(LOG_TAG, "bind() cannot be called on TCP sockets.");
                 return false;
             }
@@ -544,7 +546,7 @@ public class ChromeSocket extends CordovaPlugin {
 
             int bytesWritten = 0;
             try {
-                if (type == Type.TCP) {
+                if (type == SocketType.TCP) {
                     tcpSocket.getOutputStream().write(data);
                     bytesWritten = data.length;
                 } else {
@@ -566,7 +568,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         public int sendTo(byte[] data, String address, int port) {
-            if (type != Type.UDP) {
+            if (type != SocketType.UDP) {
                 Log.w(LOG_TAG, "sendTo() can only be called for UDP sockets.");
                 return -1;
             }
@@ -595,7 +597,7 @@ public class ChromeSocket extends CordovaPlugin {
                 return;
             }
 
-            if (type == Type.UDP && !bound && !connected) {
+            if (type == SocketType.UDP && !bound && !connected) {
                 context.error("read() is not allowed on unbound UDP sockets.");
                 return;
             }
@@ -610,7 +612,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
         public void recvFrom(int bufferSize, CallbackContext context) {
-            if (type != Type.UDP) {
+            if (type != SocketType.UDP) {
                 context.error("recvFrom() is not allowed on non-UDP sockets");
                 return;
             }
@@ -651,7 +653,7 @@ public class ChromeSocket extends CordovaPlugin {
                     }
                 } else if (readQueue != null) {
                     readQueue.put(new ReadData(true));
-                    if(type == Type.TCP) {
+                    if(type == SocketType.TCP) {
                         tcpSocket.close();
                     } else {
                         udpSocket.close();
@@ -674,7 +676,7 @@ public class ChromeSocket extends CordovaPlugin {
 
 
         public boolean listen(String address, int port, int backlog) {
-            if (type != Type.TCP) return false;
+            if (type != SocketType.TCP) return false;
             isServer = true;
 
             try {
@@ -712,7 +714,7 @@ public class ChromeSocket extends CordovaPlugin {
         // Multicast handlers
         public int joinGroup(String address) {
             try {
-                if (type != Type.UDP) {
+                if (type != SocketType.UDP) {
                     Log.e(LOG_TAG, "joinGroup not allowed with TCP sockets.");
                     return -5; // INVALID_HANDLE
                 }
@@ -823,7 +825,7 @@ public class ChromeSocket extends CordovaPlugin {
         }
 
 
-        private static class ReadData {
+        private class ReadData {
             public int size;
             public boolean killThread;
             public boolean recvFrom;
@@ -862,7 +864,7 @@ public class ChromeSocket extends CordovaPlugin {
                         byte[] outResized;
                         int bytesRead;
 
-                        if (type == Type.TCP) {
+                        if (type == SocketType.TCP) {
                             try {
                                 if (toRead > 0) {
                                     out = new byte[toRead];
@@ -948,7 +950,7 @@ public class ChromeSocket extends CordovaPlugin {
             } // run()
         } // ReadThread
 
-        private static class AcceptData {
+        private class AcceptData {
             public boolean killThread;
             public CallbackContext context;
 
@@ -976,7 +978,7 @@ public class ChromeSocket extends CordovaPlugin {
                         }
 
                         SocketData sd = new SocketData(incoming);
-                        int id = ChromeSocket.addSocket(sd);
+                        int id = ChromeSocket.this.addSocket(sd);
                         acceptData.context.sendPluginResult(new PluginResult(PluginResult.Status.OK, id));
                     }
                 } catch (InterruptedException ie) {
