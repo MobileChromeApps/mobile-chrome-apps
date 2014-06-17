@@ -659,7 +659,9 @@ public class ChromeSocket extends CordovaPlugin {
             isServer = true;
 
             try {
-                serverSocket = new ServerSocket(port, backlog);
+                serverSocket = new ServerSocket();
+                serverSocket.setReuseAddress(true);
+                serverSocket.bind(new InetSocketAddress(port), backlog);
             } catch (IOException ioe) {
                 Log.e(LOG_TAG, "Error creating server socket", ioe);
                 return false;
