@@ -86,7 +86,7 @@ var pushAgainWhenDone = false;
 function pushAll(clientInfos) {
   if (pushInProgress) {
     pushAgainWhenDone = true;
-    return;
+    return Q();
   }
   pushInProgress = true;
   var allPromises = clientInfos.map(function(clientInfo) {
