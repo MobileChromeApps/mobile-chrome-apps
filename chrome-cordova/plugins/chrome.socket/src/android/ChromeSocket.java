@@ -85,6 +85,25 @@ public class ChromeSocket extends CordovaPlugin {
         return true;
     }
 
+    public void onStop() {
+        destroyAllSockets();
+    }
+
+    public void onReset() {
+        destroyAllSockets();
+    }
+
+    private void destroyAllSockets() {
+        Log.i(LOG_TAG, "Destroying all open sockets");
+
+        for (Map.Entry<Integer, SocketData> entry : sockets.entrySet())
+        {
+            SocketData sd = entry.getValue();
+            sd.destroy();
+        }
+        sockets.clear();
+    }
+
 
     private void create(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         String socketType = args.getString(0);
