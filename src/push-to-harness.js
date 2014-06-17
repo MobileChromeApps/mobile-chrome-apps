@@ -12,11 +12,11 @@ module.exports = exports = function push(target, watch) {
     ret = extractTargets()
   }
   return ret.then(function(targets) {
-    return createClients(targets)
-  }).then(function(clients) {
-    return pushAll(clients)
+    return createSession(targets)
+  }).then(function(session) {
+    return pushAll(session.clientInfos)
     .then(function() {
-      return watch && watchFiles(clients);
+      return watch && watchFiles(session);
     });
   });
 };
@@ -26,34 +26,55 @@ function extractTargets() {
   return Q.when(['localhost:2424']);
 }
 
-function createClients(targets) {
+function createSession(targets) {
   var PushClient = require('chrome-harness-client');
 
   var deferred = Q.defer();
   var i = 0;
-  var clients = [];
+  var ret = {
+    platforms: [],
+    clientInfos: [],
+    appType: null
+  };
+
+  var chromeAppPushRoot = null;
+  if (fs.existsSync('www/manifest.json')) {
+    chromeAppPushRoot = 'www';
+  } else if (fs.existsSync('manifest.json')) {
+    chromeAppPushRoot = '.';
+  }
+  ret.appType = chromeAppPushRoot ? 'chrome' : 'cordova';
+
+  var platformMap = Object.create(null);
   function createClient() {
     var target = targets[i++];
     if (!target) {
-      return clients;
+      ret.platforms = Object.keys(platformMap);
+      return ret;
     }
     var newClient = new PushClient(target);
     return newClient.info()
     .then(function(response) {
       var infoJson = response.body;
-      var wwwDir = utils.assetDirForPlatform(infoJson['platform']);
-      // If the platform is added, then treat it as a cordova project.
-      // Otherwise, treat it as a Chrome App.
-      var pushRoot = fs.existsSync(wwwDir) ? process.cwd() : path.join(process.cwd(), 'www');
-      // TODO: Do what the comment says. We need to add in prepare to --watch though, so for
-      // now always watch the top-level www.
-      pushRoot = path.join(process.cwd(), 'www');
-      clients.push({
-          platform: infoJson['platform'],
-          client: newClient,
-          pushSession: newClient.createPushSession(pushRoot),
-          rootDir: pushRoot
-      });
+      var platform = infoJson['platform'];
+      platformMap[platform] = true;
+      if (ret.appType == 'chrome') {
+        ret.clientInfos.push({
+            platform: platform,
+            client: newClient,
+            pushSession: newClient.createPushSession(chromeAppPushRoot),
+            watchDir: chromeAppPushRoot
+        });
+      } else {
+        // Vanilla Cordova project.
+        var wwwDir = utils.assetDirForPlatform(platform);
+        ret.clientInfos.push({
+            platform: platform,
+            client: newClient,
+            pushSession: newClient.createPushSession('.'), // push client figures out to use platforms/
+            watchDir: wwwDir
+        });
+      }
       return createClient();
     });
   }
@@ -62,21 +83,21 @@ function createClients(targets) {
 
 var pushInProgress = false;
 var pushAgainWhenDone = false;
-function pushAll(clients) {
+function pushAll(clientInfos) {
   if (pushInProgress) {
     pushAgainWhenDone = true;
     return;
   }
   pushInProgress = true;
-  var allPromises = clients.map(function(client) {
-    return client.pushSession.push();
+  var allPromises = clientInfos.map(function(clientInfo) {
+    return clientInfo.pushSession.push();
   });
   var pushAgain = false;
   return Q.all(allPromises)
   .then(function() {
     if (pushAgainWhenDone) {
       return process.nextTick(function() {
-        pushAll(clients).done();
+        pushAll(clientInfos).done();
       });
     }
     pushInProgress = false;
@@ -88,19 +109,19 @@ function pushAll(clients) {
   });
 }
 
-var debouncedPushAll = debounce(function(clients) {
-  pushAll(clients).done();
+var debouncedPushAll = debounce(function(clientInfos) {
+  pushAll(clientInfos).done();
 }, 50, false);
 
-function watchFiles(clients) {
+function watchFiles(session) {
   var gaze = require('gaze');
   var deferred = Q.defer();
 
-  // Watch all .js files/dirs in process.cwd()
-  gaze(clients[0].rootDir + '/**/*', function(err, watcher) {
+  // TODO: This doesn't work for vanilla cordova apps + multiple platforms.
+  gaze(session.clientInfos[0].watchDir + '/**/*', function(err, watcher) {
     console.log('Watching for changes.');
     watcher.on('all', function(event, filepath) {
-      debouncedPushAll(clients);
+      debouncedPushAll(session.clientInfos);
     });
   });
   // TODO: Capture Ctrl-C and resolve the promise.
