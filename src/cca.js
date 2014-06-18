@@ -199,15 +199,14 @@ function main() {
     utils.fatal('Invalid command: ' + command + '. Use --help for usage.');
   }
 
-  // start hack to enable logging :(.
-  var cliDummyArgs = [0, 0, 'foo'];
+  // In verbose mode, print all cordova events
   if (commandLineFlags.d) {
-    cliDummyArgs.push('--verbose');
+    // TODO: its possible we want to console.log the results for some cordova commands even in non-verbose mode
+    cordovaLib.events.on('results', console.log);
+    cordovaLib.events.on('log', console.log);
+    cordovaLib.events.on('warn', console.warn);
+    cordovaLib.events.on('verbose', console.log);
   }
-  try {
-    require('cordova/src/cli')(cliDummyArgs);
-  } catch(e) {}
-  // end hack
 
   commandActions[command]().done(null, utils.fatal);
 }
