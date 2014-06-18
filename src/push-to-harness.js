@@ -3,20 +3,30 @@ var path = require('path');
 var Q = require('q');
 var debounce = require('debounce');
 var utils = require('./utils');
+var child_process = require('child_process');
 
 // Returns a promise.
 module.exports = exports = function push(target, watch) {
-  target = !target || Array.isArray(target) ? target : [target];
-  var ret = Q.when(target);
-  if (!target) {
-    ret = extractTargets()
-  }
-  return ret.then(function(targets) {
-    return createSession(targets)
-  }).then(function(session) {
-    return pushAll(session.clientInfos)
-    .then(function() {
-      return watch && watchFiles(session);
+  var argsAsJson = JSON.stringify([].slice.call(arguments));
+  return checkFileHandleLimit()
+  .then(function(fileHandleLimit) {
+    if (fileHandleLimit < 10000 && watch) {
+      return relaunchWithBiggerUlimit(argsAsJson);
+    }
+    target = !target || Array.isArray(target) ? target : [target];
+    var ret = Q.when(target);
+    if (!target) {
+      ret = extractTargets()
+    }
+    return ret.then(function(targets) {
+      return createSession(targets)
+    }).then(function(session) {
+      return pushAll(session.clientInfos)
+      .then(function() {
+        if (watch) {
+          return watchFiles(session);
+        }
+      });
     });
   });
 };
@@ -128,3 +138,37 @@ function watchFiles(session) {
   return deferred.promise;
 }
 
+function checkFileHandleLimit() {
+  var deferred = Q.defer();
+  if (process.platform != 'win32' && process.env['SHELL']) {
+    // gaze opens a lot of file handles, and the default on OS X is too small (EMFILE exceptions).
+    // NOTE: This is fixed in node 0.11, and is a problem only on node 0.10.
+    child_process.exec('ulimit -S -n', function(error, stdout, stderr) {
+      var curLimit = !error && +stdout;
+      deferred.resolve(curLimit || Infinity);
+    });
+  } else {
+    deferred.resolve(Infinity);
+  }
+  return deferred.promise;
+}
+
+function relaunchWithBiggerUlimit(argsAsJson) {
+  // re-run with the new ulimit
+  var deferred = Q.defer();
+  var args = ['-c', 'ulimit -S -n 10240; exec "' + process.argv[0] + '" "' + __filename + '" "' + argsAsJson.replace(/"/g, '@') + '"'];
+  var child = child_process.spawn(process.env['SHELL'], args, { stdio: 'inherit' });
+  child.on('close', function(code) {
+    if (code) {
+      deferred.reject(code);
+    } else {
+      deferred.resolve(code);
+    }
+  });
+  return deferred.promise;
+}
+
+// Gets called from EMFILE re-launch
+if (require.main === module) {
+  exports.apply(this, JSON.parse(process.argv[2].replace(/@/g, '"'))).done();
+}
