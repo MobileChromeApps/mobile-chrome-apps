@@ -21,6 +21,7 @@
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
+    "chrome-app-developer-tool-client": "^0.0.1",
     "cordova": "^3.5.0-0.2.4",
     "cordova-lib": "latest",
     "crypto-js": "^3.1.2-3",
