@@ -37,7 +37,7 @@ function extractTargets() {
 }
 
 function createSession(targets) {
-  var PushClient = require('chrome-harness-client');
+  var PushClient = require('chrome-app-developer-tool-client');
 
   var deferred = Q.defer();
   var i = 0;
