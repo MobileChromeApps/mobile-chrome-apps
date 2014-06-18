@@ -17,7 +17,6 @@
   under the License.
  */
 
-var cordova = require('cordova');
 var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
@@ -78,7 +77,7 @@ module.exports = exports = function prePrepareCommand() {
   .then(function() {
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
     if (hasIos) {
-      var platforms = require('cordova/node_modules/cordova-lib').cordova_platforms;
+      var platforms = require('cordova-lib').cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
       var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
@@ -111,100 +110,84 @@ module.exports = exports = function prePrepareCommand() {
     }
   })
 
-
-  // Install plugins
+  // Install missing plugins
   .then(function() {
-    cordova.off('results', console.log); // Hack :(.
-    cordova.raw.plugin('ls').then(function(installedPlugins) {
-      cordova.on('results', console.log);
-      var missingPlugins = plugins.filter(function(p) {
-        return installedPlugins.indexOf(p) == -1;
+    return require('cordova-lib/src/cordova/plugin')('ls');
+  })
+  .then(function(installedPlugins) {
+    var missingPlugins = plugins.filter(function(p) {
+      return installedPlugins.indexOf(p) == -1;
+    });
+    if (missingPlugins.length) {
+      console.log('## Adding in new plugins based on manifest.json');
+      var cmds = missingPlugins.map(function(pluginPath) {
+        return ['plugin', 'add', pluginPath];
       });
-      if (missingPlugins.length) {
-        console.log('## Adding in new plugins based on manifest.json');
-        var cmds = missingPlugins.map(function(pluginPath) {
-          return ['plugin', 'add', pluginPath];
-        });
-        return require('./cordova-commands').runAllCmds(cmds);
-      }
-    }, function() {
-      console.log = oldLog;
-    });
+      return require('./cordova-commands').runAllCmds(cmds);
+    }
   })
 
-  // If chrome.identity is installed, we need a client id.
   .then(function() {
-    cordova.raw.plugin('ls').then(function(installedPlugins) {
-      if (installedPlugins.indexOf('org.chromium.identity') >= 0) {
-        if (!manifest.oauth2 || !manifest.oauth2.client_id) {
-          console.warn('Warning: chrome.identity requires a client ID to be specified in the manifest.');
-        }
-      }
-    });
+    return require('cordova-lib/src/cordova/plugin')('ls');
   })
+  .then(function(installedPlugins) {
+    // If chrome.identity is installed, we need a client id.
+    if (installedPlugins.indexOf('org.chromium.identity') >= 0) {
+      if (!manifest.oauth2 || !manifest.oauth2.client_id) {
+        console.warn('Warning: chrome.identity requires a client ID to be specified in the manifest.');
+      }
+    }
 
-  // If the Crosswalk rendering engine is installed, link the library
-  .then(function() {
-    return cordova.raw.plugin('ls');
-  }).then(function(installedPlugins) {
+    // If the Crosswalk rendering engine is installed, link the library
     if (installedPlugins.indexOf('org.apache.cordova.engine.crosswalk') >= 0) {
       return addXwalkLibraryCommand();
     } else {
       return removeXwalkLibraryCommand();
     }
-  });
+  })
 };
 
 // Returns a promise. Adds a reference to the Crosswalk library project to the Android platform
 function addXwalkLibraryCommand() {
-  if (!fs.existsSync('platforms')) {
+  if (!fs.existsSync('platforms'))
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
-  }
-  var p = Q();
-  if (fs.existsSync(path.join('platforms', 'android'))) {
-    p = p.then(function() {
-      return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
-        var largestReference = 0;
-        var found_xwalk = false;
-        for (var i=0; i < lines.length; ++i) {
-          var library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)$/);
-          if (library_reference) {
-            var referenceNumber = parseInt(library_reference[1],10);
-            if (referenceNumber > largestReference) {
-              largestReference = referenceNumber;
-            }
-            found_xwalk = found_xwalk || !!library_reference[2].match(/xwalk_core_library$/);
-          }
+  if (!fs.existsSync(path.join('platforms', 'android')))
+    return Q();
+
+  return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
+    var largestReference = 0;
+    var found_xwalk = false;
+    for (var i=0; i < lines.length; ++i) {
+      var library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)$/);
+      if (library_reference) {
+        var referenceNumber = parseInt(library_reference[1],10);
+        if (referenceNumber > largestReference) {
+          largestReference = referenceNumber;
         }
-        if (!found_xwalk) {
-          lines.push('android.library.reference.' + (largestReference+1) + '=../../plugins/org.apache.cordova.engine.crosswalk/libs/xwalk_core_library');
-        }
-        return lines;
-      });
-    });
-  }
-  return p;
+        found_xwalk = found_xwalk || !!library_reference[2].match(/xwalk_core_library$/);
+      }
+    }
+    if (!found_xwalk) {
+      lines.push('android.library.reference.' + (largestReference+1) + '=../../plugins/org.apache.cordova.engine.crosswalk/libs/xwalk_core_library');
+    }
+    return lines;
+  });
 }
 
 // Returns a promise. Removes any references to the Crosswalk library project from the Android platform
 function removeXwalkLibraryCommand() {
-  if (!fs.existsSync('platforms')) {
+  if (!fs.existsSync('platforms'))
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
-  }
-  var p = Q();
-  if (fs.existsSync(path.join('platforms', 'android'))) {
-    p = p.then(function() {
-      return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
-        for (var i=lines.length-1; i >= 0; --i) {
-          var xwalk_library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)xwalk_core_library$/);
-          if (xwalk_library_reference) {
-            lines.splice(i, 1);
-          }
-        }
-        return lines;
-      });
-    });
-  }
-  return p;
-}
+  if (!fs.existsSync(path.join('platforms', 'android')))
+    return Q();
 
+  return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
+    for (var i=lines.length-1; i >= 0; --i) {
+      var xwalk_library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)xwalk_core_library$/);
+      if (xwalk_library_reference) {
+        lines.splice(i, 1);
+      }
+    }
+    return lines;
+  });
+}

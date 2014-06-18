@@ -92,7 +92,7 @@ function main() {
   }
 
   function forwardCurrentCommandToCordova() {
-    require('../node_modules/cordova/src/cli')(process.argv);
+    require('cordova/src/cli')(process.argv);
     return Q();
   }
 
@@ -187,11 +187,11 @@ function main() {
 
   // TODO(mmocny): The following few lines seem to make global changes that affect all other subcommands.
   // May want to break this out to a module as an "init" step that every other step ensures has been called.
-  var cordova = require('cordova');
-  cordova.config.setAutoPersist(false);
-  var projectRoot = cordova.findProjectRoot();
+  var cordovaLib = require('cordova-lib');
+  cordovaLib.cordova.config.setAutoPersist(false);
+  var projectRoot = cordovaLib.cordova.findProjectRoot();
   if (projectRoot) {
-    cordova.config(projectRoot, require('./default-config')(ccaRoot));
+    cordovaLib.cordova.config(projectRoot, require('./default-config')(ccaRoot));
     process.chdir(projectRoot);
   }
 
@@ -205,7 +205,7 @@ function main() {
     cliDummyArgs.push('--verbose');
   }
   try {
-    require('../node_modules/cordova/src/cli')(cliDummyArgs);
+    require('cordova/src/cli')(cliDummyArgs);
   } catch(e) {}
   // end hack
 
