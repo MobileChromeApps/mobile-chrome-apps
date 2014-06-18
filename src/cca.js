@@ -151,7 +151,7 @@ function main() {
         destAppDir = path.resolve(destAppDir);
         return require('./tools-check')()
           .then(function() {
-            return require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags)
+            return require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags);
           });
       });
     },

@@ -13,5 +13,5 @@ module.exports = exports = function upgradeProject() {
     shelljs.rm('-rf', path.join('platforms'));
     shelljs.rm('-rf', path.join('plugins'));
     return cordovaCommands.runCmd(['prepare']);
-  }
+  });
 };

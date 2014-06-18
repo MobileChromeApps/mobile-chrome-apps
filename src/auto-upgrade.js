@@ -42,4 +42,4 @@ module.exports = exports = function autoUpgrade() {
   .then(function() {
     return require('./write-out-cca-version')();
   });
-}
+};

@@ -42,7 +42,7 @@ function checkHasAndroid() {
     });
   }, function(err) {
     console.warn('Android not detected (`android` command not detected on your PATH).');
-  })
+  });
 }
 
 function checkHasIos() {

@@ -144,7 +144,7 @@ module.exports = exports = function prePrepareCommand() {
     } else {
       return removeXwalkLibraryCommand();
     }
-  })
+  });
 };
 
 // Returns a promise. Adds a reference to the Crosswalk library project to the Android platform

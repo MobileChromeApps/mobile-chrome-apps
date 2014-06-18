@@ -105,5 +105,5 @@ exports.processFile = function processFile(filename, action) {
   }).then(function(lines) {
     return Q.ninvoke(fs, 'writeFile', filename, lines.join("\n")+"\n", { encoding: 'utf-8' });
   });
-}
+};
 
