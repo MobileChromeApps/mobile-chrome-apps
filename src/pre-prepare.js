@@ -17,6 +17,8 @@
   under the License.
  */
 
+'use strict';
+
 var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
@@ -25,7 +27,9 @@ var utils = require('./utils');
 
 // Returns a promise.
 module.exports = exports = function prePrepareCommand() {
-  var plugins = [];
+  var pluginsToBeInstalled = [];
+  var pluginsToBeNotInstalled = [];
+  var pluginsNotRecognized = [];
   var manifest, whitelist;
 
   // Pre-prepare manifest check and project munger
@@ -33,48 +37,58 @@ module.exports = exports = function prePrepareCommand() {
   .then(function(m) {
     manifest = m;
     return Q.when(require('./parse_manifest')(manifest));
-  }).then(function(manifestData) {
-    plugins = require('./plugin_map').DEFAULT_PLUGINS.concat(manifestData.plugins);
-    whitelist = manifestData.whitelist;
-    console.log('## Updating config.xml from manifest.json');
-    return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'});
-  }).then(function(data) {
-    var tree = et.parse(data);
-
-    var widget = tree.getroot();
-    if (widget.tag == 'widget') {
-      widget.attrib.version = manifest.version;
-      widget.attrib.id = manifest.packageId;
-    }
-
-    var name = tree.find('./name');
-    if (name) name.text = manifest.name;
-
-    var description = tree.find('./description');
-    if (description) description.text = manifest.description;
-
-    var author = tree.find('./author');
-    if (author) author.text = manifest.author;
-
-    var content = tree.find('./content');
-    if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
-
-    var access;
-    while ((access = widget.find('./access'))) {
-      widget.remove(access);
-    }
-    whitelist.forEach(function(pattern, index) {
-      var tag = et.SubElement(widget, 'access');
-      tag.attrib.origin = pattern;
-    });
-
-    var configfile = et.tostring(tree.getroot(), {indent: 4});
-    return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
   })
-
-  // Add a URL type to the iOS project's .plist file.
-  // This is necessary for chrome.identity to redirect back to the app after authentication.
+  .then(function(manifestData) {
+    pluginsToBeInstalled = require('./plugin_map').DEFAULT_PLUGINS.concat(manifestData.pluginsToBeInstalled);
+    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled;
+    pluginsNotRecognized = manifestData.pluginsNotRecognized;
+    whitelist = manifestData.whitelist;
+  })
   .then(function() {
+    return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'})
+    .then(function(data) {
+      var tree = et.parse(data);
+
+      var widget = tree.getroot();
+      if (widget.tag == 'widget') {
+        widget.attrib.version = manifest.version;
+        widget.attrib.id = manifest.packageId;
+      }
+
+      var name = tree.find('./name');
+      if (name) name.text = manifest.name;
+
+      var description = tree.find('./description');
+      if (description) description.text = manifest.description;
+
+      var author = tree.find('./author');
+      if (author) author.text = manifest.author;
+
+      var content = tree.find('./content');
+      if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
+
+      var access;
+      while ((access = widget.find('./access'))) {
+        widget.remove(access);
+      }
+      whitelist.forEach(function(pattern, index) {
+        var tag = et.SubElement(widget, 'access');
+        tag.attrib.origin = pattern;
+      });
+
+      var configfile = et.tostring(tree.getroot(), {indent: 4});
+
+      // Don't write out if nothing actually changed
+      if (configfile == data)
+        return;
+
+      console.log('## Updating config.xml from manifest.json');
+      return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
+    });
+  })
+  .then(function() {
+    // Add a URL type to the iOS project's .plist file.
+    // This is necessary for chrome.identity to redirect back to the app after authentication.
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
     if (hasIos) {
       var platforms = require('cordova-lib').cordova_platforms;
@@ -109,24 +123,30 @@ module.exports = exports = function prePrepareCommand() {
       fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
     }
   })
-
-  // Install missing plugins
   .then(function() {
+    // Update installed plugins
     return require('cordova-lib/src/cordova/plugin')('ls');
   })
   .then(function(installedPlugins) {
-    var missingPlugins = plugins.filter(function(p) {
+    var missingPlugins = pluginsToBeInstalled.filter(function(p) {
       return installedPlugins.indexOf(p) == -1;
     });
-    if (missingPlugins.length) {
-      console.log('## Adding in new plugins based on manifest.json');
-      var cmds = missingPlugins.map(function(pluginPath) {
-        return ['plugin', 'add', pluginPath];
+    var excessPlugins = pluginsToBeNotInstalled.filter(function(p) {
+      return installedPlugins.indexOf(p) != -1;
+    });
+    if (missingPlugins.length || excessPlugins.length || pluginsNotRecognized.length) {
+      console.log('## Updating plugins based on manifest.json');
+      pluginsNotRecognized.forEach(function(unknownPermission) {
+        console.warn('Permission not recognized by cca: ' + unknownPermission + ' (ignoring)');
       });
+      var cmds = missingPlugins.map(function(plugin) {
+        return ['plugin', 'add', plugin];
+      }).concat(excessPlugins.map(function(plugin) {
+        return ['plugin', 'rm', plugin];
+      }));
       return require('./cordova-commands').runAllCmds(cmds);
     }
   })
-
   .then(function() {
     return require('cordova-lib/src/cordova/plugin')('ls');
   })
@@ -152,7 +172,7 @@ function addXwalkLibraryCommand() {
   if (!fs.existsSync('platforms'))
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
   if (!fs.existsSync(path.join('platforms', 'android')))
-    return Q();
+    return Q.when();
 
   return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
     var largestReference = 0;
@@ -179,7 +199,7 @@ function removeXwalkLibraryCommand() {
   if (!fs.existsSync('platforms'))
     return Q.reject('No platforms directory found. Please run script from the root of your project.');
   if (!fs.existsSync(path.join('platforms', 'android')))
-    return Q();
+    return Q.when();
 
   return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
     for (var i=lines.length-1; i >= 0; --i) {

@@ -32,6 +32,11 @@ exports.DEFAULT_PLUGINS = [
     'org.chromium.polyfill.blob_constructor',
 ];
 
+/*
+ * NOTE!
+ * If you remove/rename a plugin in this list, add the old value to the XX_STALE list at the end.
+ * That way, it will be automatically removed on prepare.
+ * */
 exports.PLUGIN_MAP = {
   'alarms': ['org.chromium.alarms'],
   'fileSystem': ['org.chromium.fileSystem',
@@ -50,6 +55,7 @@ exports.PLUGIN_MAP = {
   'background': [],
   'fullscreen': [],
   'geolocation': ['org.apache.cordova.geolocation'],
+  '______XX_STALE': [],
 };
 
 exports.ENGINE_MAP = {

@@ -5,82 +5,85 @@ var shelljs = require('shelljs');
 
 var utils = require('./utils');
 
+function resolveTilde(string) {
+  // TODO: implement better
+  if (string.substr(0,1) === '~')
+    return path.resolve(process.env.HOME + string.substr(1));
+  return string;
+}
+
+// Returns a promise
 module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flags) {
   var srcAppDir = null;
   var manifest = null;
-
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
 
-  function resolveTilde(string) {
-    // TODO: implement better
-    if (string.substr(0,1) === '~')
-      return path.resolve(process.env.HOME + string.substr(1));
-    return string;
-  }
+  return Q.fcall(function() {
+    // Validate source arg.
+    sourceArg = flags['copy-from'] || flags['link-to'];
+    if (!sourceArg) {
+      srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
+    } else {
+      // Strip off manifest.json from path (its containing dir must be the root of the app)
+      if (path.basename(sourceArg) === 'manifest.json') {
+        sourceArg = path.dirname(sourceArg);
+      }
+      // Always check the sourceArg as a relative path first, even if its a special value (like 'spec')
+      var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
 
-  // Validate source arg.
-  sourceArg = flags['copy-from'] || flags['link-to'];
-  if (!sourceArg) {
-    srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
-  } else {
-    // Strip off manifest.json from path (its containing dir must be the root of the app)
-    if (path.basename(sourceArg) === 'manifest.json') {
-      sourceArg = path.dirname(sourceArg);
-    }
-    // Always check the sourceArg as a relative path, even if its a special value (like 'spec')
-    var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
+      // Special values for sourceArg we resolve to predefined locations
+      if (sourceArg === 'spec') {
+        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'chrome-apps-api-tests'));
+      } else if (sourceArg === 'oldspec') {
+        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
+      } else if (sourceArg === 'default') {
+        dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
+      }
 
-    // Special values for sourceArg we resolve to predefined locations
-    if (sourceArg === 'spec') {
-      dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'chrome-apps-api-tests'));
-    } else if (sourceArg === 'oldspec') {
-      dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
-    } else if (sourceArg === 'default') {
-      dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
-    }
-
-    // Find the first valid path in our list (valid paths contain a manifest.json file)
-    var foundManifest = false;
-    for (var i = 0; i < dirsToTry.length; i++) {
-      srcAppDir = dirsToTry[i];
-      console.log('Searching for Chrome app source in ' + srcAppDir);
-      if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
-        foundManifest = true;
-        break;
+      // Find the first valid path in our list (valid paths contain a manifest.json file)
+      var foundManifest = false;
+      for (var i = 0; i < dirsToTry.length; i++) {
+        srcAppDir = dirsToTry[i];
+        console.log('Searching for Chrome app source in ' + srcAppDir);
+        if (fs.existsSync(path.join(srcAppDir, 'manifest.json'))) {
+          foundManifest = true;
+          break;
+        }
+      }
+      if (!srcAppDir) {
+        return Q.reject('Directory does not exist.');
+      }
+      if (!foundManifest) {
+        return Q.reject('No manifest.json file found');
       }
     }
-    if (!srcAppDir) {
-      return Q.reject('Directory does not exist.');
-    }
-    if (!foundManifest) {
-      return Q.reject('No manifest.json file found');
-    }
-  }
-
-  // Get the manifest.
-  return require('./get-manifest')(srcAppDir).then(function(manifestData) {
+  })
+  .then(function() {
+    return require('./get-manifest')(srcAppDir);
+  })
+  .then(function(manifestData) {
     if (!(manifestData.app && manifestData.app.background && manifestData.app.background.scripts && manifestData.app.background.scripts.length)) {
-      fatal('No background scripts found in your manifest.json file. Your manifest must contain at least one script in the "app.background.scripts" array.');
+      return Q.reject('No background scripts found in your manifest.json file. Your manifest must contain at least one script in the "app.background.scripts" array.');
     }
     manifest = manifestData;
-    return Q.when(require('./parse_manifest')(manifest));
   })
   .then(require('./tools-check'))
-
-  // Create step.
   .then(function(toolsCheckResults) {
+    // Create step.
     console.log('## Creating Your Application');
     var config_default = JSON.parse(JSON.stringify(require('./default-config')(ccaRoot)));
     config_default.lib.www = { uri: srcAppDir };
     config_default.lib.www.link = !!flags['link-to'];
 
     return require('./cordova-commands').runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
-  }).then(function() {
+  })
+  .then(function() {
     process.chdir(destAppDir);
-    console.log("Generating config.xml from manifest.json");
-    // TODO(mmocny): if cordova support --link-to/--opy-from to root folders, i.e. apps with existing config.xml, won't this overwrite a good config.xml?
+    console.log("## Generating config.xml from manifest.json");
+    // TODO(mmocny): if cordova support --link-to/--copy-from to root folders, i.e. apps with existing config.xml, won't this overwrite a good config.xml?
     return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
-  }).then(function(data) {
+  })
+  .then(function(data) {
     var configfile = data
         .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
         .replace(/__APP_PACKAGE_ID__/, (manifest.packageId) || "com.your.company.HelloWorld")
@@ -88,16 +91,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
         .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
         .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
     return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
-  }).then(function() {
-    // Add default platforms:
-    var cmds = [];
-    if (flags.ios) {
-      cmds.push(['platform', 'add', 'ios']);
-    }
-    if (flags.android) {
-      cmds.push(['platform', 'add', 'android']);
-    }
-    return require('./cordova-commands').runAllCmds(cmds);
   })
   .then(function() {
     return require('./write-out-cca-version')();
@@ -138,17 +131,25 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
     return Q();
   })
-
-  // Ensure the mobile manifest exists.
   .then(function() {
+    // Ensure the mobile manifest exists.
     var manifestMobileFilename = path.join('www', 'manifest.mobile.json');
     if (fs.existsSync(manifestMobileFilename)) return;
     var defaultManifestMobileFilename = path.join(ccaRoot, 'templates', 'default-app', 'manifest.mobile.json');
     if (!fs.existsSync(defaultManifestMobileFilename)) return; // TODO: Was I supposed to be an error?
     shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
   })
-
-  // Run prepare.
+  .then(function() {
+    // Add default platforms:
+    var cmds = [];
+    if (flags.ios) {
+      cmds.push(['platform', 'add', 'ios']);
+    }
+    if (flags.android) {
+      cmds.push(['platform', 'add', 'android']);
+    }
+    return require('./cordova-commands').runAllCmds(cmds);
+  })
   .then(function() {
     var wwwPath = path.join(destAppDir, 'www');
     var welcomeText = 'Done!\n\n';
@@ -165,7 +166,5 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     welcomeText += 'Remember to run `cca prepare` after making changes\n';
     welcomeText += 'Full instructions: https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md#making-changes-to-your-app-source-code';
     console.log(welcomeText);
-
-    return Q();
   });
 };

@@ -17,63 +17,83 @@
   under the License.
  */
 
-module.exports = function parseManifest(manifest) {
-  var permissions = [],
-      chromeAppId,
-      whitelist = [],
-      plugins = [],
-      i;
-  if (manifest.permissions) {
-    for (i = 0; i < manifest.permissions.length; ++i) {
-      if (typeof manifest.permissions[i] === "string") {
-        var matchPatternParts = /([^:]+:\/\/[^\/]+)(\/.*)$/.exec(manifest.permissions[i]);
-        if (matchPatternParts) {
-          // Disregard paths in host permissions: path is required, but
-          // <scheme>://<host>/<any path> should translate to <scheme>://<host>/*
-          whitelist.push(matchPatternParts[1] + "/*");
-        } else if (manifest.permissions[i] === "<all_urls>") {
-          whitelist.push("*");
-        } else {
-          permissions.push(manifest.permissions[i]);
-        }
-      } else {
-        permissions = permissions.concat(Object.keys(manifest.permissions[i]));
-      }
-    }
-
-    for (i = 0; i < permissions.length; i++) {
-      var pluginsForPermission = require('./plugin_map').PLUGIN_MAP[permissions[i]];
-      if (pluginsForPermission) {
-        for (var j = 0; j < pluginsForPermission.length; ++j) {
-          plugins.push(pluginsForPermission[j]);
-        }
-      } else {
-        console.warn('Permission not supported by cca: ' + permissions[i] + ' (skipping)');
-      }
-    }
-  }
-
-  var pluginsForEngine = require('./plugin_map').ENGINE_MAP[manifest.webview || "crosswalk"];
-  if (pluginsForEngine) {
-    for (var k = 0; k < pluginsForEngine.length; ++k) {
-      plugins.push(pluginsForEngine[k]);
-    }
-  } else {
-    console.warn('Rendering engine not supported by cca: ' + manifest.webview + ' (ignoring)');
-  }
-
-  // Note: chromeAppId is not currently used.
-  if (manifest.key) {
-    chromeAppId = require('./util/chrome_app_key_to_id')(manifest.key);
-  } else {
-    // All zeroes -- should we use rand() here instead?
-    chromeAppId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-  }
-
-  return {
-    appId: chromeAppId,
-    whitelist: whitelist,
-    plugins: plugins,
-    permissions: permissions,
+function mapPermissionsToPlugins(knownPermissionsMap, requestedPermissionsList) {
+  // We have to create three lists:
+  // 1. Permissions your app has requested and we know about (install these plugins)
+  // 2. Permissions your app has requested and we do not know about (warn about these)
+  // 3. Permissions your app has not requested (uninstall these plugins)
+  var ret = {
+    toInstall: [],
+    toUninstall: [],
+    unknown: [],
   };
+
+  var knownPermissionsList = Object.keys(knownPermissionsMap);
+  requestedPermissionsList = requestedPermissionsList.slice(); // deep copy so we can modify in-place
+
+  requestedPermissionsList.forEach(function(requestedPermission) {
+    // Is this permission known?
+    var idx = knownPermissionsList.indexOf(requestedPermission);
+    if (idx != -1) {
+      ret.toInstall = ret.toInstall.concat(knownPermissionsMap[requestedPermission]);
+      // Remove from the list of known permissions, so that at the end of this we have all known permissions that arent requested
+      knownPermissionsList.splice(idx,1);
+    } else {
+      ret.unknown.push(requestedPermission);
+    }
+  });
+  // Uninstall whatever is left, since it was not requested
+  knownPermissionsList.forEach(function(permission) {
+    ret.toUninstall = ret.toUninstall.concat(knownPermissionsMap[permission]);
+  });
+
+  return ret;
+}
+
+module.exports = function parseManifest(manifest) {
+  var ret = {
+    appId: undefined,
+    whitelist: [],
+    permissions: [],
+    pluginsToBeInstalled: [],
+    pluginsToBeNotInstalled: [],
+    pluginsNotRecognized: [],
+  };
+
+  (manifest.permissions || []).forEach(function(permission) {
+    if (typeof permission === "object") {
+      ret.permissions = ret.permissions.concat(Object.keys(permission));
+    } else if (permission === "<all_urls>") {
+      ret.whitelist.push("*");
+    } else {
+      var matchPatternParts = /([^:]+:\/\/[^\/]+)(\/.*)$/.exec(permission);
+      if (matchPatternParts) {
+        // Disregard paths in host permissions: path is required, but
+        // <scheme>://<host>/<any path> should translate to <scheme>://<host>/*
+        ret.whitelist.push(matchPatternParts[1] + "/*");
+      } else {
+        ret.permissions.push(permission);
+      }
+    }
+  });
+
+  var pluginsForPermissions = mapPermissionsToPlugins(require('./plugin_map').PLUGIN_MAP, ret.permissions);
+  var pluginsForEngines = mapPermissionsToPlugins(require('./plugin_map').ENGINE_MAP, [manifest.webview || "crosswalk"]);
+
+  ret.pluginsToBeInstalled = pluginsForPermissions.toInstall.concat(pluginsForEngines.toInstall);
+  ret.pluginsToBeNotInstalled = pluginsForPermissions.toUninstall.concat(pluginsForEngines.toUninstall);
+  ret.pluginsNotRecognized = pluginsForPermissions.unknown;
+
+  // This should happen rarely
+  pluginsForEngines.unknown.forEach(function(unknownEngine) {
+    console.warn('Engine not supported by cca: ' + unknownEngine + ' (skipping)');
+  });
+
+  if (manifest.key) {
+    ret.appId = require('./util/chrome_app_key_to_id')(manifest.key);
+  } else {
+    ret.appId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  }
+
+  return ret;
 };
