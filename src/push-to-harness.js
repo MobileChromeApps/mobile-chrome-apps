@@ -128,7 +128,11 @@ function watchFiles(session) {
   var deferred = Q.defer();
 
   // TODO: This doesn't work for vanilla cordova apps + multiple platforms.
-  gaze(session.clientInfos[0].watchDir + '/**/*', function(err, watcher) {
+  var watchDir = session.clientInfos[0].watchDir;
+  // Note: gaze doesn't work well with ./ prefix nor with absolute paths
+  // (https://github.com/gruntjs/grunt-contrib-watch/issues/166)
+  // path.join() is smart enough to remove the ./ prefix.
+  gaze(path.join(watchDir, '**', '*'), function(err, watcher) {
     console.log('Watching for changes.');
     watcher.on('all', function(event, filepath) {
       debouncedPushAll(session.clientInfos);
