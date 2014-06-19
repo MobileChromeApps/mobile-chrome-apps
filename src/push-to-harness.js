@@ -86,6 +86,15 @@ function createSession(targets) {
         });
       }
       return createClient();
+    }, function(error) {
+      if (error.code === 'ECONNREFUSED') {
+        console.warn('\nPlease run `adb forward tcp:2424 tcp:2424`, and then try pushing again.');
+      } else if (error.code === 'ECONNRESET') {
+        console.warn('\nPlease make sure that the Chrome App Developer Tool for Mobile is running on your device.');
+      } else {
+        console.error(error);
+      }
+      process.exit();
     });
   }
   return createClient();
@@ -100,7 +109,16 @@ function pushAll(clientInfos) {
   }
   pushInProgress = true;
   var allPromises = clientInfos.map(function(clientInfo) {
-    return clientInfo.pushSession.push();
+    try {
+      return clientInfo.pushSession.push();
+    } catch (e) {
+      if (/Not a Cordova project/.test(e)) {
+        console.warn('Please navigate to a Chrome App or Cordova project, and then try pushing again.');
+      } else {
+        console.error(e);
+      }
+      process.exit();
+    }
   });
   var pushAgain = false;
   return Q.all(allPromises)
