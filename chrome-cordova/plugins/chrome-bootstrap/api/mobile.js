@@ -50,9 +50,9 @@ exports.boot = function() {
 exports.bgInit = function(bgWnd) {
   exports.bgWindow = bgWnd;
 
+  bgWnd.navigator = navigator;
   require('cordova/modulemapper').mapModules(bgWnd.window);
 
-  bgWnd.navigator = navigator;
   // HACK: Make the bg page use the foreground windows possibly polyfill'ed XHR
   // This breaks relative URLs if fgWnd and bgWnd are at different paths.
   // Could be fixed by just re-applying the polyfill in the background page.
