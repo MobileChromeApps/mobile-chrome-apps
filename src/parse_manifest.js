@@ -46,6 +46,13 @@ function mapPermissionsToPlugins(knownPermissionsMap, requestedPermissionsList) 
   knownPermissionsList.forEach(function(permission) {
     ret.toUninstall = ret.toUninstall.concat(knownPermissionsMap[permission]);
   });
+  // Final step, bit of a hack, remove duplicate plugins from toUninstall list that exist in toInstall
+  // e.g. syncFS depends on identity.  So, even if identity isn't in your manifest, don't uninstal it if you have syncFS
+  // The way we handle this is to add org.chromium.identity to the list of plugins to install for the syncFS permission
+  // so, the last thing to do is subtract the plugins to install from the plugins to not install, since there can be overlap.
+  ret.toUninstall = ret.toUninstall.filter(function(plugin) {
+    return ret.toInstall.indexOf(plugin) == -1;
+  });
 
   return ret;
 }
