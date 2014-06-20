@@ -33,9 +33,15 @@ exports.runCmd = function runCmd(cmd) {
       msg += ' ' + arg;
     }
   });
-  // Hack to remove the obj passed to the cordova create command.
   console.log('## Running Cordova Command: ' + msg);
-  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
+  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1))
+  .fail(function(err) {
+    if (err.name == 'CordovaError') {
+        return Q.reject(err.message);
+    } else {
+        return Q.reject(err.stack);
+    }
+  });
 };
 
 // Chains a list of cordova commands, returning a promise.
