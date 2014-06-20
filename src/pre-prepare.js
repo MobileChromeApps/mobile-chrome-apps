@@ -41,6 +41,9 @@ module.exports = exports = function prePrepareCommand() {
   .then(function(manifestData) {
     pluginsToBeInstalled = require('./plugin-map').DEFAULT_PLUGINS.concat(manifestData.pluginsToBeInstalled);
     pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled;
+    pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
+      return pluginsToBeInstalled.indexOf(plugin) == -1;
+    });
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
   })
