@@ -36,10 +36,10 @@ module.exports = exports = function prePrepareCommand() {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return Q.when(require('./parse_manifest')(manifest));
+    return Q.when(require('./parse-manifest')(manifest));
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = require('./plugin_map').DEFAULT_PLUGINS.concat(manifestData.pluginsToBeInstalled);
+    pluginsToBeInstalled = require('./plugin-map').DEFAULT_PLUGINS.concat(manifestData.pluginsToBeInstalled);
     pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled;
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;

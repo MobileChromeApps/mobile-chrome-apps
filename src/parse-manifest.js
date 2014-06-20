@@ -84,8 +84,8 @@ module.exports = function parseManifest(manifest) {
     }
   });
 
-  var pluginsForPermissions = mapPermissionsToPlugins(require('./plugin_map').PLUGIN_MAP, ret.permissions);
-  var pluginsForEngines = mapPermissionsToPlugins(require('./plugin_map').ENGINE_MAP, [manifest.webview || "crosswalk"]);
+  var pluginsForPermissions = mapPermissionsToPlugins(require('./plugin-map').PLUGIN_MAP, ret.permissions);
+  var pluginsForEngines = mapPermissionsToPlugins(require('./plugin-map').ENGINE_MAP, [manifest.webview || "crosswalk"]);
 
   ret.pluginsToBeInstalled = pluginsForPermissions.toInstall.concat(pluginsForEngines.toInstall);
   ret.pluginsToBeNotInstalled = pluginsForPermissions.toUninstall.concat(pluginsForEngines.toUninstall);

@@ -60,7 +60,7 @@ function fixEnv() {
 /******************************************************************************/
 
 function main() {
-  var commandLineFlags = require('./parse_command_line')();
+  var commandLineFlags = require('./parse-command-line')();
   utils.exit.pause_on_exit = commandLineFlags.pause_on_exit;
 
   var command = commandLineFlags._[0];
