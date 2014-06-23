@@ -39,8 +39,8 @@ module.exports = exports = function prePrepareCommand() {
     return Q.when(require('./parse-manifest')(manifest));
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = require('./plugin-map').DEFAULT_PLUGINS.concat(manifestData.pluginsToBeInstalled);
-    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled;
+    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(require('./plugin-map').DEFAULT_PLUGINS);
+    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat(require('./plugin-map').STALE_PLUGINS);
     pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
       return pluginsToBeInstalled.indexOf(plugin) == -1;
     });

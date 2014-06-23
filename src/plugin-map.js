@@ -18,6 +18,12 @@
  */
 
 
+/*
+ * NOTE!
+ * If you remove/rename a plugin from these lists, add the old value to the STALE_PLUGINS list at the end.
+ * That way, it will be automatically removed on prepare.
+ * */
+
 exports.DEFAULT_PLUGINS = [
     'org.apache.cordova.file',
     'org.apache.cordova.inappbrowser',
@@ -35,11 +41,6 @@ exports.DEFAULT_PLUGINS = [
     'org.chromium.polyfill.blob_constructor',
 ];
 
-/*
- * NOTE!
- * If you remove/rename a plugin in this list, add the old value to the XX_STALE list at the end.
- * That way, it will be automatically removed on prepare.
- * */
 exports.PLUGIN_MAP = {
   'alarms': ['org.chromium.alarms', 'org.chromium.storage'],
   'fileSystem': ['org.chromium.fileSystem', 'org.chromium.FileChooser'],
@@ -57,10 +58,15 @@ exports.PLUGIN_MAP = {
   'background': [],
   'fullscreen': [],
   'geolocation': ['org.apache.cordova.geolocation'],
-  '______XX_STALE': [],
 };
+
+exports.STALE_PLUGINS = [
+];
 
 exports.ENGINE_MAP = {
   'crosswalk': ['org.apache.cordova.engine.crosswalk'],
   'system': []
+};
+
+exports.PLUGIN_DEPS = {
 };
