@@ -36,7 +36,7 @@ module.exports = exports = function prePrepareCommand() {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return Q.when(require('./parse-manifest')(manifest));
+    return require('./parse-manifest')(manifest);
   })
   .then(function(manifestData) {
     pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(require('./plugin-map').DEFAULT_PLUGINS);
