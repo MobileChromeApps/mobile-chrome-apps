@@ -81,24 +81,23 @@ function main() {
 
   function printCcaVersionPrefix() {
     console.log('cca v' + packageVersion);
-    return Q();
   }
 
   function beforeCordovaPrepare() {
     if (commandLineFlags['skip-upgrade']) {
-      return Q();
+      return Q.when();
     }
     return require('./auto-upgrade')();
   }
 
   function forwardCurrentCommandToCordova() {
+    // TODO: Can we replace use of CLI here?  Calls to cordova-lib cordova.raw?
     require('cordova/src/cli')(process.argv);
-    return Q();
   }
 
   function printVersionThenPrePrePrepareThenForwardCommandToCordova() {
-    return printCcaVersionPrefix()
-      .then(beforeCordovaPrepare)
+    printCcaVersionPrefix();
+    return beforeCordovaPrepare()
       .then(forwardCurrentCommandToCordova);
   }
 
@@ -114,18 +113,16 @@ function main() {
       return require('./post-prepare')();
     },
     'checkenv': function() {
-      return printCcaVersionPrefix()
-      .then(require('./tools-check'));
+      printCcaVersionPrefix();
+      return require('./tools-check')();
     },
     'push': function() {
-      return printCcaVersionPrefix()
-      .then(function() {
-        return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
-      });
+      printCcaVersionPrefix();
+      return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
     },
     'run': function() {
-      return printCcaVersionPrefix()
-      .then(beforeCordovaPrepare)
+      printCcaVersionPrefix();
+      return beforeCordovaPrepare()
       .then(function() {
         var platform = commandLineFlags._[1];
         if (platform === 'chrome') {
@@ -134,14 +131,14 @@ function main() {
           var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
           var childProcess = require('child_process');
           childProcess.spawn(chromePath, args);
-          return Q();
+          return;
         }
-        return forwardCurrentCommandToCordova();
+        forwardCurrentCommandToCordova();
       });
     },
     'create': function() {
-      return printCcaVersionPrefix()
-      .then(function() {
+      printCcaVersionPrefix();
+      return Q.fcall(function() {
         var destAppDir = commandLineFlags._[1] || '';
         if (!destAppDir) {
           require('optimist').showHelp(console.log);
@@ -156,25 +153,29 @@ function main() {
       });
     },
     'upgrade': function() {
-      return printCcaVersionPrefix()
-      .then(require('./upgrade-project'));
+      printCcaVersionPrefix();
+      return require('./upgrade-project')();
     },
     'version': function() {
       console.log(packageVersion);
-      return Q();
+      return Q.when();
     },
     'help': function() {
-      return printCcaVersionPrefix()
-      .then(function() {
-        require('optimist').showHelp(console.log);
-        return Q();
-      });
+      printCcaVersionPrefix();
+      require('optimist').showHelp(console.log);
+      return Q.when();
     },
     'platform': function() {
-      return printCcaVersionPrefix().then(forwardCurrentCommandToCordova);
+      printCcaVersionPrefix();
+      // Do not run auto-upgrade step if doing a platforms command
+      forwardCurrentCommandToCordova();
+      return Q.when();
     },
     'platforms': function() {
-      return printCcaVersionPrefix().then(forwardCurrentCommandToCordova);
+      printCcaVersionPrefix();
+      // Do not run auto-upgrade step if doing a platforms command
+      forwardCurrentCommandToCordova();
+      return Q.when();
     },
     'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'compile': printVersionThenPrePrePrepareThenForwardCommandToCordova,
