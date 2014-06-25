@@ -88,7 +88,10 @@ function createSession(targets) {
       return createClient();
     }, function(error) {
       if (error.code === 'ECONNREFUSED') {
-        console.warn('\nPlease run `adb forward tcp:2424 tcp:2424`, and then try pushing again.');
+        console.warn();
+        console.warn('Could not connect to device at ' + target);
+        console.warn('For a USB connected Android device, try running: adb forward tcp:2424 tcp:2424');
+        console.warn('For a networked device, use --target=DEVICE_IP_ADDRESS');
       } else if (error.code === 'ECONNRESET') {
         console.warn('\nPlease make sure that the Chrome App Developer Tool for Mobile is running on your device.');
       } else {
