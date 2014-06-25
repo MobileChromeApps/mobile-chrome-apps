@@ -12,9 +12,11 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
   * _Suggested fix:_ Adjust your touch targets to be at least 44 x 44 points. 
 * Unexpected behavior when relying on mouse hover which does not exist on touch screens.
   * _Suggested fix:_ In addition to hover, activate UI elements such as dropdowns and tooltips on tap.
-* A 300ms tap delay.
+* A 300ms tap delay on iOS
   * _Suggested fix:_ Use the [FastClick by FT Labs](https://github.com/ftlabs/fastclick) JavaScript polyfill.
   * Read this [HTML5Rocks article](http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away) for some background info.
+* Flashes when tapping on things
+  * _Suggested fix:_ Add `-webkit-tap-hightlight-color` and `-webkit-touch-callout` to your CSS
 
 ### Supported Chrome APIs 
 
@@ -33,7 +35,7 @@ We've made many of the core Chrome APIs available to Chrome Apps for Mobile, inc
 
 However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desktop features are available on mobile:
 
-  * no `&lt;webview&gt;` tag
+  * no `<webview>` tag
   * no IndexedDB
   * no getUserMedia()
   * no NaCl
