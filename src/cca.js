@@ -37,7 +37,7 @@ function fixEnv() {
   var shelljs = require('shelljs');
   if (utils.isWindows()) {
     // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
-    var javacInPath = !shelljs.which('javac');
+    var javacInPath = !!shelljs.which('javac');
     var hasJavaHome = !!process.env.JAVA_HOME;
     if (hasJavaHome && !javacInPath) {
       process.env.PATH += ';' + process.env.JAVA_HOME + '\\bin';
@@ -47,6 +47,8 @@ function fixEnv() {
           shelljs.ls('C:\\Program Files\\java\\jdk*')[0] ||
           shelljs.ls('C:\\Program Files (x86)\\java\\jdk*')[0];
       if (firstJdkDir) {
+        // shelljs always uses / in paths.
+        firstJdkDir = firstJdkDir.replace(/\//g, '\\');
         if (!javacInPath) {
           process.env.PATH += ';' + firstJdkDir + '\\bin';
         }
