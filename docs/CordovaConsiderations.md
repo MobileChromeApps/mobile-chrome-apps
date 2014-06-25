@@ -25,9 +25,9 @@ We've made many of the core Chrome APIs [available to Chrome Apps for Mobile](AP
 However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desktop features are available on mobile:
 
   * no `<webview>` tag
-  * no IndexedDB
-  * no getUserMedia()
   * no NaCl
+  * no IndexedDB on iOS 7 or below
+  * no getUserMedia() on iOS
 
 
 _**Done? Continue to [Step 5: Publish &raquo;](Publish.md)**_
