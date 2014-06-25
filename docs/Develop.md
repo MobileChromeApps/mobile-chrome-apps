@@ -1,13 +1,18 @@
 ## Step 3: Develop
 
-You can build and run your application in two ways:
+There are three workflows that you can use to run your application:
 
-* Option A: From the command line, using the `cca` tool, or
-* Option B: By using an IDE, like Eclipse or Xcode. The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
+* Option A: Use the [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/)
+* Option B: From the command line, using the `cca` tool, or
+* Option C: By using an IDE, like Eclipse or Xcode. The use of an IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
-### Option A: Develop and build using the command line
+### Option A: Use the Chrome App Developer Tool
 
-From the root of your `cca`-generated project folder:
+For details, refer to the Chrome App Developer Tool [README.md](https://github.com/MobileChromeApps/chrome-app-developer-tool/)
+
+### Option B: Develop and build using the command line
+
+From the root of your `cca`-generated project directory:
 
 #### Android
 * To run your app on the Android Emulator: `cca emulate android`
@@ -19,7 +24,7 @@ From the root of your `cca`-generated project folder:
 * To run your app on a connected iOS device: `cca run ios`
   * Note: This requires that you've set up a [Provisioning Profile](http://stackoverflow.com/questions/3362652/what-is-a-provisioning-profile-used-for-when-developing-iphone-applications) for your device.
 
-### Option B: Develop and build using an IDE
+### Option C: Develop and build using an IDE
 
 #### Android
 
@@ -40,8 +45,8 @@ From the root of your `cca`-generated project folder:
 
 
 2.  Make sure you are building the right target.
-  
-    In the top left (beside Run and Stop buttons), there is a dropdown to select target project and device. Ensure that `YourApp` is selected and not `CordovaLib`. 
+
+    In the top left (beside Run and Stop buttons), there is a dropdown to select target project and device. Ensure that `YourApp` is selected and not `CordovaLib`.
 
 3.  Click the Play button.
 

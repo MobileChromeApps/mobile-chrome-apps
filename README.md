@@ -21,6 +21,9 @@ Try out the `cca` toolchain by following these steps:
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
+## Chrome App Developer Tool (New!)
+
+The [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/) enables a fast edit/refresh cycle when developing your mobile Chrome App.
 
 ## Additional resources
 
@@ -28,7 +31,6 @@ Try out the `cca` toolchain by following these steps:
 
 * To view which Chrome APIs are supported on mobile, visit the [API Status](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md) page.
 
-* To preview your Chrome App on an Android or iOS device without the `cca` toolchain, use the [Chrome App Developer Tool for Mobile](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/ChromeADT.md).
 
 ## Let's get started
 
