@@ -39,7 +39,7 @@ _Current as of June 2014_.
     * Working on Android and iOS.
     * `chrome.storage.sync` storage does not sync, but works like `chrome.storage.local`.
 * [syncFileSystem](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.syncFileSystem) - store and retrieve files backed by Google Drive
-    * Alpha quality on iOS and Android.
+    * Alpha quality on iOS and Android (not currently being worked on)
     * Does not sync when app is not running.
 
 ## Other APIs
@@ -67,8 +67,8 @@ _Current as of June 2014_.
 * `<webview>` tag
 * NaCl
 
-# Roadmap
+# APIs Coming in the Near Term
 
-TODO
-
-
+* chrome.socket.tcp / udp / tcpServer
+* mediaGalleries
+* Better notifications and alarms support
