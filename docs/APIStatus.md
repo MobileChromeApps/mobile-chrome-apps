@@ -48,27 +48,31 @@ _Current as of June 2014_.
     * Working on Android and iOS.
     * Requires manual steps for App Store / Play Store registration.
 
-## Not yet supported APIs
-
-* bluetooth
-* commands
-* contextMenus
-* mediaGalleries
-* permissions
-* serial
-* systemInfo.cpu
-* systemInfo.display
-* systemInfo.memory
-* systemInfo.storage
-* tts
-* types
-* usb
-* webstore
-* `<webview>` tag
-* NaCl
-
-# APIs Coming in the Near Term
-
+## APIs Coming in the Near Term
 * chrome.socket.tcp / udp / tcpServer
+* runtime.getPackageDirectoryEntry
 * mediaGalleries
 * Better notifications and alarms support
+
+## APIs Coming in the Medium Term
+* bluetooth
+* app.window.*
+* fileSystem (fixes)
+* system.*
+* location
+
+## APIs Coming in the Long Term
+* bluetooth
+* bluetoothLowEnergy
+* bluetoothSocket
+* commands
+* contextMenus
+* permissions
+* tts
+* usb
+* accessibilityFeatures
+* audio
+* hid
+* wallpaper
+* webstore
+
