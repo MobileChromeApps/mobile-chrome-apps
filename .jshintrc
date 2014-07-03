@@ -1,0 +1,8 @@
+{
+	"node": true,
+	"bitwise": true,			// Prohibit bitwise operators (&, |, ^, etc.)
+	"undef": true,   	 		// Require all non-global variables to be declared (prevents global leaks)
+	"unused": "vars",  		// Require all defined variables be used (excl. function arguments)
+	"latedef": "nofunc",  // Require variables (but not funcs) to be defined before being used
+	"sub": true     	   	// Tolerate using `[]` notation when it can still be expressed in dot notation
+}

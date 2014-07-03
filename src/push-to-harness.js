@@ -16,10 +16,10 @@ module.exports = exports = function push(target, watch) {
     target = !target || Array.isArray(target) ? target : [target];
     var ret = Q.when(target);
     if (!target) {
-      ret = extractTargets()
+      ret = extractTargets();
     }
     return ret.then(function(targets) {
-      return createSession(targets)
+      return createSession(targets);
     }).then(function(session) {
       return pushAll(session.clientInfos)
       .then(function() {
@@ -39,7 +39,6 @@ function extractTargets() {
 function createSession(targets) {
   var PushClient = require('chrome-app-developer-tool-client');
 
-  var deferred = Q.defer();
   var i = 0;
   var ret = {
     platforms: [],
@@ -123,7 +122,6 @@ function pushAll(clientInfos) {
       process.exit();
     }
   });
-  var pushAgain = false;
   return Q.all(allPromises)
   .then(function() {
     if (pushAgainWhenDone) {

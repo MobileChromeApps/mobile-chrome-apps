@@ -3,8 +3,6 @@ var Q = require('q');
 var fs = require('fs');
 var shelljs = require('shelljs');
 
-var utils = require('./utils');
-
 function resolveTilde(string) {
   // TODO: implement better
   if (string.substr(0,1) === '~')
@@ -20,7 +18,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
 
   return Q.fcall(function() {
     // Validate source arg.
-    sourceArg = flags['copy-from'] || flags['link-to'];
+    var sourceArg = flags['copy-from'] || flags['link-to'];
     if (!sourceArg) {
       srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
     } else {

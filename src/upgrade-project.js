@@ -1,5 +1,4 @@
 var Q = require('q');
-var cordovaCommands = require('./cordova-commands');
 var path = require('path');
 var shelljs = require('shelljs');
 var utils = require('./utils');

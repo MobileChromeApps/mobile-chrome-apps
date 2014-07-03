@@ -8,7 +8,7 @@ gulp.task('lint', function() {
       'src/**/*.js',
       // 'tests/**/*.js',
     ])
-    .pipe(jshint({ node: true }))
+    .pipe(jshint({}))  // Using .jshintrc file for configuration.
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'));
 });

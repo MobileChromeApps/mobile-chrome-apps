@@ -53,7 +53,7 @@ function postPrepareInternal(platform) {
         var fullName = path.join(betterPath, files[i]);
         var adjustedFilename= files[i].replace('-', '_').toLowerCase();
         if (files[i] !== adjustedFilename) {
-          stats = fs.statSync(fullName);
+          var stats = fs.statSync(fullName);
           if (stats.isDirectory()) {
             fs.renameSync(fullName, path.join(betterPath, adjustedFilename));
           }
