@@ -30,6 +30,8 @@
       </feature>
     </config-file>
   </platform>
-  <platform name="android"></platform>
+  <platform name="android">
+    <dependency id="org.chromium.FileChooser" />
+  </platform>
   <platform name="bb"></platform>
 </plugin>
