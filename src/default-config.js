@@ -9,10 +9,10 @@ module.exports = exports = function defaultConfig(ccaRoot) {
         ],
     lib: {
       android: {
-        uri: path.join(ccaRoot, 'cordova', 'cordova-android')
+        url: path.join(ccaRoot, 'cordova', 'cordova-android')
       },
       ios: {
-        uri: path.join(ccaRoot, 'cordova', 'cordova-ios')
+        url: path.join(ccaRoot, 'cordova', 'cordova-ios')
       }
     }
   };
