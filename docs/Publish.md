@@ -16,7 +16,7 @@ To publish your Android application to the Play Store:
 
         ./platforms/android/cordova/build --release
 
-4. Find your signed .apk located inside `platforms/android/ant-build/`.
+4. Find your signed .apk located inside `platforms/android/bin/`.
 
 5. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
 
