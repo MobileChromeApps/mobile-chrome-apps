@@ -15,10 +15,12 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   var srcAppDir = null;
   var manifest = null;
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
+  var appWasImported = false;
 
   return Q.fcall(function() {
     // Validate source arg.
     var sourceArg = flags['copy-from'] || flags['link-to'];
+    appWasImported = !!sourceArg;
     if (!sourceArg) {
       srcAppDir = path.join(ccaRoot, 'templates', 'default-app');
     } else {
@@ -27,6 +29,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
         sourceArg = path.dirname(sourceArg);
       }
       // Always check the sourceArg as a relative path first, even if its a special value (like 'spec')
+      // TODO: shouldn't we support import from cca/cordova style apps with www/?
       var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
 
       // Special values for sourceArg we resolve to predefined locations
@@ -77,18 +80,13 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   })
   .then(function() {
     process.chdir(destAppDir);
-    console.log("## Generating config.xml from manifest.json");
-    // TODO(mmocny): if cordova support --link-to/--copy-from to root folders, i.e. apps with existing config.xml, won't this overwrite a good config.xml?
-    return Q.ninvoke(fs, 'readFile', path.join(ccaRoot, 'templates', 'config.xml'), {encoding: 'utf-8'});
   })
-  .then(function(data) {
-    var configfile = data
-        .replace(/__APP_NAME__/, (manifest.name) || "Your App Name")
-        .replace(/__APP_PACKAGE_ID__/, (manifest.packageId) || "com.your.company.HelloWorld")
-        .replace(/__APP_VERSION__/, (manifest.version) || "0.0.1")
-        .replace(/__DESCRIPTION__/, (manifest.description) || "Plain text description of this app")
-        .replace(/__AUTHOR__/, (manifest.author) || "Author name and email");
-    return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
+  .then(function() {
+    // If there is no config.xml, or the config.xml is the cordova default, replace it with our default
+    if (!appWasImported || !fs.existsSync(path.join('config.xml'))) {
+      console.log("## Creating default config.xml");
+      shelljs.cp('-f', path.join(ccaRoot, 'templates', 'config.xml'), path.join('config.xml'));
+    }
   })
   .then(function() {
     return require('./write-out-cca-version')();

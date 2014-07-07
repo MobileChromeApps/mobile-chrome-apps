@@ -28,6 +28,7 @@
     "debounce": "0.0.3",
     "elementtree": "0.1.6",
     "gaze": "~0.5.1",
+    "jsesc": "^0.4.3",
     "node.extend": "",
     "optimist": "~0.6.1",
     "q": "~1",
