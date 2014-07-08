@@ -60,4 +60,6 @@ Your HTML, CSS, and JavaScript files live within the `www` directory of your cca
 
 You can debug your Chrome App on mobile the same way that you [debug Cordova applications](https://github.com/phonegap/phonegap/wiki/Debugging-in-PhoneGap).
 
+**Important**: In order to use [remote debugging with chrome web inspector for Android](https://developer.chrome.com/devtools/docs/remote-debugging), your desktop Chrome version should match the Chrome WebView on Android.  In practice, this usually means you should be debugging using Chrome Dev/Canary.  (If there is a version mismatch, usually the chrome web inspector window appears completely blank.)
+
 _**Done? Continue to [Step 4: Next Steps &raquo;](NextSteps.md)**_
