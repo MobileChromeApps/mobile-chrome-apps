@@ -135,7 +135,7 @@ function fixLocationObjects(wnd) {
     enumerable: true,
     get: function() {
       var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
-      return parts[2];
+      return parts ? parts[2] : "";
     }
   };
   var pathnameDescriptor = {
@@ -143,7 +143,7 @@ function fixLocationObjects(wnd) {
     enumerable: true,
     get: function() {
       var parts = /^([^:]*):\/\/([^/]*)(\/[^#?]*)/.exec(this.href);
-      return parts[3];
+      return parts ? parts[3] : this.href;
     }
   };
   var originDescriptor = {
@@ -151,7 +151,7 @@ function fixLocationObjects(wnd) {
     enumerable: true,
     get: function() {
       var parts = /^([^:]*:\/\/[^/]*)(\/[^#?]*)/.exec(this.href);
-      return parts[1];
+      return parts ? parts[1] : "null";
     }
   };
   function fixInstance(l) {
