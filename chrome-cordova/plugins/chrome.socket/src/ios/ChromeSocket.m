@@ -262,6 +262,25 @@ static NSString* stringFromData(NSData* data) {
     return self;
 }
 
+- (void)destroyAllSockets
+{
+    NSLog(@"Destroying all open sockets");
+    for (NSNumber *socketId in _sockets) {
+        [self destroySocketWithId:socketId];
+    }
+}
+
+- (void)onReset
+{
+    [self destroyAllSockets];
+}
+
+- (void)dispose
+{
+    [self destroyAllSockets];
+    [super dispose];
+}
+
 - (ChromeSocketSocket*) createNewSocketWithMode:(NSString*)mode
 {
     return [self createNewSocketWithMode:mode socket:nil];
@@ -289,7 +308,11 @@ static NSString* stringFromData(NSData* data) {
 - (void)destroy:(CDVInvokedUrlCommand*)command
 {
     NSNumber* socketId = [command argumentAtIndex:0];
+    [self destroySocketWithId:socketId];
+}
 
+- (void)destroySocketWithId:(NSNumber *)socketId
+{
     ChromeSocketSocket* socket = [_sockets objectForKey:socketId];
 
     if (socket == nil)
