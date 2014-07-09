@@ -163,12 +163,6 @@ module.exports = exports = function prePrepareCommand() {
       }
     }
 
-    // If the Crosswalk rendering engine is installed, link the library
-    if (installedPlugins.indexOf('org.apache.cordova.engine.crosswalk') >= 0) {
-      return addXwalkLibraryCommand();
-    } else {
-      return removeXwalkLibraryCommand();
-    }
   });
 };
 
