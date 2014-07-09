@@ -4,6 +4,26 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.1.1 (June 25, 2014)
+* This is an exciting and significant milestone release!
+* *Important*: Android applications now run inside a new packaged chromium-based webview, using the [Crosswalk Project](https://crosswalk-project.org/)!
+  * This webview is currently based on Chrome/36, and supports WebGL, Accelerated Canvas, WebRTC, WebAudio, runs polymer without polyfills, and more!
+  * Few caveats:
+    * size of apk has increased by ~35Mb (expect that to decrease to ~18Mb very soon)
+    * You must use Chrome 36+ on desktop to use remote debugging via web inspector
+  * You can opt-out of this webview by setting `"engine”: "webview"` in `manifest.mobile.json`
+* *Important*: New `cca push [--watch]` command to work with the [Chrome App Developer Tool for Mobile](https://github.com/MobileChromeApps/chrome-app-developer-tool)
+    * This is an awesome new workflow for rapid application development, we suggest you try it out!
+* New: `cca upgrade` command, will re-add latest platforms and plugins
+  * Additionally, cca will prompt for upgrade whenever it detects a new cca version is installed (use `cca --skip-upgrade` to ignore this)
+  * No longer necessary to re-create projects every time you `npm update -g cca`!
+  * Note: upgrade will delete `platforms/` and `plugins/` so make sure you don’t have local edits
+* cca will now remove chrome plugins when you remove api permissions from your manifest
+* Added `geolocation` permission support
+* `chrome.socket` bugfixes and better cleanup of lingering connections.
+* Lots of updated documentation
+
+
 ### v0.1.0 (May 28, 2014)
 * Quick release since 0.0.11 is no longer installing fine due to changes to cordova npm modules and plugin registry.
 * First MINOR version number bump, but long overdue. A lot has changed since our first release.
