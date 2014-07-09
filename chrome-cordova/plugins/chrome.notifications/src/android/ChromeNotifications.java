@@ -245,6 +245,10 @@ public class ChromeNotifications extends CordovaPlugin {
             }
             notification = inboxStyle.build();
         } else {
+            if ("progress".equals(type)) {
+                int progress = options.optInt("progress");
+                builder.setProgress(100, progress, false);
+            }
             NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle(builder);
             bigTextStyle.bigText(options.getString("message"));
             notification = bigTextStyle.build();

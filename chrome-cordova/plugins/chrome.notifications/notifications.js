@@ -20,7 +20,7 @@ function resolveUri(uri) {
 
 function checkNotificationOptions(options) {
     var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
-    var permittedTypes = [ 'basic', 'image', 'list' ];
+    var permittedTypes = [ 'basic', 'image', 'list', 'progress' ];
     for (var i = 0; i < requiredOptions.length; i++) {
         if (!(requiredOptions[i] in options)) {
             console.error('Error: Invalid notification options. Property \'' + requiredOptions[i] + '\' is required.');
@@ -66,6 +66,11 @@ function checkNotificationOptions(options) {
                 return false;
             }
         }
+    }
+    if ('progress' in options && options.type != 'progress') {
+        console.error('Error: Invalid notification options. ' +
+                      'Property \'progress\' may only be in notifications of type \'progress\'.');
+        return false;
     }
     return true;
 }
