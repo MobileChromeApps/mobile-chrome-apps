@@ -11,7 +11,7 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
   * Few caveats:
     * size of apk has increased by ~35Mb (expect that to decrease to ~18Mb very soon)
     * You must use Chrome 36+ on desktop to use remote debugging via web inspector
-  * You can opt-out of this webview by setting `"engine”: "webview"` in `manifest.mobile.json`
+  * You can opt-out of this webview by setting `"webview”: "system"` in `manifest.mobile.json`
 * *Important*: New `cca push [--watch]` command to work with the [Chrome App Developer Tool for Mobile](https://github.com/MobileChromeApps/chrome-app-developer-tool)
     * This is an awesome new workflow for rapid application development, we suggest you try it out!
 * New: `cca upgrade` command, will re-add latest platforms and plugins
