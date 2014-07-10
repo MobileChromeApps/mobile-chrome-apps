@@ -139,8 +139,10 @@ function getAppId() {
         }
       }
     } else {
-      // TODO: return fully qualified name given during cordova project creation
-      cachedAppId = manifest['name'];
+      // For now, create an app id based on an empty name.
+      // This means we yield same app id for any app without a manifest.
+      // TODO: Retrieve the package id from config.xml and use that.
+      cachedAppId = mapAppNameToAppId('');
     }
   }
   return cachedAppId;
