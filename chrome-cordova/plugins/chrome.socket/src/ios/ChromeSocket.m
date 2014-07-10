@@ -268,6 +268,7 @@ static NSString* stringFromData(NSData* data) {
     for (NSNumber *socketId in _sockets) {
         [self destroySocketWithId:socketId];
     }
+    [_sockets removeAllObjects];
 }
 
 - (void)onReset
@@ -309,6 +310,7 @@ static NSString* stringFromData(NSData* data) {
 {
     NSNumber* socketId = [command argumentAtIndex:0];
     [self destroySocketWithId:socketId];
+    [_sockets removeObjectForKey:socketId];
 }
 
 - (void)destroySocketWithId:(NSNumber *)socketId
@@ -324,7 +326,6 @@ static NSString* stringFromData(NSData* data) {
         [socket->_socket disconnect];
     }
 
-    [_sockets removeObjectForKey:[NSNumber numberWithUnsignedInteger:socket->_socketId]];
     VERBOSE_LOG(@"NTFY %@.%@ Destroy", socketId, command.callbackId);
 }
 
