@@ -20,14 +20,16 @@
     "type": "git",
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
+  "comments" : {"crypto-js": "is not meant to be pinned, but 3.1.2-5 IS later than 3.1.2 (incorrect use of semver), and this works"},
   "dependencies": {
-    "chrome-app-developer-tool-client": "^0.0.1",
+    "chrome-app-developer-tool-client": "0.0.2",
     "cordova": "^3.5.0-0.2.4",
     "cordova-lib": "^0.21.6",
-    "crypto-js": "^3.1.2-3",
+    "crypto-js": "3.1.2-5",
     "debounce": "0.0.3",
     "elementtree": "0.1.6",
-    "gaze": "~0.5.1",
+    "gaze": "^0.5.1",
+    "gulp-mocha": "^0.5.1",
     "jsesc": "^0.4.3",
     "node.extend": "",
     "optimist": "~0.6.1",
@@ -49,7 +51,7 @@
     "chai": "^1.9.1",
     "gulp": "^3.7.0",
     "gulp-jshint": "^1.6.1",
-    "gulp-mocha": "^0.4.1",
+    "gulp-mocha": "^0.5.1",
     "gulp-util": "^2.2.14",
     "walk": "^2.3.3"
   },

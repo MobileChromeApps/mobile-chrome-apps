@@ -51,7 +51,9 @@
 
 ## Update npm Dependencies
 
-    # See what is stale
+    # ensure you have the latest dependencies requested
+    npm install
+    # See what is stale (newer versions available)
     npm outdated --depth=0
     # Update them by:
     npm install foo@version --save
