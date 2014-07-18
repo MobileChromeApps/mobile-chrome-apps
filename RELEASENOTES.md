@@ -5,18 +5,16 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
 ### v0.2.1 (July 18, 2014)
-* This update is released as 2.1 in light of the fact the 1.1 should have been 2.0
+* This update is released as 0.2.1 in light of the fact the 0.1.1 should have been 0.2.0
 * *Important*: Android applications run by default in the Crosswalk webview (see 1.1 release notes)
 * Updated cordova-android, cordova-crosswalk-engine, google-play-services
 * Correct URL manipulation methods for data urls 
-* Set both url and uri in config for cordova create
-* escape strings in config.xml
-* Update build apk path
+* escape strings in config.xml to allow for special characters like email addresses
 * Add .jshintrc file and fix all JSHint errors
 * Adding FileChooser dependency to chrome.filesystem
 * better error messages 
 * iOS: Close open sockets on app reset/shutdown
-* Fixed an NPE when getting an app id
+* Fixed an Null pointer Exception when getting an app id
 * Updated documentation
 
  
