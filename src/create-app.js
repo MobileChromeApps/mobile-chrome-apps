@@ -89,6 +89,9 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     }
   })
   .then(function() {
+    return require('./update-config-xml')();
+  })
+  .then(function() {
     return require('./write-out-cca-version')();
   })
   .then(function() {

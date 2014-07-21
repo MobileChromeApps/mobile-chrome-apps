@@ -47,50 +47,7 @@ module.exports = exports = function prePrepareCommand() {
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
   })
-  .then(function() {
-    return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'})
-    .then(function(data) {
-      var jsescape = require('jsesc');
-
-      var tree = et.parse(data);
-
-      var widget = tree.getroot();
-      if (widget.tag == 'widget') {
-        widget.attrib.version = jsescape(manifest.version) || "0.0.1";
-        widget.attrib.id = jsescape(manifest.packageId) || "com.your.company.HelloWorld";
-      }
-
-      var name = tree.find('./name');
-      if (name) name.text = jsescape(manifest.name) || "Your App Name";
-
-      var description = tree.find('./description');
-      if (description) description.text = jsescape(manifest.description) || "Plain text description of this app";
-
-      var author = tree.find('./author');
-      if (author) author.text = jsescape(manifest.author) || "Author name and email";
-
-      var content = tree.find('./content');
-      if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
-
-      var access;
-      while ((access = widget.find('./access'))) {
-        widget.remove(access);
-      }
-      whitelist.forEach(function(pattern, index) {
-        var tag = et.SubElement(widget, 'access');
-        tag.attrib.origin = pattern;
-      });
-
-      var configfile = et.tostring(tree.getroot(), {indent: 4});
-
-      // Don't write out if nothing actually changed
-      if (configfile == data)
-        return;
-
-      console.log('## Updating config.xml from manifest.json');
-      return Q.ninvoke(fs, 'writeFile', 'config.xml', configfile, { encoding: 'utf-8' });
-    });
-  })
+  .then(require('./update-config-xml'))
   .then(function() {
     // Add a URL type to the iOS project's .plist file.
     // This is necessary for chrome.identity to redirect back to the app after authentication.
