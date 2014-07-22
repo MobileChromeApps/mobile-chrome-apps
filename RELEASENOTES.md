@@ -4,6 +4,10 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.2.2 (July 22, 2014)
+* Minor fix: Don't temporarily set widget id to undefined when importing chrome apps with no manifest.mobile.json
+
+
 ### v0.2.1 (July 18, 2014)
 * This update is released as 0.2.1 in light of the fact the 0.1.1 should have been 0.2.0
 * *Important*: Android applications run by default in the Crosswalk webview (see 1.1 release notes)
