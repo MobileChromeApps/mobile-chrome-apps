@@ -10,23 +10,28 @@ module.exports = exports = function updateConfigXml() {
     return Q.ninvoke(fs, 'readFile', 'config.xml', {encoding: 'utf-8'})
     .then(function(configFileContent) {
       var jsescape = require('jsesc');
+      function escapedValueOrDefault(value, defaultValue) {
+        if (typeof value === 'undefined')
+          return defaultValue;
+        return jsescape(value);
+      }
 
       var tree = et.parse(configFileContent);
 
       var widget = tree.getroot();
       if (widget.tag == 'widget') {
-        widget.attrib.version = jsescape(manifest.version) || "0.0.1";
-        widget.attrib.id = jsescape(manifest.packageId) || "com.your.company.HelloWorld";
+        widget.attrib.version = escapedValueOrDefault(manifest.version, '0.0.1');
+        widget.attrib.id = escapedValueOrDefault(manifest.packageId, 'com.your.company.HelloWorld');
       }
 
       var name = tree.find('./name');
-      if (name) name.text = jsescape(manifest.name) || "Your App Name";
+      if (name) name.text = escapedValueOrDefault(manifest.name, 'Your App Name');
 
       var description = tree.find('./description');
-      if (description) description.text = jsescape(manifest.description) || "Plain text description of this app";
+      if (description) description.text = escapedValueOrDefault(manifest.description, 'Plain text description of this app');
 
       var author = tree.find('./author');
-      if (author) author.text = jsescape(manifest.author) || "Author name and email";
+      if (author) author.text = escapedValueOrDefault(manifest.author, 'Author name and email');
 
       var content = tree.find('./content');
       if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
@@ -50,4 +55,4 @@ module.exports = exports = function updateConfigXml() {
       return Q.ninvoke(fs, 'writeFile', 'config.xml', newConfigFileContent, { encoding: 'utf-8' });
     });
   });
-}
+};
