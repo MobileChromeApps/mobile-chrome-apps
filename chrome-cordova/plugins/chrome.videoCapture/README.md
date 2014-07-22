@@ -8,4 +8,4 @@ Stable on Android.
 
 ## Reference
 
-All you need is to add the `videoCapture` permission to the manifest.
+All you need is the `videoCapture` permission defined in the Chrome App manifest.
