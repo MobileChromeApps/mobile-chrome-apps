@@ -119,11 +119,21 @@ If the purchase fails for any reason (including cancellation), `options.failure`
 
 ### getSkuDetails()
 
-`google.payments.inapp.getSkuDetails(<skuList>, <successCallback>, <failureCallback>)`
+`google.payments.inapp.getSkuDetails(<options>)`
 
-`skuList` is an array of productId strings to retrieve information about.
+`options` is an object with the following members:
 
-If successful, `successCallback` will be called with a `skuDetails` array. Every item in the array is an object like this:
+- `success`: Success callback
+
+- `failure`: Failure callback
+
+- `sku`: [Optional] Single productId string to query
+
+- `skuList`: [Optional] An array of productId strings to retrieve information about.
+
+`sku` or `skuList` are each optional, but one of them should be provided.
+
+If successful, `options.success` will be called with a `skuDetails` array. Every item in the array is an object like this:
 
     {
         "productId": <The SKU for this product>,
@@ -133,7 +143,7 @@ If successful, `successCallback` will be called with a `skuDetails` array. Every
         "type": <The store-specific type associated with the product>
     }
 
-On failure, `failureCallback` will be called with a `failureResult` as its single argument (see above).
+On failure, `options.failure` will be called with a `failureResult` as its single argument (see above).
 
 ## External References
 
@@ -142,7 +152,7 @@ On failure, `failureCallback` will be called with a `failureResult` as its singl
 
 ### API
 * [Monetize your Chrome App](http://developer.chrome.com/apps/google_wallet.html)
-* [Google Wallet for Digital Goods API](https://developers.google.com/wallet/digital/docs/jsreference)
+* [In-App Payments with Google Wallet for Digital Goods](https://developer.chrome.com/webstore/payments-iap)
 
 ### Back-end store references
 * [Android BillingV3 documentation](http://developer.android.com/google/play/billing/api.html)

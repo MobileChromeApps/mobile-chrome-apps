@@ -27,10 +27,7 @@ errorTypes[ITEM_UNAVAILABLE] = "INTERNAL_SERVER_ERROR";
 
 exports.inapp = {
     platform: 'android-play-store',
-    getSkuDetails: function(skus, success, failure) {
-        if (!(skus instanceof Array)) {
-            skus = [skus];
-        }
+    getSkuDetailsInternal: function(skus, success, failure) {
         exec(success, failure, "InAppBillingV3", "getSkuDetails", skus);
     },
 

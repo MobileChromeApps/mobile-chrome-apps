@@ -28,7 +28,7 @@ var loadedItemSet = {};
 
 exports.inapp = {
     platform: 'ios-app-store',
-    getSkuDetails: function(skus, success, failure) {
+    getSkuDetailsInternal: function(skus, success, failure) {
         // Load the products to retrieve their information.
         window.storekit.load(skus, function(validProducts, invalidProductIds) {
             // Record the data for each valid product.
@@ -42,7 +42,7 @@ exports.inapp = {
                     // Add the item details to the list.
                     var item = {};
                     item.productId = product.id;
-                    item.title = product.title
+                    item.title = product.title;
                     item.description = product.description;
                     item.price = product.price;
                     item.type = 0;

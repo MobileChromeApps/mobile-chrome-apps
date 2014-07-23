@@ -28,9 +28,34 @@ exports.onBillingAvailabilityChanged = new Event('onBillingAvailabilityChanged')
 exports.billingAvailable = false;
 
 exports.inapp = {
-    getSkuDetails: function(skus, success, failure) {
-        var error = createError(INTERNAL_SERVER_ERROR, null, null, "getSkuDetails is not supported on this platform.");
-        failure(error);
+    getSkuDetails: function(options) {
+        var error;
+        var skus;
+
+        // If billing is unavailable, throw an error.
+        if (!exports.billingAvailable) {
+            error = createError(MERCHANT_ERROR, null, null, "Billing is unavailable.");
+            if (options.failure) options.failure(error);
+        }
+
+        // Build SKU list for query
+        skus = options.skuList || [];
+        if (options.sku) {
+            skus.push(options.sku);
+        }
+        // If no SKUs are provided, throw an error.
+        if (!skus.length) {
+            error = createError(MERCHANT_ERROR, null, null, "No SKU provided for query.");
+            if (options.failure) options.failure(error);
+        }
+
+        // Delegate to the platform-specific implementation.
+        if (exports.inapp.getSkuDetailsInternal) {
+            exports.inapp.getSkuDetailsInternal(skus, options.success, options.failure);
+        } else {
+            error = createError(INTERNAL_SERVER_ERROR, null, null, "getSkuDetails is not supported on this platform.");
+            if (options.failure) options.failure(error);
+        }
     },
 
     getPurchases: function(success, failure) {
