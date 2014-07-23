@@ -165,6 +165,10 @@ button.menu img {
           transition: transform 0.3s ease-out;
 }
 
+.fullwidth {
+  width: 100%;
+}
+
 .navdrawer-container h4,
 .navdrawer-container ul li a {
   height: auto;
