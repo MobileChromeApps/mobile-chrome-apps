@@ -58,9 +58,21 @@ exports.inapp = {
         }
     },
 
-    getPurchases: function(success, failure) {
-        var error = createError(INTERNAL_SERVER_ERROR, null, null, "getPurchases is not supported on this platform.");
-        failure(error);
+    getPurchases: function(options) {
+        var error;
+        // If billing is unavailable, throw an error.
+        if (!exports.billingAvailable) {
+            error = createError(MERCHANT_ERROR, null, null, "Billing is unavailable.");
+            if (options.failure) options.failure(error);
+        }
+
+        // Delegate to the platform-specific implementation.
+        if (exports.inapp.getPurchasesInternal) {
+            exports.inapp.getPurchasesInternal(options);
+        } else {
+            error = createError(INTERNAL_SERVER_ERROR, null, null, "getPurchases is not supported on this platform.");
+            if (options.failure) options.failure(error);
+        }
     },
 
     buy: function(options) {

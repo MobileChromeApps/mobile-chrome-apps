@@ -145,6 +145,32 @@ If successful, `options.success` will be called with a `skuDetails` array. Every
 
 On failure, `options.failure` will be called with a `failureResult` as its single argument (see above).
 
+### getPurchases()
+
+`google.payments.inapp.getPurchases(<options>)`
+
+`options` is an object with the following members:
+
+- `success`: Success callback
+
+- `failure`: Failure callback
+
+If successful, `options.success` will be called with an object containing a list of products which the user has purchased, in a `response.details` array. Every item in the array is an object like this:
+
+    {
+        "kind": <item kind>,
+        "itemId": "com.example.yourAppPackage",
+        "sku": <the SKU for this product>,
+        "createdTime": <timestamp of the purchase, in milliseconds since Jan 1, 1970>,
+        "state": <item state>
+    }
+
+The item kind will be `"googleplaystore#payment"` for items purchased through the Google Play Store.
+
+The item state will be one of `"ACTIVE"`, `"CANCELLED"`, or `"REFUNDED"`.
+
+On failure, `options.failure` will be called with a `failureResult` as its single argument (see above).
+
 ## External References
 
 ### Sample app

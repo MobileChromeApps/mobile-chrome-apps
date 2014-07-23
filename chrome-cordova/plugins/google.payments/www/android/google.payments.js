@@ -31,8 +31,29 @@ exports.inapp = {
         exec(success, failure, "InAppBillingV3", "getSkuDetails", skus);
     },
 
-    getPurchases: function(success, failure) {
-        exec(success, failure, "InAppBillingV3", "getPurchases", []);
+    getPurchasesInternal: function(options) {
+        var getPurchaseSuccess;
+        if (options.success) {
+            getPurchaseSuccess = function(purchaseDetails) {
+                var response = {
+                    response: {
+                        details: []
+                    }
+                };
+                for (var i = 0; i < purchaseDetails.length; ++i) {
+                    var purchase = purchaseDetails[i];
+                    response.response.details.push({
+                        kind: "googleplaystore#payment",
+                        itemId: purchase.packageName,
+                        sku: purchase.sku,
+                        createdTime: purchase.purchaseTime,
+                        state: purchase.purchaseState
+                    });
+                }
+                options.success(response);
+            };
+        }
+        exec(getPurchaseSuccess, options.failure, "InAppBillingV3", "getPurchases", []);
     },
 
     buyInternal: function(options) {
