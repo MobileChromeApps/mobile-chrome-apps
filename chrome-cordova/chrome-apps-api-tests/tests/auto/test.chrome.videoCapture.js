@@ -52,8 +52,10 @@ registerAutoTests("chrome.videoCapture", function() {
     expect(stream.getAudioTracks).toBeDefined();
   }
   
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+
   it('should return a valid video stream with no audio', function(done) {
-    navigator.webkitGetUserMedia({video: true, audio: false}, function(stream) {
+    navigator.getUserMedia({video: true, audio: false}, function(stream) {
       localStream = stream;
       expectMediaStream(stream);
 
@@ -73,7 +75,7 @@ registerAutoTests("chrome.videoCapture", function() {
   });
     
   it('should return both valid video and audio streams', function(done) {
-    navigator.webkitGetUserMedia({video: true, audio: true}, function(stream) {
+    navigator.getUserMedia({video: true, audio: true}, function(stream) {
       localStream = stream;
       expectMediaStream(stream);
 
