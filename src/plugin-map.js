@@ -43,8 +43,12 @@ exports.DEFAULT_PLUGINS = [
 
 exports.PLUGIN_MAP = {
   'alarms': ['org.chromium.alarms', 'org.chromium.storage'],
+  'audioCapture': ['org.chromium.audioCapture'],
+  'background': [],
   'fileSystem': ['org.chromium.fileSystem', 'org.chromium.FileChooser'],
+  'fullscreen': [],
   'gcm': ['org.chromium.gcm', 'org.chromium.storage'],
+  'geolocation': ['org.apache.cordova.geolocation'],
   'identity': ['org.chromium.identity'],
   'idle': ['org.chromium.idle'],
   'notifications': ['org.chromium.notifications', 'org.chromium.storage'],
@@ -55,9 +59,7 @@ exports.PLUGIN_MAP = {
   'storage': ['org.chromium.storage'],
   'syncFileSystem': ['org.chromium.syncFileSystem', 'org.chromium.storage', 'org.chromium.identity'],
   'unlimitedStorage': [],
-  'background': [],
-  'fullscreen': [],
-  'geolocation': ['org.apache.cordova.geolocation'],
+  'videoCapture': ['org.chromium.videoCapture'],
 };
 
 exports.STALE_PLUGINS = [

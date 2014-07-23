@@ -18,6 +18,7 @@
   },
   "permissions": [
     "alarms",
+    "audioCapture",
     "fileSystem",
     "identity",
     "idle",
@@ -29,6 +30,7 @@
     },
     "storage",
     "syncFileSystem",
+    "videoCapture",
     "http://www.apache.org/*",
     "http://127.0.0.1/*",
     "https://www.googleapis.com/*"
