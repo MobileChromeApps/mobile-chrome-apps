@@ -47,6 +47,10 @@ _Current as of June 2014_.
 * [payments](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/chrome-cordova/plugins/google.payments) - sell virtual goods within your mobile app
     * Working on Android and iOS.
     * Requires manual steps for App Store / Play Store registration.
+* [audioCapture](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.audioCapture) - capture audio directly from the user's Microphone via the getUserMedia API.
+    * Working on Android only.
+* [videoCapture](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.videoCapture) - capture video directly from the user's Web Cam via the getUserMedia API.
+    * Working on Android only.
 
 ## APIs Coming in the Near Term
 * chrome.socket.tcp / udp / tcpServer
