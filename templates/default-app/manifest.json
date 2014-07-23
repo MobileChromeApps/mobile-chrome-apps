@@ -22,7 +22,6 @@
     }
   },
   "permissions": [
-    "<all_urls>",
-    "http://developers.google.com/web/*"
+    "<all_urls>"
   ]
 }
