@@ -22,11 +22,17 @@ For Cordova apps, install with the cordova command-line tool:
 
 For iOS, no additional configuration is necessary.
 
-For Android, you will need to add a key to your application's manifest file.
+For Android, you will need to add a key to your application's manifest file. (In a mobile chrome app, this key should usually be placed in `www/manifest.mobile.json`, so as not to interfere with the desktop-chrome-compatible `manifest.json` file.)
+
+The line to add should look like:
 
     "play_store_key": <Base64-encoded public key from the Google Play Store>
 
 The required public key can be obtained from the Google Play Store once you have uploaded your app (it does not need to be published; just uploaded). From the "Services & APIs" panel for your app, copy the string labeled "Your license key for this application".
+
+In a Cordova app, create a file in the `www` directory called `manifest.json`, containing this text:
+
+    { "play_store_key": <Base64-encoded public key from the Google Play Store> }
 
 ## Usage
 
