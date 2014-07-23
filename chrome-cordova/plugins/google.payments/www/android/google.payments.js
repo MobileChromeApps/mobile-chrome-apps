@@ -35,10 +35,6 @@ exports.inapp = {
         exec(success, failure, "InAppBillingV3", "getPurchases", []);
     },
 
-    getAvailableProducts: function(success, failure) {
-        exec(success, failure, "InAppBillingV3", "getAvailableProducts", []);
-    },
-
     buyInternal: function(options) {
         var purchaseSuccess = function(purchaseDetails) {
                 var result = {
