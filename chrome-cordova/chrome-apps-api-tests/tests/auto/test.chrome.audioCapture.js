@@ -5,7 +5,6 @@
 registerAutoTests("chrome.audioCapture", function() {
   'use strict';
 
-  var localStream;
   var customMatchers = {
     toBeMediaStreamTrack : function(util, customEqualityTesters){
       return {
@@ -34,14 +33,6 @@ registerAutoTests("chrome.audioCapture", function() {
     done();
   });
 
-  afterEach(function(done) {
-    if (localStream && localStream.stop) {
-      localStream.stop();
-      localStream = undefined;
-    }
-    done();
-  });
-
   function expectMediaStream(stream) {    
     expect(stream).toBeDefined();
     expect(stream.id).toBeString();
@@ -56,7 +47,6 @@ registerAutoTests("chrome.audioCapture", function() {
   
   it('should return a valid audio stream with no video', function(done) {
     navigator.getUserMedia({audio: true, video: false}, function(stream) {
-      localStream = stream;
       expectMediaStream(stream);
 
       var audioTracks = stream.getAudioTracks();
@@ -76,7 +66,6 @@ registerAutoTests("chrome.audioCapture", function() {
     
   it('should return both valid audio and video streams', function(done) {
     navigator.getUserMedia({audio: true, video: true}, function(stream) {
-      localStream = stream;
       expectMediaStream(stream);
 
       var audioTracks = stream.getAudioTracks();
