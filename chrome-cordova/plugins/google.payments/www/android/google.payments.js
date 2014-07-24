@@ -27,19 +27,33 @@ errorTypes[ITEM_UNAVAILABLE] = "INTERNAL_SERVER_ERROR";
 
 exports.inapp = {
     platform: 'android-play-store',
-    getSkuDetails: function(skus, success, failure) {
-        if (!(skus instanceof Array)) {
-            skus = [skus];
-        }
+    getSkuDetailsInternal: function(skus, success, failure) {
         exec(success, failure, "InAppBillingV3", "getSkuDetails", skus);
     },
 
-    getPurchases: function(success, failure) {
-        exec(success, failure, "InAppBillingV3", "getPurchases", []);
-    },
-
-    getAvailableProducts: function(success, failure) {
-        exec(success, failure, "InAppBillingV3", "getAvailableProducts", []);
+    getPurchasesInternal: function(options) {
+        var getPurchaseSuccess;
+        if (options.success) {
+            getPurchaseSuccess = function(purchaseDetails) {
+                var response = {
+                    response: {
+                        details: []
+                    }
+                };
+                for (var i = 0; i < purchaseDetails.length; ++i) {
+                    var purchase = purchaseDetails[i];
+                    response.response.details.push({
+                        kind: "googleplaystore#payment",
+                        itemId: purchase.packageName,
+                        sku: purchase.sku,
+                        createdTime: purchase.purchaseTime,
+                        state: purchase.purchaseState
+                    });
+                }
+                options.success(response);
+            };
+        }
+        exec(getPurchaseSuccess, options.failure, "InAppBillingV3", "getPurchases", []);
     },
 
     buyInternal: function(options) {

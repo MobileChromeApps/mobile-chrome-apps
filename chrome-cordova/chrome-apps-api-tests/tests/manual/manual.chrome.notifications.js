@@ -43,12 +43,19 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
     });
   });
 
-
   addButton('Image Notification', function() {
     createNotification({
       type:'image',
       title:'Image Notification',
       imageUrl:'assets/tahoe-320x215.png'
+    });
+  });
+
+  addButton('Progress Notification', function() {
+    createNotification({
+      type:'progress',
+      title:'Progress Notification',
+      progress:42
     });
   });
 
