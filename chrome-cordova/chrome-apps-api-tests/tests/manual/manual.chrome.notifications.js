@@ -18,14 +18,16 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
 
   var numIds = 0;
 
-  function createNotification(options) {
+  function createNotification(options, callback) {
     var notificationId = 'id' + numIds;
     numIds++;
     if (!('iconUrl' in options)) {
       options.iconUrl = 'assets/inbox-64x64.png';
     }
     options.message = options.message || 'notificationId = ' + notificationId;
-    chrome.notifications.create(notificationId, options, function(notificationId) {});
+    chrome.notifications.create(notificationId, options, function(notificationId) {
+      if (callback) callback(notificationId);
+    });
   }
 
   addButton('Basic Notification', function() {
@@ -52,10 +54,21 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
   });
 
   addButton('Progress Notification', function() {
-    createNotification({
+    var options = {
       type:'progress',
       title:'Progress Notification',
-      progress:42
+      progress: 0,
+    };
+    createNotification(options, function(notificationId) {
+      var intervalId = setInterval(function() {
+        if (options.progress <= 100) {
+          options.progress = options.progress + 1;
+          chrome.notifications.update(notificationId, options, function() {});
+        } else {
+          clearInterval(intervalId);
+          chrome.notifications.clear(notificationId, function() {});
+        }
+      }, 60);
     });
   });
 
