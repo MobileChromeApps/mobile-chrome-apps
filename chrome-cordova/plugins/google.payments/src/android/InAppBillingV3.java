@@ -44,6 +44,10 @@ public class InAppBillingV3 extends CordovaPlugin {
 	public static final int ITEM_NOT_OWNED = -10;
 	public static final int CONSUME_FAILED = -11;
 
+	public static final int PURCHASE_PURCHASED = 0;
+	public static final int PURCHASE_CANCELLED = 1;
+	public static final int PURCHASE_REFUNDED = 2;
+
 	private IabHelper iabHelper = null;
 	boolean billingInitialized = false;
 	AtomicInteger orderSerial = new AtomicInteger(0);
@@ -156,6 +160,8 @@ public class InAppBillingV3 extends CordovaPlugin {
 			return consumePurchase(args, callbackContext);
 		} else if ("getSkuDetails".equals(action)) {
 			return getSkuDetails(args, callbackContext);
+		} else if ("getPurchases".equals(action)) {
+			return getPurchases(args, callbackContext);
 		}
 		return false;
 	}
@@ -320,6 +326,46 @@ public class InAppBillingV3 extends CordovaPlugin {
 				callbackContext.success(response);
 			}
 		});
+		return true;
+	}
+
+	protected boolean getPurchases(final JSONArray args, final CallbackContext callbackContext) {
+		if (iabHelper == null || !billingInitialized) {
+			callbackContext.error(makeError("Billing is not initialized", BILLING_NOT_INITIALIZED));
+		} else {
+			iabHelper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
+				public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+					if (result.isFailure()) {
+						callbackContext.error("Error retrieving purchase details");
+						return;
+					}
+					JSONArray response = new JSONArray();
+					try {
+						for (Purchase purchase : inventory.getAllPurchases()) {
+							if (purchase != null) {
+								int purchaseState = purchase.getPurchaseState();
+								String purchaseStateName = (
+									purchaseState == 0 ? "ACTIVE" :
+									purchaseState == 1 ? "CANCELLED" :
+									purchaseState == 2 ? "REFUNDED" :
+									"UNKNOWN");
+								JSONObject detailsJson = new JSONObject();
+								detailsJson.put("sku", purchase.getSku());
+								detailsJson.put("packageName", purchase.getPackageName());
+								detailsJson.put("purchaseTime", purchase.getPurchaseTime());
+								detailsJson.put("purchaseState", purchaseStateName);
+								detailsJson.put("itemType", purchase.getItemType());
+								detailsJson.put("itemType", purchase.getItemType());
+								response.put(detailsJson);
+							}
+						}
+					} catch (JSONException e) {
+						callbackContext.error(e.getMessage());
+					}
+					callbackContext.success(response);
+				}
+			});
+		}
 		return true;
 	}
 

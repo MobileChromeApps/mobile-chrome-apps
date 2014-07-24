@@ -4,7 +4,7 @@ See the [reference guide for building Chrome Packaged Apps](http://developer.chr
 
 This list tracks API support on mobile.
 
-_Current as of June 2014_.
+_Current as of July 2014_.
 
 ## Chrome Apps APIs
 
@@ -41,12 +41,18 @@ _Current as of June 2014_.
 * [syncFileSystem](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.syncFileSystem) - store and retrieve files backed by Google Drive
     * Alpha quality on iOS and Android (not currently being worked on)
     * Does not sync when app is not running.
+* [system.network](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.network) - retrieves information about local adapters on this system
+    * Working on Android only.
 
 ## Other APIs
 
 * [payments](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/chrome-cordova/plugins/google.payments) - sell virtual goods within your mobile app
     * Working on Android and iOS.
     * Requires manual steps for App Store / Play Store registration.
+* [audioCapture](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.audioCapture) - capture audio directly from the user's Microphone via the getUserMedia API.
+    * Working on Android only.
+* [videoCapture](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.videoCapture) - capture video directly from the user's Web Cam via the getUserMedia API.
+    * Working on Android only.
 
 ## APIs Coming in the Near Term
 * chrome.socket.tcp / udp / tcpServer

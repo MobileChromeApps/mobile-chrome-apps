@@ -22,11 +22,17 @@ For Cordova apps, install with the cordova command-line tool:
 
 For iOS, no additional configuration is necessary.
 
-For Android, you will need to add a key to your application's manifest file.
+For Android, you will need to add a key to your application's manifest file. (In a mobile chrome app, this key should usually be placed in `www/manifest.mobile.json`, so as not to interfere with the desktop-chrome-compatible `manifest.json` file.)
+
+The line to add should look like:
 
     "play_store_key": <Base64-encoded public key from the Google Play Store>
 
 The required public key can be obtained from the Google Play Store once you have uploaded your app (it does not need to be published; just uploaded). From the "Services & APIs" panel for your app, copy the string labeled "Your license key for this application".
+
+In a Cordova app, create a file in the `www` directory called `manifest.json`, containing this text:
+
+    { "play_store_key": <Base64-encoded public key from the Google Play Store> }
 
 ## Usage
 
@@ -113,11 +119,21 @@ If the purchase fails for any reason (including cancellation), `options.failure`
 
 ### getSkuDetails()
 
-`google.payments.inapp.getSkuDetails(<skuList>, <successCallback>, <failureCallback>)`
+`google.payments.inapp.getSkuDetails(<options>)`
 
-`skuList` is an array of productId strings to retrieve information about.
+`options` is an object with the following members:
 
-If successful, `successCallback` will be called with a `skuDetails` array. Every item in the array is an object like this:
+- `success`: Success callback
+
+- `failure`: Failure callback
+
+- `sku`: [Optional] Single productId string to query
+
+- `skuList`: [Optional] An array of productId strings to retrieve information about.
+
+`sku` or `skuList` are each optional, but one of them should be provided.
+
+If successful, `options.success` will be called with a `skuDetails` array. Every item in the array is an object like this:
 
     {
         "productId": <The SKU for this product>,
@@ -127,7 +143,33 @@ If successful, `successCallback` will be called with a `skuDetails` array. Every
         "type": <The store-specific type associated with the product>
     }
 
-On failure, `failureCallback` will be called with a `failureResult` as its single argument (see above).
+On failure, `options.failure` will be called with a `failureResult` as its single argument (see above).
+
+### getPurchases()
+
+`google.payments.inapp.getPurchases(<options>)`
+
+`options` is an object with the following members:
+
+- `success`: Success callback
+
+- `failure`: Failure callback
+
+If successful, `options.success` will be called with an object containing a list of products which the user has purchased, in a `response.details` array. Every item in the array is an object like this:
+
+    {
+        "kind": <item kind>,
+        "itemId": "com.example.yourAppPackage",
+        "sku": <the SKU for this product>,
+        "createdTime": <timestamp of the purchase, in milliseconds since Jan 1, 1970>,
+        "state": <item state>
+    }
+
+The item kind will be `"googleplaystore#payment"` for items purchased through the Google Play Store.
+
+The item state will be one of `"ACTIVE"`, `"CANCELLED"`, or `"REFUNDED"`.
+
+On failure, `options.failure` will be called with a `failureResult` as its single argument (see above).
 
 ## External References
 
@@ -136,7 +178,7 @@ On failure, `failureCallback` will be called with a `failureResult` as its singl
 
 ### API
 * [Monetize your Chrome App](http://developer.chrome.com/apps/google_wallet.html)
-* [Google Wallet for Digital Goods API](https://developers.google.com/wallet/digital/docs/jsreference)
+* [In-App Payments with Google Wallet for Digital Goods](https://developer.chrome.com/webstore/payments-iap)
 
 ### Back-end store references
 * [Android BillingV3 documentation](http://developer.android.com/google/play/billing/api.html)

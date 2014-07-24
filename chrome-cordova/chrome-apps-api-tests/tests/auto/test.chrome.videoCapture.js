@@ -11,7 +11,7 @@ registerAutoTests("chrome.videoCapture", function() {
         compare : function(actual, expected){
           var result = {};
           result.pass = (actual.toString() == '[object MediaStreamTrack]');
-          result.message = 'Expected ' + actual + ' to be a MediaStreamTrack.'; 
+          result.message = 'Expected ' + actual + ' to be a MediaStreamTrack.';
           return result;
         }
       }
@@ -21,7 +21,7 @@ registerAutoTests("chrome.videoCapture", function() {
         compare : function(actual, expected){
           var result = {};
           result.pass = (typeof actual == 'string');
-          result.message = 'Expected ' + actual + ' to be a string.'; 
+          result.message = 'Expected ' + actual + ' to be a string.';
           return result;
         }
       }
@@ -33,7 +33,7 @@ registerAutoTests("chrome.videoCapture", function() {
     done();
   });
 
-  function expectMediaStream(stream) {    
+  function expectMediaStream(stream) {
     expect(stream).toBeDefined();
     expect(stream.id).toBeString();
     expect(stream.label).toBeString();
@@ -42,7 +42,7 @@ registerAutoTests("chrome.videoCapture", function() {
     expect(stream.getVideoTracks).toBeDefined();
     expect(stream.getAudioTracks).toBeDefined();
   }
-  
+
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
   it('should return a valid video stream with no audio', function(done) {
@@ -58,12 +58,12 @@ registerAutoTests("chrome.videoCapture", function() {
       expect(audioTracks.length).toBe(0);
 
       done();
-    }, function(error) { 
+    }, function(error) {
       expect(error).not.toBeDefined();
       done();
     });
   });
-    
+
   it('should return both valid video and audio streams', function(done) {
     navigator.getUserMedia({video: true, audio: true}, function(stream) {
       expectMediaStream(stream);
@@ -77,9 +77,9 @@ registerAutoTests("chrome.videoCapture", function() {
       expect(audioTracks.length).toBe(1);
 
       done();
-    }, function(error) { 
+    }, function(error) {
       expect(error).not.toBeDefined();
       done();
     });
-  });  
+  });
 });

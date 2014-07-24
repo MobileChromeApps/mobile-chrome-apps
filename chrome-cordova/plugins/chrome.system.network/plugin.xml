@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.system.network"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome System Network API</name>
+
+  <platform name="android">
+    <js-module src="system.network.js" name="system.network">
+      <clobbers target="chrome.system.network" />
+    </js-module>
+    <source-file src="src/android/ChromeSystemNetwork.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSystemNetwork">
+        <param name="android-package" value="org.chromium.ChromeSystemNetwork"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>
