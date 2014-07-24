@@ -28,6 +28,28 @@ public class ChromeSystemCPU extends CordovaPlugin {
         return false;
     }
 
+    private String getCpuModelName() {
+        String ret = null;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("/proc/cpuinfo"));
+            String line = null;
+
+            while((line = reader.readLine()) != null) {
+                Log.d(LOG_TAG, line);
+                if (line.length() < 8 || !line.substring(0, 8).equals("Hardware"))
+                    continue;
+
+                int pos = line.indexOf(": ");
+                ret = line.substring(pos + 2);
+            }
+
+            reader.close();
+        } catch(Exception e) {
+            Log.e(LOG_TAG, "Error occured while getting CPU model name", e);
+        }
+        return ret;
+    }
+
     private JSONArray getCpuTimePerProcessor() {
         JSONArray ret = new JSONArray();
         try {
@@ -53,7 +75,7 @@ public class ChromeSystemCPU extends CordovaPlugin {
 
             reader.close();
         } catch(Exception e) {
-            Log.e(LOG_TAG, "Error occured while getting processors stats", e);
+            Log.e(LOG_TAG, "Error occured while getting CPU time per processor", e);
         }
         return ret;
     }
@@ -67,7 +89,7 @@ public class ChromeSystemCPU extends CordovaPlugin {
 
                     ret.put("archName", "TODO");
                     ret.put("features", "TODO");
-                    ret.put("modelName", "TODO");
+                    ret.put("modelName", getCpuModelName());
 
                     JSONArray processors = getCpuTimePerProcessor();
                     ret.put("processors", processors);
