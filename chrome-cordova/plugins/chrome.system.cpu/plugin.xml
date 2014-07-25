@@ -13,11 +13,10 @@
 
   <name>Chrome System CPU API</name>
 
-  <js-module src="system.cpu.js" name="system.cpu">
-    <clobbers target="chrome.system.cpu" />
-  </js-module>
-
   <platform name="android">
+    <js-module src="system.cpu.js" name="system.cpu">
+      <clobbers target="chrome.system.cpu" />
+    </js-module>
     <source-file src="src/android/ChromeSystemCPU.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
