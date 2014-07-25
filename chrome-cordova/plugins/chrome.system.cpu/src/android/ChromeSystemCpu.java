@@ -17,8 +17,8 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-public class ChromeSystemCPU extends CordovaPlugin {
-    private static final String LOG_TAG = "ChromeSystemCPU";
+public class ChromeSystemCpu extends CordovaPlugin {
+    private static final String LOG_TAG = "ChromeSystemCpu";
 
     private static final String MODEL_NAME_PREFIX = "model name\t: ";
     private static final String PROCESSOR_PREFIX = "Processor\t: ";

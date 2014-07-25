@@ -5,5 +5,5 @@
 var exec = require('cordova/exec');
 
 exports.getInfo = function(callback) {
-  exec(callback, callback, 'ChromeSystemCPU', 'getInfo', []);
+  exec(callback, callback, 'ChromeSystemCpu', 'getInfo', []);
 };
