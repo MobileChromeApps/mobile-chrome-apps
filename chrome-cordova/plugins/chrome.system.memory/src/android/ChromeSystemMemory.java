@@ -4,11 +4,6 @@
 
 package org.chromium;
 
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.ActivityManager.MemoryInfo;
-import android.os.Build;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
@@ -17,6 +12,10 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
+import android.os.Build;
 import android.util.Log;
 
 public class ChromeSystemMemory extends CordovaPlugin {
