@@ -6,6 +6,7 @@ package org.chromium;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.lang.System;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -19,6 +20,9 @@ import android.util.Log;
 public class ChromeSystemCPU extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeSystemCPU";
 
+    private static final String MODEL_NAME_PREFIX = "model name\t: ";
+    private static final String PROCESSOR_PREFIX = "Processor\t: ";
+
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("getInfo".equals(action)) {
@@ -28,19 +32,37 @@ public class ChromeSystemCPU extends CordovaPlugin {
         return false;
     }
 
+    private String getOperatingSystemArch() {
+        return System.getProperty("os.arch");
+    }
+
+    private JSONArray getCpuFeatures() {
+        JSONArray ret = new JSONArray();
+        // TODO(fbeaufort): Figure out which CPU features are worth returning.
+        return ret;
+    }
+
     private String getCpuModelName() {
+        // TODO(fbeaufort): Cache CPU Model name.
         String ret = null;
+        // Returns the string found in /proc/cpuinfo under the key "model name"
+        // or "Processor". "model name" is used in Linux 3.8 and later (3.7 and
+        // later for arm64) and is shown once per CPU.  "Processor" is used in
+        // earler versions and is shown only once at the top of /proc/cpuinfo
+        // regardless of the number CPUs.
         try {
             BufferedReader reader = new BufferedReader(new FileReader("/proc/cpuinfo"));
             String line = null;
 
             while((line = reader.readLine()) != null) {
-                Log.d(LOG_TAG, line);
-                if (line.length() < 8 || !line.substring(0, 8).equals("Hardware"))
-                    continue;
-
-                int pos = line.indexOf(": ");
-                ret = line.substring(pos + 2);
+                if (line.startsWith(MODEL_NAME_PREFIX)) {
+                    ret = line.substring(MODEL_NAME_PREFIX.length());
+                    break;
+                }
+                if (line.startsWith(PROCESSOR_PREFIX)) {
+                    ret = line.substring(PROCESSOR_PREFIX.length());
+                    break;
+                }
             }
 
             reader.close();
@@ -54,11 +76,14 @@ public class ChromeSystemCPU extends CordovaPlugin {
         JSONArray ret = new JSONArray();
         try {
             BufferedReader reader = new BufferedReader(new FileReader("/proc/stat"));
-            String line = reader.readLine(); // First line is total proc stats.
+            // Skip the first line because it is just an aggregated number of
+            // all cpuN lines.
+            String line = reader.readLine();
 
             while((line = reader.readLine()) != null) {
-                if (!line.substring(0, 3).equals("cpu"))
+                if (!line.startsWith("cpu")) {
                     continue;
+                }
 
                 String[] data = line.split(" ");
                 Long kernel = Long.parseLong(data[3]);
@@ -86,12 +111,11 @@ public class ChromeSystemCPU extends CordovaPlugin {
             public void run() {
                 try {
                     JSONObject ret = new JSONObject();
-
-                    ret.put("archName", "TODO");
-                    ret.put("features", "TODO");
-                    ret.put("modelName", getCpuModelName());
-
                     JSONArray processors = getCpuTimePerProcessor();
+
+                    ret.put("archName", getOperatingSystemArch());
+                    ret.put("features", getCpuFeatures());
+                    ret.put("modelName", getCpuModelName());
                     ret.put("processors", processors);
                     ret.put("numOfProcessors", processors.length());
 
