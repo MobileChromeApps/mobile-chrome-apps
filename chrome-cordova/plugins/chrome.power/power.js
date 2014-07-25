@@ -5,10 +5,6 @@
 var exec = require('cordova/exec');
 
 exports.requestKeepAwake = function(level) {
-    if (level !== 'system' && level !== 'display') {
-        // TODO(maxw): Handle this.
-    }
-
     exec(null, null, 'ChromePower', 'requestKeepAwake', [level]);
 };
 
