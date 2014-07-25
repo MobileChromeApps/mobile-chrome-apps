@@ -86,9 +86,9 @@ public class ChromeSystemCPU extends CordovaPlugin {
                 }
 
                 String[] data = line.split(" ");
-                Long kernel = Long.parseLong(data[3]);
-                Long user = Long.parseLong(data[1]) + Long.parseLong(data[2]);
-                Long idle = Long.parseLong(data[4]);
+                Long kernel = Long.valueOf(data[3]);
+                Long user = Long.valueOf(data[1]) + Long.valueOf(data[2]);
+                Long idle = Long.valueOf(data[4]);
                 JSONObject procStat = new JSONObject();
 
                 procStat.put("kernel", kernel);
