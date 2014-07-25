@@ -1,6 +1,6 @@
 # chrome.system.network Plugin
 
-This plugin provides the ability to retrieve information about local adapters on this system.
+This plugin provides the ability to retrieve information about local network adapters.
 
 ## Status
 

@@ -41,7 +41,7 @@ _Current as of July 2014_.
 * [syncFileSystem](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.syncFileSystem) - store and retrieve files backed by Google Drive
     * Alpha quality on iOS and Android (not currently being worked on)
     * Does not sync when app is not running.
-* [system.network](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.network) - retrieves information about local adapters on this system
+* [system.network](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.network) - retrieves information about local network adapters
     * Working on Android only.
 
 ## Other APIs
