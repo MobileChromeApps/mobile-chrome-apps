@@ -121,8 +121,8 @@ public class ChromeSystemCPU extends CordovaPlugin {
 
                     callbackContext.success(ret);
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "Error occured while getting info", e);
-                    callbackContext.error("Could not get system cpu info");
+                    Log.e(LOG_TAG, "Error occured while getting CPU info", e);
+                    callbackContext.error("Could not get CPU info");
                 }
             }
         });
