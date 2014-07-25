@@ -31,6 +31,7 @@
     "storage",
     "syncFileSystem",
     "system.cpu",
+    "system.memory",
     "system.network",
     "videoCapture",
     "http://www.apache.org/*",
