@@ -8,4 +8,4 @@ Stable on Android.
 
 ## Reference
 
-The API reference is [here](http://developer.chrome.com/apps/system).
+The API reference is [here](https://developer.chrome.com/apps/system_cpu).
