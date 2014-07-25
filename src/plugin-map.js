@@ -58,6 +58,7 @@ exports.PLUGIN_MAP = {
   'socket': ['org.chromium.socket'],
   'storage': ['org.chromium.storage'],
   'syncFileSystem': ['org.chromium.syncFileSystem', 'org.chromium.storage', 'org.chromium.identity'],
+  'system.memory': ['org.chromium.system.memory'],
   'unlimitedStorage': [],
   'videoCapture': ['org.chromium.videoCapture'],
 };

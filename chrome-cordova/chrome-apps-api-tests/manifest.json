@@ -30,6 +30,7 @@
     },
     "storage",
     "syncFileSystem",
+    "system.memory",
     "videoCapture",
     "http://www.apache.org/*",
     "http://127.0.0.1/*",
