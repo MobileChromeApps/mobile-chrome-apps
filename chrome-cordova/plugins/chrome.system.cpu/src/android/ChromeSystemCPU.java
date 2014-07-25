@@ -64,7 +64,6 @@ public class ChromeSystemCPU extends CordovaPlugin {
                     break;
                 }
             }
-
             reader.close();
         } catch(Exception e) {
             Log.e(LOG_TAG, "Error occured while getting CPU model name", e);
@@ -86,18 +85,18 @@ public class ChromeSystemCPU extends CordovaPlugin {
                 }
 
                 String[] data = line.split(" ");
-                Long kernel = Long.valueOf(data[3]);
                 Long user = Long.valueOf(data[1]) + Long.valueOf(data[2]);
+                Long kernel = Long.valueOf(data[3]);
                 Long idle = Long.valueOf(data[4]);
-                JSONObject procStat = new JSONObject();
 
-                procStat.put("kernel", kernel);
+                JSONObject procStat = new JSONObject();
                 procStat.put("user", user);
+                procStat.put("kernel", kernel);
                 procStat.put("idle", idle);
                 procStat.put("total", kernel + user + idle);
+
                 ret.put(procStat);
             }
-
             reader.close();
         } catch(Exception e) {
             Log.e(LOG_TAG, "Error occured while getting CPU time per processor", e);
