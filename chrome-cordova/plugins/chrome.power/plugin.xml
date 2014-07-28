@@ -25,6 +25,9 @@
         <param name="android-package" value="org.chromium.ChromePower"/>
       </feature>
     </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+    </config-file>
   </platform>
 
   <platform name="ios">

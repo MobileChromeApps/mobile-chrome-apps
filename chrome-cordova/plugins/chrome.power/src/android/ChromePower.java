@@ -14,27 +14,21 @@ import org.json.JSONException;
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.util.Log;
 import android.view.WindowManager;
 
 public class ChromePower extends CordovaPlugin {
     private static final String LOG_TAG = "ChromePower";
 
-    private WakeLock systemLock;
-
-    @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
-        PowerManager powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
-        systemLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Chrome Power System lock");
-    }
+    private WakeLock systemLock = null;
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("requestKeepAwake".equals(action)) {
-            requestKeepAwake(args, callbackContext);
+            requestKeepAwake(args);
             return true;
         } else if ("releaseKeepAwake".equals(action)) {
-            releaseKeepAwake(args, callbackContext);
+            releaseKeepAwake();
             return true;
         }
 
@@ -46,31 +40,35 @@ public class ChromePower extends CordovaPlugin {
         releaseKeepAwake();
     }
 
-    private void requestKeepAwake(final CordovaArgs args, final CallbackContext callbackContext) {
-        String level = args.getString(0);
-        if ("display".equals(level)) {
-            cordova.getActivity().runOnUiThread(new Runnable() {
-                public void run() {
+    private void requestKeepAwake(final CordovaArgs args) {
+        final String level = args.optString(0);
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                if ("display".equals(level)) {
                     cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                } else if ("system".equals(level)) {
+                    if (systemLock == null) {
+                        PowerManager powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
+                        systemLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Chrome Power System lock");
+                        systemLock.acquire();
+                    }
+                } else {
+                  Log.e(LOG_TAG, "Invalid value. Level must be one of [system, display]");
                 }
-            });
-        } else if ("system".equals(level)) {
-            systemLock.acquire();
-        } else {
-          callbackContext.error("Invalid value. Level must be one of [system, display]");
-        }
+            }
+        });
     }
 
-    private void releaseKeepAwake(final CordovaArgs args, final CallbackContext callbackContext) {
-        if (systemLock.isHeld()) {
-            systemLock.release();
-        } else {
-            cordova.getActivity().runOnUiThread(new Runnable() {
-                public void run() {
-                    cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    private void releaseKeepAwake() {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            public void run() {
+                cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                if (systemLock != null) {
+                    systemLock.release();
+                    systemLock = null;
                 }
-            });
-        }
+            }
+        });
     }
 }
 
