@@ -14,12 +14,9 @@ import org.json.JSONException;
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.util.Log;
 import android.view.WindowManager;
 
 public class ChromePower extends CordovaPlugin {
-    private static final String LOG_TAG = "ChromePower";
-
     private WakeLock systemLock = null;
 
     @Override
@@ -51,9 +48,6 @@ public class ChromePower extends CordovaPlugin {
                         PowerManager powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
                         systemLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Chrome Power System lock");
                         systemLock.acquire();
-                    }
-                } else {
-                  Log.e(LOG_TAG, "Invalid value. Level must be one of [system, display]");
                 }
             }
         });
