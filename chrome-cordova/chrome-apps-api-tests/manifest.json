@@ -23,6 +23,7 @@
     "identity",
     "idle",
     "notifications",
+    "power",
     "pushMessaging",
     "gcm",
     {

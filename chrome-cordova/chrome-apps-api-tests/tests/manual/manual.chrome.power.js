@@ -3,9 +3,14 @@
 // found in the LICENSE file.
 
 registerManualTests('chrome.power', function(rootEl, addButton) {
-  addButton('Request Keep-Awake', function() {
+  addButton('Request "System" Keep-Awake', function() {
     chrome.power.requestKeepAwake('system');
-    logger('Requested keep-awake.');
+    logger('Requested "System" keep-awake.');
+  });
+
+  addButton('Request "Display" Keep-Awake', function() {
+    chrome.power.requestKeepAwake('display');
+    logger('Requested "Display" keep-awake.');
   });
 
   addButton('Release Keep-Awake', function() {
