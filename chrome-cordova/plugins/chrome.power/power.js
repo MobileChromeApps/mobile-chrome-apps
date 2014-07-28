@@ -5,6 +5,10 @@
 var exec = require('cordova/exec');
 
 exports.requestKeepAwake = function(level) {
+    if (level !== 'system' && level !== 'display') {
+      console.error('Invalid value for argument 1. Value must be one of: [system, display].');
+      return;
+    }
     exec(null, null, 'ChromePower', 'requestKeepAwake', [level]);
 };
 
