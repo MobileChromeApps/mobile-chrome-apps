@@ -2,9 +2,16 @@
 
 This plugin provides the ability to query display metadata.
 
+## Caveats
+
+### Android
+
+`chrome.system.display.getInfo` is the only method to be implemented yet.
+Moreover, `mirroringSourceId`, `isInternal` and `isEnabled` cannot be retrieved at this moment.
+
 ## Status
 
-Stable on Android; not yet supported on iOS.
+Beta on Android; not yet supported on iOS.
 
 ## Reference
 
