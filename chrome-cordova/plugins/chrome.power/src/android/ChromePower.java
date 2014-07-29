@@ -48,6 +48,7 @@ public class ChromePower extends CordovaPlugin {
                         PowerManager powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
                         systemLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Chrome Power System lock");
                         systemLock.acquire();
+                    }
                 }
             }
         });
