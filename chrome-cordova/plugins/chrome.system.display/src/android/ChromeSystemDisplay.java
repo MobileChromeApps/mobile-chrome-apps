@@ -4,10 +4,6 @@
 
 package org.chromium;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.lang.System;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
@@ -17,7 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.graphics.Rect;
 import android.app.Activity;
 import android.hardware.display.DisplayManager;
 import android.util.DisplayMetrics;
