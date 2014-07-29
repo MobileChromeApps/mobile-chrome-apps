@@ -43,6 +43,8 @@ _Current as of July 2014_.
     * Does not sync when app is not running.
 * [system.cpu](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.cpu) - query basic CPU information of the system
     * Working on Android only
+* [system.display](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.display) - query display metadata
+    * Alpha quality on Android only
 * [system.memory](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.memory) - get physical memory information
     * Working on Android only.
 * [system.network](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.network) - retrieves information about local network adapters
