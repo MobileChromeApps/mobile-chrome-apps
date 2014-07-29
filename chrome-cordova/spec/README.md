@@ -5,7 +5,7 @@ This is a collection of automatic and manual tests that exercise various `chrome
 ## As a mobile Chrome App
 
     # From mobile-chrome-apps repository:
-    cca create com.google.ChromeSpec --link-to=spec
+    cca create ChromeSpec --link-to=spec
 
 ## As a desktop Chrome App
 
