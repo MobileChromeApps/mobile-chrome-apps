@@ -73,16 +73,6 @@ public class ChromeSystemDisplay extends CordovaPlugin {
             display.getRealMetrics(displayMetrics);
             widthPixels = displayMetrics.widthPixels;
             heightPixels = displayMetrics.heightPixels;
-        } else {
-            Display display = cordova.getActivity().getWindowManager().getDefaultDisplay(); 
-            Method mGetRawHeight = Display.class.getMethod("getRawHeight"); 
-            Method mGetRawWIdth = Display.class.getMethod("getRawWidth"); 
-            try {
-                heightPixels = (Integer) mGetRawHeight.invoke(display);
-                widthPixels = (Integer) mGetRawPixel.invoke(display);
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error occured while getting bounds", e);
-            }
         }
 
         ret.put("left", 0);
