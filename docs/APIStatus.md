@@ -8,7 +8,6 @@ _Current as of July 2014_.
 
 ## Chrome Apps APIs
 
-
 * [alarms](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.alarms) - run tasks periodically
     * Working on Android and iOS.
     * Caveat: on iOS alarms only fire when app is active (foreground).
@@ -61,7 +60,7 @@ _Current as of July 2014_.
     * Working on Android only.
 
 ## APIs Coming in the Near Term
-* chrome.socket.tcp / udp / tcpServer
+* chrome.sockets.tcp / udp / tcpServer
 * runtime.getPackageDirectoryEntry
 * mediaGalleries
 * Better notifications and alarms support
@@ -74,9 +73,6 @@ _Current as of July 2014_.
 * location
 
 ## APIs Coming in the Long Term
-* bluetooth
-* bluetoothLowEnergy
-* bluetoothSocket
 * commands
 * contextMenus
 * permissions
@@ -87,4 +83,4 @@ _Current as of July 2014_.
 * hid
 * wallpaper
 * webstore
-
+* webview tag
