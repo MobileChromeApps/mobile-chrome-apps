@@ -30,8 +30,9 @@ From the root of your `cca`-generated project directory:
 
 1. In Eclipse, select `File` -> `Import`.
 2. Choose `Android` > `Existing Android Code Into Workspace`.
-3. Import from the path you just created with `cca`.
-    * You should expect to have two projects to import, one of which is `*-CordovaLib`.
+3. Import from the `platforms/android` folder that was created within your project.
+    * It is expected to have multiple projects to import.
+    * If you see `xwalk_core_library` listed twice, then you probably accidentally imported from the root of the project.
 4. Click the Play button to run your app.
   * You will need to create a Run Configuration (as with all Java applications).  You _usually_ get prompted for this the first time automatically.
   * You will need to manage your devices/emulators the first time as well.
