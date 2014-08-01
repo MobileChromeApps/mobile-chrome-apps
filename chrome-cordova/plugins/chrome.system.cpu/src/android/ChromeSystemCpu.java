@@ -95,7 +95,9 @@ public class ChromeSystemCpu extends CordovaPlugin {
                 procStat.put("idle", idle);
                 procStat.put("total", kernel + user + idle);
 
-                ret.put(procStat);
+                JSONObject procUsage = new JSONObject();
+                procUsage.put("usage", procStat);
+                ret.put(procUsage);
             }
             reader.close();
         } catch(Exception e) {
