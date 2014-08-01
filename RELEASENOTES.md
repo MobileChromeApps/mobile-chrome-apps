@@ -4,6 +4,22 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.3.0 (August 1, 2014)
+* Lots of new plugins courtesy of [Francois Beaufort](https://plus.google.com/+FrancoisBeaufort)!
+  * `chrome.audioCapture` and `chrome.videoCapture` to add android permissions to allow WebRTC within the [new crosswalk webview](#v011-june-25-2014)
+  * Added support for `system.cpu` on Android
+  * Added support for `system.display` on Android
+  * Added support for `system.memory` on Android
+  * Added support for `system.network` on Android
+* Updated `google.payments` plugin
+  * fix `google.payments.inapp.getSkuDetails` API signature
+  * add `google.payments.inapp.getPurchases` method
+  * remove `google.payments.inapp.getAvailableProducts` method
+  * Update install instructions
+* Updated `chrome.power.requestKeepAwake` to support `'system'` in addition to `'display'`
+* Removed several build warnings for iOS
+* Updated documentation
+
 ### v0.2.2 (July 22, 2014)
 * Minor fix: Don't temporarily set widget id to undefined when importing chrome apps with no manifest.mobile.json
 
