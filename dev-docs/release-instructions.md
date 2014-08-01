@@ -46,7 +46,7 @@
 * For each plugin found by: `plugman search org.chromium`:
 
         plugman publish path/to/plugin
-    
+
     **Note:** You may need to search [the registry website](plugins.cordova.io).
 
 ## Update npm Dependencies
@@ -82,12 +82,9 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     git commit -am "Set version to x.x.x-rc#."
 
     # Publish rc to npm
-    # set "publishConfig": { "tag": "rc" }
-    vim package.json
     dev-bin/prepfornpm.sh
-    npm publish
+    npm publish --tag=rc
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
-    git checkout -- package.json
 
     # Double check things are still good
     git status
@@ -96,7 +93,8 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     # Double check that the tags point to the right things:
     npm info cca
 
-    # If anything goes wrong, unpublish rc
+If anything goes wrong, unpublish rc with:
+
     npm tag cca@0.0.0 rc
     npm unpublish cca@x.x.x-rc#
 
@@ -143,6 +141,11 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     # Remove shrinkwrap file, and push changed to master
     git rm npm-shrinkwrap.json
     git commit -m "Removing shrinkwrap file after release"
+
+    # Append -dev to "version", and bump the MINOR
+    vim package.json
+    git commit -am "Set version to x.x.x-dev."
+
     git push origin master --tags
 
 2. Send an email to chromium-apps@chromium.org with version & release notes.
