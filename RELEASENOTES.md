@@ -7,10 +7,10 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 ### v0.3.0 (August 1, 2014)
 * Lots of new plugins courtesy of [Francois Beaufort](https://plus.google.com/+FrancoisBeaufort)!
   * `chrome.audioCapture` and `chrome.videoCapture` to add android permissions to allow WebRTC within the [new crosswalk webview](#v011-june-25-2014)
-  * Added support for `system.cpu` on Android
-  * Added support for `system.display` on Android
-  * Added support for `system.memory` on Android
-  * Added support for `system.network` on Android
+  * Added support for `chrome.system.cpu` on Android
+  * Added support for `chrome.system.display` on Android
+  * Added support for `chrome.system.memory` on Android
+  * Added support for `chrome.system.network` on Android
 * Updated `google.payments` plugin
   * fix `google.payments.inapp.getSkuDetails` API signature
   * add `google.payments.inapp.getPurchases` method
