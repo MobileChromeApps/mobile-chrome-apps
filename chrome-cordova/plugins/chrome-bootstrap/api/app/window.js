@@ -46,8 +46,12 @@ AppWindow.prototype.getBounds = function() {
 };
 
 function copyAttributes(srcNode, destNode) {
-  var attrs = srcNode.attributes;
-  for (var i = 0, attr; attr = attrs[i]; ++i) {
+  var srcAttrs = srcNode.attributes;
+  var destAttrs = destNode.attributes;
+  for (var i = 0, max = destAttrs.length; i < max; ++i) {
+    destNode.removeAttribute(destAttrs[i].name);
+  }
+  for (var i = 0, attr; attr = srcAttrs[i]; ++i) {
     destNode.setAttribute(attr.name, attr.value);
   }
 }
