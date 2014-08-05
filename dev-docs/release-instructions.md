@@ -51,9 +51,12 @@
 
 ## Update npm Dependencies
 
-    # ensure you have the latest dependencies requested
-    npm install
-    # See what is stale (newer versions available)
+First, make sure to unlink any local modules.  I like to just start with:
+
+    rm -rf node_modules && npm install
+
+See what is stale (newer versions available)
+
     npm outdated --depth=0
     # Update them by:
     npm install foo@version --save
