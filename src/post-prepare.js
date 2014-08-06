@@ -217,10 +217,16 @@ function postPrepareInternal(platform) {
     return require('./get-manifest')(root);
   }).then(function(manifest) {
     // Android
-    if (platform === 'android' && manifest && manifest.versionCode) {
+    if (platform === 'android' && manifest && (manifest.versionCode || manifest.short_name)) {
       var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
       var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-      androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
+
+      if (manifest.versionCode) {
+        androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
+      }
+      if (manifest.short_name) {
+        androidManifest.find('./application/activity/intent-filter').attrib['android:label'] = manifest.short_name;
+      }
       fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
     }
 
