@@ -93,14 +93,16 @@ public class ChromeSystemDisplay extends CordovaPlugin {
         final DisplayMetrics displayMetrics = new DisplayMetrics();
         display.getMetrics(displayMetrics);
 
-        return displayMetrics.xdpi;
+        // displayMetrics.xdpi is not reliable.
+        return displayMetrics.densityDpi;
     }
 
     private float getDpiY(final Display display) {
         final DisplayMetrics displayMetrics = new DisplayMetrics();
         display.getMetrics(displayMetrics);
 
-        return displayMetrics.ydpi;
+        // displayMetrics.ydpi is not reliable.
+        return displayMetrics.densityDpi;
     }
 
     private JSONObject getWorkArea(final Display display) throws JSONException {
