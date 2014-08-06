@@ -33,6 +33,11 @@ public class ChromePower extends CordovaPlugin {
     }
 
     @Override
+    public void onReset() {
+        releaseKeepAwake();
+    }
+
+    @Override
     public void onDestroy() {
         releaseKeepAwake();
     }
@@ -66,4 +71,3 @@ public class ChromePower extends CordovaPlugin {
         });
     }
 }
-
