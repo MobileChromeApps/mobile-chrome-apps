@@ -166,7 +166,7 @@ function checkFileHandleLimit() {
   if (process.platform != 'win32' && process.env['SHELL']) {
     // gaze opens a lot of file handles, and the default on OS X is too small (EMFILE exceptions).
     // NOTE: This is fixed in node 0.11, and is a problem only on node 0.10.
-    child_process.exec('ulimit -S -n', function(error, stdout, stderr) {
+    child_process.exec('ulimit -n', function(error, stdout, stderr) {
       var curLimit = !error && +stdout;
       deferred.resolve(curLimit || Infinity);
     });
@@ -179,7 +179,7 @@ function checkFileHandleLimit() {
 function relaunchWithBiggerUlimit(argsAsJson) {
   // re-run with the new ulimit
   var deferred = Q.defer();
-  var args = ['-c', 'ulimit -S -n 10240; exec "' + process.argv[0] + '" "' + __filename + '" "' + argsAsJson.replace(/"/g, '@') + '"'];
+  var args = ['-c', 'ulimit -n 10240; exec "' + process.argv[0] + '" "' + __filename + '" "' + argsAsJson.replace(/"/g, '@') + '"'];
   var child = child_process.spawn(process.env['SHELL'], args, { stdio: 'inherit' });
   child.on('close', function(code) {
     if (code) {
