@@ -4,17 +4,48 @@
 
 registerAutoTests('chrome.app.window', function() {
   'use strict';
+
+  var customMatchers = {
+    toBeArray : function(util, customEqualityTesters){
+      return {
+        compare : function(actual, expected){
+          var result = {};
+          result.pass = (actual instanceof Array);
+          result.message = 'Expected ' + actual + ' to be an Array.';
+          return result;
+        }
+      }
+    },
+  }
+
+  beforeEach(function(done) {
+    addMatchers(customMatchers);
+    done();
+  });
+
   // TODO: implement runningInBackground
   var runningInBackground = false;
   if (runningInBackground) {
     it('current() should return null', function() {
       expect(chrome.app.window.current()).toBeNull();
     });
+    it('getAll() should return an empty array', function() {
+      var windows = chrome.app.window.getAll();
+      expect(windows).toBeArray();
+      expect(windows.length).toEqual(0);
+    });
   } else {
     it('current() should return an AppWindow', function() {
       var wnd = chrome.app.window.current();
       expect(wnd).not.toBeNull();
       expect(wnd.onClosed).not.toBeUndefined();
+    });
+    it('getAll() should return an array containing one AppWindow', function() {
+      var windows = chrome.app.window.getAll();
+      expect(windows).toBeArray();
+      expect(windows.length).toEqual(1);
+      expect(windows[0]).not.toBeNull();
+      expect(windows[0].onClosed).not.toBeUndefined();
     });
   }
   describe('window.opener', function() {
