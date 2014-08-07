@@ -217,11 +217,19 @@ function postPrepareInternal(platform) {
     return require('./get-manifest')(root);
   }).then(function(manifest) {
     // Android
-    if (platform === 'android' && manifest && manifest.versionCode) {
-      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-      androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
-      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+    if (platform === 'android' && manifest) {
+      if (manifest.versionCode) {
+        var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+        var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+        androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
+        fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+      }
+      if (manifest.short_name) {
+        var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
+        var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
+        strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
+        fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
+      }
     }
 
     // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
