@@ -6,7 +6,12 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="com.google.payments"
-    version="2.0.0">
+    version="2.0.1">
+
+  <description>
+    Enable in-app-purchases in the App Store and Play Store using a mobile version of the Google Wallet for Digital Goods API
+  </description>
+
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
