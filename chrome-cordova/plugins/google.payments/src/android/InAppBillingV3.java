@@ -170,21 +170,21 @@ public class InAppBillingV3 extends CordovaPlugin {
 		if (billingInitialized == true) {
 			Log.d(TAG, "Billing already initialized");
 			callbackContext.success();
-		}
-		if (iabHelper == null) {
+		} else if (iabHelper == null) {
 			callbackContext.error(makeError("Billing cannot be initialized", UNABLE_TO_INITIALIZE));
-		}
-		iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-			public void onIabSetupFinished(IabResult result) {
-				if (!result.isSuccess()) {
-					callbackContext.error(makeError("Unable to initialize billing: " + result.toString(), UNABLE_TO_INITIALIZE, result));
-				} else {         
-					Log.d(TAG, "Billing initialized");
-					billingInitialized = true;
-					callbackContext.success();
+		} else {
+			iabHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+				public void onIabSetupFinished(IabResult result) {
+					if (!result.isSuccess()) {
+						callbackContext.error(makeError("Unable to initialize billing: " + result.toString(), UNABLE_TO_INITIALIZE, result));
+					} else {
+						Log.d(TAG, "Billing initialized");
+						billingInitialized = true;
+						callbackContext.success();
+					}
 				}
-			}
-		});
+			});
+		}
 		return true;
 	}
 

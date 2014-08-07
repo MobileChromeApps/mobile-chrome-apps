@@ -40,9 +40,9 @@ In a Cordova app, create a file in the `www` directory called `manifest.json`, c
 
 Mobile applications are not guaranteed to have access to in-app billing services. Billing may be unavailable for many reasons, from misconfiguration to explicit denial: the owner of the device may not have a store account or may have removed in-app-purchase privileges for a guest or child's account.
 
-Your app can inspect the `google.payments.isBillingAvailable` property to test whether billing services are available or not. You can also register a listener on the `google.payments.onBillingAvailabilityChanged` events to detect changes to billing availability. It is fired whenever `isBillingAvailable` changes.
+Your app can inspect the `google.payments.billingAvailable` property to test whether billing services are available or not. You can also register a listener on the `google.payments.onBillingAvailabilityChanged` events to detect changes to billing availability. It is fired whenever `billingAvailable` changes.
 
-In general, calls to the payments API will fail if `isBillingAvailable` is `false`.
+In general, calls to the payments API will fail if `billingAvailable` is `false`.
 
 ### Purchasing Products
 
