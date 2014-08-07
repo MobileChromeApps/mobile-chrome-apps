@@ -224,3 +224,6 @@ exports.current = function() {
   return window == mobile.fgWindow ? createdAppWindow : null;
 };
 
+exports.getAll = function() {
+  return createdAppWindow ? [createdAppWindow] : [];
+};
