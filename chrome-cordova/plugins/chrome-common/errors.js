@@ -20,7 +20,7 @@ function callbackWithError(msg, callback) {
     if (typeof runtime !== 'undefined')
       runtime.lastError = { 'message' : msg };
 
-    callback.apply(null, Array.prototype.slice(arguments, 2));
+    callback.apply(null, Array.prototype.slice.call(arguments, 2));
   } finally {
     if (typeof runtime !== 'undefined')
       delete runtime.lastError;
