@@ -126,6 +126,8 @@ function pushAll(clientInfos) {
   .then(function() {
     if (pushAgainWhenDone) {
       return process.nextTick(function() {
+        pushInProgress = false;
+        pushAgainWhenDone = false;
         pushAll(clientInfos).done();
       });
     }
