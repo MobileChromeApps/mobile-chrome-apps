@@ -114,7 +114,7 @@ Generally, it's best to check in only files that you've edited, and not those ge
     
 ### When should I use CCA vs Chrome Dev Editor?
 
-The [Chrome Dev Editor](https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg) has the ability to deploy Chrome Apps to the [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/). However, it does not have the ability to create .apk or .ipa files for upload to the Play Store / App Store. Using them intertangably on the same source directory should work just fine :).
+The [Chrome Dev Editor](https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg) has the ability to deploy Chrome Apps to the [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/). However, it does not have the ability to create .apk or .ipa files for upload to the Play Store / App Store. Using them interchangeably on the same source directory should work just fine :).
 
 
 ### Can I use Xcode / Eclipse with CCA projects?
