@@ -125,7 +125,7 @@ function pushAll(clientInfos) {
   return Q.all(allPromises)
   .then(function() {
     if (pushAgainWhenDone) {
-      return process.nextTick(function() {
+      process.nextTick(function() {
         pushAll(clientInfos).done();
       });
     }
