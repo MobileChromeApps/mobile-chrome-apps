@@ -25,7 +25,7 @@ No. However, you can still compile and use native code by writing a custom Cordo
 
 - Support both Desktop and Mobile!
 - Background page & lifecycle events
-- A more oppinionated workflow
+- A more opinionated workflow
 - More reasons: [stack overflow](http://stackoverflow.com/questions/21684414/reasons-for-porting-a-cordova-app-to-a-mobile-chrome-app/)
 
 
@@ -90,7 +90,7 @@ No. However, if you have a use-case for wanting to, we'd love to hear about it :
 * __Android without Crosswalk__: Polymer works only on KitKat and requres its polyfills.
 * __iOS 6/7/8__: Polymer works and requires its polyfills.
 
-For Polymer to work with CSP enabled, you must use the [volcanize](http://www.polymer-project.org/articles/concatenating-web-components.html) tool to concatenate your imports.
+For Polymer to work with CSP enabled, you must use the [vulcanize](http://www.polymer-project.org/articles/concatenating-web-components.html) tool to concatenate your imports.
 
 
 ### How to sync data between Mobile and Desktop chrome app (e.g. with Drive)?
