@@ -78,7 +78,7 @@ CCA does not enforce CSP, but we may look at adding it at some point in the futu
 
 ## How-to's:
 
-### Is it possible to create multiple windows in MCA?
+### Is it possible to create multiple windows in CCA apps?
 
 No. However, if you have a use-case for wanting to, we'd love to hear about it :).
 
