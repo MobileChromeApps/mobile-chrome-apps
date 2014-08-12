@@ -86,11 +86,17 @@ No. However, if you have a use-case for wanting to, we'd love to hear about it :
 
 ### How do I use Polymer with CCA apps?
 
-* __Android with Crosswalk__: Polymer runs without the need for polyfills.
-* __Android without Crosswalk__: Polymer works only on KitKat and requres its polyfills.
-* __iOS 6/7/8__: Polymer works and requires its polyfills.
+* __Android with Crosswalk__: Polymer works without the need for polyfills.
+* __Android without Crosswalk__:
+  * pre-KitKat: Polymer does not work.
+  * KitKat: Polymer works and requires its polyfills.
+  * Android L+: Polymer works without the need for polyfills.
+* __iOS 6, 7, 8<sup>1</sup>__: Polymer works and requires its polyfills.
 
-For Polymer to work with CSP enabled, you must use the [vulcanize](http://www.polymer-project.org/articles/concatenating-web-components.html) tool to concatenate your imports.
+<sup>1</sup> Cordova support for WKWebView is still under development.
+
+Chrome apps on both mobile and desktop require using the
+[vulcanize](http://www.polymer-project.org/articles/concatenating-web-components.html) tool with the `--csp` flag.
 
 
 ### How to sync data between Mobile and Desktop chrome app (e.g. with Drive)?
