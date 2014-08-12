@@ -74,7 +74,7 @@ You can opt-out by adding `"webview": "system"` to your `manifest.mobile.json`.
 
 ### Do CCA Apps violate CSP?
 
-CCA does not enforce CSP, but we may look at adding it at some point in the future. [Track the issue](https://github.com/MobileChromeApps/mobile-chrome-apps/issues/73).
+CCA does not yet enforce CSP to the same extent as Chrome Apps on desktop. It currently does execute inline `<script>`s, and may in the future add further restrictions. [Track the issue](https://github.com/MobileChromeApps/mobile-chrome-apps/issues/73).
 
 
 ## How-to's:
