@@ -17,21 +17,11 @@ import android.app.Activity;
 import android.hardware.display.DisplayManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.os.Build;
 import android.view.Display;
 import android.view.Surface;
 
 public class ChromeSystemDisplay extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeSystemDisplay";
-
-    private DisplayManager displayManager;
-
-    @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
-        Activity activity = cordova.getActivity();
-        displayManager = (DisplayManager) cordova.getActivity().getSystemService(Activity.DISPLAY_SERVICE);
-    }
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -62,13 +52,15 @@ public class ChromeSystemDisplay extends CordovaPlugin {
         JSONObject ret = new JSONObject();
         int widthPixels = 0;
         int heightPixels = 0;
+        final DisplayMetrics displayMetrics = new DisplayMetrics();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            final DisplayMetrics displayMetrics = new DisplayMetrics();
+        try {
             display.getRealMetrics(displayMetrics);
-            widthPixels = displayMetrics.widthPixels;
-            heightPixels = displayMetrics.heightPixels;
+        } catch (NoSuchMethodError e) {
+            display.getMetrics(displayMetrics);
         }
+        widthPixels = displayMetrics.widthPixels;
+        heightPixels = displayMetrics.heightPixels;
 
         ret.put("left", 0);
         ret.put("top", 0);
@@ -118,6 +110,27 @@ public class ChromeSystemDisplay extends CordovaPlugin {
         return ret;
     }
 
+    private JSONObject getDisplayInfo(final Display display) throws JSONException {
+        JSONObject displayInfo = new JSONObject();
+
+        displayInfo.put("id", Integer.toString(display.getDisplayId()));
+        try {
+            displayInfo.put("name", display.getName());
+        } catch (NoSuchMethodError e) {
+            displayInfo.put("name", "Default");
+        }
+        displayInfo.put("isPrimary", display.getDisplayId() == android.view.Display.DEFAULT_DISPLAY);
+        displayInfo.put("dpiX", getDpiX(display));
+        displayInfo.put("dpiY", getDpiY(display));
+        displayInfo.put("rotation", getRotation(display));
+        displayInfo.put("bounds", getBounds(display));
+        displayInfo.put("overscan", getOverscan());
+        displayInfo.put("workArea", getWorkArea(display));
+        // mirroringSourceId, isInternal and isEnabled cannot be retrieved at this moment.
+
+        return displayInfo;
+    }
+
     private void getInfo(final CordovaArgs args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
@@ -125,23 +138,18 @@ public class ChromeSystemDisplay extends CordovaPlugin {
                 try {
                     JSONArray ret = new JSONArray();
 
-                    Display[] displays = displayManager.getDisplays();
-                    for (Display display : displays) {
-                        JSONObject displayInfo = new JSONObject();
-
-                        displayInfo.put("id", Integer.toString(display.getDisplayId()));
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                            displayInfo.put("name", display.getName());
+                    try {
+                        DisplayManager displayManager = (DisplayManager) cordova.getActivity().getSystemService(Activity.DISPLAY_SERVICE);
+                        Display[] displays = displayManager.getDisplays();
+                        for (Display display : displays) {
+                            JSONObject displayInfo = new JSONObject();
+                            displayInfo = getDisplayInfo(display);
+                            ret.put(displayInfo);
                         }
-                        displayInfo.put("isPrimary", display.getDisplayId() == android.view.Display.DEFAULT_DISPLAY);
-                        displayInfo.put("dpiX", getDpiX(display));
-                        displayInfo.put("dpiY", getDpiY(display));
-                        displayInfo.put("rotation", getRotation(display));
-                        displayInfo.put("bounds", getBounds(display));
-                        displayInfo.put("overscan", getOverscan());
-                        displayInfo.put("workArea", getWorkArea(display));
-                        // mirroringSourceId, isInternal and isEnabled cannot be retrieved at this moment.
-
+                    } catch (NoClassDefFoundError e) {
+                        Display defaultDisplay = cordova.getActivity().getWindowManager().getDefaultDisplay();
+                        JSONObject displayInfo = new JSONObject();
+                        displayInfo = getDisplayInfo(defaultDisplay);
                         ret.put(displayInfo);
                     }
 
