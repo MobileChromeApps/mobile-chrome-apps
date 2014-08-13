@@ -25,6 +25,8 @@ Try out the `cca` toolchain by following these steps:
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
+Or, have a look through our [FAQ](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/faq.md) to learn more.
+
 ## Chrome App Developer Tool (New!)
 
 The [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/) enables a fast edit/refresh cycle when developing your mobile Chrome App.
