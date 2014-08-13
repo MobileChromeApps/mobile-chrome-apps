@@ -63,7 +63,7 @@ function postPrepareInternal(platform) {
   }
 
   return promise.then(function() {
-    return require('./get-manifest')('www');
+    return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
     if (!manifest || !manifest.icons) return;
     var iconMap = {};
@@ -206,7 +206,7 @@ function postPrepareInternal(platform) {
 
   // Merge the manifests.
   .then(function() {
-    return require('./get-manifest')(root, platform);
+    return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
     return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
   })
@@ -214,7 +214,7 @@ function postPrepareInternal(platform) {
   // Set the "other" version values if defined in the manifest.
   // CFBundleVersion on iOS and versionCode on Android.
   .then(function() {
-    return require('./get-manifest')(root);
+    return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
     // Android
     if (platform === 'android' && manifest) {
