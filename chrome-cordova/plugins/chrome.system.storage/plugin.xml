@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.system.storage"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome System Storage API</name>
+
+  <platform name="android">
+    <js-module src="system.storage.js" name="system.storage">
+      <clobbers target="chrome.system.storage" />
+    </js-module>
+    <source-file src="src/android/ChromeSystemStorage.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSystemStorage">
+        <param name="android-package" value="org.chromium.ChromeSystemStorage"/>
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    </config-file>
+  </platform>
+</plugin>
