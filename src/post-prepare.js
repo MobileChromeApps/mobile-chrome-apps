@@ -204,6 +204,17 @@ function postPrepareInternal(platform) {
     }
   })
 
+  // Update Android minSdkVersion.
+  .then(function() {
+    if (platform === 'android') {
+      var iceCreamSandwichVersion = '14';
+      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+      androidManifest.find('./uses-sdk/').attrib["android:minSdkVersion"] = iceCreamSandwichVersion;
+      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+    }
+  })
+
   // Merge the manifests.
   .then(function() {
     return require('./get-manifest')('www', platform);
