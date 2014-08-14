@@ -11,7 +11,7 @@
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
-  <name>Chrome System CPU API</name>
+  <name>Chrome System Display API</name>
 
   <platform name="android">
     <js-module src="system.display.js" name="system.display">
