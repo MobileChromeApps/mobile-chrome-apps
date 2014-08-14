@@ -49,6 +49,11 @@ module.exports = exports = function parseCommandLine() {
              'prepare [PLATFORM..] ...................... copies files for specified platforms, or all platforms,\n' +
              '                                            so that the project is ready to build in each SDK\n' +
              '\n' +
+             'upgrade ................................... upgrades platforms and plugins of this project with the latest\n' +
+             '                                            versions after doing an npm update of cca.\n' +
+             '                                            Note: you will be automatically prompted to upgrade, but you can\n' +
+             '                                            skip the auto upgrade by passing --skip-upgrade to any command.\n' +
+             '\n' +
              'build [PLATFORM...] ....................... shortcut for prepare, then compile\n' +
              '\n' +
              'run [--debug|--release]\n' +
@@ -58,6 +63,7 @@ module.exports = exports = function parseCommandLine() {
              'push [--target=IP_ADDRESS:PORT] [--watch] . Pushes the app to one or more Chrome App Developer Tool instances.\n' +
              '                                            --target defaults to localhost:2424; can be specified multiple times.\n' +
              '                                            --watch enables a file watcher that auto-pushes when files change.\n' +
+             '\n' +
              'Examples:\n' +
              '    cca create MyApp\n' +
              '    cca create MyApp --link-to=' + pathToApp + '\n' +
