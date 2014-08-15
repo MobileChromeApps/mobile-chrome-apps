@@ -13,7 +13,18 @@ function parseTargetOutput(targetOutput) {
   while ((target = targetRe.exec(targetOutput))) {
     targets.push(target[2]);
   }
-  return targets;
+  var targetPrefixes = ['Google Inc.:Google APIs:','android-'];
+  var highestTargetSdk = -1;
+  targets.forEach(function(target) {
+    targetPrefixes.forEach(function(prefix) {
+      if (target.indexOf(prefix) != 0) return;
+      var targetSdk = target.slice(prefix.length);
+      if (targetSdk == 'L') targetSdk = 20;
+      if (isNaN(targetSdk)) return;
+      highestTargetSdk = Math.max(highestTargetSdk, targetSdk);
+    });
+  });
+  return highestTargetSdk;
 }
 
 function checkHasAndroid() {
@@ -21,9 +32,9 @@ function checkHasAndroid() {
     var targetOutput = out.stdout;
     hasAndroidSdk = true;
     console.log('Android SDK detected.');
-    var targets = parseTargetOutput(targetOutput);
+    var highestTargetSdk = parseTargetOutput(targetOutput);
     /* This is the android SDK version declared in cordova-android/framework/project.properties */
-    if (!(targets.indexOf('Google Inc.:Google APIs:19') > -1 || targets.indexOf('android-19') > -1)) {
+    if (highestTargetSdk < 19) {
       console.warn('Dependency warning: Android 4.4 (Google APIs) Platform is not installed.' +
         '\nAdd it using the Android SDK Manager (run the "android" command)');
     }
