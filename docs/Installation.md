@@ -8,7 +8,7 @@ The Chrome Apps for mobile toolchain can target iOS 6+ and Android 4.x+.
   * **Windows**: Install Node.js using the installation executables downloadable from [nodejs.org](http://nodejs.org).
   * **OS X** or **Linux**: Installation executables are also available from [nodejs.org](http://nodejs.org). If you wish to avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm). Example:
 
-            curl -L https://raw.github.com/creationix/nvm/master/install.sh | sh
+            curl -L https://raw.githubusercontent.com/creationix/nvm/master/install.sh | sh
             source ~/.bash_profile || source ~/.profile || source ~/.bashrc
             nvm install 0.10
             nvm alias default 0.10
