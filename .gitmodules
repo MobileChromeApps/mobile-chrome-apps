@@ -4,30 +4,9 @@
 [submodule "cordova/cordova-ios"]
 	path = cordova/cordova-ios
 	url = https://git-wip-us.apache.org/repos/asf/cordova-ios.git
-[submodule "cordova/cordova-plugin-file"]
-	path = cordova/cordova-plugin-file
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-file.git
-[submodule "cordova/cordova-plugin-inappbrowser"]
-	path = cordova/cordova-plugin-inappbrowser
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-inappbrowser.git
-[submodule "cordova/cordova-plugin-network-information"]
-	path = cordova/cordova-plugin-network-information
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-network-information.git
-[submodule "cordova/google-play-services"]
-	path = cordova/google-play-services
-	url = https://github.com/MobileChromeApps/google-play-services.git
 [submodule "cordova/cordova-plugins"]
 	path = cordova/cordova-plugins
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugins.git
-[submodule "cordova/cordova-plugin-android-support-v4"]
-	path = cordova/cordova-plugin-android-support-v4
-	url = https://github.com/MobileChromeApps/cordova-plugin-android-support-v4.git
 [submodule "cordova/cordova-crosswalk-engine"]
 	path = cordova/cordova-crosswalk-engine
 	url = https://github.com/clelland/cordova-crosswalk-engine/
-[submodule "cordova/cordova-plugin-statusbar"]
-	path = cordova/cordova-plugin-statusbar
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-statusbar.git
-[submodule "cordova/cordova-plugin-geolocation"]
-	path = cordova/cordova-plugin-geolocation
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-geolocation.git
