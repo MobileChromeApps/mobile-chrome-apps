@@ -25,31 +25,36 @@ var fs = require('fs');
 module.exports = exports = function getManifest(manifestDir, platform) {
   var manifestFilename = path.join(manifestDir, 'manifest.json');
   var manifestMobileFilename = path.join(manifestDir, 'manifest.mobile.json');
+  var manifest, manifestMobile;
 
   return Q.ninvoke(fs, 'readFile', manifestFilename, { encoding: 'utf-8' }).then(function(manifestData) {
-    var manifestMobileData = '{}';
-    return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' })
-    .then(function(mobile) {
-      manifestMobileData = mobile;
+    try {
+      // jshint evil:true
+      manifest = eval('(' + manifestData + ')');
+      // jshint evil:false
+    } catch (e) {
+      console.error(e);
+      return Q.reject('Unable to parse manifest ' + manifestFilename);
+    }
+    return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' }).then(function(manifestMobileData) {
+      try {
+        // jshint evil:true
+        manifestMobile = eval('(' + manifestMobileData + ')');
+        // jshint evil:false
+      } catch (e) {
+        console.error(e);
+        return Q.reject('Unable to parse manifest ' + manifestMobileFilename);
+      }
     }, function(err) {
       // Swallow any errors opening the mobile manifest, it's not required.
     }).then(function() {
-      try {
-        // jshint evil:true
-        var manifest = eval('(' + manifestData + ')');
-        var manifestMobile = eval('(' + manifestMobileData + ')');
-        // jshint evil:false
-        var extend = require('node.extend');
-        manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
-        // If you want a specific platform manifest, also merge in its platform specific settings
-        if (typeof platform !== 'undefined' && platform in manifest) {
-          manifest = extend(true, manifest, manifest[platform]);
-        }
-        return manifest;
-      } catch (e) {
-        console.error(e);
-        return Q.reject('Unable to parse manifest ' + manifestFilename);
+      var extend = require('node.extend');
+      manifest = extend(true, manifest, manifestMobile); // true -> deep recursive merge of these objects
+      // If you want a specific platform manifest, also merge in its platform specific settings
+      if (typeof platform !== 'undefined' && platform in manifest) {
+        manifest = extend(true, manifest, manifest[platform]);
       }
+      return manifest;
     });
   }, function(err) {
     return Q.reject('Unable to open manifest ' + manifestFilename + ' for reading.');
