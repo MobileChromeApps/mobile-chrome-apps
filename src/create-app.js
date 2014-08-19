@@ -16,6 +16,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   var manifest = null;
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
   var appWasImported = false;
+  var manifestMobileFilename = path.join(destAppDir, 'www', 'manifest.mobile.json');
 
   return Q.fcall(function() {
     // Validate source arg.
@@ -82,6 +83,25 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     process.chdir(destAppDir);
   })
   .then(function() {
+    // Ensure the mobile manifest exists.
+    if (fs.existsSync(manifestMobileFilename)) return;
+    var defaultManifestMobileFilename = path.join(ccaRoot, 'templates', 'default-app', 'manifest.mobile.json');
+    if (!fs.existsSync(defaultManifestMobileFilename)) return; // TODO: Was I supposed to be an error?
+    shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
+  })
+  .then(function() {
+    // Update default packageId if needed.
+    return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' }).then(function(manifestMobileData) {
+      // jshint evil:true
+      manifestMobile = eval('(' + manifestMobileData + ')');
+      // jshint evil:false
+      if (manifestMobile.packageId === 'com.your.company.HelloWorld') {
+        manifestMobile.packageId = 'com.your.company.' + manifest['name'].replace(/[^a-zA-Z0-9_]/g, '');
+        Q.ninvoke(fs, 'writeFile', manifestMobileFilename, JSON.stringify(manifestMobile, null, 4));
+      }
+    })
+  })
+  .then(function() {
     // If there is no config.xml, or the config.xml is the cordova default, replace it with our default
     if (!appWasImported || !fs.existsSync(path.join('config.xml'))) {
       console.log("## Creating default config.xml");
@@ -129,14 +149,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     // Create a convenience gitignore
     shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
     return Q();
-  })
-  .then(function() {
-    // Ensure the mobile manifest exists.
-    var manifestMobileFilename = path.join('www', 'manifest.mobile.json');
-    if (fs.existsSync(manifestMobileFilename)) return;
-    var defaultManifestMobileFilename = path.join(ccaRoot, 'templates', 'default-app', 'manifest.mobile.json');
-    if (!fs.existsSync(defaultManifestMobileFilename)) return; // TODO: Was I supposed to be an error?
-    shelljs.cp('-f', defaultManifestMobileFilename, manifestMobileFilename);
   })
   .then(function() {
     // Add default platforms:
