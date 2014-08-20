@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.notifications"
-    version="1.0.3">
+    version="1.0.4">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>

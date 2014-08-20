@@ -28,7 +28,7 @@ Revokes the permissions associated with an OAuth2 access token and removes it fr
 #### Amended Functions
 
     chrome.identity.getAuthToken(object details, function callback)
-    
+
 * object `details` recognizes an additional option:
     * string `accountHint`: The account to authenticate in the event that the account chooser dialog is to appear.
         * Specifying this prevents the account chooser dialog from appearing.
@@ -123,6 +123,10 @@ When using this plugin outside the context of a Chrome App, this information mus
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
 
 # Release Notes
+## 1.2.2 (Aug 20, 2014)
+- Fixed swizzling linker error
+- Added a prompt to update Google Play Services
+
 ## 1.2.1 (May 8, 2014)
 - Documentation updates.
 - Fixed Android web authentication.
