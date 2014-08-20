@@ -36,16 +36,16 @@ exports.DEFAULT_PLUGINS = [
     'org.chromium.navigation',
     'org.chromium.bootstrap',
     'org.chromium.i18n',
-    'org.chromium.polyfill.CustomEvent',
+    'org.chromium.polyfill.customevent',
     'org.chromium.polyfill.xhr_features',
     'org.chromium.polyfill.blob_constructor',
 ];
 
 exports.PLUGIN_MAP = {
   'alarms': ['org.chromium.alarms', 'org.chromium.storage'],
-  'audioCapture': ['org.chromium.audioCapture'],
+  'audioCapture': ['org.chromium.audiocapture'],
   'background': [],
-  'fileSystem': ['org.chromium.fileSystem', 'org.chromium.FileChooser'],
+  'fileSystem': ['org.chromium.filesystem', 'org.chromium.filechooser'],
   'fullscreen': [],
   'gcm': ['org.chromium.gcm', 'org.chromium.storage'],
   'geolocation': ['org.apache.cordova.geolocation'],
@@ -54,17 +54,17 @@ exports.PLUGIN_MAP = {
   'notifications': ['org.chromium.notifications', 'org.chromium.storage'],
   'payments': ['com.google.payments'],
   'power': ['org.chromium.power'],
-  'pushMessaging': ['org.chromium.pushMessaging', 'org.chromium.identity'],
+  'pushMessaging': ['org.chromium.pushmessaging', 'org.chromium.identity'],
   'socket': ['org.chromium.socket'],
   'storage': ['org.chromium.storage'],
-  'syncFileSystem': ['org.chromium.syncFileSystem', 'org.chromium.storage', 'org.chromium.identity'],
+  'syncFileSystem': ['org.chromium.syncfilesystem', 'org.chromium.storage', 'org.chromium.identity'],
   'system.cpu': ['org.chromium.system.cpu'],
   'system.display': ['org.chromium.system.display'],
   'system.memory': ['org.chromium.system.memory'],
   'system.network': ['org.chromium.system.network'],
   'system.storage': ['org.chromium.system.storage'],
   'unlimitedStorage': [],
-  'videoCapture': ['org.chromium.videoCapture'],
+  'videoCapture': ['org.chromium.videocapture'],
 };
 
 exports.STALE_PLUGINS = [
