@@ -4,6 +4,14 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.3.1 (August 21, 2014)
+* Most plugins are now downloaded from Cordova plugin registry
+* Update Crosswalk to M37
+* Update com.google.payments to ensure compatibility with bare cordova apps
+* Create faq.md
+* cordova-android: Add Gradle support
+
+
 ### v0.3.0 (August 1, 2014)
 * Lots of new plugins courtesy of [Francois Beaufort](https://plus.google.com/+FrancoisBeaufort)!
   * `chrome.audioCapture` and `chrome.videoCapture` to add android permissions to allow WebRTC within the [new crosswalk webview](#v011-june-25-2014)
@@ -28,16 +36,16 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * This update is released as 0.2.1 in light of the fact the 0.1.1 should have been 0.2.0
 * *Important*: Android applications run by default in the Crosswalk webview (see 1.1 release notes)
 * Updated cordova-android, cordova-crosswalk-engine, google-play-services
-* Correct URL manipulation methods for data urls 
+* Correct URL manipulation methods for data urls
 * escape strings in config.xml to allow for special characters like email addresses
 * Add .jshintrc file and fix all JSHint errors
 * Adding FileChooser dependency to chrome.filesystem
-* better error messages 
+* better error messages
 * iOS: Close open sockets on app reset/shutdown
 * Fixed an Null pointer Exception when getting an app id
 * Updated documentation
 
- 
+
 ### v0.1.1 (June 25, 2014)
 * This is an exciting and significant milestone release!
 * *Important*: Android applications now run inside a new packaged chromium-based webview, using the [Crosswalk Project](https://crosswalk-project.org/)!
