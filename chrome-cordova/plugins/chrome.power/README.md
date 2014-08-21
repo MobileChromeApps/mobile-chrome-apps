@@ -15,5 +15,9 @@ The API reference is [here](http://developer.chrome.com/apps/power.html).
 * There is no distinction between `system` and `display` levels; both act as though `display` was specified.
 
 # Release Notes
+## 1.0.2 (Aug 21, 2014)
+- Added system level for Android
+- Added support for system requestKeepAwake on Android
+
 ## 1.0.1 (May 8, 2014)
 - requestKeepAwake and releaseKeepAwake to run on the UI thread on Android.
