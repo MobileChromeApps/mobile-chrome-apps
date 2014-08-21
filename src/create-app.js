@@ -11,11 +11,12 @@ function resolveTilde(string) {
 }
 
 // Returns a promise
-module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flags) {
+module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, packageId, appName, flags) {
   var srcAppDir = null;
   var manifest = null;
   var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
   var appWasImported = false;
+  var manifestDesktopFilename = path.join(destAppDir, 'www', 'manifest.json');
   var manifestMobileFilename = path.join(destAppDir, 'www', 'manifest.mobile.json');
 
   return Q.fcall(function() {
@@ -77,10 +78,28 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
     config_default.lib.www = { uri: srcAppDir };
     config_default.lib.www.link = !!flags['link-to'];
 
-    return require('./cordova-commands').runCmd(['create', destAppDir, manifest.name, manifest.name, config_default]);
+    return require('./cordova-commands').runCmd(['create', destAppDir, packageId, appName, config_default]);
   })
   .then(function() {
     process.chdir(destAppDir);
+  })
+  .then(function() {
+    if (!appWasImported) {
+      // Update app name if the app is not imported.
+      return Q.ninvoke(fs, 'readFile', manifestDesktopFilename, { encoding: 'utf-8' }).then(function(manifestDesktopData) {
+        try {
+          // jshint evil:true
+          var manifestDesktop = eval('(' + manifestDesktopData + ')');
+          // jshint evil:false
+        } catch (e) {
+          console.error(e);
+          return Q.reject('Unable to parse manifest ' + manifestDesktopFilename);
+        }
+        manifestDesktop.name = appName || path.basename(destAppDir);
+        manifest.name = manifestDesktop.name;
+        Q.ninvoke(fs, 'writeFile', manifestDesktopFilename, JSON.stringify(manifestDesktop, null, 4));
+      })
+    }
   })
   .then(function() {
     // Ensure the mobile manifest exists.
@@ -92,11 +111,16 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, flag
   .then(function() {
     // Update default packageId if needed.
     return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' }).then(function(manifestMobileData) {
-      // jshint evil:true
-      manifestMobile = eval('(' + manifestMobileData + ')');
-      // jshint evil:false
+      try {
+        // jshint evil:true
+        manifestMobile = eval('(' + manifestMobileData + ')');
+        // jshint evil:false
+      } catch (e) {
+        console.error(e);
+        return Q.reject('Unable to parse manifest ' + manifestMobileFilename);
+      }
       if (manifestMobile.packageId === 'com.your.company.HelloWorld') {
-        manifestMobile.packageId = 'com.your.company.' + manifest['name'].replace(/[^a-zA-Z0-9_]/g, '');
+        manifestMobile.packageId = packageId || ('com.your.company.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
         Q.ninvoke(fs, 'writeFile', manifestMobileFilename, JSON.stringify(manifestMobile, null, 4));
       }
     })

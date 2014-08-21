@@ -4,6 +4,10 @@ To create a default mobile Chrome App project in a directory named `YourApp` run
 
     cca create YourApp
 
+Know what you're doing? You can also provide the App Id and the App Name from the command line:
+
+    cca create YourApp com.your.company.YourApp "Your App"
+
 If you have already built a Chrome App and wish to port it to a mobile platform, you can use the `--link-to` flag to create a _symlink_ to it:
 
     cca create YourApp --link-to=path/to/manifest.json
