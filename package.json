@@ -40,8 +40,6 @@
   "files": [
     "README.md",
     "RELEASENOTES.md",
-    "chrome-cordova/README.md",
-    "chrome-cordova/plugins",
     "cordova",
     "docs",
     "src",
