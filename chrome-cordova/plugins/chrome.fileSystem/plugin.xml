@@ -5,8 +5,8 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.fileSystem"
-    version="1.0.1">
+    id="org.chromium.filesystem"
+    version="1.0.2">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -31,7 +31,7 @@
     </config-file>
   </platform>
   <platform name="android">
-    <dependency id="org.chromium.FileChooser" />
+    <dependency id="org.chromium.filechooser" />
   </platform>
   <platform name="bb"></platform>
 </plugin>
