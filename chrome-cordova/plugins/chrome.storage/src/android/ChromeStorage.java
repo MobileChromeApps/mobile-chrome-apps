@@ -246,15 +246,24 @@ public class ChromeStorage extends CordovaPlugin {
                     }
 
                     if (keys != null && !keys.isEmpty()) {
-                        JSONObject storage = getStorage(namespace);
-                        for(String key : keys) {
-                            Object oldValue = storage.opt(key);
-                            if(oldValue != null) {
-                                oldValues.put(key, oldValue);
+                        // Use a lock to serialize updates to storage, to
+                        // ensure data is written consistently with
+                        // concurrent writers
+                        writeLock.lock();
+
+                        try {
+                            JSONObject storage = getStorage(namespace);
+                            for(String key : keys) {
+                                Object oldValue = storage.opt(key);
+                                if(oldValue != null) {
+                                    oldValues.put(key, oldValue);
+                                }
+                                storage.remove(key);
                             }
-                            storage.remove(key);
+                            setStorage(namespace, storage);
+                        } finally {
+                            writeLock.unlock();
                         }
-                        setStorage(namespace, storage);
                     }
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
@@ -271,8 +280,18 @@ public class ChromeStorage extends CordovaPlugin {
             public void run() {
                 try {
                     String namespace = args.getString(0);
-                    JSONObject oldValues = getStorage(namespace);
-                    setStorage(namespace, new JSONObject());
+
+                    // Use a lock to serialize updates to storage, to
+                    // ensure data is written consistently with
+                    // concurrent writers
+                    writeLock.lock();
+
+                    try {
+                        JSONObject oldValues = getStorage(namespace);
+                        setStorage(namespace, new JSONObject());
+                    } finally {
+                        writeLock.unlock();
+                    }
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not clear storage", e);
