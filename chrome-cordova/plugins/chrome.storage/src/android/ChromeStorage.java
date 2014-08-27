@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
 
 import org.apache.cordova.CordovaArgs;
@@ -27,6 +28,12 @@ import android.util.Log;
 public class ChromeStorage extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeStorage";
+    private ReentrantLock writeLock;
+    
+    @Override
+    protected void pluginInitialize() {
+        writeLock = new ReentrantLock();
+    }
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -189,15 +196,25 @@ public class ChromeStorage extends CordovaPlugin {
 
                     if (keyArray != null) {
                         List<String> keys = toStringList(keyArray);
-                        JSONObject storage = getStorage(namespace);
-                        for (String key : keys) {
-                            Object oldValue = storage.opt(key);
-                            if(oldValue != null) {
-                                oldValues.put(key, oldValue);
+
+                        // Use a lock to serialize updates to storage, to
+                        // ensure data is written consistently with
+                        // concurrent writers
+                        writeLock.lock();
+
+                        try {
+                            JSONObject storage = getStorage(namespace);
+                            for (String key : keys) {
+                                Object oldValue = storage.opt(key);
+                                if(oldValue != null) {
+                                    oldValues.put(key, oldValue);
+                                }
+                                storage.put(key, jsonObject.get(key));
                             }
-                            storage.put(key, jsonObject.get(key));
+                            setStorage(namespace, storage);
+                        } finally {
+                            writeLock.unlock();
                         }
-                        setStorage(namespace, storage);
                     }
                     callbackContext.success(oldValues);
                 } catch (Exception e) {
