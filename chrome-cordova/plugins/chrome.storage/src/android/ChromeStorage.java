@@ -280,6 +280,7 @@ public class ChromeStorage extends CordovaPlugin {
             public void run() {
                 try {
                     String namespace = args.getString(0);
+                    JSONObject oldValues;
 
                     // Use a lock to serialize updates to storage, to
                     // ensure data is written consistently with
@@ -287,7 +288,7 @@ public class ChromeStorage extends CordovaPlugin {
                     writeLock.lock();
 
                     try {
-                        JSONObject oldValues = getStorage(namespace);
+                        oldValues = getStorage(namespace);
                         setStorage(namespace, new JSONObject());
                     } finally {
                         writeLock.unlock();
