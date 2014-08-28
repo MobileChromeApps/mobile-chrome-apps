@@ -79,6 +79,52 @@ registerAutoTests("chrome.storage", function() {
       'proto': { b:2 }
     };
 
+    function createKey(index) {
+      return 'key' + index;
+    }
+    
+    function createValue(index) {
+      return 'value' + index;
+    }
+    
+    function getIndexFromKey(key) {
+      return key.substring(3);
+    }
+
+    function createInput(index) {
+      var input = {};
+      input[createKey(index)] = createValue(index);
+      return input;
+    }
+    
+    function clearAsPromise(storage) {
+      return Q.Promise(function(resolve, reject, notify) {
+        storage.clear(resolve);
+      });
+    }
+    
+    function getAsPromise(storage, key) {
+      return Q.Promise(function(resolve, reject, notify) {
+        storage.get(key, function(result) {
+          if (chrome.runtime.lastError)
+          {
+            reject(chrome.runtime.lastError);
+            return;
+          }
+          var ret = {};
+          ret.key = key;
+          ret.result = result;
+          resolve(ret);
+	      });
+      });
+    }
+    
+    function setAsPromise(storage, input) {
+      return Q.Promise(function(resolve, reject, notify) {
+        storage.set(input, resolve);
+      });
+    }
+    
     describe('chrome.storage.' + type, function() {
       describe('testing set', function() {
 
@@ -118,6 +164,40 @@ registerAutoTests("chrome.storage", function() {
         });
             });
     });
+        });
+      
+        it('set with concurrent writes', function(done) {
+          storagearea.clear(function(){
+            var maxCalls = 30;
+
+            var setCalls = [];
+            for(var i = 0; i < maxCalls; i++){
+              setCalls.push(setAsPromise(storagearea, createInput(i)));
+            }
+            
+            var getCalls = [];
+            for(var i = 0; i < maxCalls; i++){
+              getCalls.push(getAsPromise(storagearea, createKey(i)));
+            }
+            
+            Q.all(setCalls).then(function(results) {
+              return Q.all(getCalls);
+            }).then(function(results) {
+              var foundCount = 0;
+              
+              results.forEach(function(element) {
+                var key = element.key;
+                var result = element.result;
+                if (result && Object.getOwnPropertyNames(result).length !== 0){
+                  foundCount++;
+                  expect(result).toEqual(createInput(getIndexFromKey(key)));
+                }
+              });
+
+              expect(foundCount).toEqual(maxCalls);
+              done();
+            });
+          });
         });
       });
 
