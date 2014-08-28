@@ -57,6 +57,13 @@ function fixEnv() {
       }
     }
   }
+  // Add flags for building with Gradle
+  if (typeof process.env.ANDROID_BUILD == 'undefined') {
+    process.env.ANDROID_BUILD = 'gradle';
+  }
+  //if (typeof process.env.BUILD_MULTIPLE_APKS == 'undefined') {
+  //  process.env.BUILD_MULTIPLE_APKS = '1';
+  //}
 }
 
 /******************************************************************************/
