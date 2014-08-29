@@ -29,9 +29,11 @@ module.exports = exports = function parseCommandLine() {
              '    Example:\n' +
              '        cca checkenv\n' +
              '\n' +
-             'create <directory> [--android] [--ios] [--copy-from=' + pathToApp + ' | --link-to=' + pathToApp + '] - Creates a project.\n' +
+             'create <directory> [<id> [<name>]] [--android] [--ios] [--copy-from=' + pathToApp + ' | --link-to=' + pathToApp + '] - Creates a project.\n' +
              '    Details:\n' +
              '        <directory>: The directory to create the project in.\n' +
+             '        <id>: The reverse domain-style identifier.\n' +
+             '        <name>: The application\'s display text.\n' +
              '        --android: Add the Android platform (default if android SDK is detected).\n' +
              '        --ios: Add the iOS platform (default if Xcode is detected).\n' +
              '        --copy-from=' + pathToApp + ': Create a project based on the given Chrome App.\n' +
