@@ -11,7 +11,7 @@ For an overview of hybrid development, Chrome Apps on mobile, and our Chrome App
 
 You can run your [Chrome Apps](http://developer.chrome.com/apps) on Android and iOS via the [`cca` command-line tool](https://github.com/MobileChromeApps/mobile-chrome-apps).  This tool wraps your application's web code with a native Android/iOS application shell, creating a hybrid app, and allowing you to distribute via Google Play and the Apple App Store.  You can learn more from our [FAQ](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/faq.md).
 
-The Chrome Apps for Mobile project is build on top of [Apache Cordova](http://cordova.apache.org), the open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript.
+The Chrome Apps for Mobile project is built on top of [Apache Cordova](http://cordova.apache.org), the open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript.
 
 Try out the `cca` toolchain by following these steps:
 
