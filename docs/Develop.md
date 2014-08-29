@@ -17,7 +17,7 @@ From the root of your `cca`-generated project directory:
 #### Android
 * To run your app on the Android Emulator: `cca emulate android`
   * Note: This requires that you've set up an emulator. You can run `android avd` to set this up. Download additional emulator images by running `android`. To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
-* To run your app on a connected Android device: `cca run android`
+* To run your app on a connected ARM Android device: `cca run android`. To run on an Intel X86 Android device: `DEPLOY_APK_ARCH=x86 cca run android`
 
 #### iOS
 * To run your app on the iOS Simulator: `cca emulate ios`
