@@ -1,10 +1,23 @@
 # Frequently Asked Questions
 
 ## General Questions:
-### Do mobile Chrome Apps run in Chrome?
 
-No. Mobile Chrome Apps are first-class native apps that run independently from Chrome. They are built with [Cordova](https://cordova.apache.org/), which means apps leverage UIWebView on iOS, and either [Crosswalk](https://crosswalk-project.org) or the system [WebView](http://developer.android.com/reference/android/webkit/WebView.html) on Android.
+### Do Chrome Apps for Mobile run inside the Chrome Browser?
 
+No. Chrome Apps for Mobile are first-class native apps that run independent of the Chrome Browser. They are hybrid apps, which means they leverage a WebView component, not the Chrome Browser, to display content within the Android/iOS application.
+
+### Which WebView do Chrome Apps for Mobile use?
+
+**Android**: [Crosswalk WebView](https://crosswalk-project.org) is bundled by default, but you can chose to use the [system WebView](http://developer.android.com/reference/android/webkit/WebView.html).
+**iOS**: [UIWebView](https://developer.apple.com/library/ios/documentation/uikit/reference/UIWebView_Class/Reference/Reference.html).
+
+### How are Chrome Apps for Mobile Distributed to users?  Are they installed through the Chrome Web Store?
+
+Chrome Apps for mobile are first-class Native Apps and [distributred by publishing to the Play Store (Android) or App Store (iOS)](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md).  They are not installed from the Chrome Web Store.
+
+### How do Chrome Apps for Mobile compare with Apache Cordova (or PhoneGap)?
+
+Chrome Apps for Mobile are actually built on top of [Apache Cordova](https://cordova.apache.org/), and most of our work has gone directly into that project.
 
 ### What Web APIs are supported?
 
