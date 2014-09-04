@@ -28,12 +28,7 @@ import android.util.Log;
 public class ChromeStorage extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeStorage";
-    private ReentrantLock writeLock;
-    
-    @Override
-    protected void pluginInitialize() {
-        writeLock = new ReentrantLock();
-    }
+    private ReentrantLock writeLock = new ReentrantLock();
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
@@ -157,7 +152,13 @@ public class ChromeStorage extends CordovaPlugin {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
-                JSONObject storage = getStoredValuesForKeys(args, /*useDefaultValues*/ true);
+                JSONObject storage;
+                writeLock.lock();
+                try {
+                  storage = getStoredValuesForKeys(args, /*useDefaultValues*/ true);
+                } finally {
+                  writeLock.unlock();
+                }
 
                 if (storage == null) {
                     callbackContext.error("Could not retrieve storage");
@@ -172,8 +173,14 @@ public class ChromeStorage extends CordovaPlugin {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
-                //Don't use default values as the keys that don't have values in storage don't affect size
-                JSONObject storage = getStoredValuesForKeys(args, /*useDefaultValues*/ false);
+                JSONObject storage;
+                writeLock.lock();
+                try {
+                  //Don't use default values as the keys that don't have values in storage don't affect size
+                  storage = getStoredValuesForKeys(args, /*useDefaultValues*/ false);
+                } finally {
+                  writeLock.unlock();
+                }
 
                 if (storage == null) {
                     callbackContext.error("Could not retrieve storage");
