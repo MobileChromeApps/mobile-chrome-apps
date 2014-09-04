@@ -57,6 +57,16 @@ function fixEnv() {
       }
     }
   }
+  // Add flags for building with Gradle
+  if (typeof process.env.ANDROID_BUILD == 'undefined') {
+    process.env.ANDROID_BUILD = 'gradle';
+  }
+  if (typeof process.env.BUILD_MULTIPLE_APKS == 'undefined') {
+    process.env.BUILD_MULTIPLE_APKS = '1';
+  }
+  if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
+    process.env.DEPLOY_APK_ARCH = 'armv7';
+  }
 }
 
 /******************************************************************************/
@@ -150,7 +160,9 @@ function main() {
         destAppDir = path.resolve(destAppDir);
         return require('./tools-check')()
           .then(function() {
-            return require('./create-app')(destAppDir, ccaRoot, origDir, commandLineFlags);
+            var packageId = commandLineFlags._[2] || '';
+            var appName = commandLineFlags._[3] || '';
+            return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
           });
       });
     },

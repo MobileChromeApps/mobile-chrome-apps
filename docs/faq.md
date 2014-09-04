@@ -1,9 +1,26 @@
 # Frequently Asked Questions
 
-## General Questions:
-### Do mobile Chrome Apps run in Chrome?
+## General Questions
 
-No. Mobile Chrome Apps are first-class native apps that run independently from Chrome. They are built with [Cordova](https://cordova.apache.org/), which means apps leverage UIWebView on iOS, and either [Crosswalk](https://crosswalk-project.org) or the system [WebView](http://developer.android.com/reference/android/webkit/WebView.html) on Android.
+### Do Chrome Apps for Mobile run inside the Chrome Browser?
+
+No. Chrome Apps for Mobile are first-class native apps that run independent of the Chrome Browser. They are hybrid apps, which means they leverage a WebView component, not the Chrome Browser, to display content within the Android/iOS application.
+
+
+### Which WebView do Chrome Apps for Mobile use?
+
+**Android**: [Crosswalk WebView](https://crosswalk-project.org) is bundled by default, but you can choose to use the [system WebView](http://developer.android.com/reference/android/webkit/WebView.html).
+**iOS**: [UIWebView](https://developer.apple.com/library/ios/documentation/uikit/reference/UIWebView_Class/Reference/Reference.html).
+
+
+### How are Chrome Apps for Mobile distributed to users?  Are they installed through the Chrome Web Store?
+
+Chrome Apps for Mobile are first-class native apps and [distributed by publishing to the Play Store (Android) or App Store (iOS)](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md).  They are not installed from the Chrome Web Store.
+
+
+### How do Chrome Apps for Mobile compare with Apache Cordova (or PhoneGap) apps?
+
+Chrome Apps for Mobile are actually built on top of [Apache Cordova](https://cordova.apache.org/), and most of our work has gone directly into that project.
 
 
 ### What Web APIs are supported?
@@ -11,19 +28,19 @@ No. Mobile Chrome Apps are first-class native apps that run independently from C
 Core web features vary by the underlying WebView (e.g. iOS 6 vs iOS 7 vs Android vs Crosswalk).
 
 
-### What Chrome APIs are supported?
+### Which Chrome APIs are supported?
 
 Chrome API support is tracked within [APIStatus.md](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md).
 
 
 ### Is NaCL / PNaCL supported?
 
-No. However, you can still compile and use native code by writing a custom Cordova Plugin.
+No. However, you can still compile and use native code by writing a custom Cordova plugin.
 
 
 ### Why use CCA rather than Cordova?
 
-- Support both Desktop and Mobile!
+- Support both desktop and mobile!
 - Background page & [lifecycle events](Events.md)
 - A more opinionated workflow
 - More reasons: [Stack Overflow](http://stackoverflow.com/questions/21684414/reasons-for-porting-a-cordova-app-to-a-mobile-chrome-app/)
@@ -35,6 +52,7 @@ Yes. Read their documentation, though, as some plugins may require additional co
 
 
 ### Can I use Cordova plugins within CCA apps?
+
 Yes. `cca` [forwards commands](http://stackoverflow.com/questions/21886407/chrome-cordova-app-plugin-access/) to `cordova`, so the following will work:
 
     cca plugin add [PLUGIN_ID or GIT_URL or LOCAL_PATH]
@@ -52,9 +70,9 @@ One caveat though - when using `cca push` and the Chrome App Developer Tool, onl
 File a [GitHub Issue](https://github.com/MobileChromeApps/mobile-chrome-apps/issues).
 
 
-### Why does Hello World produce >20mb APK?
+### Why does Hello World produce a >20mb APK?
 
-By default, `cca` uses a bundled WebView ([Crosswalk](https://crosswalk-project.org)), rather than the system webview.
+By default, `cca` uses a bundled WebView ([Crosswalk](https://crosswalk-project.org)), rather than the system WebView.
 
 
 ### Why use the Crosswalk WebView?
@@ -77,11 +95,11 @@ You can opt-out by adding `"webview": "system"` to your `manifest.mobile.json`.
 CCA does not yet enforce CSP to the same extent as Chrome Apps on desktop. It currently does execute inline `<script>`s, and may in the future add further restrictions. [Track the issue](https://github.com/MobileChromeApps/mobile-chrome-apps/issues/73).
 
 
-## How-to's:
+## How To
 
 ### Is it possible to create multiple windows in CCA apps?
 
-No. However, if you have a use-case for wanting to, we'd love to hear about it :).
+No. However, if you have a use-case for wanting to, we'd love to hear about it. :).
 
 
 ### How do I use Polymer with CCA apps?
@@ -99,39 +117,39 @@ Chrome apps on both mobile and desktop require using the
 [vulcanize](http://www.polymer-project.org/articles/concatenating-web-components.html) tool with the `--csp` flag.
 
 
-### How to sync data between Mobile and Desktop chrome app (e.g. with Drive)?
+### How do I sync data between mobile and desktop Chrome Apps (e.g. with Drive)?
 
 http://stackoverflow.com/questions/22885267/sync-data-between-android-app-and-chrome-app-using-google-drive/
 
-Neither `chrome.storage.sync` nor `chrome.syncFileSystem` are supported within CCA. However, you can use `chrome.identity` to obtain a Google auth-token, and use that with the [Drive API](https://developers.google.com/drive/web/quickstart/quickstart-js) to sync files.
+Neither `chrome.storage.sync` nor `chrome.syncFileSystem` are supported within CCA. However, you can use `chrome.identity` to obtain a Google auth token, and use that with the [Drive API](https://developers.google.com/drive/web/quickstart/quickstart-js) to sync files.
 
 
-### How to set status bar color on iOS?
+### How do I change the color of the status bar on iOS?
 
 See Stack Overflow answer: http://stackoverflow.com/questions/21673797/set-status-bar-color-using-chrome-mobile-apps/
 
 
-## Workflow Questions:
+## Workflow Questions
 
 ### What files should I check into source control?
 
 Generally, it's best to check in only files that you've edited, and not those generated by `cca`. In addition, it's helpful to use a script or README instructions that will create the Cordova workspace based on what you have checked in. E.g.:
 
-    cca create GeneratedProject --link-to src
+    cca create GeneratedProject --link-to=/path/to/project/src
 
-### When should I use `cca` vs Chrome Dev Editor?
+### When should I use `cca` vs the Chrome Dev Editor?
 
 Use the [Chrome Dev Editor](https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg) when:
-- You cannot (or do not want) to install Node or Android/iOS sdk's
-- You would like an IDE which helps with Chrome App development
+- You cannot (or do not want to) install Node or Android/iOS SDKs
+- You would like an IDE that helps with Chrome App development
 - You are developing on a Chromebook
 
 Use `cca` when:
-- You want to create `.apk` or `.ipa` files for upload to the Play Store / App Store
-- You would like to add custom cordova plugins, or make edits to native code
+- You want to create `.apk` or `.ipa` files for uploading to the Play Store / App Store
+- You would like to add custom Cordova plugins or make edits to native code
 - You would like a command line tool to go along with your editor of choice
 
-Aside from that, use whichever you prefer.  Using them interchangeably on the same source directory will work just fine :)
+Aside from that, use whichever you prefer.  Using them interchangeably on the same source directory will work just fine. :)
 
 ### Can I use Xcode / Eclipse with CCA projects?
 

@@ -9,9 +9,9 @@ For an overview of hybrid development, Chrome Apps on mobile, and our Chrome App
 
 [![Chrome Apps on Android and iOS](docs/images/io-byte-screenshot.png)](http://www.youtube.com/watch?v=nU4lvgTrjFI)
 
-You can run your [Chrome Apps](http://developer.chrome.com/apps) on Android and iOS via a [toolchain](https://github.com/MobileChromeApps/mobile-chrome-apps) based on [Apache Cordova](http://cordova.apache.org), an open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript.
+You can run your [Chrome Apps](http://developer.chrome.com/apps) on Android and iOS via the [`cca` command-line tool](https://github.com/MobileChromeApps/mobile-chrome-apps).  This tool wraps your application's web code with a native Android/iOS application shell, creating a hybrid app, and allowing you to distribute via Google Play and the Apple App Store.  You can learn more from our [FAQ](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/faq.md).
 
-Apache Cordova wraps your application's web code with a native application shell and allows you to distribute your hybrid web app via Google Play and/or the Apple App Store. To use Apache Cordova with an existing Chrome App, you use the `cca` (**c** ordova **c** hrome **a** pp) command-line tool.
+The Chrome Apps for Mobile project is built on top of [Apache Cordova](http://cordova.apache.org), the open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript.
 
 Try out the `cca` toolchain by following these steps:
 
@@ -25,11 +25,9 @@ Try out the `cca` toolchain by following these steps:
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
-Or, have a look through our [FAQ](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/faq.md) to learn more.
-
 ## Chrome App Developer Tool (New!)
 
-The [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/) enables a fast edit/refresh cycle when developing your mobile Chrome App.
+The [Chrome App Developer Tool](https://github.com/MobileChromeApps/chrome-app-developer-tool/) enables a fast edit/refresh cycle when developing your mobile Chrome App.  It can also be used alongside the [Chrome Dev Editor](https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg?hl=en) IDE to support rapid, SDK-less development!
 
 ## Additional resources
 

@@ -90,6 +90,8 @@ module.exports = exports = function prePrepareCommand() {
     return require('cordova-lib/src/cordova/plugin')('ls');
   })
   .then(function(installedPlugins) {
+    // Convert all plugin IDs to lower case (registry has problems with upper case).
+    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase()})
     var missingPlugins = pluginsToBeInstalled.filter(function(p) {
       return installedPlugins.indexOf(p) == -1;
     });
