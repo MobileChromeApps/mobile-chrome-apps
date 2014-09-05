@@ -15,6 +15,8 @@
 
 - (void)send:(CDVInvokedUrlCommand*)command;
 
+- (void)close:(CDVInvokedUrlCommand*)command;
+
 - (void)getInfo:(CDVInvokedUrlCommand*)command;
 
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;

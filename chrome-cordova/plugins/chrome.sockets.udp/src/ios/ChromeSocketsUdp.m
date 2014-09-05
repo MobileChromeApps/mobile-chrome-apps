@@ -47,6 +47,7 @@ static NSString* stringFromData(NSData* data) {
     GCDAsyncUdpSocket* _socket;
 
     NSMutableArray* _sendCallbacks;
+    void(^_closeCallback)();
 }
 @end
 
@@ -77,7 +78,8 @@ static NSString* stringFromData(NSData* data) {
         if (_bufferSize == nil) _bufferSize = [NSNumber numberWithInteger:4096];
 
         _sendCallbacks = [NSMutableArray array];
-
+        _closeCallback = nil;
+        
         _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
         [_socket enableBroadcast:true error:nil];
     }
@@ -113,6 +115,13 @@ static NSString* stringFromData(NSData* data) {
     VERBOSE_LOG(@"udbSocket:didReceiveData socketId: %u", _socketId);
 
     [_plugin fireReceiveEventsWithSocketId:_socketId data:data address:[GCDAsyncUdpSocket hostFromAddress:address]port:[GCDAsyncUdpSocket portFromAddress:address]];
+}
+
+- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
+{
+    VERBOSE_LOG(@"udbSocketDidClose:withError socketId: %u", _socketId);
+    assert(_closeCallback != nil);
+    _closeCallback();
 }
 @end
 
@@ -187,6 +196,20 @@ static NSString* stringFromData(NSData* data) {
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:[err code]] callbackId:command.callbackId];
     }
+}
+
+- (void)close:(CDVInvokedUrlCommand *)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    
+    ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
+
+    [socket->_socket closeAfterSending];
+   
+    socket->_closeCallback = ^() {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        [_sockets removeObjectForKey:socketId];
+    };
 }
 
 - (void)getInfo:(CDVInvokedUrlCommand *)command

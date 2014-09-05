@@ -60,7 +60,7 @@ exports.send = function(socketId, data, address, port, callback) {
 };
 
 exports.close = function(socketId, callback) {
-    console.warn('not implemented yet');
+    exec(callback, null, 'ChromeSocketsUdp', 'close', [socketId]);
 };
 
 exports.getInfo = function(socketId, callback) {
@@ -69,7 +69,7 @@ exports.getInfo = function(socketId, callback) {
         result.paused = !!result.paused;
         callback(result);
     };
-    exec(win,null, 'ChromeSocketsUdp', 'getInfo', [socketId]);
+    exec(win, null, 'ChromeSocketsUdp', 'getInfo', [socketId]);
 };
 
 exports.getSockets = function(callback) {
