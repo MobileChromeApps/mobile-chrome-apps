@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.sockets.udp"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Sockets UDP API</name>
+
+  <dependency id="org.chromium.common" />
+
+  <js-module src="sockets.udp.js" name="sockets.udp">
+    <clobbers target="chrome.sockets.udp" />
+  </js-module>
+
+  <platform name="ios">
+    <framework src="Security.framework" />
+    <framework src="CFNetwork.framework" />
+    <source-file src="src/ios/ChromeSocketsUdp.m" />
+    <header-file src="src/ios/ChromeSocketsUdp.h" />
+
+    <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSocketsUdp">
+        <param name="ios-package" value="ChromeSocketsUdp"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>
