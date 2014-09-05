@@ -86,6 +86,28 @@ static NSString* stringFromData(NSData* data) {
     return self;
 }
 
+- (NSDictionary*)getInfo
+{
+    NSNumber* paused = [NSNumber numberWithBool:false];
+    NSString* localAddress = [_socket localHost];
+    NSNumber* localPort = [NSNumber numberWithUnsignedInt:[_socket localPort]];
+
+    NSMutableDictionary* socketInfo = [@{
+        @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
+        @"persistent": _persistent,
+        @"name": _name,
+        @"bufferSize": _bufferSize,
+        @"paused": paused,
+    } mutableCopy];
+
+    if (localAddress) {
+        [socketInfo setObject:localAddress forKey:@"localAddress"];
+        [socketInfo setObject:localPort forKey:@"localPort"];
+    }
+    
+    return [socketInfo copy];
+}
+
 - (void)udpSocket:(GCDAsyncUdpSocket*)sock didSendDataWithTag:(long)tag
 {
     VERBOSE_LOG(@"udpSocket:didSendDataWithTag socketId: %u", _socketId);
@@ -223,24 +245,19 @@ static NSString* stringFromData(NSData* data) {
         return;
     }
 
-    NSNumber* paused = [NSNumber numberWithBool:false];
-    NSString* localAddress = [socket->_socket localHost];
-    NSNumber* localPort = [NSNumber numberWithUnsignedInt:[socket->_socket localPort]];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[socket getInfo]] callbackId:command.callbackId];
+}
 
-    NSMutableDictionary* socketInfo = [@{
-        @"socketId": socketId,
-        @"persistent": socket->_persistent,
-        @"name": socket->_name,
-        @"bufferSize": socket->_bufferSize,
-        @"paused": paused,
-    } mutableCopy];
-
-    if (localAddress) {
-        [socketInfo setObject:localAddress forKey:@"localAddress"];
-        [socketInfo setObject:localPort forKey:@"localPort"];
+- (void)getSockets:(CDVInvokedUrlCommand *)command
+{
+    NSArray* sockets = [_sockets allValues];
+    NSMutableArray* socketsInfo = [NSMutableArray array];
+    
+    for (ChromeSocketsUdpSocket* socket in sockets) {
+        [socketsInfo addObject: [socket getInfo]];
     }
-
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:socketInfo] callbackId:command.callbackId];
+    
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:socketsInfo] callbackId:command.callbackId];
 }
 
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command

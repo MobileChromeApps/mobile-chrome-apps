@@ -19,6 +19,8 @@
 
 - (void)getInfo:(CDVInvokedUrlCommand*)command;
 
+- (void)getSockets:(CDVInvokedUrlCommand*)command;
+
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;

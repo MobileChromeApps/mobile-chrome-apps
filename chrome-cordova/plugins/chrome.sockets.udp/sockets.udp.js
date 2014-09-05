@@ -73,7 +73,14 @@ exports.getInfo = function(socketId, callback) {
 };
 
 exports.getSockets = function(callback) {
-    console.warn('not implemented yet');
+    var win = callback && function(results) {
+        for (var result in results) {
+            result.persistent = !!result.persistent;
+            result.paused = !!result.paused;
+        };
+        callback(results);
+    };
+    exec(win, null, 'ChromeSocketsUdp', 'getSockets', []);
 };
 
 exports.onReceive = new Event('onReceive');
