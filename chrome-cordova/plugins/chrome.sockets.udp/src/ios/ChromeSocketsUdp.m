@@ -173,6 +173,16 @@ static NSString* stringFromData(NSData* data) {
     return self;
 }
 
+- (void)onReset
+{
+    for (NSNumber* socketId in _sockets) {
+        ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
+        if (!socket->_persistent) {
+            [self closeSocketWithId:socketId callbackId:nil];
+        }
+    }
+}
+
 - (void)create:(CDVInvokedUrlCommand*)command
 {
     VERBOSE_LOG(@"receive create calls");
@@ -249,18 +259,27 @@ static NSString* stringFromData(NSData* data) {
     }
 }
 
+- (void)closeSocketWithId:(NSNumber*)socketId callbackId:(NSString*)theCallbackId
+{
+    ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
+
+    if (socket == nil)
+        return;
+   
+    socket->_closeCallback = ^() {
+        if (theCallbackId)
+            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
+        
+        [_sockets removeObjectForKey:socketId];
+    };
+    
+    [socket->_socket closeAfterSending];
+}
+
 - (void)close:(CDVInvokedUrlCommand *)command
 {
     NSNumber* socketId = [command argumentAtIndex:0];
-    
-    ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
-
-    [socket->_socket closeAfterSending];
-   
-    socket->_closeCallback = ^() {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
-        [_sockets removeObjectForKey:socketId];
-    };
+    [self closeSocketWithId:socketId callbackId:command.callbackId];
 }
 
 - (void)getInfo:(CDVInvokedUrlCommand *)command
