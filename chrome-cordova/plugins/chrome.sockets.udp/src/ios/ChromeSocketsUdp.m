@@ -70,13 +70,13 @@ static NSString* stringFromData(NSData* data) {
         _socketId = theSocketId;
         _plugin = thePlugin;
         _paused = [NSNumber numberWithBool:NO];
-        [self setProperties:theProperties];
         
         _sendCallbacks = [NSMutableArray array];
         _closeCallback = nil;
         
         _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
         [_socket enableBroadcast:YES error:nil];
+        [self setProperties:theProperties];
     }
     return self;
 }
@@ -127,6 +127,8 @@ static NSString* stringFromData(NSData* data) {
     if (_bufferSize == nil)
         _bufferSize = [NSNumber numberWithInteger:4096];
     
+    [_socket setMaxReceiveIPv4BufferSize:[_bufferSize integerValue]];
+    [_socket setMaxReceiveIPv6BufferSize:[_bufferSize integerValue]];
 }
 
 - (void)setPaused:(NSNumber*)paused
@@ -168,8 +170,8 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didReceiveData:(NSData *)data fromAddress:(NSData *)address withFilterContext:(id)filterContext
 {
     VERBOSE_LOG(@"udbSocket:didReceiveData socketId: %u", _socketId);
-
-    [_plugin fireReceiveEventsWithSocketId:_socketId data:data address:[GCDAsyncUdpSocket hostFromAddress:address]port:[GCDAsyncUdpSocket portFromAddress:address]];
+    
+    [_plugin fireReceiveEventsWithSocketId:_socketId data:data address:[GCDAsyncUdpSocket hostFromAddress:address] port:[GCDAsyncUdpSocket portFromAddress:address]];
 }
 
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
@@ -352,7 +354,6 @@ static NSString* stringFromData(NSData* data) {
 {
     assert(_receiveEventsCallbackId != nil);
 
-    // TODO(rui): truncated theData to the current buffer size.
     NSArray *info = @[
         [NSNumber numberWithUnsignedInteger:theSocketId],
         theData,

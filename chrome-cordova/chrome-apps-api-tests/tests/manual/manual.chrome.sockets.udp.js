@@ -53,6 +53,16 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
   }
 
+  function bindRecvFromSendToWithTinyBuffer(data) {
+    chrome.sockets.udp.create({bufferSize:8}, function(createInfo) {
+      chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', 0, function(result) {
+        chrome.sockets.udp.getInfo(createInfo.socketId, function(socketInfo) {
+          sendTo(data, socketInfo.localAddress, socketInfo.localPort);
+        });
+      });
+    });
+  }
+
   function pauseBindRecvFromSendTo(data) {
     chrome.sockets.udp.create(function(createInfo) {
       chrome.sockets.udp.setPaused(createInfo.socketId, true, function() {
@@ -144,6 +154,10 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
 
     addButton('send to a bind socket', function() {
       bindRecvFromSendTo(arr.buffer);
+    });
+
+    addButton('send to a tiny buffer bind socket', function() {
+      bindRecvFromSendToWithTinyBuffer(arr.buffer);
     });
 
     addButton('get sockets', function() {
