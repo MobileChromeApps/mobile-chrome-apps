@@ -69,16 +69,9 @@ static NSString* stringFromData(NSData* data) {
     if (self) {
         _socketId = theSocketId;
         _plugin = thePlugin;
-        _persistent = [theProperties objectForKey:@"persistent"];
-        _name = [theProperties objectForKey:@"name"];
-        _bufferSize = [theProperties objectForKey:@"bufferSize"];
         _paused = [NSNumber numberWithBool:NO];
+        [self setProperties:theProperties];
         
-        // Set undefined properties to default value.
-        if (_persistent == nil) _persistent = [NSNumber numberWithBool:NO];
-        if (_name == nil) _name = @"";
-        if (_bufferSize == nil) _bufferSize = [NSNumber numberWithInteger:4096];
-
         _sendCallbacks = [NSMutableArray array];
         _closeCallback = nil;
         
@@ -107,6 +100,33 @@ static NSString* stringFromData(NSData* data) {
     }
     
     return [socketInfo copy];
+}
+
+- (void)setProperties:(NSDictionary*)theProperties
+{
+    NSNumber* persistent = [theProperties objectForKey:@"persistent"];
+    NSString* name = [theProperties objectForKey:@"name"];
+    NSNumber* bufferSize = [theProperties objectForKey:@"bufferSize"];
+
+    if (persistent)
+        _persistent = persistent;
+    
+    if (name)
+        _name = name;
+    
+    if (bufferSize)
+        _bufferSize = bufferSize;
+    
+    // Set undefined properties to default value.
+    if (_persistent == nil)
+        _persistent = [NSNumber numberWithBool:NO];
+    
+    if (_name == nil)
+        _name = @"";
+    
+    if (_bufferSize == nil)
+        _bufferSize = [NSNumber numberWithInteger:4096];
+    
 }
 
 - (void)setPaused:(NSNumber*)paused
@@ -192,7 +212,21 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketsUdpSocket *socket = [[ChromeSocketsUdpSocket alloc] initWithId:_nextSocketId++ plugin:self properties:properties];
     [_sockets setObject:socket forKey:[NSNumber numberWithUnsignedInteger:socket->_socketId]];
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:socket->_socketId] callbackId:command.callbackId];
+}
 
+- (void)update:(CDVInvokedUrlCommand*)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSDictionary* properties = [command argumentAtIndex:1];
+    
+    ChromeSocketsUdpSocket *socket = [_sockets objectForKey:socketId];
+    
+    if (socket == nil)
+        return;
+    
+    [socket setProperties:properties];
+    
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
 }
 
 - (void)send:(CDVInvokedUrlCommand*)command

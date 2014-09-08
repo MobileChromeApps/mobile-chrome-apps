@@ -11,6 +11,8 @@
 
 - (void)create:(CDVInvokedUrlCommand*)command;
 
+- (void)update:(CDVInvokedUrlCommand*)command;
+
 - (void)setPaused:(CDVInvokedUrlCommand*)command;
 
 - (void)bind:(CDVInvokedUrlCommand*)command;

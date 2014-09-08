@@ -20,7 +20,7 @@ exports.create = function(properties, callback) {
 };
 
 exports.update = function(socketId, properties, callback) {
-    console.warn('not implemented yet');
+    exec(callback, null, 'ChromeSocketsUdp', 'update', [socketId, properties]);
 };
 
 exports.setPaused = function(socketId, paused, callback) {
