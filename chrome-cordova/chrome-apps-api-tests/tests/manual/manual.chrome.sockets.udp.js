@@ -53,6 +53,30 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
   }
 
+  function pauseBindRecvFromSendTo(data) {
+    chrome.sockets.udp.create(function(createInfo) {
+      chrome.sockets.udp.setPaused(createInfo.socketId, true, function() {
+        chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', 0, function(result) {
+          chrome.sockets.udp.getInfo(createInfo.socketId, function(socketInfo) {
+            sendTo(data, socketInfo.localAddress, socketInfo.localPort);
+          });
+        });
+      });
+    });
+  }
+
+  function bindPauseRecvFromSendTo(data) {
+    chrome.sockets.udp.create(function(createInfo) {
+      chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', 0, function(result) {
+        chrome.sockets.udp.setPaused(createInfo.socketId, true, function() {
+          chrome.sockets.udp.getInfo(createInfo.socketId, function(socketInfo) {
+            sendTo(data, socketInfo.localAddress, socketInfo.localPort);
+          });
+        });
+      });
+    });
+  }
+
   function getSockets() {
     chrome.sockets.udp.getSockets(function(socketsInfo) {
       if (!socketsInfo) return;
@@ -132,6 +156,11 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
 
     addButton('set paused', function() {
       setPaused();
+    });
+
+    addButton('send to a paused socket', function() {
+      pauseBindRecvFromSendTo(arr.buffer);
+      bindPauseRecvFromSendTo(arr.buffer);
     });
 
     addButton('close sockets', function() {

@@ -218,7 +218,7 @@ static NSString* stringFromData(NSData* data) {
 
     if (socket != nil) {
         [socket setPaused:paused];
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     }
 }
 
