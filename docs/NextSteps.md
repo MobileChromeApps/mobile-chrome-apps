@@ -42,6 +42,8 @@ A complete icon list would look like this in your `manifest.json` file:
 
 The icons will be copied to the appropriate places for each platform every time you run `cca prepare`.
 
+For a good overview and examples of common problems with resizing icons, read [this answer](http://graphicdesign.stackexchange.com/questions/5269/how-to-resize-icon-sets-in-photoshop/5271#5271) on the Graphic Design Stack Exchange.
+
 ### Splash Screens
 
 Apps on iOS show a brief splash screen as the app is loading. A set of default Cordova splash screens are included in `platforms/ios/[AppName]/Resources/splash`.  
