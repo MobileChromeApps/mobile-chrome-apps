@@ -43,7 +43,8 @@ static NSString* stringFromData(NSData* data) {
     NSNumber* _persistent;
     NSString* _name;
     NSNumber* _bufferSize;
-
+    NSNumber* _paused;
+    
     GCDAsyncUdpSocket* _socket;
 
     NSMutableArray* _sendCallbacks;
@@ -71,9 +72,10 @@ static NSString* stringFromData(NSData* data) {
         _persistent = [theProperties objectForKey:@"persistent"];
         _name = [theProperties objectForKey:@"name"];
         _bufferSize = [theProperties objectForKey:@"bufferSize"];
-
+        _paused = [NSNumber numberWithBool:NO];
+        
         // Set undefined properties to default value.
-        if (_persistent == nil) _persistent = [NSNumber numberWithBool:false];
+        if (_persistent == nil) _persistent = [NSNumber numberWithBool:NO];
         if (_name == nil) _name = @"";
         if (_bufferSize == nil) _bufferSize = [NSNumber numberWithInteger:4096];
 
@@ -81,14 +83,13 @@ static NSString* stringFromData(NSData* data) {
         _closeCallback = nil;
         
         _socket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
-        [_socket enableBroadcast:true error:nil];
+        [_socket enableBroadcast:YES error:nil];
     }
     return self;
 }
 
 - (NSDictionary*)getInfo
 {
-    NSNumber* paused = [NSNumber numberWithBool:false];
     NSString* localAddress = [_socket localHost];
     NSNumber* localPort = [NSNumber numberWithUnsignedInt:[_socket localPort]];
 
@@ -97,7 +98,7 @@ static NSString* stringFromData(NSData* data) {
         @"persistent": _persistent,
         @"name": _name,
         @"bufferSize": _bufferSize,
-        @"paused": paused,
+        @"paused": _paused,
     } mutableCopy];
 
     if (localAddress) {
@@ -106,6 +107,18 @@ static NSString* stringFromData(NSData* data) {
     }
     
     return [socketInfo copy];
+}
+
+- (void)setPaused:(NSNumber*)paused
+{
+    if (![_paused isEqualToNumber:paused]) {
+        _paused = paused;
+        if ([_paused boolValue]) {
+            [_socket pauseReceiving];
+        } else {
+            [_socket beginReceiving:nil];
+        }
+    }
 }
 
 - (void)udpSocket:(GCDAsyncUdpSocket*)sock didSendDataWithTag:(long)tag
@@ -196,6 +209,19 @@ static NSString* stringFromData(NSData* data) {
     [socket->_socket sendData:data toHost:address port:port withTimeout:-1 tag:-1];
 }
 
+- (void)setPaused:(CDVInvokedUrlCommand *)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSNumber* paused = [command argumentAtIndex:1];
+    
+    ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
+
+    if (socket != nil) {
+        [socket setPaused:paused];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
+    }
+}
+
 - (void)bind:(CDVInvokedUrlCommand*)command
 {
     NSNumber* socketId = [command argumentAtIndex:0];
@@ -213,7 +239,10 @@ static NSString* stringFromData(NSData* data) {
     VERBOSE_LOG(@"NTFY %@.%@ Bind: %d", socketId, command.callbackId, success);
 
     if (success) {
-        [socket->_socket beginReceiving:nil];
+        
+        if (![socket->_paused boolValue])
+            [socket->_socket beginReceiving:nil];
+        
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:[err code]] callbackId:command.callbackId];

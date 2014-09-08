@@ -24,7 +24,7 @@ exports.update = function(socketId, properties, callback) {
 };
 
 exports.setPaused = function(socketId, paused, callback) {
-    console.warn('not implemented yet');
+    exec(callback, null, 'ChromeSocketsUdp', 'setPaused', [socketId, paused]);
 };
 
 exports.bind = function(socketId, address, port, callback) {
