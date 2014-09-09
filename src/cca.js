@@ -222,8 +222,15 @@ function main() {
     cordovaLib.events.on('warn', console.warn);
     cordovaLib.events.on('verbose', console.log);
   }
-
-  commandActions[command]().done(null, utils.fatal);
+  require('./getanalytics')()
+  .then(function(analytics) {
+    // TODO: Should we show the question when running cca help?
+    // TODO: Do something with analytics
+    console.log('TODO: Debug message. analyitcs loaded. command=', command, 'isFake=', analytics.isFake);
+    return Q();
+  })
+  .then(commandActions[command])
+  .done(null, utils.fatal);
 }
 
 if (require.main === module) {
