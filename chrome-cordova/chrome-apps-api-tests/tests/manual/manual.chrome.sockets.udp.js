@@ -6,7 +6,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
 
   function sendTo(data, addr, port) {
     chrome.sockets.udp.create(function(createInfo) {
-      chrome.sockets.udp.bind(createInfo.socketId, addr, 0, function(result) {
+      chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', 0, function(result) {
         chrome.sockets.udp.send(createInfo.socketId, data, addr, port, function(result) {
           if (result < 0) {
             logger('send fail: ' + result);
@@ -87,6 +87,58 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
   }
 
+  function stringToArrayBuffer(string) {
+    // UTF-16LE
+    var buf = new ArrayBuffer(string.length * 2);
+    var bufView = new Uint16Array(buf);
+    for (var i = 0, strLen = string.length; i < strLen; i++) {
+      bufView[i] = string.charCodeAt(i);
+    }
+    return buf;
+  }
+
+  function joinMulticastGroup(address, loopback) {
+    chrome.sockets.udp.create({bufferSize:1048576},function (socket) {
+      var socketId = socket.socketId;
+      logger(socket);
+      chrome.sockets.udp.setMulticastTimeToLive(socketId, 12, function (result) {
+        if (result != 0) {
+          logger("Set TTL Error: " + result);
+        }
+        chrome.sockets.udp.setMulticastLoopbackMode(socketId, loopback, function (result) {
+          if (result != 0) {
+            logger("Set Multicast LoopbackMode" + result);
+          }
+          chrome.sockets.udp.bind(socketId, "0.0.0.0", 0, function (result) {
+            if (result != 0) {
+              chrome.sockets.udp.close(socketId);
+              logger("Error on bind(): " + result);
+            } else {
+              chrome.sockets.udp.joinGroup(socketId, address, function (result) {
+                if (result != 0) {
+                  chrome.sockets.udp.close(socketId);
+                  logger("Error on joinGroup(): " + result);
+                } else {
+                  chrome.sockets.udp.getInfo(socketId, function(socketInfo) {
+                    message = stringToArrayBuffer(socketId + ' Joined Group');
+                    chrome.sockets.udp.send(
+                      socketId, message, address, socketInfo.localPort, function (result) {
+                      if (result < 0) {
+                        logger('send fail: ' + result);
+                      } else {
+                        logger('group sendTo: success');
+                      }
+                    });
+                  });
+                }
+              });
+            }
+          });
+        });
+      });
+    });
+  }
+
   function getSockets() {
     chrome.sockets.udp.getSockets(function(socketsInfo) {
       if (!socketsInfo) return;
@@ -134,6 +186,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
 
     var defaultAddr = '127.0.0.1';
     var defaultPort = 1234;
+    var multicastAddr = '224.0.0.1';
 
     var arr = new Uint8Array(256);
     for (var i = 0; i < arr.length; i++) {
@@ -181,6 +234,13 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
       closeSockets();
     });
 
+    addButton('Join multicast group', function() {
+      joinMulticastGroup(multicastAddr, false);
+    });
+
+    addButton('Join multicast group with loopback', function() {
+      joinMulticastGroup(multicastAddr, true);
+    });
   }
 
   initPage();
