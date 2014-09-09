@@ -97,7 +97,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     return buf;
   }
 
-  function joinMulticastGroup(address, loopback) {
+  function joinMulticastGroup(address, port, loopback) {
     chrome.sockets.udp.create({bufferSize:1048576},function (socket) {
       var socketId = socket.socketId;
       logger(socket);
@@ -109,7 +109,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
           if (result != 0) {
             logger("Set Multicast LoopbackMode" + result);
           }
-          chrome.sockets.udp.bind(socketId, "0.0.0.0", 0, function (result) {
+          chrome.sockets.udp.bind(socketId, "0.0.0.0", port, function (result) {
             if (result != 0) {
               chrome.sockets.udp.close(socketId);
               logger("Error on bind(): " + result);
@@ -119,16 +119,13 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
                   chrome.sockets.udp.close(socketId);
                   logger("Error on joinGroup(): " + result);
                 } else {
-                  chrome.sockets.udp.getInfo(socketId, function(socketInfo) {
-                    message = stringToArrayBuffer(socketId + ' Joined Group');
-                    chrome.sockets.udp.send(
-                      socketId, message, address, socketInfo.localPort, function (result) {
+                  message = stringToArrayBuffer(socketId + ' Joined Group');
+                  chrome.sockets.udp.send(socketId, message, address, port, function (result) {
                       if (result < 0) {
                         logger('send fail: ' + result);
                       } else {
                         logger('group sendTo: success');
                       }
-                    });
                   });
                 }
               });
@@ -185,7 +182,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
   function initPage() {
 
     var defaultAddr = '127.0.0.1';
-    var defaultPort = 1234;
+    var defaultPort = 12345;
     var multicastAddr = '224.0.0.1';
 
     var arr = new Uint8Array(256);
@@ -235,11 +232,11 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
 
     addButton('Join multicast group', function() {
-      joinMulticastGroup(multicastAddr, false);
+      joinMulticastGroup(multicastAddr, defaultPort, false);
     });
 
     addButton('Join multicast group with loopback', function() {
-      joinMulticastGroup(multicastAddr, true);
+      joinMulticastGroup(multicastAddr, defaultPort, true);
     });
   }
 
