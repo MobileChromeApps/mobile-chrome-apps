@@ -53,8 +53,8 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
   }
 
-  function bindRecvFromSendToWithTinyBuffer(data) {
-    chrome.sockets.udp.create({bufferSize:8}, function(createInfo) {
+  function bindRecvFromSendToWithBufferSize(data, bufferSize) {
+    chrome.sockets.udp.create({bufferSize:bufferSize}, function(createInfo) {
       chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', 0, function(result) {
         chrome.sockets.udp.getInfo(createInfo.socketId, function(socketInfo) {
           sendTo(data, socketInfo.localAddress, socketInfo.localPort);
@@ -98,7 +98,7 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
   }
 
   function joinMulticastGroup(address, port, loopback) {
-    chrome.sockets.udp.create({bufferSize:1048576},function (socket) {
+    chrome.sockets.udp.create(function (socket) {
       var socketId = socket.socketId;
       logger(socket);
       chrome.sockets.udp.setMulticastTimeToLive(socketId, 12, function (result) {
@@ -207,7 +207,11 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
 
     addButton('send to a tiny buffer bind socket', function() {
-      bindRecvFromSendToWithTinyBuffer(arr.buffer);
+      bindRecvFromSendToWithBufferSize(arr.buffer, 8);
+    });
+
+    addButton('send to a extra large buffer bind socket', function() {
+      bindRecvFromSendToWithBufferSize(arr.buffer, 1048576);
     });
 
     addButton('get sockets', function() {

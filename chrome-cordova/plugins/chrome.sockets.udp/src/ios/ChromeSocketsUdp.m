@@ -135,8 +135,21 @@ static NSString* stringFromData(NSData* data) {
     if (_bufferSize == nil)
         _bufferSize = [NSNumber numberWithInteger:4096];
     
-    [_socket setMaxReceiveIPv4BufferSize:[_bufferSize integerValue]];
-    [_socket setMaxReceiveIPv6BufferSize:[_bufferSize integerValue]];
+    if ([_socket isIPv4]) {
+        if ([_bufferSize integerValue] > UINT16_MAX) {
+           [_socket setMaxReceiveIPv4BufferSize:UINT16_MAX];
+        } else {
+            [_socket setMaxReceiveIPv4BufferSize:[_bufferSize integerValue]];
+        }
+    }
+    
+    if ([_socket isIPv6]) {
+        if ([bufferSize integerValue] > UINT32_MAX) {
+            [_socket setMaxReceiveIPv6BufferSize:UINT32_MAX];
+        } else {
+            [_socket setMaxReceiveIPv6BufferSize:[_bufferSize integerValue]];
+        }
+    }
 }
 
 - (void)setPaused:(NSNumber*)paused
@@ -294,14 +307,6 @@ static NSString* stringFromData(NSData* data) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
         return;
     }
-    
-    // Verify Sockets Options
-    // [socket->_socket performBlock:^{
-    //     unsigned char loop;
-    //     socklen_t size;
-    //     getsockopt([socket->_socket socketFD], IPPROTO_IP, IP_MULTICAST_LOOP, &loop, &size);
-    //     VERBOSE_LOG(@"%d %d", loop, size);
-    // }];
   
     [socket->_sendCallbacks addObject:[^(BOOL success, NSInteger errCode) {
         VERBOSE_LOG(@"ACK %@.%@ Write: %d", socketId, command.callbackId, success);
