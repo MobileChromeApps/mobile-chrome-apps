@@ -119,7 +119,7 @@ exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
         }
         callback(errCode);
     };
-    exec(callback, fail, 'ChromeSocketsUdp', 'setMulticastTimeToLive', [socketId, ttl]);
+    exec(win, fail, 'ChromeSocketsUdp', 'setMulticastTimeToLive', [socketId, ttl]);
 };
 
 exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
@@ -136,7 +136,7 @@ exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
 };
 
 exports.getJoinedGroups = function(socketId, callback) {
-    exec(callback, callback, 'ChromeSocketsUdp', 'getJoinedGroups', [socketId]);
+    exec(callback, null, 'ChromeSocketsUdp', 'getJoinedGroups', [socketId]);
 };
 
 exports.onReceive = new Event('onReceive');
