@@ -2,8 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 var Event = require('org.chromium.common.events');
-var platform = cordova.require('cordova/platform');
 var exec = cordova.require('cordova/exec');
+
+var checkBufferSize = function(bufferSize) {
+
+    if (bufferSize === null)
+        return;
+
+    if (bufferSize > 65535) {
+        console.warn('The theoretical maximum size of any IPv4 UDP packet is UINT16_MAX = 65535.');
+    }
+
+    if (bufferSize > 4294967295) {
+        console.warn('The theoretical maximum size of any IPv6 UDP packet is UINT32_MAX = 4294967295');
+    }
+};
 
 exports.create = function(properties, callback) {
     if (typeof properties == 'function') {
@@ -16,10 +29,12 @@ exports.create = function(properties, callback) {
         };
         callback(createInfo);
     };
+    checkBufferSize(properties.bufferSize);
     exec(win, null, 'ChromeSocketsUdp', 'create', [properties]);
 };
 
 exports.update = function(socketId, properties, callback) {
+    checkBufferSize(properties.bufferSize);
     exec(callback, null, 'ChromeSocketsUdp', 'update', [socketId, properties]);
 };
 
@@ -77,7 +92,7 @@ exports.getSockets = function(callback) {
         for (var result in results) {
             result.persistent = !!result.persistent;
             result.paused = !!result.paused;
-        };
+        }
         callback(results);
     };
     exec(win, null, 'ChromeSocketsUdp', 'getSockets', []);
@@ -121,7 +136,7 @@ exports.onReceiveError = new Event('onReceiveError');
 function registerReceiveEvents() {
 
     var win = function() {
-        info = {
+        var info = {
             socketId: arguments[0],
             data: arguments[1],
             remoteAddress: arguments[2],
