@@ -14,19 +14,15 @@
   <name>Chrome Apps Sockets UDP API</name>
 
   <dependency id="org.chromium.common" />
+  <dependency id="org.chromium.iosSocketsHelper" />
 
   <js-module src="sockets.udp.js" name="sockets.udp">
     <clobbers target="chrome.sockets.udp" />
   </js-module>
 
   <platform name="ios">
-    <framework src="Security.framework" />
-    <framework src="CFNetwork.framework" />
     <source-file src="src/ios/ChromeSocketsUdp.m" />
     <header-file src="src/ios/ChromeSocketsUdp.h" />
-
-    <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
-    <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSocketsUdp">
