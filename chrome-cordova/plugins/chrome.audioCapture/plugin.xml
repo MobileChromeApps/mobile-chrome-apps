@@ -5,8 +5,8 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.audioCapture"
-    version="1.0.0">
+    id="org.chromium.audiocapture"
+    version="1.0.1">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>

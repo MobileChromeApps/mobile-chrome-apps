@@ -4,14 +4,15 @@
   Use of this source code is governed by a BSD-style license that can be
   found in the LICENSE file.
 -->
-<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"    xmlns:android="http://schemas.android.com/apk/res/android"    id="org.chromium.pushMessaging"
-    version="1.0.0">
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.chromium.pushmessaging"
+    version="1.0.1">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Push Messaging API</name>
-  
+
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.identity" />
 
