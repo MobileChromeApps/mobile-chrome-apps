@@ -25,6 +25,16 @@
 
 - (void)getSockets:(CDVInvokedUrlCommand*)command;
 
+- (void)joinGroup:(CDVInvokedUrlCommand*)command;
+
+- (void)leaveGroup:(CDVInvokedUrlCommand*)command;
+
+- (void)setMulticastTimeToLive:(CDVInvokedUrlCommand*)command;
+
+- (void)setMulticastLoopbackMode:(CDVInvokedUrlCommand*)command;
+
+- (void)getJoinedGroups:(CDVInvokedUrlCommand*)command;
+
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;

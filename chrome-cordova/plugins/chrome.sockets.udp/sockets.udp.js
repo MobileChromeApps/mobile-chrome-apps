@@ -83,6 +83,62 @@ exports.getSockets = function(callback) {
     exec(win, null, 'ChromeSocketsUdp', 'getSockets', []);
 };
 
+exports.joinGroup = function(socketId, address, callback) {
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function(errCode) {
+        if (errCode == null) {
+            callback(-1000);
+        }
+        callback(errCode);
+    };
+    exec(win, fail, 'ChromeSocketsUdp', 'joinGroup', [socketId, address]);
+};
+
+exports.leaveGroup = function(socketId, address, callback) {
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function(errCode) {
+        if (errCode == null) {
+            callback(-1000);
+        }
+        callback(errCode);
+    };
+    exec(win, fail, 'ChromeSocketsUdp', 'leaveGroup', [socketId, address]);
+};
+
+exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function(errCode) {
+        if (errCode == null) {
+            callback(-1000);
+        }
+        callback(errCode);
+    };
+    exec(callback, fail, 'ChromeSocketsUdp', 'setMulticastTimeToLive', [socketId, ttl]);
+};
+
+exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function(errCode) {
+        if (errCode == null) {
+            callback(-1000);
+        }
+        callback(errCode);
+    };
+    exec(win, fail, 'ChromeSocketsUdp', 'setMulticastLoopbackMode', [socketId, enabled]);
+};
+
+exports.getJoinedGroups = function(socketId, callback) {
+    exec(callback, callback, 'ChromeSocketsUdp', 'getJoinedGroups', [socketId]);
+};
+
 exports.onReceive = new Event('onReceive');
 exports.onReceiveError = new Event('onReceiveError');
 
