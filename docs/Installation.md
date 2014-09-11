@@ -19,7 +19,7 @@ When developing an application for Android, you will also need to install:
 
 * [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) 7 (or higher)
 * [Android SDK](https://developer.android.com/sdk/index.html)
-  * We recommend using the "_Get the SDK for an existing IDE_" installer.
+  * We recommend using "_Get the SDK for an existing IDE_" or "_Android Studio_" methods.
   * **Linux**: The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`.
 
 
