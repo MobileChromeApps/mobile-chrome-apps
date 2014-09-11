@@ -22,13 +22,11 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
 
   function receiveErrorListener(info) {
     logger('RecvError on socket: ' + info.socketId);
-    logger(info);
     chrome.sockets.udp.close(info.socketId);
   }
 
   function receiveListener(info) {
-    logger('Recv: success Data: ' +
-           String.fromCharCode.apply(null, new Uint16Array(info.data)));
+    logger('Recv from socket: ');
     logger(info);
     chrome.sockets.udp.close(info.socketId);
   }

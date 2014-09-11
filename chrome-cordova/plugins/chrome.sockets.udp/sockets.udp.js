@@ -10,11 +10,11 @@ var checkBufferSize = function(bufferSize) {
         return;
 
     if (bufferSize > 65535) {
-        console.warn('The theoretical maximum size of any IPv4 UDP packet is UINT16_MAX = 65535.');
+        console.warn('Buffer size exceeds IPv4 UDP 65535 size limit.');
     }
 
     if (bufferSize > 4294967295) {
-        console.warn('The theoretical maximum size of any IPv6 UDP packet is UINT32_MAX = 4294967295');
+        console.warn('Buffer size exceeds IPv6 UDP 4294967295 size limit.');
     }
 };
 
