@@ -18,13 +18,10 @@ The Chrome Apps for mobile toolchain can target iOS 6+ and Android 4.x+.
 When developing an application for Android, you will also need to install:
 
 * [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) 7 (or higher)
-* [Android SDK](http://developer.android.com/sdk/index.html) version 4.4.2 (or higher)
-  * Install the Android SDK and Android Developer Tools which come bundled with Android ADT Bundle.
-  * Add `sdk/tools` and `sdk/platform-tools` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable. 
-  * **OS X**: The version of Eclipse that comes with the Android SDK requires JRE 6. If opening Eclipse.app does not prompt you to install JRE 6, get it through the Mac App Store.
+* [Android SDK](https://developer.android.com/sdk/index.html)
+  * We recommend using the "_Get the SDK for an existing IDE_" installer.
   * **Linux**: The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`.
-* [Apache Ant](http://ant.apache.org/bindownload.cgi)
-  * Add `apache-ant-x.x.x/bin` [to your PATH](https://www.google.com/search?q=how+to+add+sdktools+to+path) environment variable.
+
 
 ### Targeting iOS
 
@@ -45,7 +42,7 @@ Install `cca` via npm:
 
     npm install -g cca
 
-To update the toolchain later with new releases: `npm update -g cca`.
+To update the toolchain later with new releases, use the same command: `npm install -g cca`.
 
 Confirm that everything is installed correctly by running this command from the command line:
 
