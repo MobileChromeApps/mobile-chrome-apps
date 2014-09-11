@@ -221,54 +221,18 @@ function postPrepareInternal(platform) {
   }).then(function(manifest) {
     return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
   })
-
-  // Set the "other" version values if defined in the manifest.
-  // CFBundleVersion on iOS and versionCode on Android.
+  // Write manifest.short_name as launcher_name in Android strings.xml
   .then(function() {
     return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
     // Android
     if (platform === 'android' && manifest) {
-      if (manifest.versionCode) {
-        var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-        var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-        androidManifest.getroot().attrib["android:versionCode"] = manifest.versionCode;
-        fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
-      }
       if (manifest.short_name) {
         var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
         var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
         strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
         fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
       }
-    }
-
-    // On iOS it is customary to set CFBundleVersion = CFBundleShortVersionString
-    // so if manifest.CFBundleVersion is not specifically set, we'll default to manifest.version
-    if (platform === 'ios' && manifest && (manifest.version || manifest.CFBundleVersion)) {
-      var platforms = require('cordova-lib').cordova_platforms;
-      var parser = new platforms.ios.parser(path.join('platforms','ios'));
-      var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
-      var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
-      var theNode;
-      var isFound = 0;
-
-      // plist file format is pretty strange, we need the <string> node
-      // immediately following <key>CFBundleVersion</key>
-      // iterating over all the nodes.
-      infoPlistXml.iter('*', function(e) {
-        if (isFound === 0) {
-          if (e.text == 'CFBundleVersion') {
-            isFound = 1;
-          }
-        } else if (isFound == 1) {
-          theNode = e;
-          isFound = 2;
-        }
-      });
-
-      theNode.text = manifest.CFBundleVersion || manifest.version;
-      fs.writeFileSync(infoPlistPath, infoPlistXml.write({indent: 4}), 'utf-8');
     }
   });
 }

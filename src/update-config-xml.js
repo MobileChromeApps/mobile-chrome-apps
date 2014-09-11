@@ -22,6 +22,12 @@ module.exports = exports = function updateConfigXml() {
       if (widget.tag == 'widget') {
         widget.attrib.version = escapedValueOrDefault(manifest.version, '0.0.1');
         widget.attrib.id = escapedValueOrDefault(manifest.packageId, 'com.your.company.HelloWorld');
+        if (manifest.versionCode) {
+          widget.attrib['android-versionCode'] = manifest.versionCode;
+        }
+        if (manifest.CFBundleVersion) {
+          widget.attrib['ios-CFBundleVersion'] = manifest.CFBundleVersion;
+        }
       }
 
       var name = tree.find('./name');
