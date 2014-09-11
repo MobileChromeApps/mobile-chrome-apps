@@ -76,7 +76,7 @@ function makeFakeModule(log_calls) {
   log_calls = true;
   fakeModule.isFake = true;
 
-  var funcsToFake = ['sendCommand', 'sendError', 'sendTiming'];
+  var funcsToFake = ['sendEvent', 'sendCommand', 'sendError', 'sendTiming'];
 
   funcsToFake.forEach(function(f) {
     if (log_calls) {

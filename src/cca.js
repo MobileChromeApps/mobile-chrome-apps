@@ -226,6 +226,7 @@ function main() {
   .then(function(analytics) {
     // TODO: Should we show the question when running cca help?
     // TODO: Do something with analytics
+    analytics.sendEvent('cca', command);
     console.log('TODO: Debug message. analyitcs loaded. command=', command, 'isFake=', analytics.isFake);
     return Q();
   })
