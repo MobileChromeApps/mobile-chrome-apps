@@ -203,7 +203,7 @@ function main() {
     cordovaLib.events.on('warn', console.warn);
     cordovaLib.events.on('verbose', console.log);
   }
-  require('./getanalytics')()
+  require('./analytics-loader').getAnalyticsModule()
   .then(function(analytics) {
     // TODO: Should we show the question when running cca help?
     // TODO: Do something with analytics
