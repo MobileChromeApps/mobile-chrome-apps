@@ -55,7 +55,7 @@ exports.bind = function(socketId, address, port, callback) {
 exports.send = function(socketId, data, address, port, callback) {
     var type = Object.prototype.toString.call(data).slice(8, -1);
     if (type != 'ArrayBuffer') {
-        throw new Error('chrome.socket.write - data is not an ArrayBuffer! (Got: ' + type + ')');
+        throw new Error('chrome.sockets.udp.send - data is not an ArrayBuffer! (Got: ' + type + ')');
     }
     var win = callback && function(bytesSent) {
         var sendInfo = {
