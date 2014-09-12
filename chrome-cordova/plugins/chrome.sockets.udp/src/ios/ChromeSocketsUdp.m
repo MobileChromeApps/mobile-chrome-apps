@@ -328,15 +328,21 @@ static NSString* stringFromData(NSData* data) {
 
     if (socket == nil)
         return;
-   
+  
     socket->_closeCallback = [^() {
         if (theCallbackId)
             [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
         
         [_sockets removeObjectForKey:socketId];
     } copy];
-    
-    [socket->_socket closeAfterSending];
+   
+    if ([socket->_socket isClosed]) {
+        void(^callback)() = socket->_closeCallback;
+        socket->_closeCallback = nil;
+        callback();
+    } else {
+        [socket->_socket closeAfterSending];
+    }
 }
 
 - (void)close:(CDVInvokedUrlCommand *)command
