@@ -8,7 +8,7 @@ To publish your Android application to the Play Store:
 
 1. Update the two Android app version ids, then run `cca prepare`:
     * `android:versionName` is set using the `version` key in `www/manifest.json` (this sets the version of your desktop packaged app, too).
-    * `android:versionCode` is set using the `versionCode` key in `www/manifest.mobile.js`.
+    * `android:versionCode` can be explicitly set using the `versionCode` key in `www/manifest.mobile.js`. If omitted, `versionCode` will default to `major * 10000 + minor * 100 + rev` (assuming `version` looks like `"major.minor.rev"`)
 
 2. Create (or update) your keystore (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
 
@@ -29,7 +29,9 @@ To publish your Android application to the Play Store:
 
 ### Publish to the iOS App Store
 
-1. Update the app version by setting the `CFBundleVersion` key in `www/manifest.mobile.js`, then run `cca prepare`.
+1. Update the app version by setting the `CFBundleVersion` key in `www/manifest.mobile.js`. If not explicitly set, `CFBundleVersion` will default to the same value as `version`. If `version` contains a dash, only the part before the dash will be used for `CFBundleVersion`.
+
+2. Run `cca prepare`.
 
 2. Open the Xcode project file found under your `platforms/ios` directory:
 
