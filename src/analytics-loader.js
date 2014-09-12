@@ -6,8 +6,8 @@ var utils = require('./utils');
 
 var analyticsModule;
 
-module.exports = getAnalytics;
-function getAnalytics(use_logging_mock) {
+module.exports.getAnalyticsModule = getAnalyticsModule;
+function getAnalyticsModule(use_logging_mock) {
   if (analyticsModule) {
     return Q(analyticsModule);
   }
@@ -21,6 +21,16 @@ function getAnalytics(use_logging_mock) {
     analyticsModule = ans ? require('./analytics') : makeFakeModule();
     return Q(analyticsModule);
   });
+}
+
+module.exports.setAnalyticsPermission = setAnalyticsPermission;
+function setAnalyticsPermission(isAllowed) {
+  var userConfig = readWriteUserConfig();
+  userConfig = userConfig || {};
+  userConfig.analytics = userConfig.analytics || {};
+  userConfig.analytics.isAllowed = isAllowed;
+  userConfig.analytics.savedOnDate = new Date();
+  readWriteUserConfig(userConfig);
 }
 
 function readWriteUserConfig(userConfig) {
