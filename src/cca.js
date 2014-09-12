@@ -191,6 +191,13 @@ function main() {
     process.chdir(projectRoot);
   }
 
+  // `analytics` command has to be dealt with before everything else.
+  var analyticsLoader = require('./analytics-loader');
+  if (command == 'analytics') {
+    analyticsLoader.analyticsCommand(commandLineFlags);
+    return;
+  }
+
   if (!commandActions.hasOwnProperty(command)) {
     utils.fatal('Invalid command: ' + command + '. Use --help for usage.');
   }
@@ -203,10 +210,10 @@ function main() {
     cordovaLib.events.on('warn', console.warn);
     cordovaLib.events.on('verbose', console.log);
   }
-  require('./analytics-loader').getAnalyticsModule()
+
+  analyticsLoader.getAnalyticsModule()
   .then(function(analytics) {
     // TODO: Should we show the question when running cca help?
-    // TODO: Do something with analytics
     analytics.sendEvent('cca', command);
     console.log('TODO: Debug message. analyitcs loaded. command=', command, 'isFake=', analytics.isFake);
     return Q();

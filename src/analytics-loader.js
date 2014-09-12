@@ -33,6 +33,7 @@ function setAnalyticsPermission(isAllowed) {
   readWriteUserConfig(userConfig);
 }
 
+module.exports.readWriteUserConfig = readWriteUserConfig;
 function readWriteUserConfig(userConfig) {
   //var isWrite = !(typeof(ans) == 'undefined');
   var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
@@ -49,6 +50,41 @@ function readWriteUserConfig(userConfig) {
   } else {
     return null;
   }
+}
+
+module.exports.analyticsCommand = analyticsCommand;
+function analyticsCommand(commandLineFlags) {
+  var arg = commandLineFlags._[1];
+    var usage = 'cca analytics {enable|disable}';
+  // `cca analytics` will tell if it's currently enabled.
+  if (!arg) {
+    var userConfig = readWriteUserConfig();
+    if (userConfig && userConfig.analytics) {
+      var enabled = userConfig.analytics.isAllowed;
+      console.log(
+        'Usage statistics collection is currently ' +
+        (enabled?'enabled':'disabled') +
+        '. To change run:\n' + usage
+        );
+    } else {
+      console.log('Usage statistics collection permission is not yet set.');
+    }
+    return;
+  }
+
+  // Print a ling message if the arg is something other than enable or disable.
+  arg  = arg.toLowerCase();
+  if (arg != 'enable' && arg != 'disable') {
+    utils.fatal(
+      'Invalig argument ' + arg + '. ' +
+      'To enable/disable anonymous usage statistics collection run:\n' +
+      usage
+      );
+    return;
+  }
+
+  setAnalyticsPermission(arg == 'enable');
+  console.log('Usage statistics collection', arg + 'd.');
 }
 
 function getAnswer() {
