@@ -223,10 +223,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)onReset
 {
     for (NSNumber* socketId in _sockets) {
-        ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
-        if (!socket->_persistent) {
-            [self closeSocketWithId:socketId callbackId:nil];
-        }
+        [self closeSocketWithId:socketId callbackId:nil];
     }
 }
 
