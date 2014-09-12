@@ -1,58 +1,21 @@
 var Q = require('q');
 
 var utils = require('./utils');
+var check_reqs = require('../cordova/cordova-android/bin/lib/check_reqs');
 
-var hasAndroidSdk;
 var hasAndroidPlatform;
 var hasXcode;
 
-function parseTargetOutput(targetOutput) {
-  var targets = [];
-  var target;
-  var targetRe = /^id: (\d+) or "([^"]*)"/gm;
-  while ((target = targetRe.exec(targetOutput))) {
-    targets.push(target[2]);
-  }
-  var targetPrefixes = ['Google Inc.:Google APIs:','android-'];
-  var highestTargetSdk = -1;
-  targets.forEach(function(target) {
-    targetPrefixes.forEach(function(prefix) {
-      if (target.indexOf(prefix) != 0) return;
-      var targetSdk = target.slice(prefix.length);
-      if (targetSdk == 'L') targetSdk = 20;
-      if (isNaN(targetSdk)) return;
-      highestTargetSdk = Math.max(highestTargetSdk, targetSdk);
-    });
-  });
-  return highestTargetSdk;
-}
-
 function checkHasAndroid() {
-  return utils.exec('android list targets', true /* opt_silent */).then(function(out) {
-    var targetOutput = out.stdout;
-    hasAndroidSdk = true;
+  hasAndroidPlatform = false;
+  return check_reqs.check_java()
+  .then(function() {
+    return check_reqs.check_android();
+  }).then(function() {
     console.log('Android SDK detected.');
-    var highestTargetSdk = parseTargetOutput(targetOutput);
-    /* This is the android SDK version declared in cordova-android/framework/project.properties */
-    if (highestTargetSdk < 19) {
-      console.warn('Dependency warning: Android 4.4 (Google APIs) Platform is not installed.' +
-        '\nAdd it using the Android SDK Manager (run the "android" command)');
-    }
-    // Stacking up here because we want to bail after the first one fails.
-    return utils.exec('ant -version', true /* opt_silent */)
-    // TODO: Should we replace the inline error handlers with .fail()/.catch() calls, so error handler code follow calls directly?
-    .then(function() {
-      // Project creation does succeed without javac.
-      hasAndroidPlatform = true;
-      return utils.exec('javac -version', true /* opt_silent */)
-      .then(null, function(err) {
-        console.warn('Dependency warning: `javac` command not detected on your PATH.');
-      });
-    }, function(err) {
-      console.warn('Dependency warning: `ant` command not detected on your PATH.');
-    });
-  }, function(err) {
-    console.warn('Android not detected (`android` command not detected on your PATH).');
+    hasAndroidPlatform = true;
+  }).then(null, function(err) {
+    console.warn(err.message);
   });
 }
 
@@ -79,7 +42,7 @@ module.exports = exports = function toolsCheck() {
   var ret = Q();
 
   // Is this the first time we're checking for the tools?
-  if (typeof hasAndroidSdk == 'undefined') {
+  if (typeof hasAndroidPlatform == 'undefined') {
     ret = ret.then(function() {
       console.log('## Checking that tools are installed');
       return checkHasAndroid().then(checkHasIos);
@@ -93,7 +56,6 @@ module.exports = exports = function toolsCheck() {
           'https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md');
 
     return Q({
-      hasAndroidSdk: hasAndroidSdk,
       hasAndroidPlatform: hasAndroidPlatform,
       hasXcode: hasXcode,
     });
