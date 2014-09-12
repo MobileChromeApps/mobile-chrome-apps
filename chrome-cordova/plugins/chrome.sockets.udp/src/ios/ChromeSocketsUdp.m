@@ -51,7 +51,8 @@ static NSString* stringFromData(NSData* data) {
     GCDAsyncUdpSocket* _socket;
 
     NSMutableArray* _sendCallbacks;
-    void(^_closeCallback)();
+    
+    id _closeCallback;
     
     NSMutableSet* _multicastGroups;
 }
@@ -199,7 +200,10 @@ static NSString* stringFromData(NSData* data) {
 {
     VERBOSE_LOG(@"udbSocketDidClose:withError socketId: %u", _socketId);
     assert(_closeCallback != nil);
-    _closeCallback();
+    void (^callback)() = _closeCallback;
+    _closeCallback = nil;
+    
+    callback();
 }
 @end
 
@@ -328,12 +332,12 @@ static NSString* stringFromData(NSData* data) {
     if (socket == nil)
         return;
    
-    socket->_closeCallback = ^() {
+    socket->_closeCallback = [^() {
         if (theCallbackId)
             [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
         
         [_sockets removeObjectForKey:socketId];
-    };
+    } copy];
     
     [socket->_socket closeAfterSending];
 }
