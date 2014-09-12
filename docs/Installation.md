@@ -21,6 +21,7 @@ When developing an application for Android, you will also need to install:
 * [Android SDK](https://developer.android.com/sdk/index.html)
   * We recommend using "_Get the SDK for an existing IDE_" or "_Android Studio_" methods.
   * **Linux**: The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`.
+* _Optional_ - On Windows, you need [vendor-specific device drivers](http://developer.android.com/tools/extras/oem-usb.html) to connect to certain devices.
 
 
 ### Targeting iOS
