@@ -36,18 +36,33 @@
 
 ## Publish Plugin Changes
 
-* For each plugin within chrome-cordova/plugins:
+* See which have changes:
 
-        git log path/to/plugin # See what's changed since the previous release.
-        cd path/to/plugin
-        vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
-        git commit -am "Updated plugin release notes and version numbers for release."
+    cd chrome-cordova/plugins
+    ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master > /dev/null && echo $l); done | xargs echo)
+    echo "Changes: $ACTIVE"
 
-* For each plugin found by: `plugman search org.chromium`:
+* Add release notes:
 
-        plugman publish path/to/plugin
+    for l in $ACTIVE; do ( cd $l; vim README.md ); done
 
-    **Note:** You may need to search [the registry website](plugins.cordova.io).
+Vim helper command:
+    :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master
+
+    git commit -am "Updated plugin release notes and version numbers for release."
+    git push origin master
+
+* Publish plugins
+
+    for l in $ACTIVE; do ( cd $l; plugman publish . ); done
+
+* Set plugin versions to -dev
+
+    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E s:"version=\"$v\":version=\"$v2\":" plugin.xml; fi) ; done
+    git commit -am "Added -dev suffix to plugin versions"
+    git show # Sanity check
+    git push origin master
+
 
 ## Update npm Dependencies
 
