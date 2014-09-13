@@ -15,13 +15,13 @@ if [[ $1 = --submodule ]]; then
   cd "$toplevel"
   prevhash=$(git ls-tree $prevtag $path | awk '{print $3}')
   cd - > /dev/null
-  git log --pretty=format:'* '"$name"': %s' --topo-order --no-merges $prevhash..HEAD
+  git log --pretty=format:'* '"$(basename $name)"': %s' --topo-order --no-merges $prevhash..HEAD
   exit 0
 fi
 
 cd $(dirname $0)/..
 
-prevtag=$(git describe --abbrev=0 HEAD)
-echo "### Commits made since $prevtag ($(date "+%h %d, %Y")"
+prevtag=$(git describe --tags --abbrev=0 HEAD)
+echo "### $prevtag ($(date "+%h %d, %Y"))"
+git log --pretty=format:'* %s' --topo-order --no-merges $prevtag..HEAD
 git submodule foreach --quiet $PWD'/dev-bin/release-logs.sh --submodule "$name" "$path" "$sha1" "$toplevel" '"$prevtag"
-git log --pretty=format:'* cca: %s' --topo-order --no-merges $prevtag..HEAD
