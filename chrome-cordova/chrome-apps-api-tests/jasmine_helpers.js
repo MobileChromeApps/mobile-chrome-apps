@@ -59,21 +59,27 @@ function addJasmineHelpers(jasmineInterface) {
     return typeof window.chrome.runtime !== 'undefined';
   };
 
-  jasmineInterface.describeCordovaOnly = function(){};
+  jasmineInterface.describeChromeOnly = function(){};
   jasmineInterface.describeAndroidOnly = function(){};
   jasmineInterface.describeIosOnly = function(){};
-  jasmineInterface.describeChromeRuntimeOnly = function(){};
+  jasmineInterface.describeExcludeChrome = function(){};
+  jasmineInterface.describeExcludeIos = function(){};
+  jasmineInterface.describeExcludeAndroid = function(){};
 
   if (!jasmineInterface.isOnCordova()) {
-    jasmineInterface.describeChromeRuntimeOnly = jasmineInterface.describe;
+    jasmineInterface.describeChromeOnly = jasmineInterface.describe;
+    jasmineInterface.describeExcludeIos = jasmineInterface.describe;
+    jasmineInterface.describeExcludeAndroid = jasmineInterface.describe;
   } else {
     jasmineInterface.describeCordovaOnly = jasmineInterface.describe;
 
     var platform = cordova.require('cordova/platform');
     if (platform.id == "android") {
       jasmineInterface.describeAndroidOnly = jasmineInterface.describe;
+      jasmineInterface.describeExcludeIos = jasmineInterface.describe;
     } else if (platform.id == "ios") {
       jasmineInterface.describeIosOnly = jasmineInterface.describe;
+      jasmineInterface.describeExcludeAndroid = jasmineInterface.describe;
     }
   }
 

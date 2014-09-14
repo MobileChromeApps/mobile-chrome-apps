@@ -6,7 +6,6 @@ registerAutoTests("chrome.gcm", function() {
   'use strict';
   var testTimeout = 2000;
   var senderid = '90031296475';
-//  var senderid = '594483801284';
   var sender = senderid+ "@gcm.googleapis.com";
 
   describeAndroidOnly('testing registration', function() {
@@ -71,49 +70,14 @@ registerAutoTests("chrome.gcm", function() {
     });
   });
 
-  describeAndroidOnly('testing sending', function() {
-
-    var msgcount=0;
-    var globdone=null;
-    var listener = function(msg) {
-      console.log(' msg',msg);
-      msgcount++;
-      if(globdone) globdone();
-    }
-    beforeEach( function() {
-      chrome.gcm.onMessage.addListener(listener);
-    })
-
-    afterEach( function() {
-      chrome.gcm.onMessage.removeListener(listener);
-      expect(msgcount=1);
-    })
-
-    it('should send and receive one msg', function(done) {
-      globdone=done;
-      var message = {
-        'destinationId' : sender,
-        'messageId' : '0',
-        'timeToLive' : 10,
-        'data' : { 'test' : 'test' }
-      };
-      try {
-        chrome.gcm.send(message, function(msgid) {
-          expect(msgid.length).toBeGreaterThan(0);
-          expect(chrome.runtime.lastError).not.toBeDefined();
-        });
-      } catch (e) {
-          expect(e).not.toBeDefined();
-      }
-    });
-
+  describe('testing sending', function() {
+    // TODO don't run on ios
     it('should fail to send a big msg', function(done) {
-      globdone=done;
-      var blob100='0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
+      var blob100 = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
       var msgdata = {};
-      for(var k=0;k<41;k++){
-        var key='k'+k;
-        msgdata[key]=blob100;
+      for(var k = 0; k < 41; k++){
+        var key = 'k' + k;
+        msgdata[key] = blob100;
       }
       var message = {
         'destinationId' : sender,
@@ -123,13 +87,38 @@ registerAutoTests("chrome.gcm", function() {
       };
       try {
         chrome.gcm.send(message, function(msgid) {
-          expect('not to get there');
+          expect('Should not get here').toBe(false);
+          done();
         });
       } catch (e) {
-          expect(e.message).toBeDefined();
-          expect(e.message.substring(0,16)).toEqual("Payload exceeded");
+        expect(e.message).toBeDefined();
+        expect(e.message.substring(0,16)).toEqual("Payload exceeded");
+        done();
       }
-      done();
+    });
+
+    it('should send and receive one msg', function(done) {
+      var message = {
+        'destinationId' : sender,
+        'messageId' : '0',
+        'timeToLive' : 10,
+        'data' : { 'type': 'ping', 'message' : 'test' }
+      };
+      chrome.gcm.onMessage.addListener(function(msg) {
+        expect(msg.data.type).toBe('pong')
+        expect(msg.data.message).toBe('test')
+
+        chrome.gcm.onMessage.removeListener(this);
+        done();
+      });
+      try {
+        chrome.gcm.send(message, function(msgid) {
+          expect(msgid.length).toBeGreaterThan(0);
+          expect(chrome.runtime.lastError).not.toBeDefined();
+        });
+      } catch (e) {
+          expect(e).not.toBeDefined();
+      }
     });
 
     // I would love to test onSendError and onMessagesDeleted

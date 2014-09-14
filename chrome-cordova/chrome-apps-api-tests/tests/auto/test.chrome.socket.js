@@ -452,7 +452,7 @@ registerAutoTests('chrome.socket', function() {
     });
 
 
-    describeCordovaOnly('fail on desktop', function() {
+    describeExcludeChrome('fail on desktop', function() {
 
     it('bind connect x2 read write', function(done) {
       chrome.socket.bind(sockets[0].socketId, bindAddr, port, function(bindResult1) {
