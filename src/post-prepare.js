@@ -204,6 +204,16 @@ function postPrepareInternal(platform) {
     }
   })
 
+  // Update Android Theme to Translucent
+  .then(function() {
+    if (platform === 'android') {
+      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+      androidManifest.find('./application/activity').attrib["android:theme"] = "@android:style/Theme.Translucent";
+      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+    }
+  })
+
   // Update Android minSdkVersion.
   .then(function() {
     if (platform === 'android') {
