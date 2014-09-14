@@ -145,7 +145,7 @@ function main() {
     },
     'upgrade': function() {
       printCcaVersionPrefix();
-      return require('./upgrade-project')();
+      return require('./upgrade-project')(commandLineFlags.y);
     },
     'version': function() {
       console.log(packageVersion);

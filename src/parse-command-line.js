@@ -88,6 +88,11 @@ module.exports = exports = function parseCommandLine() {
           alias: 'version',
           desc: 'Show version.'
       })
+      .options('y', {
+          type: 'boolean',
+          alias: 'skip-prompt',
+          desc: 'Answer "yes" to any "yes/no" prompts.'
+      })
       .options('skip-upgrade', {
         type: 'boolean',
         desc: 'Don\'t upgrade platforms and plugins.',
