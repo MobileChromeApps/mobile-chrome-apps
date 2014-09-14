@@ -19,6 +19,7 @@
  */
 
 // System modules.
+var fs = require('fs');
 var path = require('path');
 
 // Third-party modules.
@@ -75,6 +76,9 @@ function main() {
   function beforeCordovaPrepare() {
     if (commandLineFlags['skip-upgrade']) {
       return Q.when();
+    }
+    if (!fs.existsSync(path.join('www', 'manifest.json'))) {
+      return Q.reject('This is not a cca project.  Perhaps you meant to use the cordova-cli?')
     }
     return require('./auto-upgrade')();
   }
