@@ -20,7 +20,7 @@
 // Common parameters.
 var v = 1; // Protocol version.
 var tid = 'UA-52080037-2'; // Tracking ID.
-var cid = '12345'; // Client ID.  TODO(maxw): Use something relevant.
+var cid = getClientId(); // Client ID.
 var an = 'cca'; // App name.
 var av = require('../package').version; // App version.
 
@@ -31,6 +31,24 @@ URL_BASE += '&tid=' + tid;
 URL_BASE += '&cid=' + cid;
 URL_BASE += '&an=' + an;
 URL_BASE += '&av=' + av;
+
+// This function retrieves the client ID from the config file or generates if it one doesn't exist.
+function getClientId() {
+  var analyticsLoader = require('./analytics-loader');
+  var userConfig = analyticsLoader.readWriteUserConfig();
+
+  // Return the client id from the file, if one is there.
+  if (userConfig && userConfig.analytics && userConfig.analytics.clientId) {
+    return userConfig.analytics.clientId;
+  }
+
+  // We don't have a client id yet, so generate one, save it, and return it.
+  userConfig = userConfig || {};
+  userConfig.analytics = userConfig.analytics || {};
+  userConfig.analytics.clientId = require('node-uuid').v4();
+  analyticsLoader.readWriteUserConfig(userConfig);
+  return userConfig.analytics.clientId;
+}
 
 // This helper function sends a measurement to the given URL.
 function sendMeasurement(url) {

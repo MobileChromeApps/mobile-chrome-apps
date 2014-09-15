@@ -142,7 +142,8 @@ function log(x) {
 
 // Exports!
 module.exports = {
+  analyticsCommand: analyticsCommand,
   getAnalyticsModule: getAnalyticsModule,
-  analyticsCommand: analyticsCommand
+  readWriteUserConfig: readWriteUserConfig
 };
 

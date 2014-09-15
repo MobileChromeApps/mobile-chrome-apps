@@ -31,6 +31,7 @@
     "gaze": "^0.5.1",
     "gulp-mocha": "^0.5.1",
     "jsesc": "^0.4.3",
+    "node-uuid": "^1.4.1",
     "node.extend": "",
     "optimist": "~0.6.1",
     "q": "~1",
