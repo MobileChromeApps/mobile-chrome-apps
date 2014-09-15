@@ -36,7 +36,7 @@ var ccaRoot = path.join(__dirname, '..');
 
 function fixEnv() {
   // Add flags for building with Gradle
-  if (!process.env.ANDROID_BUILD == 'undefined') {
+  if (typeof process.env.ANDROID_BUILD == 'undefined') {
     process.env.ANDROID_BUILD = 'gradle';
   }
   if (typeof process.env.BUILD_MULTIPLE_APKS == 'undefined') {
