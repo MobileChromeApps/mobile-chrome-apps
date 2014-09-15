@@ -7,7 +7,6 @@
 #import <arpa/inet.h>
 #import <ifaddrs.h>
 #import <netdb.h>
-#import <sys/errno.h>
 
 #ifndef CHROME_SOCKETS_UDP_VERBOSE_LOGGING
 #define CHROME_SOCKETS_UDP_VERBOSE_LOGGING 0
@@ -33,8 +32,6 @@ static NSString* stringFromData(NSData* data) {
     return ret;
 }
 #endif  // CHROME_SOCKETS_UDP_VERBOSE_LOGGING
-
-#define INVALID_ARGUMENT_ERROR_CODE -4
 
 #pragma mark ChromeSocketsUdpSocket interface
 
@@ -277,7 +274,7 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
 
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
     
@@ -305,7 +302,7 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
    
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
   
@@ -382,7 +379,7 @@ static NSString* stringFromData(NSData* data) {
     
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
     if (socket == nil || [socket->_multicastGroups containsObject:address]) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
     
@@ -404,7 +401,7 @@ static NSString* stringFromData(NSData* data) {
     
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
     if (socket == nil || ![socket->_multicastGroups containsObject:address]) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
    
@@ -426,14 +423,13 @@ static NSString* stringFromData(NSData* data) {
     
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
     
     VERBOSE_LOG(@"REQ %@.%@ setMulticastTimeToLive", socketId, command.callbackId);
    
     [socket->_socket performBlock:^{
-        extern int errno;
         
         if ([socket->_socket isIPv4]) {
             unsigned char ttlCpy = [ttl intValue];
@@ -461,15 +457,13 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketsUdpSocket* socket = [_sockets objectForKey:socketId];
     
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:INVALID_ARGUMENT_ERROR_CODE] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
         return;
     }
 
     VERBOSE_LOG(@"REQ %@.%@ setMulticastLoopbackMode", socketId, command.callbackId);
     
     [socket->_socket performBlock:^{
-        
-        extern int errno;
 
         if ([socket->_socket isIPv4]) {
             unsigned char loop = [enabled intValue];
