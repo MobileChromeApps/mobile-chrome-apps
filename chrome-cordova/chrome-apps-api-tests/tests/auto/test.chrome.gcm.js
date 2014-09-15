@@ -7,7 +7,7 @@ registerAutoTests("chrome.gcm", function() {
   var senderid = '90031296475';
   var sender = senderid+ "@gcm.googleapis.com";
 
-  describeAndroidOnly('testing registration', function() {
+  describeExcludeIos('registration', function() {
     it('should contain definitions', function(done) {
       expect(chrome.gcm).toBeDefined();
       expect(chrome.gcm.send).toBeDefined();
@@ -21,6 +21,7 @@ registerAutoTests("chrome.gcm", function() {
 
     it('should register and unregister', function(done) {
       chrome.gcm.register([senderid], function(regid) {
+        expect(regid).toBeDefined();
         expect(regid.length).toBeGreaterThan(1);
         expect(chrome.runtime.lastError).not.toBeDefined();
         chrome.gcm.unregister(function() {
@@ -36,7 +37,7 @@ registerAutoTests("chrome.gcm", function() {
           expect('Not to get here').toEqual('');
         });
       } catch(e) {
-        expect(e.message.substring(0,13)).toEqual('Invalid value');
+        expect(e.message).toBeDefined();
         expect(chrome.runtime.lastError).not.toBeDefined();
       }
       done();
@@ -50,6 +51,24 @@ registerAutoTests("chrome.gcm", function() {
       });
     });
 
+  });
+
+  describeExcludeIos('sending', function() {
+    it('should error for missing key', function(done) {
+      var message = {
+        'data' : { 'test' : 'test' }
+      };
+      try {
+        chrome.gcm.send(message, function(msgid) {
+          expect("Should not be here").not.toBeDefined();
+          done();
+        });
+      } catch (e) {
+        expect(e.message).toBeDefined();
+        done();
+      }
+    });
+
     it('should error for invalid data', function(done) {
       var message = {
         'messageId' : '0',
@@ -59,18 +78,15 @@ registerAutoTests("chrome.gcm", function() {
       };
       try {
         chrome.gcm.send(message, function(msgid) {
-          expect(msgid.length).toBeGreaterThan(0);
+          expect("Should not be here").not.toBeDefined();
           done();
         });
       } catch (e) {
-          expect(e.message).toEqual("Invalid data key: collapse_key");
-          done();
+        expect(e.message).toBeDefined();
+        done();
       }
     });
-  });
 
-  describe('testing sending', function() {
-    // TODO don't run on ios
     it('should fail to send a big msg', function(done) {
       var blob100 = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789';
       var msgdata = {};
@@ -96,22 +112,65 @@ registerAutoTests("chrome.gcm", function() {
       }
     });
 
-    it('should send and receive one msg', function(done) {
+    it('should send and receive one simple msg', function(done) {
       var message = {
         'destinationId' : sender,
         'messageId' : '0',
         'timeToLive' : 10,
         'data' : { 'type': 'ping', 'message' : 'test' }
       };
-      chrome.gcm.onMessage.addListener(function(msg) {
-        expect(msg.data.type).toBe('pong')
-        expect(msg.data.message).toBe('test')
+      chrome.gcm.onMessage.addListener(function listener(msg) {
+        expect(msg).toBeDefined();
+        expect(msg.data).toBeDefined();
+        expect(msg.data.type).toEqual('pong')
+        expect(msg.data.message).toEqual('test')
 
-        chrome.gcm.onMessage.removeListener(this);
+        chrome.gcm.onMessage.removeListener(listener);
         done();
       });
       try {
         chrome.gcm.send(message, function(msgid) {
+          expect(msgid).toBeDefined();
+          expect(msgid.length).toBeGreaterThan(0);
+          expect(chrome.runtime.lastError).not.toBeDefined();
+        });
+      } catch (e) {
+          expect(e).not.toBeDefined();
+      }
+    });
+
+    it('should send and receive one complex msg', function(done) {
+      var message = {
+        'destinationId' : sender,
+        'messageId' : '0',
+        'timeToLive' : 10,
+        'data' : {
+          'type': 'ping',
+          'message' : 'testing multi value',
+          'message2': 'more2',
+          'message3': 'more3',
+          'message4': 'more4',
+          'message5': 'more5',
+          //'int': 1,
+          //'float': 3.33,
+          //'bool': true,
+          //'string': 'sss',
+          //'array': [1, 3.33, true, 'sss', [1,2,3], {'a':1, 'b':2}],
+          //'map': {'a': 1, 'b': 2}
+        }
+      };
+      chrome.gcm.onMessage.addListener(function listener(msg) {
+        expect(msg).toBeDefined();
+        expect(msg.data).toBeDefined();
+        expect(msg.data.type).toEqual('pong')
+        expect(msg.data.message).toEqual(message.data.message)
+
+        chrome.gcm.onMessage.removeListener(listener);
+        done();
+      });
+      try {
+        chrome.gcm.send(message, function(msgid) {
+          expect(msgid).toBeDefined();
           expect(msgid.length).toBeGreaterThan(0);
           expect(chrome.runtime.lastError).not.toBeDefined();
         });
