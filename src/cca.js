@@ -192,7 +192,7 @@ function main() {
       return Q.when();
     },
     'analytics': function() {
-      require('./analytics-loader').analyticsCommand(commandLineFlags._[1]);
+      // Do nothing.  This is handled as a special-case below.
       return Q.when();
     },
     'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
@@ -227,7 +227,14 @@ function main() {
     cordovaLib.events.on('verbose', console.log);
   }
 
-  require('./analytics-loader').getAnalyticsModule()
+  // If the command is an analytics command, act accordingly.
+  // We do this now because it's a special case.  If this is the user's first command, a prompt doesn't make sense.
+  var analyticsLoader = require('./analytics-loader');
+  if (command === 'analytics') {
+    analyticsLoader.analyticsCommand(commandLineFlags._[1]);
+  }
+
+  analyticsLoader.getAnalyticsModule()
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
     return Q();
