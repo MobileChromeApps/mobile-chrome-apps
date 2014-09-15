@@ -90,7 +90,7 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     # Things are good?
     git status
 
-    # set "version": "x.x.x-rc#"
+    # set "version": "x.x.x-rc1"
     vim package.json
 
     # Update shrinkwrap dependancies
@@ -98,11 +98,11 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     git add npm-shrinkwrap.json
 
     # Commit so that no-one re-uses this version of the rc
-    git commit -am "Set version to x.x.x-rc#."
+    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4)"
 
     # Publish rc to npm
     dev-bin/prepfornpm.sh
-    npm publish --tag=rc
+    npm publish --tag=rc # This takes a long time.
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
 
     # Double check things are still good
@@ -141,8 +141,9 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # remove -rc# from "version"
     vim package.json
-    git commit -am "Set version to x.x.x."
-    git tag vx.x.x
+    CCA_VERSION="$(grep '"version"' package.json | cut -d'"' -f4)"
+    git commit -am "Set version to $CCA_VERSION"
+    git tag v$CCA_VERSION
 
     # Publish to npm
     # Confirm "publishConfig": { "tag": "rc" } is not set in package.json
@@ -155,7 +156,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # Unpublish rc
     npm tag cca@0.0.0 rc
-    npm unpublish cca@x.x.x-rc#
+    npm unpublish cca@$CCA_VERSION-rc#
 
     # Remove shrinkwrap file, and push changed to master
     git rm npm-shrinkwrap.json
@@ -165,7 +166,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     vim package.json
     git commit -am "Set version to x.x.x-dev."
 
-    git push origin master --tags
+    git push origin master refs/tags/v$CCA_VERSION
 
 2. Send an email to chromium-apps@chromium.org with version & release notes.
 3. Post on G+ (using corp G+, but setting as public), then ask for it to be re-shared. ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).
