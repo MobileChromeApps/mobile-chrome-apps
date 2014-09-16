@@ -12,6 +12,7 @@ By default, all mobile Chrome Apps will use Crosswalk and an embedded Chromium W
   - Add the setting: `"webview": "system"`
 
 ## Benefits
+There are a number of specific benefits to using Crosswalk, for both users and developers:
 - Use advanced WebView features such as WebRTC, WebAudio, and Accelerated 2D Canvas
 - Many performance improvements available in the latest version of Chromium
 - Supports any device running Android versions back to Ice Cream Sandwich
