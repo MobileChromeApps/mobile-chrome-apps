@@ -6,7 +6,7 @@ In your project's `platforms` directory, you have two complete native projects: 
 
 To publish your Android application to the Play Store:
 
-1. Update the two Android app version ids, then run `cca prepare`:
+1. Ensure that your app version is set:
     * `android:versionName` is set using the `version` key in `www/manifest.json` (this sets the version of your desktop packaged app, too).
     * `android:versionCode` can be explicitly set using the `versionCode` key in `www/manifest.mobile.js`. If omitted, `versionCode` will default to `major * 10000 + minor * 100 + rev` (assuming `version` looks like `"major.minor.rev"`)
 
@@ -14,16 +14,18 @@ To publish your Android application to the Play Store:
 
         keytool -genkey -v -keystore KEYSTORE_NAME.keystore -alias ALIAS -keyalg RSA -keysize 2048 -validity 10000
 
-3. Create (or edit) `platforms/android/ant.properties` to set the `key.store` and `key.alias` properties (as explained [in the Android developer docs](http://developer.android.com/tools/building/building-cmdline.html#ReleaseMode)).
+3. Create a file called `android-release-keys.properties`, and put into it:
 
-        key.store=PATH_TO_KEYSTORE
-        key.alias=ALIAS
+      keyAlias=ALIAS
+      keyPassword=????
+      storeFile=KEYSTORE_NAME.keystore
+      storePassword=????
 
-4. Build your project (Note: this will prompt for your keystore password):
+4. Build your project:
 
         cca build --release
 
-5. Find your signed .apk located inside `platforms/android/bin/`.
+5. Find your signed .apk(s) at `platforms/android/out/*-release.apk`.
 
 6. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
 
