@@ -21,8 +21,9 @@ There are a number of specific benefits to using Crosswalk, for both users and d
 ## Caveats
 While Crosswalk addresses many pain points of hybrid app development, there are some drawbacks to be considered.
 - An increased memory footprint across apps, as the embedded WebView is not shareable. Investigation suggests it has a fixed memory overhead of about 30MB (as _reported by the RSS column of_ `ps`)
-- An increase of about 30MB in the size of the .apk file
-- Manual updating for the embedded WebView.  Since it is packaged with the app, it is not auto-updatable, so users cannot receive security and other bug fixes.  Instead, the developer must update and re-publish the app
+- An increase of about 17MB in the size of the .apk file
+- Manual updating for the embedded WebView. 
+  - Developers must rebuild and re-publish apps to update the WebView
 - Support for only x86 and ARM architectures
 
 ## Publishing to the Play Store
