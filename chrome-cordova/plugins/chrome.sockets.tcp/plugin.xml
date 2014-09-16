@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.sockets.tcp"
+    version="1.0.0">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Sockets TCP API</name>
+
+  <dependency id="org.chromium.common" />
+
+  <js-module src="sockets.tcp.js" name="sockets.tcp">
+    <clobbers target="chrome.sockets.tcp" />
+  </js-module>
+
+  <platform name="ios">
+    <framework src="Security.framework" />
+    <framework src="CFNetwork.framework" />
+    <source-file src="src/ios/ChromeSocketsTcp.m" />
+    <header-file src="src/ios/ChromeSocketsTcp.h" />
+
+    <source-file src="src/ios/third_party/GCDAsyncSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncSocket.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSocketsTcp">
+        <param name="ios-package" value="ChromeSocketsTcp"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

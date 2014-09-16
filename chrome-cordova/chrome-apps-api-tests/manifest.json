@@ -16,6 +16,19 @@
       ]
     }
   },
+  "sockets": {
+    "udp": {
+      "bind": "*",
+      "send": "*",
+      "multicastMembership": ""
+    },
+    "tcp": {
+      "connect": "*"
+    },
+    "tcpServer": {
+      "listen": "*"
+    }
+  },
   "permissions": [
     "alarms",
     "audioCapture",
@@ -26,9 +39,6 @@
     "power",
     "pushMessaging",
     "gcm",
-    {
-      "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
-    },
     "storage",
     "syncFileSystem",
     "system.cpu",
