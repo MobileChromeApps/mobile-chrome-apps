@@ -93,17 +93,6 @@ def message_callback(session, message):
     'message_id': msg['message_id']
   })
 
-  # TODO: remove this workaround for issue https://github.com/MobileChromeApps/mobile-chrome-apps/issues/290
-  payload = None
-  if msg.has_key('data') and msg['data'].has_key('payload'):
-    payload = json.loads(msg['data']['payload'])
-  else:
-    payload = msg
-  if not payload.has_key('data'):
-    print "Error: Message has no data!"
-    return
-  payload = payload['data']
-
   #print "Got: " + json.dumps(payload, indent=2)
 
   handleMessageInApplicationSpecificManner(msg, payload)
