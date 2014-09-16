@@ -25,4 +25,4 @@ While Crosswalk addresses pain points of hybrid app development, there are some 
 - Supports only x86 and ARM architectures
 
 ## Publishing to the Play Store
-When publishing apps to the Play Store, it is important to upload multiple apk files, based on architecture (x86 and ARM).  Fortunately, this is (can be?) automatically handled by the build process for Chrome Apps for Mobile.
+When publishing apps to the Play Store, it is important to upload multiple apk files, based on architecture (x86 and ARM).  By providing separate files, the download size is reduced for users. Fortunately, the Chrome Apps for Mobile tooling always generates a separate .apk file for each architecture.  It is simply a matter of including all these files during the publishing process.
