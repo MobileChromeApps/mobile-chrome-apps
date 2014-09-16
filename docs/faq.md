@@ -9,8 +9,8 @@ No. Chrome Apps for Mobile are first-class native apps that run independent of t
 
 ### Which WebView do Chrome Apps for Mobile use?
 
-**Android**: [Crosswalk WebView](https://crosswalk-project.org) is bundled by default, but you can choose to use the [system WebView](http://developer.android.com/reference/android/webkit/WebView.html).
-**iOS**: [UIWebView](https://developer.apple.com/library/ios/documentation/uikit/reference/UIWebView_Class/Reference/Reference.html).
+- **Android**: [Crosswalk WebView](https://crosswalk-project.org) is bundled by default, but you can choose to use the [system WebView](http://developer.android.com/reference/android/webkit/WebView.html). See our [Crosswalk documentation](Crosswalk.md) for more information.
+- **iOS**: [UIWebView](https://developer.apple.com/library/ios/documentation/uikit/reference/UIWebView_Class/Reference/Reference.html).
 
 
 ### How are Chrome Apps for Mobile distributed to users?  Are they installed through the Chrome Web Store?
