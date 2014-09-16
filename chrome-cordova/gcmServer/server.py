@@ -93,9 +93,7 @@ def message_callback(session, message):
     'message_id': msg['message_id']
   })
 
-  #print "Got: " + json.dumps(payload, indent=2)
-
-  handleMessageInApplicationSpecificManner(msg, payload)
+  handleMessageInApplicationSpecificManner(msg, payload['data'])
 
 ################################################################################
 
