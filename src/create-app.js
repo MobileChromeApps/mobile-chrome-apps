@@ -198,7 +198,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
       welcomeText += 'Your project has been created, with web assets in the `www` directory:\n'+
                      wwwPath + '\n\n';
     }
-    welcomeText += 'Remember to run `cca prepare` after making changes\n';
+    welcomeText += 'Remember to run `cca prepare` after making changes if you are using an IDE.\n';
     welcomeText += 'Full instructions: https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md#making-changes-to-your-app-source-code';
     console.log(welcomeText);
   });
