@@ -16,6 +16,7 @@
   <platform name="android">
     <config-file target="AndroidManifest.xml" parent="/*">
       <uses-permission android:name="android.permission.RECORD_AUDIO" />
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     </config-file>
   </platform>
 </plugin>
