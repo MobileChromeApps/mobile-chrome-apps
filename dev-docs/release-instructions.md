@@ -99,6 +99,7 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
         vim node_modules/cordova-lib/node_modules/cordova-js/package.json # Delete browserify dependency
         rm -r node_modules/cordova-lib/node_modules/cordova-js/node_modules/browserify
         npm shrinkwrap
+    # If you didn't get such an error, remove these instructions!
 
     git add npm-shrinkwrap.json
 
