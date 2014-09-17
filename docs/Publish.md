@@ -36,6 +36,7 @@ To publish your Android application to the Play Store:
 5. Find your signed .apk(s) at `platforms/android/out/*-release.apk`.
 
 6. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
+   * Use `advanced mode` to publish multiple APKs, as described by the [Multiple APKs docs](http://developer.android.com/google/play/publishing/multiple-apks.html).
 
 ### Publish to the iOS App Store
 
