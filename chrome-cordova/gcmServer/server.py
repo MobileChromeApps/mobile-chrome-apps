@@ -93,11 +93,12 @@ def message_callback(session, message):
     'message_id': msg['message_id']
   })
 
-  handleMessageInApplicationSpecificManner(msg, payload['data'])
+  handleMessageInApplicationSpecificManner(msg)
 
 ################################################################################
 
-def handleMessageInApplicationSpecificManner(msg, payload):
+def handleMessageInApplicationSpecificManner(msg):
+  payload = msg['data']
   # payload['type'] is not a requirement, its just a convention I chose to use
 
   def handlePingMessage(msg, payload):
