@@ -19,7 +19,7 @@ CADT is an app for your mobile development device that makes it quick and easy t
 
 CADT integrates with both Chrome Dev Editor and `cca` to bring you __live deploy__, allowing you to instantly preview the Chrome App you're editing, running right on your Android or iOS device. When you make a change to the code in your editor, you'll see it straight away on your device.
 
-### [The `cca` Command Line Tool](https://github.com/MobileChromeApps/mobile-chrome-apps)
+### [The `cca` Command Line Tool](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md#install-the-cca-command-line-tool)
 
 `cca` provides all the functionality you need to develop and package Chrome Apps for Mobile from the command line. Use it with CADT to rapidly iterate on your code: live deploy allows you to instantly see your Chrome App running on a connected mobile device. When you are ready to publish your Chrome App for Mobile to the Apple App Store and Google Play Store, use `cca` to bundle up your Chrome App into the proper mobile packages.
 
