@@ -20,13 +20,13 @@ CDE is an IDE built specifically for Chrome Apps. Use it with CADT for live depl
 
 There are three different workflows that you can use to run your application:
 
-* **Option A**: Live deploy with CADT -- quick and easy!
+* **Option A**: Live deploy with CADT (quick and easy!)
 * **Option B**: Use `cca` to package your application and deploy it to your mobile device
 * **Option C**: Use a third party IDE, such as Eclipse or Xcode. The use of a third party IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
-### Option A: Live deploy with CADT -- quick and easy!
+### Option A: Live deploy with CADT (quick and easy!)
 
-1. Follow these [instructions](https://github.com/MobileChromeApps/chrome-app-developer-tool/) to install CADT on your mobile device.
+1. Follow these [instructions](https://github.com/MobileChromeApps/chrome-app-developer-tool/#installation) to install CADT on your mobile device.
 
 2. Use either `cca` or CDE as your tool to initiate live deploy from your development computer.
 
