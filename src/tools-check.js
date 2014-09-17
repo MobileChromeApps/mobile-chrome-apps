@@ -30,7 +30,7 @@ function checkHasIos() {
       hasXcode = true;
       console.log('Xcode detected.');
     }, function(err) {
-      console.log('Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
+      console.warn('Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
     });
   }, function(err) {
     console.log('Xcode not detected.');
@@ -60,4 +60,12 @@ module.exports = exports = function toolsCheck() {
       hasXcode: hasXcode,
     });
   });
+};
+
+exports.fixEnv = function() {
+  return check_reqs.check_java()
+  .then(function() {
+    return check_reqs.check_android();
+  })
+  .then(null, function() {});
 };

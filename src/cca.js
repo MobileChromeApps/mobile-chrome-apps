@@ -63,13 +63,6 @@ function main() {
   var command = commandLineFlags._[0];
   var packageVersion = require('../package').version;
 
-  if (commandLineFlags.v) {
-    command = 'version';
-  }
-  if (commandLineFlags.h || !command) {
-    command = 'help';
-  }
-
   // Colorize after parseCommandLine to avoid --help being printed in red.
   utils.colorizeConsole();
 
@@ -78,6 +71,20 @@ function main() {
 
   function printCcaVersionPrefix() {
     console.log('cca v' + packageVersion);
+  }
+
+  if (command == 'exec') {
+    return require('./tools-check').fixEnv()
+    .then(function() {
+      require('./exec')(process.argv.slice(3));
+    }).done(null, utils.fatal);
+  }
+
+  if (commandLineFlags.v) {
+    command = 'version';
+  }
+  if (commandLineFlags.h || !command) {
+    command = 'help';
   }
 
   function beforeCordovaPrepare() {
@@ -225,9 +232,7 @@ function main() {
   analyticsLoader.getAnalyticsModule()
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
-    return Q();
-  })
-  .then(commandActions[command])
+  }).then(commandActions[command])
   .done(null, utils.fatal);
 }
 

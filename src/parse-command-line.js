@@ -60,7 +60,9 @@ module.exports = exports = function parseCommandLine() {
              '\n' +
              'run [--debug|--release]\n' +
              '    [--device|--emulator|--target=FOO]\n' +
-             '    [PLATFORM] ............................ deploys app on specified platform devices / emulators\n' +
+             '    [android|ios|chrome] .................. deploys app on specified platform devices / emulators\n' +
+             '\n' +
+             'exec CMD [args...] ........................ runs the given command with all SDK tools added to your PATH\n' +
              '\n' +
              'push [--target=IP_ADDRESS:PORT] [--watch] . Pushes the app to one or more Chrome App Developer Tool instances.\n' +
              '                                            --target defaults to localhost:2424; can be specified multiple times.\n' +
