@@ -363,7 +363,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)getSockets:(CDVInvokedUrlCommand *)command
 {
     NSArray* sockets = [_sockets allValues];
-    NSMutableArray* socketsInfo = [NSMutableArray array];
+    NSMutableArray* socketsInfo = [NSMutableArray arrayWithCapacity:[sockets count]];
     
     for (ChromeSocketsUdpSocket* socket in sockets) {
         [socketsInfo addObject: [socket getInfo]];
