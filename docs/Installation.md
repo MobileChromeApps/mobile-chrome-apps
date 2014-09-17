@@ -31,6 +31,8 @@ Please note that iOS development can only be done on OS X. In addition, you will
 * [Xcode](https://developer.apple.com/xcode/) 5 (or higher) which includes the Xcode command line tools
 * [ios-deploy](https://github.com/phonegap/ios-deploy) (needed to deploy to an iOS device)
   * `npm install -g ios-deploy`
+  * If you get a "make: command not found" error, then run this first:
+    * `export PATH="$PATH:$(xcode-select --print-path)/usr/bin"`
 * [ios-sim](https://github.com/phonegap/ios-sim) (needed to deploy to iOS Simulator)
   * `npm install -g ios-sim`
 * *Optional:* Register as an iOS developer
