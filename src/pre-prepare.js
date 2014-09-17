@@ -32,11 +32,16 @@ module.exports = exports = function prePrepareCommand() {
   var pluginsNotRecognized = [];
   var manifest, whitelist;
 
+  var cordovaCmdline = process.env['CORDOVA_CMDLINE'].split(/\s+/);
+  var argv = require('optimist')(cordovaCmdline)
+      .options('webview', { type: 'string' })
+      .argv;
+
   // Pre-prepare manifest check and project munger
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return require('./parse-manifest')(manifest);
+    return require('./parse-manifest')(manifest, { webview: argv.webview });
   })
   .then(function(manifestData) {
     pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(require('./plugin-map').DEFAULT_PLUGINS);
