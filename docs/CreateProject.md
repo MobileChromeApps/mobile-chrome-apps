@@ -1,10 +1,10 @@
 ## Step 2: Create a project
 
-To create a default mobile Chrome App project in a directory named `YourApp` run:
+To create a default Chrome App for Mobile project in a directory named `YourApp`, run:
 
     cca create YourApp
 
-Know what you're doing? You can also provide the App Id and the App Name from the command line:
+Know what you're doing? You can also provide the App ID and the App Name from the command line:
 
     cca create YourApp com.your.company.YourApp "Your App"
 
