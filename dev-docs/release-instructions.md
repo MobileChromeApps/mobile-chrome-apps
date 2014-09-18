@@ -169,9 +169,10 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # Append -dev to "version", and bump the MINOR
     vim package.json
-    git commit -am "Set version to x.x.x-dev."
+    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4)."
 
     git push origin master refs/tags/v$CCA_VERSION
+    # If the push fails, do a git pull **WITHOUT --rebase**
 
 2. Send an email to chromium-apps@chromium.org with version & release notes.
 3. Post on G+ (using corp G+, but setting as public), then ask for it to be re-shared. ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).
