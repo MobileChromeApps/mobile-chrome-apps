@@ -80,7 +80,7 @@ See what is stale (newer versions available)
 ## Update Release Notes:
 
     vim RELEASENOTES.md
-    :read !./dev-bin/release-logs.sh
+    :read !./dev-bin/release-logs.sh VERSION
     # Curate judiciously
 
 Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-cli`.

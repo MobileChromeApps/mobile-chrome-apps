@@ -21,7 +21,19 @@ fi
 
 cd $(dirname $0)/..
 
-prevtag=$(git describe --tags --abbrev=0 HEAD)
-echo "### $prevtag ($(date "+%h %d, %Y"))"
-git log --pretty=format:'* %s' --topo-order --no-merges $prevtag..HEAD
+if [[ -z $1 ]]; then
+  echo "Usage: $0 NEW_VERSION" >&2
+  exit 1
+fi
+VERSION=$1
+
+start=HEAD
+if git describe v$VERSION 2>&1 > /dev/null; then
+  start=v$VERSION^
+fi
+prevtag=$(git describe --tags --abbrev=0 $start)
+echo "### v$VERSION ($(date "+%h %d, %Y"))"
+git log --pretty=format:'* %s' --topo-order --no-merges $prevtag..$start
 git submodule foreach --quiet $PWD'/dev-bin/release-logs.sh --submodule "$name" "$path" "$sha1" "$toplevel" '"$prevtag"
+echo
+echo
