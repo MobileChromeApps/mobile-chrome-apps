@@ -152,7 +152,6 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     git tag v$CCA_VERSION
 
     # Publish to npm
-    # Confirm "publishConfig": { "tag": "rc" } is not set in package.json
     dev-bin/prepfornpm.sh
     npm publish
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
