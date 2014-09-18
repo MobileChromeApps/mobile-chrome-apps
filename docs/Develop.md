@@ -94,7 +94,7 @@ From the root of your `cca`-generated project directory:
 
 Your HTML, CSS and JavaScript files live within the `www` directory of your cca project folder.
 
-**Important** (for packaging your Chrome App for Mobile; *does not apply to live deploy*): After making changes to `www/`, you must run `cca prepare` before deploying your application. If you are running `cca build`, `cca run`, or `cca emulate` from the command line, the prepare step is done automatically. If you are developing using Eclipse/Xcode, you must run `cca prepare` manually.
+**Important**: When using an IDE, you must manually run `cca prepare` before deploying your application. If you are deploying using `cca` on the command-line, the prepare step is done automatically.
 
 ### Debugging
 
