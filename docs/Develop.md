@@ -43,7 +43,7 @@ Navigate to your Chrome App's directory. Then deploy:
 	* **Android:** To setup, use `adb forward tcp:2424 tcp:2424`
 	* **iOS:** To setup, obtain [tcprelay.py](https://github.com/chid/tcprelay) and use `adb tcprelay.py 2424:2424`
 	* Use `cca push`
-* **New! &raquo** Use `cca push [--target=IP_ADDRESS] --watch` to begin **continuous live deploy**: the Chrome App is automatically refreshed when the code is updated.
+* **New! &raquo;** Use `cca push [--target=IP_ADDRESS] --watch` to begin **continuous live deploy**: the Chrome App is automatically refreshed when the code is updated.
 
 #### CDE
 
