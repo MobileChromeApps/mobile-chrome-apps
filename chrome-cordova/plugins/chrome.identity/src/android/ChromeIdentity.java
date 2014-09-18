@@ -272,7 +272,7 @@ public class ChromeIdentity extends CordovaPlugin {
         try {
             String token = args.getString(0);
             Context context = this.cordova.getActivity();
-            GoogleAuthUtil.clearToken(context, token);
+            GoogleAuthUtil.invalidateToken(context, token);
             callbackContext.success();
         } catch (SecurityException e) {
             // This happens when trying to clear a token that doesn't exist.
