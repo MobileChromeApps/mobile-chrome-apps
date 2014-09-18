@@ -70,8 +70,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     }
     manifest = manifestData;
   })
-  .then(require('./tools-check'))
-  .then(function(toolsCheckResults) {
+  .then(function() {
     // Create step.
     console.log('## Creating Your Application');
     var config_default = JSON.parse(JSON.stringify(require('./default-config')(ccaRoot)));

@@ -10,13 +10,17 @@ function checkHasAndroid() {
   hasAndroidPlatform = false;
   return check_reqs.check_java()
   .then(function() {
-    return check_reqs.check_android();
-  }).then(function() {
-    console.log('Android SDK detected.');
-    hasAndroidPlatform = true;
-  }).then(null, function(err) {
-    console.warn(err.message);
-  });
+    return check_reqs.check_android()
+    .then(function() {
+      console.warn('\x1B[32mAndroid Development: SDK configured properly.\x1B[39m');
+      hasAndroidPlatform = true;
+    }, function(err) {
+      console.warn('Android Development: ' + err.message);
+    });
+  }, function(err) {
+    console.warn('Android Development: JDK not found. ' + err.message);
+    return Q.reject();
+  }).then(null, function(){});
 }
 
 function checkHasIos() {
@@ -28,12 +32,12 @@ function checkHasIos() {
     return utils.exec('xcodebuild -version', true /* opt_silent */)
     .then(function() {
       hasXcode = true;
-      console.log('Xcode detected.');
+      console.warn('\x1B[32miOS Development: SDK configured properly.\x1B[39m');
     }, function(err) {
-      console.warn('Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
+      console.warn('iOS Development: Xcode appears to be installed, but no version is selected (fix this with xcodeselect).');
     });
   }, function(err) {
-    console.log('Xcode not detected.');
+    console.warn('iOS Development: SDK not detected.');
   });
 }
 
@@ -44,7 +48,6 @@ module.exports = exports = function toolsCheck() {
   // Is this the first time we're checking for the tools?
   if (typeof hasAndroidPlatform == 'undefined') {
     ret = ret.then(function() {
-      console.log('## Checking that tools are installed');
       return checkHasAndroid().then(checkHasIos);
     });
   }

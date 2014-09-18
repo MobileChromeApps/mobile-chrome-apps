@@ -85,7 +85,7 @@ function main() {
       return Q.when();
     }
     if (!fs.existsSync(path.join('www', 'manifest.json'))) {
-      return Q.reject('This is not a cca project.  Perhaps you meant to use the cordova-cli?')
+      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?')
     }
     return require('./auto-upgrade')();
   }
@@ -146,12 +146,9 @@ function main() {
         }
         // resolve turns relative paths into absolute
         destAppDir = path.resolve(destAppDir);
-        return require('./tools-check')()
-          .then(function() {
-            var packageId = commandLineFlags._[2] || '';
-            var appName = commandLineFlags._[3] || '';
-            return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
-          });
+        var packageId = commandLineFlags._[2] || '';
+        var appName = commandLineFlags._[3] || '';
+        return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
       });
     },
     'upgrade': function() {
