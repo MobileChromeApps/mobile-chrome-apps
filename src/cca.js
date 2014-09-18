@@ -45,13 +45,6 @@ function fixEnv() {
   if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
     process.env.DEPLOY_APK_ARCH = 'armv7';
   }
-  // signing keys
-  if (!process.env.DEBUG_SIGNING_PROPERTIES_FILE && fs.existsSync('android-debug-keys.properties')) {
-      process.env.DEBUG_SIGNING_PROPERTIES_FILE = path.resolve('android-debug-keys.properties');
-  }
-  if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE && fs.existsSync('android-release-keys.properties')) {
-      process.env.RELEASE_SIGNING_PROPERTIES_FILE = path.resolve('android-release-keys.properties');
-  }
 }
 
 /******************************************************************************/
@@ -207,6 +200,13 @@ function main() {
   if (projectRoot) {
     cordovaLib.cordova.config(projectRoot, require('./default-config')(ccaRoot));
     process.chdir(projectRoot);
+    // signing keys
+    if (!process.env.DEBUG_SIGNING_PROPERTIES_FILE && fs.existsSync('android-debug-keys.properties')) {
+      process.env.DEBUG_SIGNING_PROPERTIES_FILE = path.resolve('android-debug-keys.properties');
+    }
+    if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE && fs.existsSync('android-release-keys.properties')) {
+      process.env.RELEASE_SIGNING_PROPERTIES_FILE = path.resolve('android-release-keys.properties');
+    }
   }
 
   if (!commandActions.hasOwnProperty(command)) {
