@@ -11,23 +11,32 @@ To publish your Android application to the Play Store:
     * `android:versionCode` can be explicitly set using the `versionCode` key in `www/manifest.mobile.js`. If omitted, `versionCode` will default to `major * 10000 + minor * 100 + rev` (assuming `version` looks like `"major.minor.rev"`)
 
 2. Create (or update) your keystore (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
+   ```
+   cca exec keytool -genkey -v -keystore FILENAME.keystore -alias YOUR_PETS_NAME -keyalg RSA -keysize 2048 -validity 10000
+   ```
+  * Create a password when prompted
 
-        keytool -genkey -v -keystore KEYSTORE_NAME.keystore -alias ALIAS -keyalg RSA -keysize 2048 -validity 10000
 
 3. Create a file called `android-release-keys.properties`, and put into it:
 
-      keyAlias=ALIAS
-      keyPassword=????
-      storeFile=KEYSTORE_NAME.keystore
-      storePassword=????
+    ```
+    storeFile=FILENAME.keystore
+    storePassword=YOUR_STORE_PASSWORD
+    keyAlias=YOUR_PETS_NAME
+    keyPassword=YOUR_KEY_PASSWORD
+    ```
+    
+    * You can optionally leave out the password settings and if so, will be prompted for them when building.
 
 4. Build your project:
-
-        cca build --release
+   ```
+   cca build --release
+   ```
 
 5. Find your signed .apk(s) at `platforms/android/out/*-release.apk`.
 
 6. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
+   * Use `advanced mode` to publish multiple APKs, as described by the [Multiple APKs docs](http://developer.android.com/google/play/publishing/multiple-apks.html).
 
 ### Publish to the iOS App Store
 

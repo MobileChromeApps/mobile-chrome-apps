@@ -57,7 +57,8 @@ function mapPermissionsToPlugins(knownPermissionsMap, requestedPermissionsList) 
   return ret;
 }
 
-module.exports = function parseManifest(manifest) {
+module.exports = function parseManifest(manifest, options) {
+  options = options || {};
   var ret = {
     appId: undefined,
     whitelist: [],
@@ -85,7 +86,7 @@ module.exports = function parseManifest(manifest) {
   });
 
   var pluginsForPermissions = mapPermissionsToPlugins(require('./plugin-map').PLUGIN_MAP, ret.permissions);
-  var pluginsForEngines = mapPermissionsToPlugins(require('./plugin-map').ENGINE_MAP, [manifest.webview || "crosswalk"]);
+  var pluginsForEngines = mapPermissionsToPlugins(require('./plugin-map').ENGINE_MAP, [options.webview || manifest.webview || "crosswalk"]);
 
   ret.pluginsToBeInstalled = pluginsForPermissions.toInstall.concat(pluginsForEngines.toInstall);
   ret.pluginsToBeNotInstalled = pluginsForPermissions.toUninstall.concat(pluginsForEngines.toUninstall);

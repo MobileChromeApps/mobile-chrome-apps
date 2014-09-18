@@ -28,6 +28,7 @@ module.exports = exports = function autoUpgrade() {
     shelljs.rm('-f', path.join('plugins', 'android.json'));
     shelljs.rm('-f', path.join('plugins', 'ios.json'));
 
+    console.log('## First-time build. Detecting available SDKs:');
     return require('./tools-check')()
     .then(function(toolsCheckResults) {
       var cmds = [];

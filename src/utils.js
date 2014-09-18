@@ -16,7 +16,7 @@ exports.exit.pause_on_exit = false;
 
 exports.fatal = function fatal(msg) {
   console.error(msg);
-  if (msg.stack) console.error(msg.stack);
+  if (msg && msg.stack) console.error(msg.stack);
   exports.exit(1);
 };
 

@@ -45,13 +45,6 @@ function fixEnv() {
   if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
     process.env.DEPLOY_APK_ARCH = 'armv7';
   }
-  // signing keys
-  if (!process.env.DEBUG_SIGNING_PROPERTIES_FILE && fs.existsSync('android-debug-keys.properties')) {
-      process.env.DEBUG_SIGNING_PROPERTIES_FILE = path.resolve('android-debug-keys.properties');
-  }
-  if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE && fs.existsSync('android-release-keys.properties')) {
-      process.env.RELEASE_SIGNING_PROPERTIES_FILE = path.resolve('android-release-keys.properties');
-  }
 }
 
 /******************************************************************************/
@@ -63,13 +56,6 @@ function main() {
   var command = commandLineFlags._[0];
   var packageVersion = require('../package').version;
 
-  if (commandLineFlags.v) {
-    command = 'version';
-  }
-  if (commandLineFlags.h || !command) {
-    command = 'help';
-  }
-
   // Colorize after parseCommandLine to avoid --help being printed in red.
   utils.colorizeConsole();
 
@@ -80,12 +66,26 @@ function main() {
     console.log('cca v' + packageVersion);
   }
 
+  if (command == 'exec') {
+    return require('./tools-check').fixEnv()
+    .then(function() {
+      require('./exec')(process.argv.slice(3));
+    }).done(null, utils.fatal);
+  }
+
+  if (commandLineFlags.v) {
+    command = 'version';
+  }
+  if (commandLineFlags.h || !command) {
+    command = 'help';
+  }
+
   function beforeCordovaPrepare() {
     if (commandLineFlags['skip-upgrade']) {
       return Q.when();
     }
     if (!fs.existsSync(path.join('www', 'manifest.json'))) {
-      return Q.reject('This is not a cca project.  Perhaps you meant to use the cordova-cli?')
+      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?')
     }
     return require('./auto-upgrade')();
   }
@@ -146,12 +146,9 @@ function main() {
         }
         // resolve turns relative paths into absolute
         destAppDir = path.resolve(destAppDir);
-        return require('./tools-check')()
-          .then(function() {
-            var packageId = commandLineFlags._[2] || '';
-            var appName = commandLineFlags._[3] || '';
-            return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
-          });
+        var packageId = commandLineFlags._[2] || '';
+        var appName = commandLineFlags._[3] || '';
+        return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
       });
     },
     'upgrade': function() {
@@ -200,6 +197,13 @@ function main() {
   if (projectRoot) {
     cordovaLib.cordova.config(projectRoot, require('./default-config')(ccaRoot));
     process.chdir(projectRoot);
+    // signing keys
+    if (!process.env.DEBUG_SIGNING_PROPERTIES_FILE && fs.existsSync('android-debug-keys.properties')) {
+      process.env.DEBUG_SIGNING_PROPERTIES_FILE = path.resolve('android-debug-keys.properties');
+    }
+    if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE && fs.existsSync('android-release-keys.properties')) {
+      process.env.RELEASE_SIGNING_PROPERTIES_FILE = path.resolve('android-release-keys.properties');
+    }
   }
 
   if (!commandActions.hasOwnProperty(command)) {
@@ -225,9 +229,7 @@ function main() {
   analyticsLoader.getAnalyticsModule()
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
-    return Q();
-  })
-  .then(commandActions[command])
+  }).then(commandActions[command])
   .done(null, utils.fatal);
 }
 
