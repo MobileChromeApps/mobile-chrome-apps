@@ -4,9 +4,9 @@
 
 #### [Chrome App Developer Tool for Mobile (CADT)](https://github.com/MobileChromeApps/chrome-app-developer-tool/)
 
-CADT is an app for your mobile development device that makes it quick and easy to see your code in action. It provides the Cordova framework of Chrome Apps for Mobile so you can test your code by simply pushing your Chrome App assets to your mobile device (made easy with our tools), which is must faster than packaging up the entire mobile app.
+CADT is an app for your mobile development device that makes it quick and easy to see your code in action. It provides the Cordova framework of Chrome Apps for Mobile so you can test your code by simply pushing your Chrome App assets to your mobile device (made easy with our tools), which is must faster than packaging up the entire mobile app. This is called **live deploy**.
 
-CADT integrates with both Chrome Dev Editor and `cca` to bring you __live deploy__, allowing you to instantly preview the Chrome App you're editing, running right on your Android or iOS device. When you make a change to the code in your editor, you will be able to see it straight away on your device.
+With CADT running on your mobile device, live deploy can be initiated from your development computer with either Chrome Dev Editor or the `cca` command line tool, allowing you to instantly preview the Chrome App you're editing, running right on Android or iOS. When you make a change to the code in your editor, you're a quick push away from seeing it straight on your device.
 
 #### [The `cca` Command Line Tool](https://github.com/MobileChromeApps/mobile-chrome-apps)
 
