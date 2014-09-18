@@ -28,7 +28,7 @@ There are three different workflows that you can use to run your application:
 
 1. Follow these [instructions](https://github.com/MobileChromeApps/chrome-app-developer-tool/#installation) to install CADT on your mobile device.
 
-  **Note:** Remove all older versions of CADT on your device so that only the latest version remains.
+  **Note:** Remove all older versions of CADT from your mobile device so that only the latest version remains.
 
 2. Use either `cca` or CDE as your tool to initiate live deploy from your development computer.
 
