@@ -35,6 +35,7 @@ module.exports = exports = function prePrepareCommand() {
   var cordovaCmdline = process.env['CORDOVA_CMDLINE'].split(/\s+/);
   var argv = require('optimist')(cordovaCmdline)
       .options('webview', { type: 'string' })
+      .options('release', { type: 'boolean' })
       .argv;
 
   // Pre-prepare manifest check and project munger
@@ -54,6 +55,11 @@ module.exports = exports = function prePrepareCommand() {
   })
   .then(require('./update-config-xml'))
   .then(function() {
+    if (/android/.exec(process.env['CORDOVA_PLATFORMS']) && argv['release']) {
+      if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
+        utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.')
+      }
+    }
     // Add a URL type to the iOS project's .plist file.
     // This is necessary for chrome.identity to redirect back to the app after authentication.
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
