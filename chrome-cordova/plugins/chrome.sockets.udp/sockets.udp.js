@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 var Event = require('org.chromium.common.events');
+var platform = cordova.require('cordova/platform');
 var exec = cordova.require('cordova/exec');
+
 
 var checkBufferSize = function(bufferSize) {
 
@@ -144,6 +146,33 @@ function registerReceiveEvents() {
         };
         exports.onReceive.fire(info);
     };
+
+    // TODO: speical callback for android, DELETE when multipart result for
+    // android is avaliable
+    if (platform.id == 'android') {
+        win = (function() {
+            var data;
+            var call = 0;
+            return function(arg) {
+                if (call === 0) {
+                    data = arg;
+                    call++;
+                } else  {
+                    var info = {
+                        socketId: arg.socketId,
+                        data: data,
+                        remoteAddress: arg.remoteAddress,
+                        remotePort: arg.remotePort
+                    };
+
+                    call = 0;
+
+                    exports.onReceive.fire(info);
+                }
+            };
+        })();
+    }
+
 
     var fail = function(info) {
         exports.onReceiveError.fire(info);
