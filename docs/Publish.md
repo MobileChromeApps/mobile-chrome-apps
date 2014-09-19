@@ -20,7 +20,7 @@ To publish your Android application to the Play Store:
   * Note: the "cca exec" prefix is required only if keytool is not already available on your PATH
 
 
-3. Create a file called `android-release-keys.properties` at the root of your project (as a sibling to `www/`). Put into it:
+3. Put the following settings into a file called `android-release-keys.properties` at the root of your project (as a sibling to `www/`):
 
     ```
     storeFile=FILENAME.keystore
@@ -28,8 +28,7 @@ To publish your Android application to the Play Store:
     keyAlias=YOUR_PETS_NAME
     keyPassword=YOUR_KEY_PASSWORD
     ```
-    
-    * `storePassword` and `keyPassword` are optional. If omitted, you will be prompted for them when building.
+    * Note: `storePassword` and `keyPassword` are optional. If omitted, you will be prompted for them when building.
 
 4. Build your project:
    ```
