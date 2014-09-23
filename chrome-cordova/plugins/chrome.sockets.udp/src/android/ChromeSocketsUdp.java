@@ -106,7 +106,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       return;
     }
 
-    socket.setProperties(properties);
+    try {
+      socket.setProperties(properties);
+    } catch (SocketException e) {
+    }
 
     callbackContext.success();
   }
@@ -140,13 +143,15 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
       return;
     }
 
-    if (socket.bind(address, port)) {
+    try {
+      socket.bind(address, port);
       callbackContext.success();
-    } else {
-      callbackContext.error("Failed to bind");
+    } catch (SocketException e) {
+      callbackContext.error(-1000);
     }
   }
 
@@ -162,20 +167,19 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
       return;
     }
 
-    int bytesSent = socket.send(address, port, data);
-
-    if (bytesSent > 0) {
-      callbackContext.success(bytesSent);
-    } else {
-      socket.addSendPacket(address, port, data, callbackContext);
-      try {
-        selectorMessages.put(
-            new SelectorMessage(socket, SelectorMessageType.SO_R_WRITE_AND_READ, null));
-      } catch (InterruptedException e) {
+    try {
+      int bytesSent = socket.send(address, port, data);
+      if (bytesSent > 0) {
+        callbackContext.success(bytesSent);
+      } else {
+        socket.addSendPacket(address, port, data, callbackContext);
       }
+    } catch (IOException e) {
+      callbackContext.error(-1000);
     }
   }
 
@@ -225,9 +229,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
       return;
     }
-
-    JSONObject info = socket.getInfo();
-    callbackContext.success(info);
+    callbackContext.success(socket.getInfo());
   }
 
   private void getSockets(CordovaArgs args, final CallbackContext callbackContext)
@@ -244,7 +246,6 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
   private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
-
     recvContext = callbackContext;
     startSelectorThread();
   }
@@ -278,7 +279,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   }
 
   private enum SelectorMessageType {
-    SO_CREATE, SO_CLOSE, SO_R_READ, SO_R_WRITE_AND_READ, T_STOP; }
+    SO_CREATE,
+    SO_CLOSE,
+    T_STOP;
+  }
 
   private class SelectorMessage {
 
@@ -329,12 +333,6 @@ public class ChromeSocketsUdp extends CordovaPlugin {
               if (msg.callbackContext != null)
                 msg.callbackContext.success();
               break;
-            case SO_R_READ:
-              msg.socket.register(selector, SelectionKey.OP_READ);
-              break;
-            case SO_R_WRITE_AND_READ:
-              msg.socket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-              break;
             case T_STOP:
               running = false;
               break;
@@ -378,15 +376,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
           }
 
           if (key.isWritable()) {
-            socket.deQueueSend();
-            if (socket.isSendPacketsEmpty()) {
-              try {
-                // No pending send packets, remove the write interests on selector.
-                selectorMessages.put(
-                    new SelectorMessage(socket, SelectorMessageType.SO_R_READ, null));
-              } catch (InterruptedException e) {
-              }
-            }
+            socket.dequeueSend();
           }
         } // while next
 
@@ -412,11 +402,13 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     UdpSocket(
         DatagramChannel channel, int socketId, CallbackContext recvContext, JSONObject properties)
-        throws JSONException {
+        throws JSONException, IOException {
 
       this.channel = channel;
       this.socketId = socketId;
       this.recvContext = recvContext;
+
+      channel.configureBlocking(false);
 
       // set socket default options
       paused = false;
@@ -425,6 +417,21 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       name = "";
 
       setProperties(properties);
+      setBufferSize();
+    }
+
+    void addInterestSet(int interestSet) {
+      if (key != null) {
+        key.interestOps(key.interestOps() | interestSet);
+        key.selector().wakeup();
+      }
+    }
+
+    void removeInterestSet(int interestSet) {
+      if (key != null) {
+        key.interestOps(key.interestOps() & ~interestSet);
+        key.selector().wakeup();
+      }
     }
 
     int getSocketId() {
@@ -432,11 +439,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     void register(Selector selector, int interestSets) throws IOException {
-      channel.configureBlocking(false);
       key = channel.register(selector, interestSets, this);
     }
 
-    void setProperties(JSONObject properties) throws JSONException {
+    void setProperties(JSONObject properties) throws JSONException, SocketException {
 
       if (!properties.isNull("persistent"))
         persistent = properties.getBoolean("persistent");
@@ -444,44 +450,44 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       if (!properties.isNull("name"))
         name = properties.getString("name");
 
-      if (!properties.isNull("bufferSize"))
+      if (!properties.isNull("bufferSize")) {
         bufferSize = properties.getInt("bufferSize");
+        setBufferSize();
+      }
+    }
+
+    void setBufferSize() throws SocketException {
+      channel.socket().setSendBufferSize(bufferSize);
+      channel.socket().setReceiveBufferSize(bufferSize);
     }
 
     void setPaused(boolean paused) {
       this.paused = paused;
+      if (paused) {
+        removeInterestSet(SelectionKey.OP_READ);
+      } else {
+        addInterestSet(SelectionKey.OP_READ);
+      }
     }
 
     void addSendPacket(String address, int port, byte[] data, CallbackContext callbackContext) {
-
       UdpSendPacket sendPacket = new UdpSendPacket(address, port, data, callbackContext);
-
+      addInterestSet(SelectionKey.OP_WRITE);
       try {
         sendPackets.put(sendPacket);
       } catch (InterruptedException e) {
       }
     }
 
-    boolean bind(String address, int port) {
-      InetSocketAddress isa = new InetSocketAddress(port);
-      try {
-        channel.socket().bind(isa);
-      } catch (SocketException e) {
-        Log.e(LOG_TAG, "Failed to bind UDP socket");
-        return false;
-      }
-      return true;
+    void bind(String address, int port) throws SocketException {
+      channel.socket().bind(new InetSocketAddress(port));
     }
 
-    int send(String address, int port, byte[] data) {
-      try {
-        return channel.send(ByteBuffer.wrap(data), new InetSocketAddress(address, port));
-      } catch (IOException e) {
-        return 0;
-      }
+    int send(String address, int port, byte[] data) throws IOException {
+      return channel.send(ByteBuffer.wrap(data), new InetSocketAddress(address, port));
     }
 
-    void deQueueSend() {
+    void dequeueSend() {
       if (sendPackets.peek() != null) {
         UdpSendPacket sendPacket = null;
         try {
@@ -492,11 +498,9 @@ public class ChromeSocketsUdp extends CordovaPlugin {
         } catch (IOException e) {
           sendPacket.callbackContext.error(-1000);
         }
+      } else {
+        removeInterestSet(SelectionKey.OP_WRITE);
       }
-    }
-
-    boolean isSendPacketsEmpty() {
-      return sendPackets.size() == 0;
     }
 
     void close() throws IOException {
@@ -505,7 +509,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       channel.close();
     }
 
-    public JSONObject getInfo() throws JSONException {
+    JSONObject getInfo() throws JSONException {
 
       JSONObject info = new JSONObject();
 
