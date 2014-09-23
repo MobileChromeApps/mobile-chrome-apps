@@ -1,4 +1,6 @@
-# Chrome API Implementation Status
+# Chrome Apps APIs and Libraries
+
+## APIs
 
 See the [reference guide for building Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html) on desktop.
 
@@ -6,7 +8,7 @@ This list tracks API support on mobile.
 
 _Current as of July 2014_.
 
-## Chrome Apps APIs
+### Chrome Apps APIs
 
 * [alarms](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.alarms) - run tasks periodically
     * Working on Android and iOS.
@@ -51,7 +53,7 @@ _Current as of July 2014_.
 * [system.storage](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.storage) - query storage device information and be notified when a removable storage device is attached and detached.
     * Alpha quality on Android only
 
-## Other APIs
+### Other APIs
 
 * [payments](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/chrome-cordova/plugins/google.payments) - sell virtual goods within your mobile app
     * Working on Android and iOS.
@@ -61,20 +63,20 @@ _Current as of July 2014_.
 * [videoCapture](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.videoCapture) - capture video directly from the user's Web Cam via the getUserMedia API.
     * Working on Android only.
 
-## APIs Coming in the Near Term
+### APIs Coming in the Near Term
 * chrome.sockets.tcp / udp / tcpServer
 * runtime.getPackageDirectoryEntry
 * mediaGalleries
 * Better notifications and alarms support
 
-## APIs Coming in the Medium Term
+### APIs Coming in the Medium Term
 * bluetooth
 * app.window.*
 * fileSystem (fixes)
 * system.*
 * location
 
-## APIs Coming in the Long Term
+### APIs Coming in the Long Term
 * commands
 * contextMenus
 * permissions
@@ -86,3 +88,13 @@ _Current as of July 2014_.
 * wallpaper
 * webstore
 * webview tag
+
+## Libraries
+
+This is, of course, not an exhaustive list!  More will be added as we find them—don't hesitate to contact us if you know of a great, useful library.
+
+* [Chrome Platform Analytics](https://github.com/GoogleChrome/chrome-platform-analytics)
+    * Adds Google Analytics support for Chrome Apps.
+* [Resource Loader](https://github.com/GoogleChrome/apps-resource-loader)
+    * Simplifies loading external resources (such as images).
+

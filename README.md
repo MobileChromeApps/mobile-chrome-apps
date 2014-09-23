@@ -47,7 +47,7 @@ Try out Chrome Apps for Mobile by following these steps:
 
 * There are a few special considerations that you should keep in mind when developing with Cordova. We've listed them in the [considerations section](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/CordovaConsiderations.md).
 
-* To view which Chrome APIs are supported on mobile, visit the [API Status page](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md).
+* To view which Chrome APIs and other libraries are supported on mobile, visit the [APIs and Libraries page](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIsAndLibraries.md).
 
 ## Let's get started
 
