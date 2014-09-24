@@ -11,6 +11,9 @@ var ChromeExtensionURLs = require('org.chromium.bootstrap.helpers.ChromeExtensio
 var createdAppWindow = null;
 var dummyNode = document.createElement('a');
 
+// The temporary tag name used for deferring HTML import processing
+var linkReplacementTag = "x-txpspgbc"
+
 function AppWindow() {
   this.contentWindow = mobile.fgWindow;
   this.id = '';
@@ -63,32 +66,40 @@ function applyAttributes(attrText, destNode) {
 
 // Evals the scripts in order.
 function evalScripts(rootNode, afterFunc) {
-  var scripts = rootNode.getElementsByTagName('script');
+  var nodes = rootNode.querySelectorAll('script,' + linkReplacementTag);
   var doc = rootNode.ownerDocument;
-  var numRemaining = scripts.length;
+  var numRemaining = nodes.length;
   function onLoadCallback(a) {
     if (!numRemaining--) {
       afterFunc && afterFunc();
     }
   }
-  for (var i = 0, script; script = scripts[i]; ++i) {
-    if (script.type && !(/text\/javascript/i.exec(script.type) ||
-                         /application\/javascript/i.exec(script.type) ||
-                         /application\/dart/i.exec(script.type))) {
-      onLoadCallback();
-    } else if (script.src) {
-      var replacement = doc.createElement('script');
-      copyAttributes(script, replacement);
-      replacement.onload = onLoadCallback;
-      replacement.onerror = onLoadCallback;
-      replacement.async = false;
-      script.parentNode.replaceChild(replacement, script);
-    } else {
-      // Skip over inline scripts.
-      console.warn('Refused to execute inline script because it violates the following Content Security Policy directive: "default-src \'self\' chrome-extension-resource:"');
-      console.warn('Script contents:');
-      console.warn(script.textContent.slice(0, 100) + (script.textContent.length > 100 ? '<truncated>' : ''));
-      onLoadCallback();
+  for (var i = 0, node; node = nodes[i]; ++i) {
+    if (node.nodeName === "SCRIPT") {
+      if (node.type && !(/text\/javascript/i.exec(node.type) ||
+                           /application\/javascript/i.exec(node.type) ||
+                           /application\/dart/i.exec(node.type))) {
+        onLoadCallback();
+      } else if (node.src) {
+        var replacement = doc.createElement('script');
+        copyAttributes(node, replacement);
+        replacement.onload = onLoadCallback;
+        replacement.onerror = onLoadCallback;
+        replacement.async = false;
+        node.parentNode.replaceChild(replacement, node);
+      } else {
+        // Skip over inline scripts.
+        console.warn('Refused to execute inline script because it violates the following Content Security Policy directive: "default-src \'self\' chrome-extension-resource:"');
+        console.warn('Script contents:');
+        console.warn(node.textContent.slice(0, 100) + (node.textContent.length > 100 ? '<truncated>' : ''));
+        onLoadCallback();
+      }
+   } else {
+    var replacement = document.createElement('link');
+    copyAttributes(node, replacement);
+    replacement.onload = onLoadCallback;
+    replacement.onerror = onLoadCallback;
+    node.parentNode.replaceChild(replacement, node);
     }
   }
   // Handle the no scripts case.
@@ -103,6 +114,11 @@ function rewritePage(pageContent, filePath) {
   while (fgHead.lastChild) {
     fgHead.removeChild(fgHead.lastChild);
   }
+
+  // Replace HTML Imports with a placeholder tag. This will be removed
+  // in execScripts(), above.
+  var importFinder = /<link([^>]*rel\s*=\s*(['"])import\2[^>]*)>/ig;
+  pageContent = pageContent.replace(importFinder, "<"+linkReplacementTag+"$1></"+linkReplacementTag+">");
 
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {
