@@ -16,6 +16,9 @@ The API reference is [here](http://developer.chrome.com/apps/fileSystem.html).
 * All files are can be made "writable"; there is not yet any differentiation here.
 
 # Release Notes
+## 1.0.3 (Sep 24, 2014)
+* Switch to org.chromium.filechooser (lowercase)
+
 ## 1.0.1 (April 1, 2014)
 - Correctly report error when resolveLocalFileSystemURL fails.
 

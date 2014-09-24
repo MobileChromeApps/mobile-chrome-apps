@@ -41,14 +41,14 @@
     cd chrome-cordova/plugins
     ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); [[ -n $(git log -n 1 "$LAST_VERSION_BUMP"..master .) ]] && echo $l); done | xargs echo)
     # See what's changed so you have an idea:
-    (for l in $ACTIVE; do (cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); echo $l; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .); done) | less
+    (for l in $ACTIVE; do (cd $l; echo $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master -- . ; echo); done) | less
 
-* Add release notes:
+* Add release notes & bump version:
 
-    for l in $ACTIVE; do ( cd $l; vim README.md ); done
+    for l in $ACTIVE; do ( cd $l; vim README.md plugin.xml ); done
 
 Vim helper command:
-    :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .
+    :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:\%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .
 
     git commit -am "Updated plugin release notes and version numbers for release."
     git push origin master

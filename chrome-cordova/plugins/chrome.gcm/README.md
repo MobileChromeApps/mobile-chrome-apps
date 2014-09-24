@@ -21,5 +21,8 @@ The API reference is [here](https://developer.chrome.com/apps/cloudMessagingV2).
 * You require the 'gcm' permission to use this API
 
 # Release Notes
+## 1.0.1 (Sep 24, 2014)
+* Fix #287 #290 Fix several significant GCM bugs
+
 ## 1.0.0 (May 8, 2014)
 - Initial Release
