@@ -117,8 +117,10 @@ function rewritePage(pageContent, filePath) {
 
   // Replace HTML Imports with a placeholder tag. This will be removed
   // in execScripts(), above.
-  var importFinder = /<link([^>]*rel\s*=\s*(['"])import\2[^>]*)>/ig;
-  pageContent = pageContent.replace(importFinder, "<"+linkReplacementTag+"$1></"+linkReplacementTag+">");
+  // RegExp may match more than needed (in odd cases), but doing so is harmless.
+  // It also strips off any </link> or <link /> (which are also odd).
+  var importFinder = /<link(\s[^>]*\brel\s*=[\s'"]*import[\s\S]*?)(?:\/?>)(?:\s*<\/link>)?/ig;
+  pageContent = pageContent.replace(importFinder, '<' + linkReplacementTag + '$1></' + linkReplacementTag + '>');
 
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {
