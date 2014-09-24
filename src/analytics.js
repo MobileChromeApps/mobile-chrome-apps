@@ -52,8 +52,10 @@ function getClientId() {
 
 // This helper function sends a measurement to the given URL.
 function sendMeasurement(url) {
+  // On an error, silently fail.
+  // TODO(maxw): Queue and retry failed measurements.
   var http = require('http');
-  http.get(url);
+  http.get(url).on('error', function() { });
 }
 
 module.exports = {
