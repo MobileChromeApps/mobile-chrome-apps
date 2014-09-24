@@ -139,6 +139,9 @@ The following is the full set of tests. Vary accordingly depending on the magnit
   * Check that killing & re-running the app auto-joins
 * Ensure that ChromeSpec passes all tests on iOS & Android
 * Ensure that ChromeSpec on Android can be run from Windows host (via VirtualBox + modern.ie is easiest).
+* Test the update flow:
+  * Just run `cca run android` from within a project and it should trigger
+  * You can locally change the version in package.json (e.g. remove the -rc) to trigger it
 
 ## Publish full release:
 

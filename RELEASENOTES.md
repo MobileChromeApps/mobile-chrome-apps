@@ -8,6 +8,7 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * Android: Fix build warning about dynamic properties being deprecated
 * Android: Make Android Studio project imports work properly
 * Android: Faster builds by building only release/debug for sublibraries
+* Android: Even faster builds for `cca run android` by building only one of arm vs x86
 * Android: Make it an error to try to build android release without android-release-keys.properties
 * Fix cca create failing when not connected to the internet
 * Add platforms in one command instead of two (triggers one fewer prepares)
