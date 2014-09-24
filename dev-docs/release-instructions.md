@@ -168,11 +168,8 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # Remove shrinkwrap file, and push changed to master
     git rm npm-shrinkwrap.json
-    git commit -m "Removing shrinkwrap file after release"
-
-    # Append -dev to "version", and bump the MINOR
-    vim package.json
-    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4)."
+    vim package.json # Append -dev to "version", and bump the MINOR
+    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4) and removed shrinkwrap."
 
     git push origin master refs/tags/v$CCA_VERSION
     # If the push fails, do a git pull **WITHOUT --rebase**
