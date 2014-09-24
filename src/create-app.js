@@ -132,9 +132,13 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     }
   })
   .then(function() {
-    return require('./update-config-xml')();
+    return require('./get-manifest')('www')
   })
-  .then(function() {
+  .then(function(manifestJson) {
+    var configXmlData = fs.readFileSync('config.xml', 'utf8');
+    var analyzedManifest = require('./shared-with-cadt/analyse-manifest')(manifestJson);
+    var newConfigData = require('./shared-with-cadt/update-config-xml')(manifestJson, analyzedManifest, configXmlData);
+    fs.writeFileSync('config.xml', newConfigData);
     return require('./write-out-cca-version')();
   })
   .then(function() {

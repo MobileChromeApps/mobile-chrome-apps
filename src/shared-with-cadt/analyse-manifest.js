@@ -98,7 +98,7 @@ module.exports = function parseManifest(manifest, options) {
   });
 
   if (manifest.key) {
-    ret.appId = require('./util/chrome_app_key_to_id')(manifest.key);
+    ret.appId = require('./chrome-app-key-to-id')(manifest.key);
   } else {
     ret.appId = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   }

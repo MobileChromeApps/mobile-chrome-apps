@@ -24,6 +24,8 @@ var fs = require('fs');
 var et = require('elementtree');
 var path = require('path');
 var utils = require('./utils');
+var PluginMap = require('./shared-with-cadt/plugin-map');
+var analyseManifest = require('./shared-with-cadt/analyse-manifest');
 
 // Returns a promise.
 module.exports = exports = function prePrepareCommand() {
@@ -42,18 +44,25 @@ module.exports = exports = function prePrepareCommand() {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return require('./parse-manifest')(manifest, { webview: argv.webview });
+    return analyseManifest(manifest, { webview: argv.webview });
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(require('./plugin-map').DEFAULT_PLUGINS);
-    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat(require('./plugin-map').STALE_PLUGINS);
+    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(PluginMap.DEFAULT_PLUGINS);
+    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat(PluginMap.STALE_PLUGINS);
     pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
       return pluginsToBeInstalled.indexOf(plugin) == -1;
     });
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
+
+    var configXmlData = fs.readFileSync('config.xml', 'utf8');
+    var newConfigData = require('./shared-with-cadt/update-config-xml')(manifest, manifestData, configXmlData);
+    // Don't write out if nothing actually changed
+    if (newConfigData != configXmlData) {
+      console.log('## Updating config.xml from manifest.json');
+      fs.writeFileSync('config.xml', newConfigData);
+    }
   })
-  .then(require('./update-config-xml'))
   .then(function() {
     if (/android/.exec(process.env['CORDOVA_PLATFORMS']) && argv['release']) {
       if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
