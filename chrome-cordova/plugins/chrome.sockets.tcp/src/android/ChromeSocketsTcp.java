@@ -80,6 +80,17 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     stopSelectorThread();
   }
 
+  public int registerAcceptedSocketChannel(SocketChannel socketChannel)
+      throws IOException, InterruptedException {
+    TcpSocket socket = new TcpSocket(nextSocket++, recvContext, socketChannel);
+    sockets.put(Integer.valueOf(socket.getSocketId()), socket);
+
+    selectorMessages.put(new SelectorMessage(socket, SelectorMessageType.SO_ACCEPTED, null));
+    selector.wakeup();
+
+    return socket.getSocketId();
+  }
+
   private void create(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
     JSONObject properties = args.getJSONObject(0);
@@ -343,6 +354,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   private enum SelectorMessageType {
     SO_CONNECT,
     SO_CONNECTED,
+    SO_ACCEPTED,
     SO_DISCONNECTED,
     SO_CLOSE,
     T_STOP;
@@ -378,7 +390,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     private void processPendingMessages() {
 
       while (selectorMessages.peek() != null) {
-
         SelectorMessage msg = null;
         try {
           msg = selectorMessages.take();
@@ -388,6 +399,9 @@ public class ChromeSocketsTcp extends CordovaPlugin {
               break;
             case SO_CONNECTED:
               msg.socket.register(selector, SelectionKey.OP_READ);
+              break;
+            case SO_ACCEPTED:
+              msg.socket.register(selector, 0);
               break;
             case SO_DISCONNECTED:
               msg.socket.disconnect();
@@ -437,7 +451,14 @@ public class ChromeSocketsTcp extends CordovaPlugin {
           TcpSocket socket = (TcpSocket)key.attachment();
 
           if (key.isReadable()) {
-            socket.read();
+            try {
+              if (socket.read() < 0) {
+                selectorMessages.put(
+                    new SelectorMessage(socket, SelectorMessageType.SO_DISCONNECTED, null));
+              }
+            } catch (JSONException e) {
+            } catch (InterruptedException e) {
+            }
           }
 
           if (key.isWritable()) {
@@ -485,14 +506,30 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       channel = SocketChannel.open();
       channel.configureBlocking(false);
 
-      // set socket default options
+      setDefaultProperties();
+      setProperties(properties);
+      setBufferSize();
+    }
+
+    TcpSocket(int socketId, CallbackContext recvContext, SocketChannel acceptedSocket)
+        throws IOException {
+      this.socketId = socketId;
+      this.recvContext = recvContext;
+
+      channel = acceptedSocket;
+      channel.configureBlocking(false);
+
+      setDefaultProperties();
+      setBufferSize();
+      // accepted socket paused by default
+      paused = true;
+    }
+
+    void setDefaultProperties() {
       paused = false;
       persistent = false;
       bufferSize = 4096;
       name = "";
-
-      setProperties(properties);
-      setBufferSize();
     }
 
     void addInterestSet(int interestSet) {
@@ -648,15 +685,20 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       return info;
     }
 
-    void read() {
+    int read() throws JSONException {
 
-      if (paused) return;
+      int bytesRead = 0;
+      if (paused) return bytesRead;
 
       ByteBuffer recvBuffer = ByteBuffer.allocate(bufferSize);
       recvBuffer.clear();
 
       try {
-        channel.read(recvBuffer);
+        bytesRead = channel.read(recvBuffer);
+        if (bytesRead < 0) {
+          sendReceiveError();
+          return bytesRead;
+        }
         recvBuffer.flip();
         byte[] recvBytes = new byte[recvBuffer.limit()];
         recvBuffer.get(recvBytes);
@@ -675,8 +717,18 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         recvContext.sendPluginResult(metadataResult);
 
       } catch (IOException e) {
-      } catch (JSONException e) {
+        sendReceiveError();
       }
+      return bytesRead;
+    }
+
+    private void sendReceiveError() throws JSONException {
+      JSONObject info = new JSONObject();
+      info.put("socketId", socketId);
+      info.put("resultCode", -1000);
+      PluginResult errResult = new PluginResult(Status.ERROR, info);
+      errResult.setKeepCallback(true);
+      recvContext.sendPluginResult(errResult);
     }
 
     private class TcpSendPacket {

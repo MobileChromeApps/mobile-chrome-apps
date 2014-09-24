@@ -20,6 +20,16 @@
     <clobbers target="chrome.sockets.tcpServer" />
   </js-module>
 
+  <platform name="android">
+    <source-file src="src/android/ChromeSocketsTcpServer.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSocketsTcpServer">
+        <param name="android-package" value="org.chromium.ChromeSocketsTcpServer"/>
+      </feature>
+    </config-file>
+  </platform>
+
   <platform name="ios">
     <source-file src="src/ios/ChromeSocketsTcpServer.m" />
     <header-file src="src/ios/ChromeSocketsTcpServer.h" />

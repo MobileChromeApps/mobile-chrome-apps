@@ -19,7 +19,7 @@ exports.create = function(properties /** optional */, callback) {
 };
 
 exports.update = function(socketId, properties, callback) {
-    exec(callback, null, 'ChromeSocketsTcpServer', 'update', [properties]);
+    exec(callback, null, 'ChromeSocketsTcpServer', 'update', [socketId, properties]);
 };
 
 exports.setPaused = function(socketId, paused, callback) {
