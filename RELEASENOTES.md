@@ -4,6 +4,14 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.4.1 (Sep 24, 2014)
+* Android: Fix build warning about dynamic properties being deprecated
+* Android: Make Android Studio project imports work properly
+* Android: Faster builds by building only release/debug for sublibraries
+* Android: Make it an error to try to build android release without android-release-keys.properties
+* Fix cca create failing when not connected to the internet
+* Add platforms in one command instead of two (triggers one fewer prepares)
+
 ### v0.4.0 (Sep 18, 2014)
 * Android: Switched build system to Gradle (no more Ant)
 * Android: Now generating smaller APKs via arm/x86-specific builds

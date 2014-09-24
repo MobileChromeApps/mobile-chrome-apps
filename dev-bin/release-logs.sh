@@ -15,7 +15,14 @@ if [[ $1 = --submodule ]]; then
   cd "$toplevel"
   prevhash=$(git ls-tree $prevtag $path | awk '{print $3}')
   cd - > /dev/null
-  git log --pretty=format:'* '"$(basename $name)"': %s' --topo-order --no-merges $prevhash..HEAD
+  PREFIX=$(basename $name)
+  if [[ $PREFIX = cordova-android ]]; then
+    PREFIX=Android
+  elif [[ $PREFIX = cordova-ios ]]; then
+    PREFIX=iOS
+  fi
+  git log --pretty=format:'* '"$PREFIX"': %s' --topo-order --no-merges $prevhash..HEAD
+  echo
   exit 0
 fi
 
@@ -28,12 +35,13 @@ fi
 VERSION=$1
 
 start=HEAD
-if git describe v$VERSION 2>&1 > /dev/null; then
+if git describe v$VERSION > /dev/null 2>&1; then
   start=v$VERSION^
 fi
 prevtag=$(git describe --tags --abbrev=0 $start)
 echo "### v$VERSION ($(date "+%h %d, %Y"))"
 git log --pretty=format:'* %s' --topo-order --no-merges $prevtag..$start
+echo
 git submodule foreach --quiet $PWD'/dev-bin/release-logs.sh --submodule "$name" "$path" "$sha1" "$toplevel" '"$prevtag"
 echo
 echo
