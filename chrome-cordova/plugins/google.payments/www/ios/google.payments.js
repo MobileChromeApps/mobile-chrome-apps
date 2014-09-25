@@ -71,7 +71,15 @@ exports.inapp = {
             if (isValidProduct) {
                 // Set the purchase callback.
                 window.storekit.options.purchase = function(transactionId, productId) {
-                    options.success();
+                    options.success({
+                        request: {
+                            sku: productId,
+                            consume: options.consume
+                        },
+                        response: {
+                            orderId: transactionId
+                        }
+                    });
                 };
 
                 // Set the error callback.
