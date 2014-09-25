@@ -1,13 +1,19 @@
 package org.chromium;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -57,6 +63,16 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       getInfo(args, callbackContext);
     } else if ("getSockets".equals(action)) {
       getSockets(args, callbackContext);
+    } else if ("joinGroup".equals(action)) {
+      joinGroup(args, callbackContext);
+    } else if ("leaveGroup".equals(action)) {
+      leaveGroup(args, callbackContext);
+    } else if ("setMulticastTimeToLive".equals(action)) {
+      setMulticastTimeToLive(args, callbackContext);
+    } else if ("setMulticastLoopbackMode".equals(action)) {
+      setMulticastLoopbackMode(args, callbackContext);
+    } else if ("getJoinedGroups".equals(action)) {
+      getJoinedGroups(args, callbackContext);
     } else if ("registerReceiveEvents".equals(action)) {
       registerReceiveEvents(args, callbackContext);
     } else {
@@ -82,8 +98,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     JSONObject properties = args.getJSONObject(0);
 
     try {
-      UdpSocket socket = new UdpSocket(
-          DatagramChannel.open(), nextSocket++, recvContext, properties);
+      UdpSocket socket = new UdpSocket(nextSocket++, recvContext, properties);
       selectorMessages.put(
           new SelectorMessage(socket, SelectorMessageType.SO_CREATE, callbackContext));
       selector.wakeup();
@@ -244,6 +259,108 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     callbackContext.success(results);
   }
 
+  private void joinGroup(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+    int socketId = args.getInt(0);
+    String address = args.getString(1);
+
+    UdpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    try {
+      socket.joinGroup(address);
+      callbackContext.success();
+    } catch (UnknownHostException e) {
+      callbackContext.error(-1000);
+    } catch (IOException e) {
+      callbackContext.error(-1000);
+    }
+  }
+
+  private void leaveGroup(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+    int socketId = args.getInt(0);
+    String address = args.getString(1);
+
+    UdpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    try {
+      socket.leaveGroup(address);
+      callbackContext.success();
+    } catch (UnknownHostException e) {
+      callbackContext.error(-1000);
+    } catch (IOException e) {
+      callbackContext.error(-1000);
+    }
+  }
+
+  private void setMulticastTimeToLive(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+    int socketId = args.getInt(0);
+    int ttl = args.getInt(1);
+
+    UdpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    try {
+      socket.setMulticastTimeToLive(ttl);
+      callbackContext.success();
+    } catch (IOException e) {
+      callbackContext.error(-1000);
+    }
+  }
+
+  private void setMulticastLoopbackMode(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+    int socketId = args.getInt(0);
+    boolean enabled = args.getBoolean(1);
+
+    UdpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    try {
+      socket.setMulticastLoopbackMode(enabled);
+      callbackContext.success();
+    } catch (SocketException e) {
+      callbackContext.error(-1000);
+    }
+  }
+
+  private void getJoinedGroups(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+
+    int socketId = args.getInt(0);
+
+    UdpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      return;
+    }
+    callbackContext.success(new JSONArray(socket.getJoinedGroups()));
+  }
+
   private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
     recvContext = callbackContext;
@@ -389,9 +506,11 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   private class UdpSocket {
     private final int socketId;
     private final DatagramChannel channel;
+    private final MulticastSocket multicastSocket;
     private final CallbackContext recvContext;
 
     private BlockingQueue<UdpSendPacket> sendPackets = new LinkedBlockingQueue<UdpSendPacket>();
+    private HashSet<String> multicastGroups = new HashSet<String>();
     private SelectionKey key;
 
     private boolean paused;
@@ -400,21 +519,25 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     private String name;
     private int bufferSize;
 
-    UdpSocket(
-        DatagramChannel channel, int socketId, CallbackContext recvContext, JSONObject properties)
+    private MulticastReadThread multicastReadThread;
+
+    UdpSocket(int socketId, CallbackContext recvContext, JSONObject properties)
         throws JSONException, IOException {
 
-      this.channel = channel;
       this.socketId = socketId;
       this.recvContext = recvContext;
 
+      channel = DatagramChannel.open();
       channel.configureBlocking(false);
+      multicastSocket = new MulticastSocket(null);
 
       // set socket default options
       paused = false;
       persistent = false;
       bufferSize = 4096;
       name = "";
+
+      multicastReadThread = null;
 
       setProperties(properties);
       setBufferSize();
@@ -480,7 +603,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     void bind(String address, int port) throws SocketException {
+      channel.socket().setReuseAddress(true);
       channel.socket().bind(new InetSocketAddress(port));
+      multicastSocket.setReuseAddress(true);
+      multicastSocket.bind(new InetSocketAddress(port));
     }
 
     int send(String address, int port, byte[] data) throws IOException {
@@ -504,9 +630,16 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     void close() throws IOException {
+
       if (key != null && channel.isRegistered())
         key.cancel();
+
       channel.close();
+      multicastSocket.close();
+
+      if (multicastReadThread != null) {
+        multicastReadThread.cancel();
+      }
     }
 
     JSONObject getInfo() throws JSONException {
@@ -525,6 +658,41 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       }
 
       return info;
+    }
+
+    void joinGroup(String address) throws UnknownHostException, IOException {
+
+      if (multicastGroups.contains(address)) {
+        Log.e(LOG_TAG, "Attempted to join an already joined multicast group.");
+        return;
+      }
+
+      multicastGroups.add(address);
+      multicastSocket.joinGroup(InetAddress.getByName(address));
+
+      if (multicastReadThread == null) {
+        multicastReadThread = new MulticastReadThread(socketId, multicastSocket, recvContext);
+        multicastReadThread.start();
+      }
+    }
+
+    void leaveGroup(String address) throws UnknownHostException, IOException {
+      if (multicastGroups.contains(address)) {
+        multicastGroups.remove(address);
+        multicastSocket.leaveGroup(InetAddress.getByName(address));
+      }
+    }
+
+    void setMulticastTimeToLive(int ttl) throws IOException {
+      multicastSocket.setTimeToLive(ttl);
+    }
+
+    void setMulticastLoopbackMode(boolean enabled) throws SocketException {
+      multicastSocket.setLoopbackMode(!enabled);
+    }
+
+    public Collection<String> getJoinedGroups() {
+      return multicastGroups;
     }
 
     void read() {
@@ -564,13 +732,55 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       }
     }
 
+    private class MulticastReadThread extends Thread {
+      private final int socketId;
+      private final MulticastSocket socket;
+      private final CallbackContext recvContext;
+
+      MulticastReadThread(int socketId, MulticastSocket socket, CallbackContext recvContext) {
+        this.socketId = socketId;
+        this.socket = socket;
+        this.recvContext = recvContext;
+      }
+
+      public void run() {
+        while(!Thread.currentThread().isInterrupted()) {
+          try {
+            byte[] out = new byte[socket.getReceiveBufferSize()];
+            DatagramPacket packet = new DatagramPacket(out, out.length);
+            socket.receive(packet);
+
+            PluginResult dataResult = new PluginResult(Status.OK, out);
+            dataResult.setKeepCallback(true);
+
+            recvContext.sendPluginResult(dataResult);
+
+            JSONObject metadata = new JSONObject();
+
+            metadata.put("socketId", socketId);
+            metadata.put("remoteAddress", packet.getAddress().getHostAddress());
+            metadata.put("remotePort", packet.getPort());
+
+            PluginResult metadataResult = new PluginResult(Status.OK, metadata);
+            metadataResult.setKeepCallback(true);
+            recvContext.sendPluginResult(metadataResult);
+          } catch (IOException e) {
+          } catch (JSONException e) {
+          }
+        }
+      }
+
+      public void cancel() {
+        interrupt();
+      }
+    }
+
     private class UdpSendPacket {
       final SocketAddress address;
       final CallbackContext callbackContext;
       final ByteBuffer data;
 
-      UdpSendPacket(String address, int port, byte[] data,
-                    CallbackContext callbackContext) {
+      UdpSendPacket(String address, int port, byte[] data, CallbackContext callbackContext) {
         this.address = new InetSocketAddress(address, port);
         this.data = ByteBuffer.wrap(data);
         this.callbackContext = callbackContext;
