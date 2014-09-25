@@ -34,7 +34,7 @@ exports.inapp = {
             // Record the data for each valid product.
             var skuDetails = [];
             if (validProducts.length) {
-                validProducts.forEach(function (i, product) {
+                validProducts.forEach(function (product, i) {
                     // Add the valid product to the set of loaded items.
                     loadedItemSet[product.id] = true;
                     console.log("Loaded product: " + product.id);
