@@ -32,13 +32,13 @@
     "elementtree": "0.1.6",
     "gaze": "^0.5.1",
     "gulp-mocha": "^0.5.1",
-    "jsesc": "^0.5.0",
     "node-uuid": "^1.4.1",
     "node.extend": "",
     "optimist": "~0.6.1",
     "q": "~1",
     "semver": "^2.3.0",
-    "shelljs": "^0.3.0"
+    "shelljs": "^0.3.0",
+    "xmldom": "^0.1.19"
   },
   "files": [
     "README.md",

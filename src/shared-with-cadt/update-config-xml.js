@@ -19,51 +19,46 @@
 
 'use strict';
 
-var et = require('elementtree');
-
-module.exports = exports = function updateConfigXml(manifest, analyzedManifest, configXmlData) {
-  var jsescape = require('jsesc');
-  function escapedValueOrDefault(value, defaultValue) {
-    if (typeof value === 'undefined')
-      return defaultValue;
-    return jsescape(value);
+// configXmlDom: parsed with DOMParser.
+module.exports = exports = function updateConfigXml(manifest, analyzedManifest, configXmlDom) {
+  var widget = configXmlDom.lastChild; // firstChild is the <xml> delcaration.
+  function $(name) {
+    var ret = widget.getElementsByTagName(name);
+    return ret && ret[0];
+  }
+  function getOrCreateRootNode(name) {
+    var ret = $(name);
+    if (!ret) {
+      ret = configXmlDom.createElement(name);
+      widget.appendChild(ret);
+    }
+    return ret;
+  }
+  function setOrDeleteAttribute(node, name, value) {
+    if (value) {
+      node.setAttribute(name, value);
+    } else {
+      node.removeAttribute(name);
+    }
   }
 
-  var tree = et.parse(configXmlData);
+  widget.setAttribute('version', manifest.version || '0.0.1');
+  widget.setAttribute('id', manifest.packageId || 'com.your.company.HelloWorld');
+  setOrDeleteAttribute(widget, 'android-versionCode', manifest.versionCode);
+  setOrDeleteAttribute(widget, 'ios-CFBundleVersion', manifest.CFBundleVersion);
 
-  var widget = tree.getroot();
-  if (widget.tag == 'widget') {
-    widget.attrib.version = escapedValueOrDefault(manifest.version, '0.0.1');
-    widget.attrib.id = escapedValueOrDefault(manifest.packageId, 'com.your.company.HelloWorld');
-    if (manifest.versionCode) {
-      widget.attrib['android-versionCode'] = manifest.versionCode;
-    }
-    if (manifest.CFBundleVersion) {
-      widget.attrib['ios-CFBundleVersion'] = manifest.CFBundleVersion;
-    }
-  }
-
-  var name = tree.find('./name');
-  if (name) name.text = escapedValueOrDefault(manifest.name, 'Your App Name');
-
-  var description = tree.find('./description');
-  if (description) description.text = escapedValueOrDefault(manifest.description, 'Plain text description of this app');
-
-  var author = tree.find('./author');
-  if (author) author.text = escapedValueOrDefault(manifest.author, 'Author name and email');
-
-  var content = tree.find('./content');
-  if (content) content.attrib.src = "plugins/org.chromium.bootstrap/chromeapp.html";
+  getOrCreateRootNode('name').textContent = manifest.name || 'Your App Name';
+  getOrCreateRootNode('description').textContent = manifest.description || 'Plain text description of this app';
+  getOrCreateRootNode('author').textContent = manifest.author || 'Author Name <a@b.com>';
+  getOrCreateRootNode('content').setAttribute('src', 'plugins/org.chromium.bootstrap/chromeapp.html');
 
   var access;
-  while ((access = widget.find('./access'))) {
-    widget.remove(access);
+  while (access = $('access')) {
+    access.parentNode.removeChild(access);
   }
   analyzedManifest.whitelist.forEach(function(pattern, index) {
-    var tag = et.SubElement(widget, 'access');
-    tag.attrib.origin = pattern;
+    var tag = configXmlDom.createElement('access');
+    tag.setAttribute('origin', pattern);
+    widget.appendChild(tag);
   });
-
-  var newConfigFileContent = et.tostring(tree.getroot(), {indent: 4});
-  return newConfigFileContent;
 };

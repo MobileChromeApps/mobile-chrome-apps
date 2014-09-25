@@ -22,6 +22,7 @@
 var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
+var xmldom = require('xmldom');
 var path = require('path');
 var utils = require('./utils');
 var PluginMap = require('./shared-with-cadt/plugin-map');
@@ -56,7 +57,9 @@ module.exports = exports = function prePrepareCommand() {
     whitelist = manifestData.whitelist;
 
     var configXmlData = fs.readFileSync('config.xml', 'utf8');
-    var newConfigData = require('./shared-with-cadt/update-config-xml')(manifest, manifestData, configXmlData);
+    var configXmlDom = new xmldom.DOMParser().parseFromString(configXmlData);
+    require('./shared-with-cadt/update-config-xml')(manifest, manifestData, configXmlDom);
+    var newConfigData = new xmldom.XMLSerializer().serializeToString(configXmlDom);
     // Don't write out if nothing actually changed
     if (newConfigData != configXmlData) {
       console.log('## Updating config.xml from manifest.json');
