@@ -47,13 +47,13 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
   setOrDeleteAttribute(widget, 'android-versionCode', manifest.versionCode);
   setOrDeleteAttribute(widget, 'ios-CFBundleVersion', manifest.CFBundleVersion);
 
-  getOrCreateRootNode('name').textContent = manifest.name || 'Your App Name';
+  getOrCreateRootNode('name').textContent = manifest.name || manifest.packageId || 'Your App Name';
   getOrCreateRootNode('description').textContent = manifest.description || 'Plain text description of this app';
   getOrCreateRootNode('author').textContent = manifest.author || 'Author Name <a@b.com>';
   getOrCreateRootNode('content').setAttribute('src', 'plugins/org.chromium.bootstrap/chromeapp.html');
 
   var access;
-  while (access = $('access')) {
+  while ((access = $('access'))) {
     access.parentNode.removeChild(access);
   }
   analyzedManifest.whitelist.forEach(function(pattern, index) {

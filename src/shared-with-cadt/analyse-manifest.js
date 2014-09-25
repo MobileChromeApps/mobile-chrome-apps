@@ -57,7 +57,7 @@ function mapPermissionsToPlugins(knownPermissionsMap, requestedPermissionsList) 
   return ret;
 }
 
-module.exports = function parseManifest(manifest, options) {
+module.exports = function analyseManifest(manifest, options) {
   options = options || {};
   var ret = {
     appId: undefined,

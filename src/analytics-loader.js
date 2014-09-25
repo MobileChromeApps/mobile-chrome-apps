@@ -60,7 +60,7 @@ function requestPermission() {
   }
 
   // We have no record of permission, so ask away.
-  var promptText = 'Would you like to help make make this tool better by automatically sending usage statistics and error reports to Google?\n'
+  var promptText = 'Would you like to help make make this tool better by automatically sending usage statistics and error reports to Google?\n';
   promptText += 'This information will be used in accordance with the Google Privacy Policy (http://www.google.com/policies/privacy). [y/n] ';
   return utils.waitForKey(promptText)
   .then(function(key) {
@@ -113,7 +113,7 @@ function analyticsCommand(command) {
   if (!command) {
     var userConfig = readWriteUserConfig();
     var permission = userConfig && userConfig.analytics && userConfig.analytics.isAllowed;
-    outputText = 'Usage statistics collection is currently ' + (permission ? 'enabled' : 'disabled') + '. ';
+    var outputText = 'Usage statistics collection is currently ' + (permission ? 'enabled' : 'disabled') + '. ';
     outputText += 'To change this, run ' + usage + '.';
     console.log(outputText);
     return;

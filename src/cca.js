@@ -85,7 +85,7 @@ function main() {
       return Q.when();
     }
     if (!fs.existsSync(path.join('www', 'manifest.json'))) {
-      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?')
+      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
     }
     return require('./auto-upgrade')();
   }

@@ -18,8 +18,6 @@
  */
 var childProcess = require('child_process');
 var path = require('path');
-var Q = require('q');
-var fs = require('fs');
 
 function resolveTilde(string) {
   if (string.substr(0,1) === '~')

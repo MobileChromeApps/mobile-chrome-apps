@@ -87,9 +87,10 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     if (!appWasImported) {
       // Update app name if the app is not imported.
       return Q.ninvoke(fs, 'readFile', manifestDesktopFilename, { encoding: 'utf-8' }).then(function(manifestDesktopData) {
+        var manifestDesktop;
         try {
           // jshint evil:true
-          var manifestDesktop = eval('(' + manifestDesktopData + ')');
+          manifestDesktop = eval('(' + manifestDesktopData + ')');
           // jshint evil:false
         } catch (e) {
           console.error(e);
@@ -98,7 +99,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
         manifestDesktop.name = appName || path.basename(destAppDir);
         manifest.name = manifestDesktop.name;
         Q.ninvoke(fs, 'writeFile', manifestDesktopFilename, JSON.stringify(manifestDesktop, null, 4));
-      })
+      });
     }
   })
   .then(function() {
@@ -111,6 +112,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
   .then(function() {
     // Update default packageId if needed.
     return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' }).then(function(manifestMobileData) {
+      var manifestMobile;
       try {
         // jshint evil:true
         manifestMobile = eval('(' + manifestMobileData + ')');
@@ -123,7 +125,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
         manifestMobile.packageId = packageId || ('com.your.company.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
         Q.ninvoke(fs, 'writeFile', manifestMobileFilename, JSON.stringify(manifestMobile, null, 4));
       }
-    })
+    });
   })
   .then(function() {
     // If there is no config.xml, or the config.xml is the cordova default, replace it with our default
@@ -133,7 +135,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     }
   })
   .then(function() {
-    return require('./get-manifest')('www')
+    return require('./get-manifest')('www');
   })
   .then(function(manifestJson) {
     var configXmlData = fs.readFileSync('config.xml', 'utf8');

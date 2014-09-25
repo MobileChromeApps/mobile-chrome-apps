@@ -1,7 +1,6 @@
 var Q = require('q');
 var path = require('path');
 var childProcess = require('child_process');
-var fs = require('fs');
 
 exports.exit = function exit(code) {
   if (exports.exit.pause_on_exit) {

@@ -6,7 +6,7 @@ var utils = require('./utils');
 module.exports = exports = function upgradeProject(skipPrompt) {
   return Q.fcall(function() {
     if (skipPrompt) return 'y';
-    return utils.waitForKey('Warning: Upgrade will replace all files in platforms and plugins. Continue? [y/N] ')
+    return utils.waitForKey('Warning: Upgrade will replace all files in platforms and plugins. Continue? [y/N] ');
   })
   .then(function(key) {
     if (key != 'y' && key != 'Y') {

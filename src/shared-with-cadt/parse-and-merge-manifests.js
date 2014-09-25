@@ -18,8 +18,8 @@
  */
 
 // Returns a promise for the manifest contents.
-module.exports = exports = function getManifest(manifestPath, platform, readFileFunc, Q) {
-  var manifestMobilePath = manifestPath.replace(/manifest.json$/, 'manifest.mobile.json')
+module.exports = exports = function parseAndMergeManifests(manifestPath, platform, readFileFunc, Q) {
+  var manifestMobilePath = manifestPath.replace(/manifest.json$/, 'manifest.mobile.json');
   var manifest, manifestMobile;
 
   return readFileFunc(manifestPath).then(function(manifestData) {

@@ -19,7 +19,6 @@
 
 'use strict';
 
-var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
 var xmldom = require('xmldom');
@@ -69,7 +68,7 @@ module.exports = exports = function prePrepareCommand() {
   .then(function() {
     if (/android/.exec(process.env['CORDOVA_PLATFORMS']) && argv['release']) {
       if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
-        utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.')
+        utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.');
       }
     }
     // Add a URL type to the iOS project's .plist file.
@@ -114,7 +113,7 @@ module.exports = exports = function prePrepareCommand() {
   })
   .then(function(installedPlugins) {
     // Convert all plugin IDs to lower case (registry has problems with upper case).
-    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase()})
+    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase(); });
     var missingPlugins = pluginsToBeInstalled.filter(function(p) {
       return installedPlugins.indexOf(p) == -1;
     });
