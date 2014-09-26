@@ -445,7 +445,6 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
         channel = ServerSocketChannel.open();
         channel.configureBlocking(false);
       }
-      channel.socket().setReuseAddress(true);
     }
 
     void listen(String address, int port) throws IOException {
