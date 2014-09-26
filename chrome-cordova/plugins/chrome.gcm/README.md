@@ -8,7 +8,7 @@ Supported on Android
 
 ## Reference
 
-The API reference is [here](https://developer.chrome.com/apps/cloudMessagingV2).
+The API reference is [here](https://developer.chrome.com/apps/gcm), and a full description on how to set up Google Cloud Messaging is [here](https://developer.chrome.com/apps/cloudMessaging).
 
 ## Dependencies
 
