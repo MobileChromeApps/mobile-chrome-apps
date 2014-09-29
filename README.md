@@ -27,6 +27,8 @@ With CADT running on your mobile device, live deploy can be initiated from your 
 
 CDE is an IDE built specifically for Chrome Apps. Use it with CADT for live deploy.
 
+![Using CDE, cca, and CADT to develop Chrome Apps for Mobile](docs/images/cde-cadt-diagram.png)
+
 ## Try it out
 
 Try out Chrome Apps for Mobile by following these steps:
