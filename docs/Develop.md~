@@ -2,8 +2,6 @@
 
 ### Tools Overview
 
-![Using CDE, cca, and CADT to develop Chrome Apps for Mobile](images/cde-cadt-diagram.png)
-
 #### [Chrome App Developer Tool for Mobile (CADT)](https://github.com/MobileChromeApps/chrome-app-developer-tool/)
 
 CADT is an app for your mobile development device that makes it quick and easy to see your code in action. It provides the Cordova framework of Chrome Apps for Mobile so you can test your code by simply pushing your Chrome App assets to your mobile device (made easy with our tools), which is much faster than packaging up the entire mobile app. This is called **live deploy**.

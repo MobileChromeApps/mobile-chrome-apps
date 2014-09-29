@@ -13,8 +13,6 @@ For an overview and demo of hybrid development, Chrome Apps for Mobile, and our 
 
 ## Tools
 
-![Using CDE, cca, and CADT to develop Chrome Apps for Mobile](docs/images/cde-cadt-diagram.png)
-
 ### [Chrome App Developer Tool for Mobile (CADT)](https://github.com/MobileChromeApps/chrome-app-developer-tool/)
 
 CADT is an app for your mobile development device that makes it quick and easy to see your code in action. It provides the Cordova framework of Chrome Apps for Mobile so you can test your code by simply pushing your Chrome App assets to your mobile device (made easy with our tools), which is must faster than packaging up the entire mobile app. This is called **live deploy**.
@@ -28,6 +26,8 @@ With CADT running on your mobile device, live deploy can be initiated from your 
 ### [Chrome Dev Editor (CDE)](https://github.com/dart-lang/chromedeveditor)
 
 CDE is an IDE built specifically for Chrome Apps. Use it with CADT for live deploy.
+
+![Using CDE, cca, and CADT to develop Chrome Apps for Mobile](docs/images/cde-cadt-diagram.png)
 
 ## Try it out
 
