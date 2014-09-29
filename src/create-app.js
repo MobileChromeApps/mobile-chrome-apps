@@ -3,6 +3,7 @@ var Q = require('q');
 var fs = require('fs');
 var shelljs = require('shelljs');
 var xmldom = require('xmldom');
+var ccaManifestLogic = require('cca-manifest-logic');
 
 function resolveTilde(string) {
   // TODO: implement better
@@ -139,9 +140,9 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
   })
   .then(function(manifestJson) {
     var configXmlData = fs.readFileSync('config.xml', 'utf8');
-    var analyzedManifest = require('./shared-with-cadt/analyse-manifest')(manifestJson);
+    var analyzedManifest = ccaManifestLogic.analyseManifest(manifestJson);
     var configXmlDom = new xmldom.DOMParser().parseFromString(configXmlData);
-    require('./shared-with-cadt/update-config-xml')(manifestJson, analyzedManifest, configXmlDom);
+    ccaManifestLogic.updateConfigXml(manifestJson, analyzedManifest, configXmlDom);
     configXmlData = new xmldom.XMLSerializer().serializeToString(configXmlDom);
     fs.writeFileSync('config.xml', configXmlData);
     return require('./write-out-cca-version')();

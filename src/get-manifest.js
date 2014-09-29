@@ -20,7 +20,7 @@
 var fs = require('fs');
 var path = require('path');
 var Q = require('q');
-var parseAndMergeManifests = require('./shared-with-cadt/parse-and-merge-manifests');
+var ccaManifestLogic = require('cca-manifest-logic');
 
 // Returns a promise for the manifest contents.
 module.exports = exports = function getManifest(manifestDir, platform) {
@@ -28,5 +28,5 @@ module.exports = exports = function getManifest(manifestDir, platform) {
   function readFileFunc(p) {
     return Q.ninvoke(fs, 'readFile', p, 'utf8');
   }
-  return parseAndMergeManifests(manifestFilename, platform, readFileFunc, Q);
+  return ccaManifestLogic.parseAndMergeManifests(manifestFilename, platform, readFileFunc, Q);
 };

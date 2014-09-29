@@ -24,6 +24,7 @@
     "crypto-js": "is not meant to be pinned, but 3.1.2-5 IS later than 3.1.2 (incorrect use of semver), and this works"
   },
   "dependencies": {
+    "cca-manifest-logic": "0.0.1",
     "chrome-app-developer-tool-client": "0.0.2",
     "cordova": "^3.6.1-0.2.10",
     "cordova-lib": "^0.21.6",

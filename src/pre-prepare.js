@@ -24,8 +24,7 @@ var et = require('elementtree');
 var xmldom = require('xmldom');
 var path = require('path');
 var utils = require('./utils');
-var PluginMap = require('./shared-with-cadt/plugin-map');
-var analyseManifest = require('./shared-with-cadt/analyse-manifest');
+var ccaManifestLogic = require('cca-manifest-logic');
 
 // Returns a promise.
 module.exports = exports = function prePrepareCommand() {
@@ -44,11 +43,11 @@ module.exports = exports = function prePrepareCommand() {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return analyseManifest(manifest, { webview: argv.webview });
+    return ccaManifestLogic.analyseManifest(manifest, { webview: argv.webview });
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(PluginMap.DEFAULT_PLUGINS);
-    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat(PluginMap.STALE_PLUGINS);
+    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat();
+    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat();
     pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
       return pluginsToBeInstalled.indexOf(plugin) == -1;
     });
@@ -57,7 +56,7 @@ module.exports = exports = function prePrepareCommand() {
 
     var configXmlData = fs.readFileSync('config.xml', 'utf8');
     var configXmlDom = new xmldom.DOMParser().parseFromString(configXmlData);
-    require('./shared-with-cadt/update-config-xml')(manifest, manifestData, configXmlDom);
+    ccaManifestLogic.updateConfigXml(manifest, manifestData, configXmlDom);
     var newConfigData = new xmldom.XMLSerializer().serializeToString(configXmlDom);
     // Don't write out if nothing actually changed
     if (newConfigData != configXmlData) {

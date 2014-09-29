@@ -65,6 +65,10 @@ Vim helper command:
     git push origin master
 
 
+## Publish cca-manifest-logic Module (if changes exist)
+
+TODO
+
 ## Update npm Dependencies
 
 First, make sure to unlink any local modules.  I like to just start with:
