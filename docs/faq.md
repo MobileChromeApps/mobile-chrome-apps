@@ -30,7 +30,7 @@ Core web features vary by the underlying WebView (e.g. iOS 6 vs iOS 7 vs Android
 
 ### Which Chrome APIs are supported?
 
-Chrome API support is tracked within [APIStatus.md](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md).
+Chrome API support is tracked within [APIsAndLibraries.md](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIsAndLibraries.md).
 
 
 ### Is NaCL / PNaCL supported?

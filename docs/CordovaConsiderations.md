@@ -20,7 +20,7 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 
 ### Supported Chrome APIs 
 
-We've made many of the core Chrome APIs [available to Chrome Apps for Mobile](APIStatus.md).
+We've made many of the core Chrome APIs [available to Chrome Apps for Mobile](APIsAndLibraries.md).
 
 However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desktop features are available on mobile:
 

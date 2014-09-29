@@ -129,9 +129,9 @@ pages.forEach(function(page, i){
           anchorHref = anchorHref
                           .replace('https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/','')
                           .replace('docs/','');
-          if ( anchorHref.indexOf('APIStatus.md') > -1 ) {
-            // API Status page will always be on Github so link to it
-            $(element).attr('href', 'https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIStatus.md');
+          if ( anchorHref.indexOf('APIsAndLibraries.md') > -1 ) {
+            // API status and libraries page will always be on Github so link to it
+            $(element).attr('href', 'https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/APIsAndLibraries.md');
           }
           else if ( anchorHref.indexOf('#') > -1 ) {
             // already an anchor so strip out the file name and hope it works as a link still...
