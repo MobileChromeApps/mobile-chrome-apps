@@ -118,7 +118,14 @@ function main() {
     },
     'push': function() {
       printCcaVersionPrefix();
-      return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
+      return Q.fcall(function() {
+        var extraFlag = commandLineFlags._[1] || '';
+        if (extraFlag) {
+          require('optimist').showHelp(console.log);
+          return Q.reject('Flag "' + extraFlag + '" not understood.  Did you mean `--target=' + extraFlag + '`?');
+        }
+        return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
+      });
     },
     'run': function() {
       printCcaVersionPrefix();
