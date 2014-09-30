@@ -47,11 +47,11 @@ registerAutoTests('chrome.system.display', function() {
     done();
   });
   
-  it('should have getInfo exist', function() {
-    expect(chrome.system.display.getInfo).toBeDefined();
-  });
-
   describe('getInfo', function() {
+    it('should exist', function() {
+      expect(chrome.system.display.getInfo).toBeDefined();
+    });
+
     it('should return an array of displays', function(done) {
       chrome.system.display.getInfo(function(displays) {
         expect(displays).toBeDefined();

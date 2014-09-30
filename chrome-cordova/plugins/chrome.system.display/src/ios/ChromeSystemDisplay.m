@@ -11,21 +11,11 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
-@interface ChromeSystemDisplay () {
-    NSOperationQueue* _executor;
-}
-- (void)_getInfo:(CDVInvokedUrlCommand*)command;
-@end
-
 @implementation ChromeSystemDisplay
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
 {
     self = [super initWithWebView:theWebView];
-    if (self) {
-        _executor = [NSOperationQueue new];
-        [_executor setMaxConcurrentOperationCount:1];
-    }
     return self;
 }
 
@@ -108,40 +98,34 @@
     [displayInfo setObject:[self getOverscan:display] forKey:@"overscan"];
     [displayInfo setObject:[self getWorkArea:display] forKey:@"workArea"];
 
-    // mirroringSourceId, isInternal and isEnabled cannot be retrieved at this moment.
-
     return displayInfo;
 }
 
 - (void)getInfo:(CDVInvokedUrlCommand*)command
 {
-    NSInvocationOperation* operation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(_getInfo:) object:command];
-    [_executor addOperation:operation];
-}
+    [self.commandDelegate runInBackground:^{
+        CDVPluginResult* pluginResult = nil;
 
-- (void)_getInfo:(CDVInvokedUrlCommand*)command
-{
-    CDVPluginResult* pluginResult = nil;
+        @try {
 
-    @try {
-
-        NSMutableArray* displays = [NSMutableArray array];
+            NSMutableArray* displays = [NSMutableArray array];
         
-        UIScreen* mainScreen = [UIScreen mainScreen];
-        NSArray* screens = [UIScreen screens];
-        int i = 0;
-        for (UIScreen* screen in screens) {
-            [displays addObject:[self getDisplayInfo:screen displayIndex:i mainDisplay:mainScreen]];
-            i++;
+            UIScreen* mainScreen = [UIScreen mainScreen];
+            NSArray* screens = [UIScreen screens];
+            int i = 0;
+            for (UIScreen* screen in screens) {
+                [displays addObject:[self getDisplayInfo:screen displayIndex:i mainDisplay:mainScreen]];
+                i++;
+            }
+
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:displays];
+        } @catch (NSException* exception) {
+            VERBOSE_LOG(@"%@ - %@", @"Error occured while getting display info", [exception debugDescription]);
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get display info"];
         }
 
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:displays];
-    } @catch (NSException* exception) {
-        VERBOSE_LOG(@"%@ - %@", @"Error occured while getting display info", [exception debugDescription]);
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get display info"];
-    }
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];    
 }
 
 @end

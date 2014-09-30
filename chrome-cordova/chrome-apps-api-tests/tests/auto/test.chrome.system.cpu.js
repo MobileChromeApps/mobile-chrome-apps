@@ -17,12 +17,12 @@ registerAutoTests('chrome.system.cpu', function() {
       };
     },
 
-    toBeNumber : function(util, customEqualityTesters) {
+    toHaveProperty : function(util, customEqualityTesters) {
       return {
-        compare : function(actual, expected){
+        compare : function(actual, propName, propType){
           var result = {};
-          result.pass = (typeof actual === 'number');
-          result.message = 'Expected ' + actual + ' to be a number.'; 
+          result.pass = ((void 0 !== actual[propName]) && (propType ? (typeof actual[propName] === propType) : true));
+          result.message = 'Expected ' + actual + ' to have property ' + propName + (propType ? ' of type ' + propType : '');
           return result;
         }
       };
@@ -45,11 +45,11 @@ registerAutoTests('chrome.system.cpu', function() {
     done();
   });
   
-  it('should have getInfo exist', function() {
-    expect(chrome.system.cpu.getInfo).not.toBeUndefined();
-  });
-
   describe('getInfo', function() {
+    it('should exist', function() {
+      expect(chrome.system.cpu.getInfo).toBeDefined();
+    });
+
     it('should return an info object', function(done) {
       chrome.system.cpu.getInfo(function(info) {
         expect(info).toBeDefined();
@@ -63,8 +63,7 @@ registerAutoTests('chrome.system.cpu', function() {
       chrome.system.cpu.getInfo(function(info) {
     
         // integer: numOfProcessors
-        expect(info.numOfProcessors).toBeDefined();
-        expect(info.numOfProcessors).toBeNumber();
+        expect(info).toHaveProperty('numOfProcessors', 'number');
         expect(info.numOfProcessors).toBeGreaterThan(0);
     
         done();
@@ -75,8 +74,7 @@ registerAutoTests('chrome.system.cpu', function() {
       chrome.system.cpu.getInfo(function(info) {
     
         // string: archName
-        expect(info.archName).toBeDefined();
-        expect(info.archName).toBeString();
+        expect(info).toHaveProperty('archName', 'string');
         expect(info.archName.length).toBeGreaterThan(0);
     
         done();
@@ -87,8 +85,7 @@ registerAutoTests('chrome.system.cpu', function() {
       chrome.system.cpu.getInfo(function(info) {
     
         // string: modelName
-        expect(info.modelName).toBeDefined();
-        expect(info.modelName).toBeString();
+        expect(info).toHaveProperty('modelName', 'string');
         expect(info.modelName.length).toBeGreaterThan(0);
     
         done();
@@ -118,7 +115,22 @@ registerAutoTests('chrome.system.cpu', function() {
         expect(info.processors).toBeArray();
         expect(info.processors.length).toBe(info.numOfProcessors);
         info.processors.forEach(function(proc) {
-          //expect(proc).toBeString();
+          expect(proc).toHaveProperty('usage');
+          
+          var statNames = ['total', 'kernel', 'idle', 'user'];
+          var totalUsage = 0;
+          statNames.forEach(function(stat) {
+            expect(proc.usage).toHaveProperty(stat, 'number');
+            if (stat !== 'kernel') {
+              // On ios, it seems that kernel usage is always 0
+              expect(proc.usage[stat]).toBeGreaterThan(0);
+            }
+            if (stat !== 'total') {
+              totalUsage += proc.usage[stat];
+            }
+          });
+          
+          expect(proc.usage.total).toEqual(totalUsage);
         });
 
         done();

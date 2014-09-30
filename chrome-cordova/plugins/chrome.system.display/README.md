@@ -12,7 +12,7 @@ be retrieved.
 
 ## Status
 
-Alpha quality on Android; not yet supported on iOS.
+Alpha quality on Android and iOS.
 
 ## Reference
 
