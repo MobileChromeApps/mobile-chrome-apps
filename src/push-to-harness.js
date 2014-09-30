@@ -21,7 +21,7 @@ module.exports = exports = function push(target, watch) {
     return ret.then(function(targets) {
       return createSession(targets);
     }).then(function(session) {
-      return pushAll(session.clientInfos)
+      return pushAll(session.clientInfos, /* forceLaunch */ true)
       .then(function() {
         if (watch) {
           return watchFiles(session);
@@ -104,7 +104,7 @@ function createSession(targets) {
 
 var pushInProgress = false;
 var pushAgainWhenDone = false;
-function pushAll(clientInfos) {
+function pushAll(clientInfos, forceLaunch) {
   if (pushInProgress) {
     pushAgainWhenDone = true;
     return Q();
@@ -112,7 +112,7 @@ function pushAll(clientInfos) {
   pushInProgress = true;
   var allPromises = clientInfos.map(function(clientInfo) {
     try {
-      return clientInfo.pushSession.push();
+      return clientInfo.pushSession.push(forceLaunch);
     } catch (e) {
       if (/Not a Cordova project/.test(e)) {
         console.warn('Please navigate to a Chrome App or Cordova project, and then try pushing again.');
@@ -126,7 +126,7 @@ function pushAll(clientInfos) {
   .then(function() {
     if (pushAgainWhenDone) {
       process.nextTick(function() {
-        pushAll(clientInfos).done();
+        pushAll(clientInfos, /* forceLaunch */ false).done();
       });
     }
     pushInProgress = false;
@@ -139,7 +139,7 @@ function pushAll(clientInfos) {
 }
 
 var debouncedPushAll = debounce(function(clientInfos) {
-  pushAll(clientInfos).done();
+  pushAll(clientInfos, /* forceLaunch */ false).done();
 }, 50, false);
 
 function watchFiles(session) {
