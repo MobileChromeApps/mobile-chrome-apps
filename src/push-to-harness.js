@@ -21,6 +21,7 @@ module.exports = exports = function push(target, watch) {
     return ret.then(function(targets) {
       return createSession(targets);
     }).then(function(session) {
+      // Push the app and force a launch, even if it hasn't changed from a previous launch, since the app is being pushed for the first time.
       return pushAll(session.clientInfos, /* forceLaunch */ true)
       .then(function() {
         if (watch) {
@@ -104,6 +105,10 @@ function createSession(targets) {
 
 var pushInProgress = false;
 var pushAgainWhenDone = false;
+// gaze uses fs.watchFile, which is classified as "unstable" (http://goo.gl/H16j5l).
+// It sometimes causes multiple change events to be fired, and they're far enough apart that debouncing is ineffective.
+// To deal with this, CADT-client's push functionality doesn't relaunch an app with no changes unless `forceLaunch` is true.
+// Calls to `pushAll` can specify whether to force a launch.
 function pushAll(clientInfos, forceLaunch) {
   if (pushInProgress) {
     pushAgainWhenDone = true;
@@ -126,6 +131,7 @@ function pushAll(clientInfos, forceLaunch) {
   .then(function() {
     if (pushAgainWhenDone) {
       process.nextTick(function() {
+        // Push, but don't force a launch if the app hasn't changed.
         pushAll(clientInfos, /* forceLaunch */ false).done();
       });
     }
@@ -139,6 +145,7 @@ function pushAll(clientInfos, forceLaunch) {
 }
 
 var debouncedPushAll = debounce(function(clientInfos) {
+  // Push, but don't force a launch if the app hasn't changed.
   pushAll(clientInfos, /* forceLaunch */ false).done();
 }, 50, false);
 
