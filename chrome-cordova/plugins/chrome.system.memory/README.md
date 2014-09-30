@@ -4,7 +4,7 @@ This plugin provides the ability to get physical memory information.
 
 ## Status
 
-Stable on Android; not yet supported on iOS.
+Stable on Android and iOS.
 
 ## Caveats
 

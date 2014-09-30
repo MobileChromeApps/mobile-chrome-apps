@@ -6,7 +6,6 @@
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
 #import <arpa/inet.h>
-#import <ifaddrs.h>
 #import <netdb.h>
 
 #ifndef CHROME_SOCKET_VERBOSE_LOGGING
@@ -621,40 +620,6 @@ static NSString* stringFromData(NSData* data) {
     }
 
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:socketInfo] callbackId:command.callbackId];
-}
-
-- (void)getNetworkList:(CDVInvokedUrlCommand*)command
-{
-    NSMutableArray* ret = [NSMutableArray array];
-
-    struct ifaddrs *interfaces = NULL;
-    struct ifaddrs *temp_addr = NULL;
-
-    // retrieve the current interfaces - returns 0 on success
-    // @"en0" wifi connection, @"pdp_ip0" cell connection
-    if(!getifaddrs(&interfaces)) {
-        // Loop through linked list of interfaces
-        temp_addr = interfaces;
-        while(temp_addr != NULL) {
-            sa_family_t sa_type = temp_addr->ifa_addr->sa_family;
-            if(sa_type == AF_INET || sa_type == AF_INET6) {
-                NSString *name = [NSString stringWithUTF8String:temp_addr->ifa_name];
-                NSString *addr = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)]; // pdp_ip0
-                if (![name hasPrefix:@"lo"] && ![addr isEqualToString:@"0.0.0.0"]) {
-                    VERBOSE_LOG(@"NTFY networkList -- name: %@ = addr: %@", name, addr);
-                    [ret addObject:@{
-                              @"name": name,
-                           @"address": addr
-                    }];
-                }
-            }
-            temp_addr = temp_addr->ifa_next;
-        }
-        // Free memory
-        freeifaddrs(interfaces);
-    }
-
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:ret] callbackId:command.callbackId];
 }
 
 - (void)joinGroup:(CDVInvokedUrlCommand*)command

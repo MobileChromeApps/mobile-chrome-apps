@@ -6,22 +6,36 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.system.memory"
-    version="1.0.1-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome System Memory API</name>
+  <keywords>chrome,system,memory</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
+
+  <js-module src="system.memory.js" name="system.memory">
+    <clobbers target="chrome.system.memory" />
+  </js-module>
 
   <platform name="android">
-    <js-module src="system.memory.js" name="system.memory">
-      <clobbers target="chrome.system.memory" />
-    </js-module>
     <source-file src="src/android/ChromeSystemMemory.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeSystemMemory">
         <param name="android-package" value="org.chromium.ChromeSystemMemory"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeSystemMemory.m" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSystemMemory">
+        <param name="ios-package" value="ChromeSystemMemory"/>
       </feature>
     </config-file>
   </platform>

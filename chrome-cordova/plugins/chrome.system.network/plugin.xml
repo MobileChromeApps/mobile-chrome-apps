@@ -6,22 +6,36 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.system.network"
-    version="1.0.1-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome System Network API</name>
+  <keywords>chrome,system,network</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
+
+  <js-module src="system.network.js" name="system.network">
+    <clobbers target="chrome.system.network" />
+  </js-module>
 
   <platform name="android">
-    <js-module src="system.network.js" name="system.network">
-      <clobbers target="chrome.system.network" />
-    </js-module>
     <source-file src="src/android/ChromeSystemNetwork.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeSystemNetwork">
         <param name="android-package" value="org.chromium.ChromeSystemNetwork"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeSystemNetwork.m" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSystemNetwork">
+        <param name="ios-package" value="ChromeSystemNetwork"/>
       </feature>
     </config-file>
   </platform>

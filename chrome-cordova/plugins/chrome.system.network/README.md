@@ -4,7 +4,7 @@ This plugin provides the ability to retrieve information about local network ada
 
 ## Status
 
-Stable on Android; not yet supported on iOS.
+Stable on Android and iOS.
 
 ## Reference
 
