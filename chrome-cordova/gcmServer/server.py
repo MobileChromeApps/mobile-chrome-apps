@@ -11,8 +11,6 @@ unacked_messages_quota = 1000
 send_queue = []
 client = None
 
-connected_users = {}
-
 ################################################################################
 
 # Return a random alphanumerical id
@@ -20,31 +18,6 @@ def random_id():
   chars = string.ascii_letters + string.digits
   rid = ''.join(random.choice(chars) for i in range(8))
   return rid
-
-################################################################################
-
-def updateScore(regid, data):
-  oldscore = 0
-  if connected_users.has_key(regid):
-    oldscore = connected_users[regid]['score']
-  connected_users[regid] = {
-    'score': data['score'],
-    'name': data['name']
-  }
-  sendGcmToUsersWhoseScoreWasBeaten(oldscore, data['score'], data['name'])
-
-################################################################################
-
-def sendGcmToUsersWhoseScoreWasBeaten(oldscore, newscore, name):
-  # find users with [oldscore, newscore)
-  for regid in connected_users:
-    user = connected_users[regid]
-    if not (user['score'] >= oldscore and user['score'] < newscore):
-      return
-    sendMessage(regid, {
-        'type': 'scoreBeaten',
-        'name': name
-      })
 
 ################################################################################
 
@@ -61,7 +34,6 @@ def send(json_dict):
   template = "<message><gcm xmlns='google:mobile:data'>{1}</gcm></message>"
   content = template.format(client.Bind.bound[0], json.dumps(json_dict))
   client.send(xmpp.protocol.Message(node = content))
-  #print "Sent: " + json.dumps(json_dict, indent=2)
 
 ################################################################################
 
