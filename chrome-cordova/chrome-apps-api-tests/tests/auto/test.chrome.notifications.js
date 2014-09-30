@@ -6,6 +6,22 @@ registerAutoTests("chrome.notifications", function() {
   'use strict';
   var testTimeout = 2000;
 
+  function clearAllNotifications(callback) {
+    chrome.notifications.getAll(function clearNotifications(notifications) {
+      var notificationArray = Object.keys(notifications);
+      if (notificationArray.length === 0) {
+        callback();
+        return;
+      } else {
+        chrome.notifications.clear(notificationArray[0], function() {
+          delete notifications[notificationArray[0]];
+          clearNotifications(notifications);
+        });
+      }
+    });
+  }
+
+
   it('should contain definitions', function() {
     expect(chrome.notifications).toBeDefined();
     expect(chrome.notifications.create).toBeDefined();
@@ -32,21 +48,6 @@ registerAutoTests("chrome.notifications", function() {
       });
      }
 
-    function clearAllNotifications(callback) {
-      chrome.notifications.getAll(function clearNotifications(notifications) {
-        var notificationArray = Object.keys(notifications);
-        if (notificationArray.length == 0) {
-          callback();
-          return;
-        } else {
-          chrome.notifications.clear(notificationArray[0], function() {
-            delete notifications[notificationArray[0]];
-            clearNotifications(notifications);
-          });
-        }
-      });
-    }
-
     function checkNotificationsEqual(expected, callback) {
       chrome.notifications.getAll(function(notifications) {
         for (var id in notifications) {
@@ -64,12 +65,13 @@ registerAutoTests("chrome.notifications", function() {
            compare : function(actual, expected){
              var result = {};
              result.pass = (typeof actual == 'string');
-             result.message = 'Expected ' + actual + ' to be a string.'; 
+             result.message = 'Expected ' + actual + ' to be a string.';
              return result;
            }
-         }
+         };
        }
-    }
+    };
+
     beforeEach(function(done) {
       ids = [ 'id0', 'id1' ];
       options = {'type':'basic', 'iconUrl':'assets/icon-128x128.png', 'title':'Notification Title',
@@ -118,4 +120,99 @@ registerAutoTests("chrome.notifications", function() {
       });
     });
   });
+
+  describe('parameter validation for notifications', function() {
+
+    function createNotificationWithMissingOption(done) {
+      createInvalidNotification(done, true, true);
+    }
+
+    function createNotificationWithInvalidOptionValue(done) {
+      createInvalidNotification(done, false, false);
+    }
+
+    function createInvalidNotification(done, notificationCallbackShouldExecute, lastErrorShouldBeSet) {
+      var callbackExecuted = false;
+      var lastErrorSet = false;
+
+      chrome.notifications.create(ids[0], options, function(id0) {
+        callbackExecuted = true;
+        lastErrorSet = (chrome.runtime.lastError !== null);
+      });
+
+      // Wait briefly to give the callback time to be executed
+      setTimeout(function() {
+        expect(callbackExecuted).toBe(notificationCallbackShouldExecute);
+        expect(lastErrorSet).toBe(lastErrorShouldBeSet);
+        done();
+      }, 250);
+    }
+
+    function checkNotificationsEmpty(callback) {
+      chrome.notifications.getAll(function(notifications) {
+        for (var id in notifications) {
+          expect(ids).not.toContain(id);
+        }
+        callback();
+      });
+    }
+
+    function removeOption(paramToOmit)
+    {
+      delete options[paramToOmit];
+    }
+
+    var ids;
+    var options;
+    var customMatchers = {
+      toBeString : function(util,customEqualityTesters){
+        return {
+          compare : function(actual, expected){
+            var result = {};
+            result.pass = (typeof actual == 'string');
+            result.message = 'Expected ' + actual + ' to be a string.';
+            return result;
+          }
+        };
+      }
+    };
+
+    beforeEach(function(done) {
+      ids = [ 'id0', 'id1' ];
+      options = {'type':'basic', 'iconUrl':'assets/icon-128x128.png', 'title':'Notification Title','message':'Notification Message' };
+      addMatchers(customMatchers);
+      done();
+    });
+
+    afterEach(function(done) {
+      clearAllNotifications(function() {
+        done();
+      });
+    });
+
+    it('create should require: type', function(done) {
+      removeOption('type');
+      createNotificationWithMissingOption(done);
+    });
+
+    it('create should require: iconUrl', function(done) {
+      removeOption('iconUrl');
+      createNotificationWithMissingOption(done);
+    });
+
+    it('create should require: title', function(done) {
+      removeOption('title');
+      createNotificationWithMissingOption(done);
+    });
+
+    it('create should require: message', function(done) {
+      removeOption('message');
+      createNotificationWithMissingOption(done);
+    });
+
+    it('create should enforce valid value for: type', function(done) {
+      options.type = 'invalid';
+      createNotificationWithInvalidOptionValue(done);
+    });
+  }); // describe 'parameter validation'
 });
