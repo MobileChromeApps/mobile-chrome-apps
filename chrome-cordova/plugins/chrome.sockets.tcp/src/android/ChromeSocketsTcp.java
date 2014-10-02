@@ -248,7 +248,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     if (!socket.isConnected()) {
-      Log.e(LOG_TAG, "Socket is not connected with hsot " + socketId);
+      Log.e(LOG_TAG, "Socket is not connected with host " + socketId);
       callbackContext.error(-1000);
       return;
     }
@@ -522,6 +522,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     private SocketChannel channel;
 
     private SSLEngine sslEngine;
+    private JSONObject sslOptions;
     // Buffer used to decrypt ssl data, we have no control on its size
     private ByteBuffer sslPeerAppData;
     private ByteBuffer sslPeerNetData;
@@ -548,6 +549,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       channel.configureBlocking(false);
 
       sslEngine = null;
+      sslOptions = null;
 
       setDefaultProperties();
       setProperties(properties);
@@ -778,13 +780,36 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       sslPeerNetData = newBuffer;
     }
 
-    void setUpSSLEngine() {
+    void setUpSSLEngine() throws JSONException {
       try {
         sslEngine = SSLContext.getDefault().createSSLEngine();
         sslEngine.setUseClientMode(true);
         sslPeerNetData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
         sslNetData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
         sslPeerAppData = ByteBuffer.allocate(sslEngine.getSession().getApplicationBufferSize());
+
+        String minVersion = "";
+        String maxVersion = "";
+        if (sslOptions != null && !sslOptions.isNull("tlsVersion")) {
+          JSONObject tlsVersion = sslOptions.getJSONObject("tlsVersion");
+
+          if (!tlsVersion.isNull("min")) {
+            minVersion = tlsVersion.getString("min");
+          }
+
+          if (!tlsVersion.isNull("max")) {
+            maxVersion = tlsVersion.getString("max");
+          }
+        }
+
+        if (minVersion.startsWith("tls")) {
+          sslEngine.setEnabledProtocols(new String[] {"TLSv1"});
+        }
+
+        if (maxVersion.startsWith("ssl")) {
+          sslEngine.setEnabledProtocols(new String[] {"SSLv3"});
+        }
+
         sslEngine.beginHandshake();
       } catch (SSLException e) {
         handshakeFailed();
@@ -801,6 +826,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       if (sslEngine != null)
         return;
       secureCallback = callbackContext;
+      sslOptions = options;
     }
 
     void addSendPacket(byte[] data, CallbackContext callbackContext) {
