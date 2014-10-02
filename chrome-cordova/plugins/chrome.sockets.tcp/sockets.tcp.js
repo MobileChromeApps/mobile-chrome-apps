@@ -47,7 +47,14 @@ exports.disconnect = function(socketId, callback) {
 };
 
 exports.secure = function(socketId, options, callback) {
-    console.warn('chrome.sockets.tcp.secure not implemented yet');
+    if (typeof options == 'function') {
+        callback = options;
+        options = {};
+    }
+    var win = callback && function() {
+        callback(0);
+    };
+    exec(win, callback, 'ChromeSocketsTcp', 'secure', [socketId, options]);
 };
 
 exports.send = function(socketId, data, callback) {

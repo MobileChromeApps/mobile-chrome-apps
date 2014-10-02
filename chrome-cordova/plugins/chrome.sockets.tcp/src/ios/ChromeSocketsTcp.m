@@ -53,6 +53,7 @@ static NSString* stringFromData(NSData* data) {
     
     id _connectCallback;
     id _disconnectCallback;
+    id _secureCallback;
 }
 
 @end
@@ -106,6 +107,7 @@ static NSString* stringFromData(NSData* data) {
     _sendCallbacks = [NSMutableArray array];
     _connectCallback = nil;
     _disconnectCallback = nil;
+    _secureCallback = nil;
 }
 
 - (NSDictionary*)getInfo
@@ -191,7 +193,8 @@ static NSString* stringFromData(NSData* data) {
     
     callback(YES, 0);
     
-    [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
+    if (!_paused)
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
@@ -233,6 +236,17 @@ static NSString* stringFromData(NSData* data) {
     
     [self resetSocket];
 }
+
+- (void)socketDidSecure:(GCDAsyncSocket *)sock
+{
+    VERBOSE_LOG(@"socketDidSecure socketId: %u", _socketId);
+    
+    assert(_secureCallback != nil);
+    void (^callback)() = _secureCallback;
+    _secureCallback = nil;
+    callback();
+}
+
 @end
 
 @implementation ChromeSocketsTcp
@@ -352,6 +366,56 @@ static NSString* stringFromData(NSData* data) {
 {
     NSNumber* socketId = [command argumentAtIndex:0];
     [self disconnectSocketWithId:socketId callbackId:command.callbackId close:NO];
+}
+
+- (NSNumber*)getSecureVersion:(NSString*)versionString
+{
+    if ([versionString isEqualToString:@"ssl3"]) {
+        return [NSNumber numberWithInt:kSSLProtocol3];
+    } else if ([versionString isEqualToString:@"tls1"]) {
+        return [NSNumber numberWithInt:kTLSProtocol1];
+    } else if ([versionString isEqualToString:@"tls1.1"]) {
+        return [NSNumber numberWithInt:kTLSProtocol11];
+    } else if ([versionString isEqualToString:@"tls1.2"]) {
+        return [NSNumber numberWithInt:kTLSProtocol12];
+    } else {
+        return nil;
+    }
+}
+
+- (void)secure:(CDVInvokedUrlCommand *)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSDictionary* options = [command argumentAtIndex:1];
+    
+    ChromeSocketsTcpSocket* socket = [_sockets objectForKey:socketId];
+    
+    if (socket == nil) {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
+        return;
+    }
+ 
+    socket->_secureCallback = [^() {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } copy];
+  
+    NSMutableDictionary* settings = [NSMutableDictionary dictionaryWithCapacity:2];
+    
+    NSDictionary* tlsVersion = [options objectForKey:@"tlsVersion"];
+    if (tlsVersion) {
+        NSNumber* minVersion = [self getSecureVersion:[tlsVersion objectForKey:@"min"]];
+        NSNumber* maxVersion = [self getSecureVersion:[tlsVersion objectForKey:@"max"]];
+        
+        if (minVersion) {
+            [settings setObject:minVersion forKey:GCDAsyncSocketSSLProtocolVersionMin];
+        }
+        
+        if (maxVersion) {
+            [settings setObject:maxVersion forKey:GCDAsyncSocketSSLProtocolVersionMax];
+        }
+    }
+    
+    [socket->_socket startTLS:settings];
 }
 
 - (void)send:(CDVInvokedUrlCommand*)command
