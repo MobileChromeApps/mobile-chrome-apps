@@ -16,6 +16,8 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
   function receiveListener(info) {
     logger('Client Recv: success');
     logger(info);
+    var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
+    logger(message);
     chrome.sockets.tcp.disconnect(info.socketId);
     chrome.sockets.tcp.close(info.socketId);
   }
@@ -66,6 +68,58 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
             }
           });
         }
+      });
+    });
+  }
+
+  function stringToArrayBuffer(string) {
+    var buf = new ArrayBuffer(string.length);
+    var bufView = new Uint8Array(buf);
+    for (var i = 0, strLen = string.length; i < strLen; i++) {
+      bufView[i] = string.charCodeAt(i);
+    }
+    return buf;
+  }
+
+  function connectSecureAndSend(data) {
+    chrome.sockets.tcp.create(function(createInfo) {
+      chrome.sockets.tcp.setPaused(createInfo.socketId, true, function() {
+        var hostname = 'www.sslshopper.com';
+        chrome.sockets.tcp.connect(createInfo.socketId, hostname, 443, function(result) {
+          if (result === 0) {
+              chrome.sockets.tcp.secure(
+                createInfo.socketId,
+                {tlsVersion: {min: 'ssl3', max: 'tls1.2'}},
+                function(result) {
+                  if (result !== 0) {
+                    logger('secure connection failed: ' + result);
+                  }
+                  chrome.sockets.tcp.setPaused(createInfo.socketId, false, function() {
+                    var requestString = 'GET / HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+                    var message = stringToArrayBuffer(requestString);
+
+                    chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
+                      if (result.resultCode === 0) {
+                        logger('connectSecureAndSend: success');
+                      }
+                    });
+
+                    chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
+                      if (result.resultCode === 0) {
+                        logger('connectSecureAndSend: success');
+                      }
+                    });
+
+                    chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
+                      if (result.resultCode === 0) {
+                        logger('connectSecureAndSend: success');
+                      }
+                    });
+
+                  });
+                });
+          }
+        });
       });
     });
   }
@@ -163,6 +217,10 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
 
     addButton('TCP: connect & send', function() {
       connectAndSend(arr.buffer);
+    });
+
+    addButton('TCP: connect & secure & send', function() {
+      connectSecureAndSend(arr.buffer);
     });
 
     addButton('TCP: send to unconnected', function() {

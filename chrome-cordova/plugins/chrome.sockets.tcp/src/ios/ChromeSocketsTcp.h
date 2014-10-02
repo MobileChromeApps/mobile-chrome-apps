@@ -24,7 +24,7 @@
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command;
 
-// - (void)secure:(CDVInvokedUrlCommand*)command;
+- (void)secure:(CDVInvokedUrlCommand*)command;
 
 - (void)send:(CDVInvokedUrlCommand*)command;
 

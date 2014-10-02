@@ -7,12 +7,17 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLException;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
@@ -54,6 +59,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       connect(args, callbackContext);
     } else if ("disconnect".equals(action)) {
       disconnect(args, callbackContext);
+    } else if ("secure".equals(action)) {
+      secure(args, callbackContext);
     } else if ("send".equals(action)) {
       send(args, callbackContext);
     } else if ("close".equals(action)) {
@@ -227,6 +234,35 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
   }
 
+  private void secure(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
+    int socketId = args.getInt(0);
+    JSONObject options = args.getJSONObject(1);
+
+    TcpSocket socket = sockets.get(Integer.valueOf(socketId));
+
+    if (socket == null) {
+      Log.e(LOG_TAG, "No socket with socketId " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    if (!socket.isConnected()) {
+      Log.e(LOG_TAG, "Socket is not connected with hsot " + socketId);
+      callbackContext.error(-1000);
+      return;
+    }
+
+    socket.secure(options, callbackContext);
+
+    try {
+      selectorMessages.put(
+          new SelectorMessage(socket, SelectorMessageType.SSL_INIT_HANDSHAKE, null));
+      selector.wakeup();
+    } catch (InterruptedException e) {
+    }
+  }
+
   private void send(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
     int socketId = args.getInt(0);
@@ -246,16 +282,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       return;
     }
 
-    try {
-      int bytesSent = socket.send(data);
-      if (bytesSent > 0) {
-        callbackContext.success(bytesSent);
-      } else {
-        socket.addSendPacket(data, callbackContext);
-      }
-    } catch (IOException e) {
-      callbackContext.error(-1000);
-    }
+    socket.addSendPacket(data, callbackContext);
   }
 
   private void sendCloseMessage(TcpSocket socket, CallbackContext callbackContext)
@@ -358,6 +385,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     SO_ACCEPTED,
     SO_DISCONNECTED,
     SO_CLOSE,
+    SSL_INIT_HANDSHAKE,
     T_STOP;
   }
 
@@ -415,6 +443,11 @@ public class ChromeSocketsTcp extends CordovaPlugin {
               if (msg.callbackContext != null)
                 msg.callbackContext.success();
               break;
+            case SSL_INIT_HANDSHAKE:
+              msg.socket.setUpSSLEngine();
+              while(msg.socket.handshaking());
+              msg.socket.handshakeSuccess();
+              break;
             case T_STOP:
               running = false;
               break;
@@ -423,6 +456,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         } catch (IOException e) {
           if (msg.callbackContext != null)
             msg.callbackContext.error(-1000);
+        } catch (JSONException e) {
         }
       }
 
@@ -488,6 +522,12 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     private SocketChannel channel;
 
+    private SSLEngine sslEngine;
+    // Buffer used to decrypt ssl data, we have no control on its size
+    private ByteBuffer sslPeerAppData;
+    private ByteBuffer sslPeerNetData;
+    private ByteBuffer sslNetData;
+
     private BlockingQueue<TcpSendPacket> sendPackets = new LinkedBlockingQueue<TcpSendPacket>();
     private SelectionKey key;
 
@@ -498,6 +538,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     private int bufferSize;
 
     private CallbackContext connectCallback;
+    private CallbackContext secureCallback;
 
     TcpSocket(int socketId, CallbackContext recvContext, JSONObject properties)
         throws JSONException, IOException {
@@ -506,6 +547,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
       channel = SocketChannel.open();
       channel.configureBlocking(false);
+
+      sslEngine = null;
 
       setDefaultProperties();
       setProperties(properties);
@@ -519,6 +562,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
       channel = acceptedSocket;
       channel.configureBlocking(false);
+
+      sslEngine = null;
 
       setDefaultProperties();
       setBufferSize();
@@ -633,12 +678,135 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       channel.close();
     }
 
-    int send(byte[] data) throws IOException {
-      return channel.write(ByteBuffer.wrap(data));
+    /**
+     * @return whether handshake has been finished.
+     */
+    boolean handshaking() throws IOException, JSONException {
+      SSLEngineResult res;
+      switch(sslEngine.getHandshakeStatus()) {
+        case FINISHED:
+          return false;
+        case NEED_TASK:
+          Runnable task;
+          while((task = sslEngine.getDelegatedTask()) != null) {
+            task.run();
+          }
+          return true;
+        case NEED_UNWRAP:
+          int bytesRead = channel.read(sslPeerNetData);
+          if (bytesRead == -1) {
+            handshakeFailed();
+            return false;
+          }
+          sslPeerAppData.clear();
+          sslPeerNetData.flip();
+
+          do {
+            res = sslEngine.unwrap(sslPeerNetData, sslPeerAppData);
+          } while (shouldRedoUnwrap(res));
+
+          sslPeerAppData.flip();
+          sslPeerNetData.compact();
+          return true;
+        case NEED_WRAP:
+          ByteBuffer wrapData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
+          res = sslEngine.wrap(ByteBuffer.allocate(0), wrapData);
+          wrapData.flip();
+          channel.write(wrapData);
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    void handshakeFailed() {
+      if (secureCallback != null) {
+        secureCallback.error(-1000);
+        secureCallback = null;
+      }
+      tearDownSSLEngine();
+    }
+
+    void handshakeSuccess() {
+      if (secureCallback != null) {
+        secureCallback.success();
+        secureCallback = null;
+      }
+    }
+
+    boolean shouldRedoUnwrap(SSLEngineResult res) {
+      switch (res.getStatus()) {
+        case BUFFER_OVERFLOW:
+          increaseSSLAppBuffer();
+          return true;
+        case BUFFER_UNDERFLOW:
+          if (sslPeerNetData.capacity() < sslEngine.getSession().getPacketBufferSize())
+            increaseSSLNetBuffer();
+          return false;
+        case OK:
+          return res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_UNWRAP &&
+              res.bytesProduced() == 0;
+        default:
+          return false;
+      }
+    }
+
+    boolean shouldRedoWrap(SSLEngineResult res) {
+      switch (res.getStatus()) {
+        case BUFFER_OVERFLOW:
+          increaseSSLNetBuffer();
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    void increaseSSLAppBuffer() {
+      ByteBuffer newBuffer = ByteBuffer.allocate(
+          sslEngine.getSession().getApplicationBufferSize() +
+          sslPeerAppData.position());
+      sslPeerAppData.flip();
+      newBuffer.put(sslPeerAppData);
+      sslPeerAppData = newBuffer;
+    }
+
+    void increaseSSLNetBuffer() {
+      ByteBuffer newBuffer = ByteBuffer.allocate(
+          sslEngine.getSession().getPacketBufferSize() +
+          sslPeerNetData.position());
+      sslPeerNetData.flip();
+      newBuffer.put(sslPeerNetData);
+      sslPeerNetData = newBuffer;
+    }
+
+    void setUpSSLEngine() {
+      try {
+        sslEngine = SSLContext.getDefault().createSSLEngine();
+        sslEngine.setUseClientMode(true);
+        sslPeerNetData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
+        sslNetData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
+        sslPeerAppData = ByteBuffer.allocate(sslEngine.getSession().getApplicationBufferSize());
+        sslEngine.beginHandshake();
+      } catch (SSLException e) {
+        handshakeFailed();
+      } catch (NoSuchAlgorithmException e) {
+        handshakeFailed();
+      }
+    }
+
+    void tearDownSSLEngine() {
+      sslEngine = null;
+    }
+
+    void secure(JSONObject options, CallbackContext callbackContext) {
+      if (sslEngine != null)
+        return;
+      secureCallback = callbackContext;
     }
 
     void addSendPacket(byte[] data, CallbackContext callbackContext) {
-      TcpSendPacket sendPacket = new TcpSendPacket(data, callbackContext);
+      ByteBuffer appData = ByteBuffer.wrap(data);
+      TcpSendPacket sendPacket = new TcpSendPacket(appData, callbackContext);
       addInterestSet(SelectionKey.OP_WRITE);
       try {
         sendPackets.put(sendPacket);
@@ -647,18 +815,34 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     void dequeueSend() {
-      if (sendPackets.peek() != null) {
-        TcpSendPacket sendPacket = null;
-        try {
-          sendPacket = sendPackets.take();
-          int bytesSent = channel.write(sendPacket.data);
-          sendPacket.callbackContext.success(bytesSent);
-        } catch (InterruptedException e) {
-        } catch (IOException e) {
-          sendPacket.callbackContext.error(-1000);
-        }
-      } else {
+      if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
+        return;
+      }
+
+      TcpSendPacket sendPacket = null;
+      try {
+        int bytesSent = 0;
+        sendPacket = sendPackets.take();
+        if (sslEngine != null) {
+          SSLEngineResult res;
+          do {
+            res = sslEngine.wrap(sendPacket.data, sslNetData);
+          } while (shouldRedoWrap(res));
+
+          sslNetData.flip();
+          bytesSent = res.bytesConsumed();
+
+          channel.write(sslNetData);
+
+          sslNetData.clear();
+        } else {
+          bytesSent = channel.write(sendPacket.data);
+        }
+        sendPacket.callbackContext.success(bytesSent);
+      } catch (InterruptedException e) {
+      } catch (IOException e) {
+        sendPacket.callbackContext.error(-1000);
       }
     }
 
@@ -691,36 +875,56 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       int bytesRead = 0;
       if (paused) return bytesRead;
 
-      ByteBuffer recvBuffer = ByteBuffer.allocate(bufferSize);
-      recvBuffer.clear();
-
       try {
-        bytesRead = channel.read(recvBuffer);
-        if (bytesRead < 0) {
-          sendReceiveError();
-          return bytesRead;
+        if (sslEngine != null) {
+          bytesRead = channel.read(sslPeerNetData);
+          if (bytesRead < 0)
+            return bytesRead;
+
+          sslPeerNetData.flip();
+
+          SSLEngineResult res;
+          do {
+            res = sslEngine.unwrap(sslPeerNetData, sslPeerAppData);
+          } while (shouldRedoUnwrap(res));
+
+          if (res.getStatus() == SSLEngineResult.Status.OK) {
+            sslPeerAppData.flip();
+            sendReceive(sslPeerAppData);
+          }
+
+          sslPeerNetData.compact();
+          sslPeerAppData.clear();
+        } else {
+          ByteBuffer recvData = ByteBuffer.allocate(bufferSize);
+          bytesRead = channel.read(recvData);
+          if (bytesRead < 0)
+            return bytesRead;
+
+          recvData.flip();
+          sendReceive(recvData);
         }
-        recvBuffer.flip();
-        byte[] recvBytes = new byte[recvBuffer.limit()];
-        recvBuffer.get(recvBytes);
-
-        PluginResult dataResult = new PluginResult(Status.OK, recvBytes);
-        dataResult.setKeepCallback(true);
-
-        recvContext.sendPluginResult(dataResult);
-
-        JSONObject metadata = new JSONObject();
-
-        metadata.put("socketId", socketId);
-        PluginResult metadataResult = new PluginResult(Status.OK, metadata);
-        metadataResult.setKeepCallback(true);
-
-        recvContext.sendPluginResult(metadataResult);
 
       } catch (IOException e) {
         sendReceiveError();
       }
       return bytesRead;
+    }
+
+    private void sendReceive(ByteBuffer data) throws JSONException {
+
+      byte[] recvBytes = new byte[data.limit()];
+      data.get(recvBytes);
+
+      PluginResult dataResult = new PluginResult(Status.OK, recvBytes);
+      dataResult.setKeepCallback(true);
+      recvContext.sendPluginResult(dataResult);
+
+      JSONObject metadata = new JSONObject();
+      metadata.put("socketId", socketId);
+      PluginResult metadataResult = new PluginResult(Status.OK, metadata);
+      metadataResult.setKeepCallback(true);
+      recvContext.sendPluginResult(metadataResult);
     }
 
     private void sendReceiveError() throws JSONException {
@@ -736,8 +940,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       final ByteBuffer data;
       final CallbackContext callbackContext;
 
-      TcpSendPacket(byte[] data, CallbackContext callbackContext) {
-        this.data = ByteBuffer.wrap(data);
+      TcpSendPacket(ByteBuffer data, CallbackContext callbackContext) {
+        this.data = data;
         this.callbackContext = callbackContext;
       }
     }
