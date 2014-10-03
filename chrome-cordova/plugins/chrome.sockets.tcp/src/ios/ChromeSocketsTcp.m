@@ -242,7 +242,7 @@ static NSString* stringFromData(NSData* data) {
     self = [super init];
     if (self) {
         _sockets = [NSMutableDictionary dictionary];
-        _nextSocketId = 0;
+        _nextSocketId = 1;
         _receiveEventsCallbackId = nil;
     }
     return self;
