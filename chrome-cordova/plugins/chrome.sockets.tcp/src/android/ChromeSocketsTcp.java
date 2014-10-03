@@ -31,7 +31,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   private Map<Integer, TcpSocket> sockets = new ConcurrentHashMap<Integer, TcpSocket>();
   private BlockingQueue<SelectorMessage> selectorMessages =
       new LinkedBlockingQueue<SelectorMessage>();
-  private int nextSocket = 0;
+  private int nextSocket = 1;
   private CallbackContext recvContext;
   private Selector selector;
   private SelectorThread selectorThread;
