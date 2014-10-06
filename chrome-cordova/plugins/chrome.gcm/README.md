@@ -6,15 +6,9 @@ This plugin allows Android apps to send/receive push messages.
 
 Supported on Android
 
-## Caveats
-
-### Android
-
-You have to manually change the theme to translucent in `platforms/android/AndroidManifest.xml` by changing `"Theme.Black.NoTitleBar"` to `"Theme.Translucent"` inside your `<activity>` tag.
-
 ## Reference
 
-The API reference is [here](https://developer.chrome.com/apps/cloudMessagingV2).
+The API reference is [here](https://developer.chrome.com/apps/gcm), and a full description on how to set up Google Cloud Messaging is [here](https://developer.chrome.com/apps/cloudMessaging).
 
 ## Dependencies
 
@@ -27,5 +21,8 @@ The API reference is [here](https://developer.chrome.com/apps/cloudMessagingV2).
 * You require the 'gcm' permission to use this API
 
 # Release Notes
+## 1.0.1 (Sep 24, 2014)
+* Fix #287 #290 Fix several significant GCM bugs
+
 ## 1.0.0 (May 8, 2014)
 - Initial Release

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.iosSocketsCommon"
+    version="4.7.1">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps iOS Sockets Common</name>
+
+  <platform name="ios">
+    <framework src="Security.framework" />
+    <framework src="CFNetwork.framework" />
+    <source-file src="src/ios/third_party/GCDAsyncSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncSocket.h" />
+    <source-file src="src/ios/third_party/GCDAsyncUdpSocket.m" />
+    <header-file src="src/ios/third_party/GCDAsyncUdpSocket.h" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="IosSocketsCommon">
+        <param name="ios-package" value="IosSocketsCommon"/>
+      </feature>
+    </config-file>
+  </platform>
+</plugin>

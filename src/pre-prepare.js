@@ -19,11 +19,12 @@
 
 'use strict';
 
-var Q = require('q');
 var fs = require('fs');
 var et = require('elementtree');
+var xmldom = require('xmldom');
 var path = require('path');
 var utils = require('./utils');
+var ccaManifestLogic = require('cca-manifest-logic');
 
 // Returns a promise.
 module.exports = exports = function prePrepareCommand() {
@@ -32,23 +33,43 @@ module.exports = exports = function prePrepareCommand() {
   var pluginsNotRecognized = [];
   var manifest, whitelist;
 
+  var cordovaCmdline = process.env['CORDOVA_CMDLINE'].split(/\s+/);
+  var argv = require('optimist')(cordovaCmdline)
+      .options('webview', { type: 'string' })
+      .options('release', { type: 'boolean' })
+      .argv;
+
   // Pre-prepare manifest check and project munger
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
-    return require('./parse-manifest')(manifest);
+    return ccaManifestLogic.analyseManifest(manifest, { webview: argv.webview });
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(require('./plugin-map').DEFAULT_PLUGINS);
-    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat(require('./plugin-map').STALE_PLUGINS);
+    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat();
+    pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat();
     pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
       return pluginsToBeInstalled.indexOf(plugin) == -1;
     });
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
+
+    var configXmlData = fs.readFileSync('config.xml', 'utf8');
+    var configXmlDom = new xmldom.DOMParser().parseFromString(configXmlData);
+    ccaManifestLogic.updateConfigXml(manifest, manifestData, configXmlDom);
+    var newConfigData = new xmldom.XMLSerializer().serializeToString(configXmlDom);
+    // Don't write out if nothing actually changed
+    if (newConfigData != configXmlData) {
+      console.log('## Updating config.xml from manifest.json');
+      fs.writeFileSync('config.xml', newConfigData);
+    }
   })
-  .then(require('./update-config-xml'))
   .then(function() {
+    if (/android/.exec(process.env['CORDOVA_PLATFORMS']) && argv['release']) {
+      if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
+        utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.');
+      }
+    }
     // Add a URL type to the iOS project's .plist file.
     // This is necessary for chrome.identity to redirect back to the app after authentication.
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
@@ -91,7 +112,7 @@ module.exports = exports = function prePrepareCommand() {
   })
   .then(function(installedPlugins) {
     // Convert all plugin IDs to lower case (registry has problems with upper case).
-    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase()})
+    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase(); });
     var missingPlugins = pluginsToBeInstalled.filter(function(p) {
       return installedPlugins.indexOf(p) == -1;
     });
@@ -125,47 +146,3 @@ module.exports = exports = function prePrepareCommand() {
   });
 };
 
-// Returns a promise. Adds a reference to the Crosswalk library project to the Android platform
-function addXwalkLibraryCommand() {
-  if (!fs.existsSync('platforms'))
-    return Q.reject('No platforms directory found. Please run script from the root of your project.');
-  if (!fs.existsSync(path.join('platforms', 'android')))
-    return Q.when();
-
-  return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
-    var largestReference = 0;
-    var found_xwalk = false;
-    for (var i=0; i < lines.length; ++i) {
-      var library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)$/);
-      if (library_reference) {
-        var referenceNumber = parseInt(library_reference[1],10);
-        if (referenceNumber > largestReference) {
-          largestReference = referenceNumber;
-        }
-        found_xwalk = found_xwalk || !!library_reference[2].match(/xwalk_core_library$/);
-      }
-    }
-    if (!found_xwalk) {
-      lines.push('android.library.reference.' + (largestReference+1) + '=../../plugins/org.apache.cordova.engine.crosswalk/libs/xwalk_core_library');
-    }
-    return lines;
-  });
-}
-
-// Returns a promise. Removes any references to the Crosswalk library project from the Android platform
-function removeXwalkLibraryCommand() {
-  if (!fs.existsSync('platforms'))
-    return Q.reject('No platforms directory found. Please run script from the root of your project.');
-  if (!fs.existsSync(path.join('platforms', 'android')))
-    return Q.when();
-
-  return utils.processFile(path.join('platforms','android','project.properties'), function(lines) {
-    for (var i=lines.length-1; i >= 0; --i) {
-      var xwalk_library_reference = lines[i].match(/^android.library.reference.(\d+)\s*=(.*)xwalk_core_library$/);
-      if (xwalk_library_reference) {
-        lines.splice(i, 1);
-      }
-    }
-    return lines;
-  });
-}

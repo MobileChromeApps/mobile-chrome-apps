@@ -36,18 +36,38 @@
 
 ## Publish Plugin Changes
 
-* For each plugin within chrome-cordova/plugins:
+* See which have changes:
 
-        git log path/to/plugin # See what's changed since the previous release.
-        cd path/to/plugin
-        vim README.md plugin.xml # Update release notes (bottom of README) and plugin version.
-        git commit -am "Updated plugin release notes and version numbers for release."
+    cd chrome-cordova/plugins
+    ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); [[ -n $(git log -n 1 "$LAST_VERSION_BUMP"..master .) ]] && echo $l); done | xargs echo)
+    # See what's changed so you have an idea:
+    (for l in $ACTIVE; do (cd $l; echo $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master -- . ; echo); done) | less
 
-* For each plugin found by: `plugman search org.chromium`:
+* Add release notes & bump version:
 
-        plugman publish path/to/plugin
+    for l in $ACTIVE; do ( cd $l; vim README.md plugin.xml ); done
 
-    **Note:** You may need to search [the registry website](plugins.cordova.io).
+Vim helper command:
+    :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:\%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .
+
+    git commit -am "Updated plugin release notes and version numbers for release."
+    git push origin master
+
+* Publish plugins
+
+    for l in $ACTIVE; do ( cd $l; plugman publish . ); done
+
+* Set plugin versions to -dev
+
+    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E s:"version=\"$v\":version=\"$v2\":" plugin.xml; fi) ; done
+    git commit -am "Added -dev suffix to plugin versions"
+    git show # Sanity check
+    git push origin master
+
+
+## Publish cca-manifest-logic Module (if changes exist)
+
+TODO
 
 ## Update npm Dependencies
 
@@ -64,7 +84,7 @@ See what is stale (newer versions available)
 ## Update Release Notes:
 
     vim RELEASENOTES.md
-    :read !./dev-bin/release-logs.sh
+    :read !./dev-bin/release-logs.sh VERSION
     # Curate judiciously
 
 Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-cli`.
@@ -74,19 +94,25 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     # Things are good?
     git status
 
-    # set "version": "x.x.x-rc#"
+    # set "version": "x.x.x-rc1"
     vim package.json
 
     # Update shrinkwrap dependancies
     npm shrinkwrap
+    # If you get errors about invalid semver of a browserify dependency:
+        vim node_modules/cordova-lib/node_modules/cordova-js/package.json # Delete browserify dependency
+        rm -r node_modules/cordova-lib/node_modules/cordova-js/node_modules/browserify
+        npm shrinkwrap
+    # If you didn't get such an error, remove these instructions!
+
     git add npm-shrinkwrap.json
 
     # Commit so that no-one re-uses this version of the rc
-    git commit -am "Set version to x.x.x-rc#."
+    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4)"
 
     # Publish rc to npm
     dev-bin/prepfornpm.sh
-    npm publish --tag=rc
+    npm publish --tag=rc # This takes a long time.
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
 
     # Double check things are still good
@@ -117,6 +143,9 @@ The following is the full set of tests. Vary accordingly depending on the magnit
   * Check that killing & re-running the app auto-joins
 * Ensure that ChromeSpec passes all tests on iOS & Android
 * Ensure that ChromeSpec on Android can be run from Windows host (via VirtualBox + modern.ie is easiest).
+* Test the update flow:
+  * Just run `cca run android` from within a project and it should trigger
+  * You can locally change the version in package.json (e.g. remove the -rc) to trigger it
 
 ## Publish full release:
 
@@ -125,11 +154,11 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # remove -rc# from "version"
     vim package.json
-    git commit -am "Set version to x.x.x."
-    git tag vx.x.x
+    CCA_VERSION="$(grep '"version"' package.json | cut -d'"' -f4)"
+    git commit -am "Set version to $CCA_VERSION"
+    git tag v$CCA_VERSION
 
     # Publish to npm
-    # Confirm "publishConfig": { "tag": "rc" } is not set in package.json
     dev-bin/prepfornpm.sh
     npm publish
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
@@ -139,17 +168,15 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # Unpublish rc
     npm tag cca@0.0.0 rc
-    npm unpublish cca@x.x.x-rc#
+    npm unpublish cca@$CCA_VERSION-rc#
 
     # Remove shrinkwrap file, and push changed to master
     git rm npm-shrinkwrap.json
-    git commit -m "Removing shrinkwrap file after release"
+    vim package.json # Append -dev to "version", and bump the MINOR
+    git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4) and removed shrinkwrap."
 
-    # Append -dev to "version", and bump the MINOR
-    vim package.json
-    git commit -am "Set version to x.x.x-dev."
-
-    git push origin master --tags
+    git push origin master refs/tags/v$CCA_VERSION
+    # If the push fails, do a git pull **WITHOUT --rebase**
 
 2. Send an email to chromium-apps@chromium.org with version & release notes.
 3. Post on G+ (using corp G+, but setting as public), then ask for it to be re-shared. ([example](https://plus.sandbox.google.com/+GoogleChromeDevelopers/posts/DiHAsUfetRo)).

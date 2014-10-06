@@ -5,6 +5,9 @@ Cordova. It is meant to be used with the `cca` tool, and isn't useful outside
 the context of a mobile Chrome App.
 
 # Release Notes
+## 1.0.3 (Sep 24, 2014)
+* Defer HTML imports using placeholder tag (fixes non-vulcanized Polymer apps)
+
 ## 1.0.2 (April 1, 2014)
 - Fix chrome-extension: URLs not setting no-cache headers.
 - Fix AngularJS apps having the extension ID in their hash on start-up on KitKat.

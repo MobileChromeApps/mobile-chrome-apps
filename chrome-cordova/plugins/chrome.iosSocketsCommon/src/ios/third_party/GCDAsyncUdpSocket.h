@@ -10,7 +10,8 @@
 
 #import <Foundation/Foundation.h>
 #import <dispatch/dispatch.h>
-
+#import <TargetConditionals.h>
+#import <Availability.h>
 
 extern NSString *const GCDAsyncUdpSocketException;
 extern NSString *const GCDAsyncUdpSocketErrorDomain;
@@ -545,7 +546,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  *     If data is nil or zero-length, this method does nothing.
  *     If passing NSMutableData, please read the thread-safety notice below.
  * 
- * @param address
+ * @param remoteAddr
  *     The address to send the data to (specified as a sockaddr structure wrapped in a NSData object).
  * 
  * @param timeout

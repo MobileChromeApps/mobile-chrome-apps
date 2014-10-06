@@ -4,7 +4,7 @@
 
 registerAutoTests('chrome.fileSystem', function() {
   'use strict';
-  describeCordovaOnly('chrome.fileSystem', function() {
+  describeExcludeChrome('chrome.fileSystem', function() {
     // Create a file entry for testing.
     var fileEntry = new FileEntry('filename', 'fullpath');
 
@@ -41,8 +41,5 @@ registerAutoTests('chrome.fileSystem', function() {
         chrome.fileSystem.isWritableEntry(fileEntry, isWritableEntryCallback);
       });
     });
-  });
-
-  describeChromeRuntimeOnly('chrome.fileSystem', function() {
   });
 });

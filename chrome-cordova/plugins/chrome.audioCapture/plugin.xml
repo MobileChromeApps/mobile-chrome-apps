@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.audiocapture"
-    version="1.0.1">
+    version="1.0.3-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -16,6 +16,7 @@
   <platform name="android">
     <config-file target="AndroidManifest.xml" parent="/*">
       <uses-permission android:name="android.permission.RECORD_AUDIO" />
+      <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     </config-file>
   </platform>
 </plugin>
