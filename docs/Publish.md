@@ -6,30 +6,45 @@ In your project's `platforms` directory, you have two complete native projects: 
 
 To publish your Android application to the Play Store:
 
-1. Update the two Android app version ids, then run `cca prepare`:
-    * `android:versionName` is set using the `version` key in `www/manifest.json` (this sets the version of your desktop packaged app, too).
-    * `android:versionCode` is set using the `versionCode` key in `www/manifest.mobile.js`.
+1. Ensure that your app details are set.
+    * `android:versionName` is set using the `version` key in `www/manifest.json`.
+       * This also sets the version of your desktop packaged app.
+    * `android:versionCode` can be set using the `versionCode` key in `www/manifest.mobile.js`.
+       * If omitted, `versionCode` will default to `major * 10000 + minor * 100 + rev` (assuming `version` looks like `"major.minor.rev"`)
 
-2. Create (or update) your keystore (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
+2. Generate a keystore and key pair (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
+   ```
+   cca exec keytool -genkey -v -keystore FILENAME.keystore -alias YOUR_PETS_NAME -keyalg RSA -keysize 2048 -validity 10000
+   ```
+  * Create a password when prompted
+  * Note: the "cca exec" prefix is required only if keytool is not already available on your PATH
 
-        keytool -genkey -v -keystore KEYSTORE_NAME.keystore -alias ALIAS -keyalg RSA -keysize 2048 -validity 10000
 
-3. Create (or edit) `platforms/android/ant.properties` to set the `key.store` and `key.alias` properties (as explained [in the Android developer docs](http://developer.android.com/tools/building/building-cmdline.html#ReleaseMode)).
+3. Put the following settings into a file called `android-release-keys.properties` at the root of your project (as a sibling to `www/`):
 
-        key.store=PATH_TO_KEYSTORE
-        key.alias=ALIAS
+    ```
+    storeFile=FILENAME.keystore
+    storePassword=YOUR_STORE_PASSWORD
+    keyAlias=YOUR_PETS_NAME
+    keyPassword=YOUR_KEY_PASSWORD
+    ```
+    * Note: `storePassword` and `keyPassword` are optional. If omitted, you will be prompted for them when building.
 
-4. Build your project (Note: this will prompt for your keystore password):
+4. Build your project:
+   ```
+   cca build android --release
+   ```
 
-        cca build --release
-
-5. Find your signed .apk located inside `platforms/android/bin/`.
+5. Find your signed .apk(s) at `platforms/android/out/*-release.apk`.
 
 6. Upload your signed application to the [Google Play developer console](https://play.google.com/apps/publish).
+   * Use `advanced mode` to publish multiple APKs, as described by the [Multiple APKs docs](http://developer.android.com/google/play/publishing/multiple-apks.html).
 
 ### Publish to the iOS App Store
 
-1. Update the app version by setting the `CFBundleVersion` key in `www/manifest.mobile.js`, then run `cca prepare`.
+1. Update the app version by setting the `CFBundleVersion` key in `www/manifest.mobile.js`. If not explicitly set, `CFBundleVersion` will default to the same value as `version`. If `version` contains a dash, only the part before the dash will be used for `CFBundleVersion`.
+
+2. Run `cca prepare`.
 
 2. Open the Xcode project file found under your `platforms/ios` directory:
 

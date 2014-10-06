@@ -109,7 +109,7 @@ If the purchase fails for any reason (including cancellation), `options.failure`
 
 `errorType` may be one of these values:
 
-- `MERCHANT_ERROR`: The billing system is unavailable, or the the `buy()` arguments are incorrect.
+- `MERCHANT_ERROR`: The billing system is unavailable, or the `buy()` arguments are incorrect.
 
 - `PURCHASE_CANCELLED`: No error occurred, but the purchase was not completed. The purchaser cancelled the payment, or the payment was declined by the store.
 

@@ -1,3 +1,4 @@
 .DS_Store
 node_modules
 /docs/generator/chrome_apps_on_mobile.html
+*.pyc

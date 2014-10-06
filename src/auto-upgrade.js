@@ -28,17 +28,20 @@ module.exports = exports = function autoUpgrade() {
     shelljs.rm('-f', path.join('plugins', 'android.json'));
     shelljs.rm('-f', path.join('plugins', 'ios.json'));
 
+    console.log('## First-time build. Detecting available SDKs:');
     return require('./tools-check')()
     .then(function(toolsCheckResults) {
-      var cmds = [];
       // TODO(mmocny): any way to use .raw so as not to also call prepare after each platform add?
-      if (toolsCheckResults.hasXcode) {
-        cmds.push(['platform', 'add', 'ios']);
-      }
+      var plats = [];
       if (toolsCheckResults.hasAndroidPlatform) {
-         cmds.push(['platform', 'add', 'android']);
+        plats.push('android');
       }
-      return require('./cordova-commands').runAllCmds(cmds);
+      if (toolsCheckResults.hasXcode ) {
+        plats.push('ios');
+      }
+      if (plats.length) {
+        return require('./cordova-commands').runCmd(['platform', 'add', plats]);
+      }
     })
     .then(function() {
       return require('./write-out-cca-version')();

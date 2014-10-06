@@ -24,7 +24,10 @@ var Q = require('q');
 exports.runCmd = function runCmd(cmd) {
   var msg = cmd[0];
   cmd.slice(1).forEach(function(arg) {
-    if (typeof arg != 'string') {
+    if (Array.isArray(arg)) {
+      msg += ' ' + arg.join(' ');
+      return;
+    } else if (typeof arg != 'string') {
       return;
     }
     if (arg.indexOf(' ') != -1) {

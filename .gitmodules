@@ -9,4 +9,4 @@
 	url = https://git-wip-us.apache.org/repos/asf/cordova-plugins.git
 [submodule "cordova/cordova-crosswalk-engine"]
 	path = cordova/cordova-crosswalk-engine
-	url = https://github.com/clelland/cordova-crosswalk-engine/
+	url = https://github.com/MobileChromeApps/cordova-crosswalk-engine/

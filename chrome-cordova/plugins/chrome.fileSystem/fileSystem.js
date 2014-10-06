@@ -97,7 +97,7 @@ function getFileIos(options, callback) {
 }
 
 function getFileAndroid(options, callback) {
-  var AndroidFileChooser = cordova.require('org.chromium.FileChooser.FileChooser');
+  var AndroidFileChooser = cordova.require('org.chromium.filechooser.FileChooser');
 
   // Determine the relevant mime types.
   var mimeTypes = determineMimeTypes(options.accepts, options.acceptsAllTypes);

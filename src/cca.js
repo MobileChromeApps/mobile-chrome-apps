@@ -19,6 +19,7 @@
  */
 
 // System modules.
+var fs = require('fs');
 var path = require('path');
 
 // Third-party modules.
@@ -34,29 +35,6 @@ var ccaRoot = path.join(__dirname, '..');
 /******************************************************************************/
 
 function fixEnv() {
-  var shelljs = require('shelljs');
-  if (utils.isWindows()) {
-    // Windows java installer doesn't add javac to PATH, nor set JAVA_HOME (ugh).
-    var javacInPath = !!shelljs.which('javac');
-    var hasJavaHome = !!process.env.JAVA_HOME;
-    if (hasJavaHome && !javacInPath) {
-      process.env.PATH += ';' + process.env.JAVA_HOME + '\\bin';
-    } else if (!hasJavaHome || !javacInPath) {
-      var firstJdkDir =
-          shelljs.ls(process.env.ProgramFiles + '\\java\\jdk*')[0] ||
-          shelljs.ls('C:\\Program Files\\java\\jdk*')[0] ||
-          shelljs.ls('C:\\Program Files (x86)\\java\\jdk*')[0];
-      if (firstJdkDir) {
-        // shelljs always uses / in paths.
-        firstJdkDir = firstJdkDir.replace(/\//g, '\\');
-        if (!javacInPath) {
-          process.env.PATH += ';' + firstJdkDir + '\\bin';
-        }
-        process.env.JAVA_HOME = firstJdkDir;
-        console.log('Set JAVA_HOME to ' + firstJdkDir);
-      }
-    }
-  }
   // Add flags for building with Gradle
   if (typeof process.env.ANDROID_BUILD == 'undefined') {
     process.env.ANDROID_BUILD = 'gradle';
@@ -78,13 +56,6 @@ function main() {
   var command = commandLineFlags._[0];
   var packageVersion = require('../package').version;
 
-  if (commandLineFlags.v) {
-    command = 'version';
-  }
-  if (commandLineFlags.h || !command) {
-    command = 'help';
-  }
-
   // Colorize after parseCommandLine to avoid --help being printed in red.
   utils.colorizeConsole();
 
@@ -95,9 +66,26 @@ function main() {
     console.log('cca v' + packageVersion);
   }
 
+  if (command == 'exec') {
+    return require('./tools-check').fixEnv()
+    .then(function() {
+      require('./exec')(process.argv.slice(3));
+    }).done(null, utils.fatal);
+  }
+
+  if (commandLineFlags.v) {
+    command = 'version';
+  }
+  if (commandLineFlags.h || !command) {
+    command = 'help';
+  }
+
   function beforeCordovaPrepare() {
     if (commandLineFlags['skip-upgrade']) {
       return Q.when();
+    }
+    if (!fs.existsSync(path.join('www', 'manifest.json'))) {
+      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
     }
     return require('./auto-upgrade')();
   }
@@ -130,7 +118,14 @@ function main() {
     },
     'push': function() {
       printCcaVersionPrefix();
-      return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
+      return Q.fcall(function() {
+        var extraFlag = commandLineFlags._[1] || '';
+        if (extraFlag) {
+          require('optimist').showHelp(console.log);
+          return Q.reject('Flag "' + extraFlag + '" not understood.  Did you mean `--target=' + extraFlag + '`?');
+        }
+        return require('./push-to-harness')(commandLineFlags.target, commandLineFlags.watch);
+      });
     },
     'run': function() {
       printCcaVersionPrefix();
@@ -138,11 +133,9 @@ function main() {
       .then(function() {
         var platform = commandLineFlags._[1];
         if (platform === 'chrome') {
-          // TODO: improve
-          var chromePath = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
-          var args = ['--profile-directory=/dev/null', '--load-and-launch-app=' + path.join('www')];
-          var childProcess = require('child_process');
-          childProcess.spawn(chromePath, args);
+          // TODO: For some reason --user-data-dir and --load-and-launch-app do not play well together.  Seems you must still quit Chrome Canary first for this to work.
+          var spawn = require('child_process').spawn;
+          spawn('open', ['-n', '-a', 'Google Chrome Canary', '--args', '--user-data-dir=/tmp/cca_chrome_data_dir', '--load-and-launch-app=' + path.resolve('www')]); // '--disable-web-security'
           return;
         }
         forwardCurrentCommandToCordova();
@@ -158,17 +151,14 @@ function main() {
         }
         // resolve turns relative paths into absolute
         destAppDir = path.resolve(destAppDir);
-        return require('./tools-check')()
-          .then(function() {
-            var packageId = commandLineFlags._[2] || '';
-            var appName = commandLineFlags._[3] || '';
-            return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
-          });
+        var packageId = commandLineFlags._[2] || '';
+        var appName = commandLineFlags._[3] || '';
+        return require('./create-app')(destAppDir, ccaRoot, origDir, packageId, appName, commandLineFlags);
       });
     },
     'upgrade': function() {
       printCcaVersionPrefix();
-      return require('./upgrade-project')();
+      return require('./upgrade-project')(commandLineFlags.y);
     },
     'version': function() {
       console.log(packageVersion);
@@ -191,6 +181,10 @@ function main() {
       forwardCurrentCommandToCordova();
       return Q.when();
     },
+    'analytics': function() {
+      // Do nothing.  This is handled as a special-case below.
+      return Q.when();
+    },
     'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'compile': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'emulate': printVersionThenPrePrePrepareThenForwardCommandToCordova,
@@ -208,6 +202,13 @@ function main() {
   if (projectRoot) {
     cordovaLib.cordova.config(projectRoot, require('./default-config')(ccaRoot));
     process.chdir(projectRoot);
+    // signing keys
+    if (!process.env.DEBUG_SIGNING_PROPERTIES_FILE && fs.existsSync('android-debug-keys.properties')) {
+      process.env.DEBUG_SIGNING_PROPERTIES_FILE = path.resolve('android-debug-keys.properties');
+    }
+    if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE && fs.existsSync('android-release-keys.properties')) {
+      process.env.RELEASE_SIGNING_PROPERTIES_FILE = path.resolve('android-release-keys.properties');
+    }
   }
 
   if (!commandActions.hasOwnProperty(command)) {
@@ -223,7 +224,18 @@ function main() {
     cordovaLib.events.on('verbose', console.log);
   }
 
-  commandActions[command]().done(null, utils.fatal);
+  // If the command is an analytics command, act accordingly.
+  // We do this now because it's a special case.  If this is the user's first command, a prompt doesn't make sense.
+  var analyticsLoader = require('./analytics-loader');
+  if (command === 'analytics') {
+    analyticsLoader.analyticsCommand(commandLineFlags._[1]);
+  }
+
+  analyticsLoader.getAnalyticsModule()
+  .then(function(analytics) {
+    analytics.sendEvent('cca', command);
+  }).then(commandActions[command])
+  .done(null, utils.fatal);
 }
 
 if (require.main === module) {

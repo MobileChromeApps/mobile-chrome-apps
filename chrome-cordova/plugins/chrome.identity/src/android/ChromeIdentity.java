@@ -272,13 +272,19 @@ public class ChromeIdentity extends CordovaPlugin {
         try {
             String token = args.getString(0);
             Context context = this.cordova.getActivity();
-            GoogleAuthUtil.invalidateToken(context, token);
+            GoogleAuthUtil.clearToken(context, token);
             callbackContext.success();
         } catch (SecurityException e) {
             // This happens when trying to clear a token that doesn't exist.
             callbackContext.success();
         } catch (JSONException e) {
             callbackContext.error("Could not invalidate token due to JSONException.");
+        } catch (GooglePlayServicesAvailabilityException e) {
+            callbackContext.error("Could not invalidate token due to GooglePlayServicesAvailabilityException.");
+        } catch (GoogleAuthException e) {
+            callbackContext.error("Could not invalidate token due to GoogleAuthException.");
+        } catch (IOException e) {
+            callbackContext.error("Could not invalidate token due to IOException.");
         }
     }
 }

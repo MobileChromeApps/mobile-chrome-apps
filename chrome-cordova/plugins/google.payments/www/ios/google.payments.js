@@ -34,7 +34,7 @@ exports.inapp = {
             // Record the data for each valid product.
             var skuDetails = [];
             if (validProducts.length) {
-                validProducts.forEach(function (i, product) {
+                validProducts.forEach(function (product, i) {
                     // Add the valid product to the set of loaded items.
                     loadedItemSet[product.id] = true;
                     console.log("Loaded product: " + product.id);
@@ -71,7 +71,15 @@ exports.inapp = {
             if (isValidProduct) {
                 // Set the purchase callback.
                 window.storekit.options.purchase = function(transactionId, productId) {
-                    options.success();
+                    options.success({
+                        request: {
+                            sku: productId,
+                            consume: options.consume
+                        },
+                        response: {
+                            orderId: transactionId
+                        }
+                    });
                 };
 
                 // Set the error callback.

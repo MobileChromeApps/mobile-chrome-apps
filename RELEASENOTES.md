@@ -4,6 +4,36 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.4.1 (Sep 24, 2014)
+* Android: Fix build warning about dynamic properties being deprecated
+* Android: Make Android Studio project imports work properly
+* Android: Faster builds by building only release/debug for sublibraries
+* Android: Even faster builds for `cca run android` by building only one of arm vs x86
+* Android: Make it an error to try to build android release without android-release-keys.properties
+* Fix cca create failing when not connected to the internet
+* Add platforms in one command instead of two (triggers one fewer prepares)
+
+### v0.4.0 (Sep 18, 2014)
+* Android: Switched build system to Gradle (no more Ant)
+* Android: Now generating smaller APKs via arm/x86-specific builds
+* Android: New release signing instructions (now requires a android-release-keys.properties file in project root)
+* Android: Update to Crosswalk 8.37.189.0 (based on Chromium 37)
+* Android: New command-line flag: cca build --webview=system
+* Improvements to checkenv and SDK detection logic
+* Added "exec" command to make it easier to run programs that require fix-ups to PATH
+* Added Google Analytics
+* Added 'cca analytics' to enable/disable usage stats collection
+* Fix #300: Error if using cca command inside cordova project
+* Fix #304: Automatically set Android Theme
+* Fix #315: Add -y flag to skip [y/n] upgrade prompt
+* Update Crosswalk-engine plugin to handle file picker (Fixes #263)
+* Switch to cordova-ios@3.6.1, updated cordova-android to latest 4.0.x
+* Update cordova-crosswalk-engine to fix timers not being fired when app is backgrounded (fixes #297)
+* Change all plugin IDs to lower case
+* Fix #296, prepare was running plugin add each time
+* iOS: Removed dependency on CoreLocation framework
+
+
 ### v0.3.1 (August 21, 2014)
 * Most plugins are now downloaded from Cordova plugin registry
 * Update Crosswalk to M37

@@ -3,8 +3,11 @@ var path = require('path');
 var shelljs = require('shelljs');
 var utils = require('./utils');
 
-module.exports = exports = function upgradeProject() {
-  return utils.waitForKey('Warning: Upgrade will replace all files in platforms and plugins. Continue? [y/N] ')
+module.exports = exports = function upgradeProject(skipPrompt) {
+  return Q.fcall(function() {
+    if (skipPrompt) return 'y';
+    return utils.waitForKey('Warning: Upgrade will replace all files in platforms and plugins. Continue? [y/N] ');
+  })
   .then(function(key) {
     if (key != 'y' && key != 'Y') {
       return Q.reject('Okay, nevermind.');

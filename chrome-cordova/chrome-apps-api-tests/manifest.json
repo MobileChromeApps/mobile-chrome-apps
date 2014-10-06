@@ -33,6 +33,7 @@
     "alarms",
     "audioCapture",
     "fileSystem",
+    "geolocation",
     "identity",
     "idle",
     "notifications",
