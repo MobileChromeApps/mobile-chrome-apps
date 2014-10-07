@@ -16,6 +16,19 @@
       ]
     }
   },
+  "sockets": {
+    "udp": {
+      "bind": "*",
+      "send": "*",
+      "multicastMembership": ""
+    },
+    "tcp": {
+      "connect": "*"
+    },
+    "tcpServer": {
+      "listen": "*"
+    }
+  },
   "permissions": [
     "alarms",
     "audioCapture",
