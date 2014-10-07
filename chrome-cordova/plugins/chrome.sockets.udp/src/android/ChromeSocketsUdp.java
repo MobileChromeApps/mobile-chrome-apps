@@ -605,8 +605,6 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     void bind(String address, int port) throws SocketException {
       channel.socket().setReuseAddress(true);
       channel.socket().bind(new InetSocketAddress(port));
-      multicastSocket.setReuseAddress(true);
-      multicastSocket.bind(new InetSocketAddress(port));
     }
 
     int send(String address, int port, byte[] data) throws IOException {
@@ -671,6 +669,8 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       multicastSocket.joinGroup(InetAddress.getByName(address));
 
       if (multicastReadThread == null) {
+    	multicastSocket.setReuseAddress(true);
+        multicastSocket.bind(new InetSocketAddress(channel.socket().getLocalPort()));
         multicastReadThread = new MulticastReadThread(socketId, multicastSocket, recvContext);
         multicastReadThread.start();
       }
