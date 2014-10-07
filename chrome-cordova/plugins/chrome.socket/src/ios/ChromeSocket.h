@@ -29,7 +29,6 @@
 //- (void)setNoDelay:(CDVInvokedUrlCommand*)command;
 
 - (void)getInfo:(CDVInvokedUrlCommand*)command;
-- (void)getNetworkList:(CDVInvokedUrlCommand*)command;
 
 - (void)joinGroup:(CDVInvokedUrlCommand*)command;
 - (void)leaveGroup:(CDVInvokedUrlCommand*)command;

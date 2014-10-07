@@ -15,6 +15,7 @@
 
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.iosSocketsCommon" />
+  <dependency id="org.chromium.system.network" />
 
   <js-module src="socket.js" name="Socket">
     <clobbers target="chrome.socket" />
