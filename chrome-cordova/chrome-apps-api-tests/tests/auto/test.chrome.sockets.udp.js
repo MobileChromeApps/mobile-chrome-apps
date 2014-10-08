@@ -93,7 +93,7 @@ registerAutoTests('chrome.sockets.udp', function() {
     expect(chrome.sockets.udp.getJoinedGroups).toBeDefined();
   });
 
-  describe('UDP' ,function() {
+  describe('UDP', function() {
 
     it('port is available (sanity test)', function(done) {
       chrome.sockets.udp.bind(sockets[0].socketId, bindAddr, port, function(bindResult) {
@@ -295,7 +295,7 @@ registerAutoTests('chrome.sockets.udp', function() {
 
   });
 
-  describe('Multicast' ,function() {
+  describe('Multicast', function() {
 
     it('simple joinGroup', function(done) {
       chrome.sockets.udp.bind(sockets[0].socketId, bindAddr, port, function(bindResult) {
