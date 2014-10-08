@@ -269,7 +269,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       for (TcpSocket socket: sockets.values()) {
         sendCloseMessage(socket, null);
       }
-      selector.wakeup();
+      if(selector != null)
+        selector.wakeup();
     } catch (InterruptedException e) {
     }
   }
