@@ -193,7 +193,7 @@ static NSString* stringFromData(NSData* data) {
     
     callback(YES, 0);
     
-    if (!_paused)
+    if (![_paused boolValue])
         [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
 }
 
