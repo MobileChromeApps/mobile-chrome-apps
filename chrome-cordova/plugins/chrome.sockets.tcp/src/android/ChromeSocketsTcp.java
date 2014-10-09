@@ -143,6 +143,14 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     socket.setPaused(paused);
+    if (!paused) {
+      try {
+        selectorMessages.put(new SelectorMessage(
+            socket, SelectorMessageType.SO_ADD_READ_INTEREST, null));
+        selector.wakeup();
+      } catch (InterruptedException e) {
+      }
+    }
     callbackContext.success();
   }
 
@@ -283,6 +291,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     socket.addSendPacket(data, callbackContext);
+
+    try {
+      selectorMessages.put(new SelectorMessage(
+          socket, SelectorMessageType.SO_ADD_WRITE_INTEREST, null));
+      selector.wakeup();
+    } catch (InterruptedException e) {
+    }
   }
 
   private void sendCloseMessage(TcpSocket socket, CallbackContext callbackContext)
@@ -385,6 +400,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     SO_DISCONNECTED,
     SO_CLOSE,
     SSL_INIT_HANDSHAKE,
+    SO_ADD_READ_INTEREST,
+    SO_ADD_WRITE_INTEREST,
     T_STOP;
   }
 
@@ -446,6 +463,12 @@ public class ChromeSocketsTcp extends CordovaPlugin {
               msg.socket.setUpSSLEngine();
               while(msg.socket.handshaking());
               msg.socket.handshakeSuccess();
+              break;
+            case SO_ADD_READ_INTEREST:
+              msg.socket.addInterestSet(SelectionKey.OP_READ);
+              break;
+            case SO_ADD_WRITE_INTEREST:
+              msg.socket.addInterestSet(SelectionKey.OP_WRITE);
               break;
             case T_STOP:
               running = false;
@@ -579,17 +602,17 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       name = "";
     }
 
+    // Only call this method on selector thread
     void addInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() | interestSet);
-        key.selector().wakeup();
       }
     }
 
+    // Only call this method on selector thread
     void removeInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() & ~interestSet);
-        key.selector().wakeup();
       }
     }
 
@@ -626,11 +649,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     void setPaused(boolean paused) {
       this.paused = paused;
-      if (paused) {
-        removeInterestSet(SelectionKey.OP_READ);
-      } else  {
-        addInterestSet(SelectionKey.OP_READ);
-      }
     }
 
     void setKeepAlive(boolean enable) throws SocketException {
@@ -832,7 +850,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     void addSendPacket(byte[] data, CallbackContext callbackContext) {
       ByteBuffer appData = ByteBuffer.wrap(data);
       TcpSendPacket sendPacket = new TcpSendPacket(appData, callbackContext);
-      addInterestSet(SelectionKey.OP_WRITE);
       try {
         sendPackets.put(sendPacket);
       } catch (InterruptedException e) {
@@ -898,7 +915,10 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     int read() throws JSONException {
 
       int bytesRead = 0;
-      if (paused) return bytesRead;
+      if (paused) {
+        removeInterestSet(SelectionKey.OP_READ);
+        return bytesRead;
+      }
 
       try {
         if (sslEngine != null) {
