@@ -32,7 +32,6 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSystemCpu.m" />
-    <header-file src="src/ios/ChromeSystemCpu.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSystemCpu">

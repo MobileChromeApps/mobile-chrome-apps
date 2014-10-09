@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSystemCpu.h"
-
+#import <Cordova/CDVPlugin.h>
+#import <Foundation/Foundation.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <mach/mach.h>
@@ -17,133 +17,174 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
+@interface ChromeSystemCpu : CDVPlugin
+
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+
+@end
+
 @implementation ChromeSystemCpu
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
+- (NSError *)kernelCallError:(NSString *)errMsg
 {
-    self = [super initWithWebView:theWebView];
-    return self;
+    int code = errno;
+	NSString *codeDescription = [NSString stringWithUTF8String:strerror(code)];
+
+	NSDictionary* userInfo = @{
+                              NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%@: %d - %@", errMsg, code, codeDescription]
+                              };
+	
+	return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
 }
 
-- (NSError *)throwSystemCallFailed:(NSString *)reason
+- (NSString*)getSysctlByName:(const char *)identifier error:(NSError **)errPtr
 {
-	NSString *errMsg = [NSString stringWithUTF8String:strerror(errno)];
+    size_t len = 0;
 
-    NSException* myException = [NSException
-                                exceptionWithName:@"InvalidOperationException"
-                                reason:[NSString stringWithFormat:@"%@: %@", reason, errMsg]
-                                userInfo:nil];
-    @throw myException;
-}
-
-- (NSString*)getSysctlByName:(const char *)identifier
-{
-    size_t len;
-    char *value;
-    int ret;
-    
-    ret = sysctlbyname(identifier, NULL, &len, NULL, 0);
+    int ret = sysctlbyname(identifier, NULL, &len, NULL, 0);
     if (ret != 0)
     {
-        [self throwSystemCallFailed:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+		if (errPtr)
+		{
+			*errPtr = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+		}
+        return nil;
     }
 
-    value = malloc(len);
+    char *value = malloc(len);
     ret = sysctlbyname(identifier, value, &len, NULL, 0);
     if (ret != 0)
     {
-        [self throwSystemCallFailed:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+		if (errPtr)
+		{
+			*errPtr = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+		}
+        free(value);
+        return nil;
     }
 
-    return @(value);
+    NSString* ctlValue = @(value);
+    free(value);
+    return ctlValue;
 }
 
-- (void)getCpuNames:(NSMutableDictionary*)info typeKey:(NSString*)typeKey subTypeKey:(NSString*)subTypeKey
+- (BOOL)getCpuNames:(NSString**)cpuType cpuSubType:(NSString**)cpuSubType error:(NSError **)errPtr
 {
     host_basic_info_data_t hinfo;
-    mach_msg_type_number_t count;
-    char *cpu_type_name, *cpu_subtype_name;
+    mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
     
-    count = HOST_BASIC_INFO_COUNT;
     kern_return_t kr = host_info(mach_host_self(),
                                  HOST_BASIC_INFO,
                                  (host_info_t)&hinfo,
                                  &count);
     
     if (kr != KERN_SUCCESS) {
-        NSException* myException = [NSException
-                                    exceptionWithName:@"InvalidOperationException"
-                                    reason:@"Failed to retrieve host info"
-                                    userInfo:nil];
-        @throw myException;
+		if (errPtr)
+		{
+			*errPtr = [self kernelCallError:@"Failed to retrieve host info"];
+		}
+		return NO;
     }
     
     
     // the slot_name() library function converts the specified
     // cpu_type/cpu_subtype pair to a human-readable form
+    char* cpu_type_name = NULL;
+    char* cpu_subtype_name = NULL;
+
     slot_name(hinfo.cpu_type, hinfo.cpu_subtype, &cpu_type_name,
               &cpu_subtype_name);
     
-    [info setValue:@(cpu_type_name) forKey:typeKey];
-    [info setValue:@(cpu_subtype_name) forKey:subTypeKey];
+    *cpuType = @(cpu_type_name);
+    *cpuSubType = @(cpu_subtype_name);
+    
+    return YES;
 }
 
-- (NSArray*)getCpuFeatures
+- (NSArray*)getCpuFeatures:(NSError **)errPtr
 {
-    NSMutableArray* ret = [NSMutableArray array];
-    // This key is not supported on iOS apparently (although it is for Mac)
-    // NSString* allFeatures = [self getSysctlByName:"machdep.cpu.features"];
+    NSMutableArray* features = [NSMutableArray array];
+    // The sysctl key "machdep.cpu.features" is not supported on iOS (although it is for MacOS)
+    /*NSString* allFeatures = [self getSysctlByName:"machdep.cpu.features" error:errPtr];
+    if (!allFeatures)
+    {
+        return nil;
+    }*/
     // Have yet to find other way to determine cpu features
-    return ret;
+    return features;
 }
 
-- (NSArray*)getCpuTimePerProcessor
+- (NSArray*)getCpuTimePerProcessor:(NSError **)errPtr
 {
-    NSMutableArray* ret = [NSMutableArray array];
+    NSMutableArray* procs = [NSMutableArray array];
 
     processor_info_array_t cpuInfo;
     mach_msg_type_number_t numCpuInfo;    
     natural_t numCPUs = 0U;
     
-    kern_return_t err = host_processor_info(mach_host_self(),
+    kern_return_t kr = host_processor_info(mach_host_self(),
                                             PROCESSOR_CPU_LOAD_INFO,
                                             &numCPUs,
                                             &cpuInfo,
                                             &numCpuInfo);
-    if (err != KERN_SUCCESS) {
-        NSException* myException = [NSException
-                exceptionWithName:@"InvalidOperationException"
-                reason:@"Failed to retrieve host processor info"
-                userInfo:nil];
-        @throw myException;
+    if (kr != KERN_SUCCESS) {
+		if (errPtr)
+		{
+			*errPtr = [self kernelCallError:@"Failed to retrieve host processor info"];
+		}
+		return nil;
     }
 
-    for(unsigned i = 0U; i < numCPUs; ++i) {
-        float user, kernel, idle, total;
+    for(natural_t i = 0U; i < numCPUs; ++i) {
 
-        user = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_USER];
-        kernel = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_SYSTEM];
-        idle = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_IDLE];
-        total = user + kernel + idle + cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_NICE];
+        float user = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_USER];
+        float kernel = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_SYSTEM];
+        float idle = cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_IDLE];
+        float total = user + kernel + idle + cpuInfo[(CPU_STATE_MAX * i) + CPU_STATE_NICE];
 
-        NSMutableDictionary* procStat = [NSMutableDictionary dictionary];
-        [procStat setValue:@(user) forKey:@"user"];
-        [procStat setValue:@(kernel) forKey:@"kernel"];
-        [procStat setValue:@(idle) forKey:@"idle"];
-        [procStat setValue:@(total) forKey:@"total"];
+        NSDictionary* procStat = @{
+                                   @"user": @(user),
+                                   @"kernel": @(kernel),
+                                   @"idle": @(idle),
+                                   @"total": @(total)
+                                   };
 
-        NSMutableDictionary* procUsage = [NSMutableDictionary dictionary];
-        [procUsage setObject:procStat forKey:@"usage"];
-    
-        [ret addObject:procUsage];
+        [procs addObject:@{
+                           @"usage": procStat
+                           }];
     }
 
-    return ret;
+    return procs;
 }
       
-- (NSNumber*)getProcessorCount
+- (NSDictionary*)_getInfo:(NSError **)errPtr
 {
-    return [NSNumber numberWithInt:[[NSProcessInfo processInfo] processorCount]];
+    NSArray* processors = [self getCpuTimePerProcessor:errPtr];
+
+    if (processors == nil) {
+        return nil;
+    }
+
+    NSArray* features = [self getCpuFeatures:errPtr];
+
+    if (features == nil) {
+        return nil;
+    }
+
+    NSString* archName;
+    NSString* modelName;
+    if (![self getCpuNames:&archName cpuSubType:&modelName error:errPtr])
+    {
+        return nil;
+    }
+
+    return @{
+             @"archName": archName,
+             @"modelName": modelName,
+             @"features": features,
+             @"processors": processors,
+             @"numOfProcessors": @([processors count])
+             };
 }
 
 - (void)getInfo:(CDVInvokedUrlCommand*)command
@@ -151,20 +192,16 @@
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
 
-        @try {
-
-            NSMutableDictionary* info = [NSMutableDictionary dictionary];
-
-            NSArray* processors = [self getCpuTimePerProcessor];
-
-            [self getCpuNames:info typeKey:@"archName" subTypeKey:@"modelName"];
-            [info setObject:[self getCpuFeatures] forKey:@"features"];
-            [info setObject:processors forKey:@"processors"];
-            [info setValue:@([processors count]) forKey:@"numOfProcessors"];
-
+        NSError* err = nil;
+        NSDictionary* info = [self _getInfo:&err];
+        
+        if (info)
+        {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:info];
-        } @catch (NSException* exception) {
-            VERBOSE_LOG(@"%@ - %@", @"Error occured while getting CPU info", [exception debugDescription]);
+        }
+        else
+        {
+            NSLog(@"Error occured while getting CPU info - %@", [err localizedDescription]);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get CPU info"];
         }
 
