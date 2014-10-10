@@ -20,6 +20,16 @@
     <clobbers target="chrome.sockets.udp" />
   </js-module>
 
+  <platform name="android">
+    <source-file src="src/android/ChromeSocketsUdp.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSocketsUdp">
+        <param name="android-package" value="org.chromium.ChromeSocketsUdp"/>
+      </feature>
+    </config-file>
+  </platform>
+
   <platform name="ios">
     <source-file src="src/ios/ChromeSocketsUdp.m" />
     <header-file src="src/ios/ChromeSocketsUdp.h" />

@@ -16,9 +16,8 @@ registerAutoTests("chrome.notifications", function() {
     expect(chrome.notifications.onClicked).toBeDefined();
     expect(chrome.notifications.onButtonClicked).toBeDefined();
   });
-  
-//   if(isOnCordova() && cordova.require('cordova/platform').id != 'ios'){
-    describe('testing notifications', function() {
+
+    describeExcludeIos('testing notifications', function() {
      function createNotifications(callback) {
        chrome.notifications.create(ids[0], options, function(id0) {
          expect(id0).toBe(ids[0]);
@@ -119,5 +118,4 @@ registerAutoTests("chrome.notifications", function() {
       });
     });
   });
-// }
 });
