@@ -33,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
+import android.os.AsyncTask;
 
 public class ChromeSocket extends CordovaPlugin {
 
@@ -199,11 +200,26 @@ public class ChromeSocket extends CordovaPlugin {
             return;
         }
 
-        int result = sd.sendTo(data, address, port);
-        if (result <= 0) {
-            context.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, result));
-        } else {
-            context.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+        new SendToTask().execute(sd, data, address, port, context);
+    }
+
+    private class SendToTask extends AsyncTask<Object, Void, Void> {
+        @Override
+        protected Void doInBackground(Object... argsArray) {
+            SocketData sd = (SocketData)argsArray[0];
+            byte[] data = (byte[])argsArray[1];
+            String address = (String)argsArray[2];
+            int port = ((Integer)argsArray[3]).intValue();
+            CallbackContext context = (CallbackContext)argsArray[4];
+
+            int result = sd.sendTo(data, address, port);
+            if (result <= 0) {
+                context.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, result));
+            } else {
+                context.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+            }
+            
+            return null;
         }
     }
 
