@@ -45,6 +45,13 @@ registerAutoTests("chrome.audioCapture", function() {
 
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
+  it('should have navigator.getUserMedia', function() {
+    expect(navigator.getUserMedia).toBeDefined();
+  });
+
+  if (!navigator.getUserMedia)
+    return;
+
   it('should return a valid audio stream with no video', function(done) {
     navigator.getUserMedia({audio: true, video: false}, function(stream) {
       expectMediaStream(stream);
