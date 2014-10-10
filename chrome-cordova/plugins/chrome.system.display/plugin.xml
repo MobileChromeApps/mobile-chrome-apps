@@ -32,7 +32,6 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSystemDisplay.m" />
-    <header-file src="src/ios/ChromeSystemDisplay.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSystemDisplay">

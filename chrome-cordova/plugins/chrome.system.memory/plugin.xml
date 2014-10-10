@@ -32,7 +32,6 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSystemMemory.m" />
-    <header-file src="src/ios/ChromeSystemMemory.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSystemMemory">

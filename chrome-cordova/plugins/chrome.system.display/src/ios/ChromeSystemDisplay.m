@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSystemDisplay.h"
+#import <Cordova/CDVPlugin.h>
+#import <Foundation/Foundation.h>
 #import <UIKit/UIScreen.h>
     
 #if CHROME_SYSTEM_DISPLAY_VERBOSE_LOGGING
@@ -11,75 +12,69 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
-@implementation ChromeSystemDisplay
+@interface ChromeSystemDisplay : CDVPlugin
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
-{
-    self = [super initWithWebView:theWebView];
-    return self;
-}
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+
+@end
+
+@implementation ChromeSystemDisplay
 
 - (NSDictionary*) buildBoundsInfo:(CGRect)bounds scale:(CGFloat)scale
 {
-    NSMutableDictionary* boundsInfo = [NSMutableDictionary dictionary];
-
     // Convert screen resolution from points to pixels
     CGSize screenSize = CGSizeMake(bounds.size.width * scale, bounds.size.height * scale);
 
-    [boundsInfo setValue:@(0) forKey:@"left"];
-    [boundsInfo setValue:@(0) forKey:@"top"];
-    [boundsInfo setValue:@(screenSize.width) forKey:@"width"];
-    [boundsInfo setValue:@(screenSize.height) forKey:@"height"];
-
-    return boundsInfo;
+    return @{
+        @"left": @(0),
+        @"top": @(0),
+        @"width": @(screenSize.width),
+        @"height": @(screenSize.height)
+    };
 }
 
-- (NSNumber*) getRotation:(UIScreen*)display
+- (NSNumber*) rotationForDisplay:(UIScreen*)display
 {
     //TODO: There should be a way to figure out the orientation, and thus the rotation
-    return 0;
+    return @(0);
 }
 
-- (NSDictionary*) getBounds:(UIScreen*)display
+- (NSDictionary*) boundsForDisplay:(UIScreen*)display
 {
     return [self buildBoundsInfo:[display bounds] scale:[display scale]];
 }
 
-- (NSDictionary*) getOverscan:(UIScreen*)display
+- (NSDictionary*) overscanForDisplay:(UIScreen*)display
 {
-    NSMutableDictionary* overscan = [NSMutableDictionary dictionary];
-    
-    [overscan setValue:@(0) forKey:@"left"];
-    [overscan setValue:@(0) forKey:@"top"];
-    [overscan setValue:@(0) forKey:@"right"];
-    [overscan setValue:@(0) forKey:@"bottom"];
-    
-    return overscan;
+    return @{
+        @"left": @(0),
+        @"top": @(0),
+        @"right": @(0),
+        @"bottom": @(0)
+    };
 }
 
-- (NSNumber*) getDpiX:(UIScreen*)display
+- (NSNumber*) dpiXForDisplay:(UIScreen*)display
 {
     float scale = [display scale];
 
     return [NSNumber numberWithFloat: scale * 160];
 }
 
-- (NSNumber*) getDpiY:(UIScreen*)display
+- (NSNumber*) dpiYForDisplay:(UIScreen*)display
 {
     float scale = [display scale];
     
     return [NSNumber numberWithFloat: scale * 160];
 }
 
-- (NSDictionary*) getWorkArea:(UIScreen*)display
+- (NSDictionary*) workAreaForDisplay:(UIScreen*)display
 {
     return [self buildBoundsInfo:[display applicationFrame] scale:[display scale]];
 }
 
 - (NSDictionary*) getDisplayInfo:(UIScreen*)display displayIndex:(NSInteger)index mainDisplay:(UIScreen*)mainDisplay
 {
-    NSMutableDictionary* displayInfo = [NSMutableDictionary dictionary];
-
     BOOL isPrimary = NO;
     NSString* name = @"[unnamed]";
     
@@ -88,17 +83,17 @@
         name = @"Built-in Screen";
     }
 
-    [displayInfo setValue:[@(index) stringValue] forKey:@"id"];
-    [displayInfo setValue:name forKey:@"name"];
-    [displayInfo setValue:[NSNumber numberWithBool:isPrimary] forKey:@"isPrimary"];
-    [displayInfo setValue:[self getDpiX:display] forKey:@"dpiX"];
-    [displayInfo setValue:[self getDpiY:display] forKey:@"dpiY"];
-    [displayInfo setValue:[self getRotation:display] forKey:@"rotation"];
-    [displayInfo setObject:[self getBounds:display] forKey:@"bounds"];
-    [displayInfo setObject:[self getOverscan:display] forKey:@"overscan"];
-    [displayInfo setObject:[self getWorkArea:display] forKey:@"workArea"];
-
-    return displayInfo;
+    return @{
+        @"id": [@(index) stringValue],
+        @"name": name,
+        @"isPrimary": [NSNumber numberWithBool:isPrimary],
+        @"dpiX": [self dpiXForDisplay:display],
+        @"dpiY": [self dpiYForDisplay:display],
+        @"rotation": [self rotationForDisplay:display],
+        @"bounds": [self boundsForDisplay:display],
+        @"overscan": [self overscanForDisplay:display],
+        @"workArea": [self workAreaForDisplay:display]
+    };
 }
 
 - (void)getInfo:(CDVInvokedUrlCommand*)command
@@ -120,12 +115,12 @@
 
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:displays];
         } @catch (NSException* exception) {
-            VERBOSE_LOG(@"%@ - %@", @"Error occured while getting display info", [exception debugDescription]);
+            NSLog(@"Error occured while getting display info - %@", [exception debugDescription]);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get display info"];
         }
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];    
+    }];
 }
 
 @end

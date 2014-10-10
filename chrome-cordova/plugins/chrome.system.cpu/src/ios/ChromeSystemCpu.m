@@ -37,16 +37,16 @@
 	return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
 }
 
-- (NSString*)getSysctlByName:(const char *)identifier error:(NSError **)errPtr
+- (NSString*)getSysctlByName:(const char *)identifier error:(NSError **)error
 {
     size_t len = 0;
 
     int ret = sysctlbyname(identifier, NULL, &len, NULL, 0);
     if (ret != 0)
     {
-		if (errPtr)
+		if (error)
 		{
-			*errPtr = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+			*error = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
 		}
         return nil;
     }
@@ -55,9 +55,9 @@
     ret = sysctlbyname(identifier, value, &len, NULL, 0);
     if (ret != 0)
     {
-		if (errPtr)
+		if (error)
 		{
-			*errPtr = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
+			*error = [self kernelCallError:[NSString stringWithFormat:@"sysctlbyname('%s') failed", identifier]];
 		}
         free(value);
         return nil;
@@ -68,7 +68,7 @@
     return ctlValue;
 }
 
-- (BOOL)getCpuNames:(NSString**)cpuType cpuSubType:(NSString**)cpuSubType error:(NSError **)errPtr
+- (BOOL)getCpuNames:(NSString**)cpuType cpuSubType:(NSString**)cpuSubType error:(NSError **)error
 {
     host_basic_info_data_t hinfo;
     mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
@@ -79,9 +79,9 @@
                                  &count);
     
     if (kr != KERN_SUCCESS) {
-		if (errPtr)
+		if (error)
 		{
-			*errPtr = [self kernelCallError:@"Failed to retrieve host info"];
+			*error = [self kernelCallError:@"Failed to retrieve host info"];
 		}
 		return NO;
     }
@@ -101,11 +101,11 @@
     return YES;
 }
 
-- (NSArray*)getCpuFeatures:(NSError **)errPtr
+- (NSArray*)getCpuFeatures:(NSError **)error
 {
     NSMutableArray* features = [NSMutableArray array];
     // The sysctl key "machdep.cpu.features" is not supported on iOS (although it is for MacOS)
-    /*NSString* allFeatures = [self getSysctlByName:"machdep.cpu.features" error:errPtr];
+    /*NSString* allFeatures = [self getSysctlByName:"machdep.cpu.features" error:error];
     if (!allFeatures)
     {
         return nil;
@@ -114,7 +114,7 @@
     return features;
 }
 
-- (NSArray*)getCpuTimePerProcessor:(NSError **)errPtr
+- (NSArray*)getCpuTimePerProcessor:(NSError **)error
 {
     NSMutableArray* procs = [NSMutableArray array];
 
@@ -128,9 +128,9 @@
                                             &cpuInfo,
                                             &numCpuInfo);
     if (kr != KERN_SUCCESS) {
-		if (errPtr)
+		if (error)
 		{
-			*errPtr = [self kernelCallError:@"Failed to retrieve host processor info"];
+			*error = [self kernelCallError:@"Failed to retrieve host processor info"];
 		}
 		return nil;
     }
@@ -157,15 +157,15 @@
     return procs;
 }
       
-- (NSDictionary*)_getInfo:(NSError **)errPtr
+- (NSDictionary*)_getInfo:(NSError **)error
 {
-    NSArray* processors = [self getCpuTimePerProcessor:errPtr];
+    NSArray* processors = [self getCpuTimePerProcessor:error];
 
     if (processors == nil) {
         return nil;
     }
 
-    NSArray* features = [self getCpuFeatures:errPtr];
+    NSArray* features = [self getCpuFeatures:error];
 
     if (features == nil) {
         return nil;
@@ -173,7 +173,7 @@
 
     NSString* archName;
     NSString* modelName;
-    if (![self getCpuNames:&archName cpuSubType:&modelName error:errPtr])
+    if (![self getCpuNames:&archName cpuSubType:&modelName error:error])
     {
         return nil;
     }
@@ -192,8 +192,8 @@
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
 
-        NSError* err = nil;
-        NSDictionary* info = [self _getInfo:&err];
+        NSError* error = nil;
+        NSDictionary* info = [self _getInfo:&error];
         
         if (info)
         {
@@ -201,7 +201,7 @@
         }
         else
         {
-            NSLog(@"Error occured while getting CPU info - %@", [err localizedDescription]);
+            NSLog(@"Error occured while getting CPU info - %@", [error localizedDescription]);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get CPU info"];
         }
 

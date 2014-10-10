@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSystemMemory.h"
+#import <Cordova/CDVPlugin.h>
+#import <Foundation/Foundation.h>
 #import <mach/mach.h>
 #import <mach/mach_host.h>
 
@@ -12,15 +13,28 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
+@interface ChromeSystemMemory : CDVPlugin
+
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+
+@end
+
 @implementation ChromeSystemMemory
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
+
+- (NSError *)kernelCallError:(NSString *)errMsg
 {
-    self = [super initWithWebView:theWebView];
-    return self;
+    int code = errno;
+	NSString *codeDescription = [NSString stringWithUTF8String:strerror(code)];
+
+	NSDictionary* userInfo = @{
+                              NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%@: %d - %@", errMsg, code, codeDescription]
+                              };
+	
+	return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
 }
 
-- (NSNumber *)getAvailableMemory
+- (NSNumber *)getAvailableMemory:(NSError **)error
 {
     mach_port_t host_port;
     mach_msg_type_number_t host_size;
@@ -32,12 +46,13 @@
 
     vm_statistics_data_t vm_stat;
 
-    if (host_statistics(host_port, HOST_VM_INFO, (host_info_t)&vm_stat, &host_size) != KERN_SUCCESS) {
-        NSException* myException = [NSException
-                exceptionWithName:@"InvalidOperationException"
-                reason:@"Failed to fetch vm statistics"
-                userInfo:nil];
-        @throw myException;
+    if (host_statistics(host_port, HOST_VM_INFO, (host_info_t)&vm_stat, &host_size) != KERN_SUCCESS)
+    {
+		if (error)
+		{
+			*error = [self kernelCallError:@"Failed to fetch vm statistics"];
+		}
+        return nil;
     }
     
     /* Stats in bytes */ 
@@ -51,16 +66,23 @@
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
 
-        @try {
+        NSError* error = nil;
 
-            NSMutableDictionary* info = [NSMutableDictionary dictionary];
+        NSNumber* capacity = [NSNumber numberWithUnsignedLongLong:[[NSProcessInfo processInfo] physicalMemory]];
+        NSNumber* available = [self getAvailableMemory:&error];
 
-            [info setValue:[self getAvailableMemory] forKey:@"availableCapacity"];
-            [info setValue:[NSNumber numberWithUnsignedLongLong:[[NSProcessInfo processInfo] physicalMemory]] forKey:@"capacity"];
+        if (available)
+        {
+            NSDictionary* info = @{
+                @"availableCapacity": available,
+                @"capacity": capacity
+            };
 
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:info];
-        } @catch (NSException* exception) {
-            VERBOSE_LOG(@"%@ - %@", @"Error occured while getting memory info", [exception debugDescription]);
+        }
+        else
+        {
+            NSLog(@"Error occured while getting memory info - %@", [error localizedDescription]);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get memory info"];
         }
 

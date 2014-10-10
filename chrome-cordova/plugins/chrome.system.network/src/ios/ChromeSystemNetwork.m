@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSystemNetwork.h"
+#import <Cordova/CDVPlugin.h>
+#import <Foundation/Foundation.h>
 #import <sys/types.h>
 #import <ifaddrs.h> // For getifaddrs()
 #import <net/if.h> // For IFF_LOOPBACK
@@ -14,18 +15,30 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
+@interface ChromeSystemNetwork : CDVPlugin
+
+- (void)getNetworkInterfaces:(CDVInvokedUrlCommand*)command;
+
+@end
+
 @implementation ChromeSystemNetwork
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView
+- (NSError *)kernelCallError:(NSString *)errMsg
 {
-    self = [super initWithWebView:theWebView];
-    return self;
+    int code = errno;
+	NSString *codeDescription = [NSString stringWithUTF8String:strerror(code)];
+
+	NSDictionary* userInfo = @{
+                              NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%@: %d - %@", errMsg, code, codeDescription]
+                              };
+	
+	return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
 }
 
--(NSString*)getIPAddress:(struct sockaddr *)ifa_addr family:(sa_family_t)family
+- (NSString*)getIPAddress:(struct sockaddr *)ifa_addr family:(sa_family_t)family
 {
     // IP address has different data structure, for IPv4 vs IPv6
-    void* addressPointer;
+    void* addressPointer = NULL;
     char addressBuffer[100];
     
     if (family == AF_INET6)
@@ -60,7 +73,7 @@
         return 0;
     }
     
-    unsigned int prefixLength;
+    unsigned int prefixLength = 0;
 
     // Compute the network prefix length by using the "address" of the net mask
     //  - Count all the most significant bits that are set in the address
@@ -72,7 +85,6 @@
         struct in6_addr address = ((struct sockaddr_in6 *)ifa_netmask)->sin6_addr;
         
         // Count all the set bits in the 16 bytes of the IPv6 address
-        prefixLength = 0;
         for (int i = 0; i < 16; i++) {
             u_int8_t mask_part = address.s6_addr[i];
             
@@ -88,7 +100,6 @@
         uint32_t subnet_mask = ntohl( address.s_addr );
         
         // Count all the set bits in the 32 bit IPv4 address
-        prefixLength = 0;
         while ( subnet_mask & 0x80000000 ) {
           prefixLength++;
           subnet_mask <<= 1;
@@ -97,70 +108,77 @@
     
     return prefixLength;
 }
+
+- (NSArray*)_getNetworkInterfaces:(NSError **)error
+{
+    struct ifaddrs* interfaces = NULL;
+
+    // retrieve the current interfaces - returns 0 on success
+    if (getifaddrs(&interfaces) != 0)
+    {
+		if (error)
+		{
+			*error = [self kernelCallError:@"Failed to getifaddrs"];
+		}
+        return nil;
+    }
+
+    NSMutableArray* ret = [NSMutableArray array];
+    struct ifaddrs* temp_addr = NULL;
+    
+    // Loop through linked list of interfaces
+    for (temp_addr = interfaces; temp_addr != NULL; temp_addr = temp_addr->ifa_next)
+    {
+        if (temp_addr->ifa_flags & IFF_LOOPBACK)
+        {
+            // Ignore the loopback address
+            continue;
+        }
+        
+        sa_family_t family = (temp_addr->ifa_addr ? temp_addr->ifa_addr->sa_family : 0);
+        if (family != AF_INET &&
+            family != AF_INET6)
+        {
+            // Ignore non-Internet interfaces
+            continue;
+        }
+        
+        NSString* name = [NSString stringWithUTF8String:temp_addr->ifa_name];
+        
+        NSString* address = [self getIPAddress:temp_addr->ifa_addr family:family];
+
+        unsigned int prefixLength = [self getPrefixLength:temp_addr->ifa_netmask family:family];
+        
+        VERBOSE_LOG(@"interface name: %@; address: %@; prefixLength: %d", name, address, prefixLength);
+        
+        [ret addObject:@{
+                         @"name": name,
+                         @"address": address,
+                         @"prefixLength": @(prefixLength)
+                         }];
+    }
+    
+    // Free memory
+    freeifaddrs(interfaces);
+    
+    return ret;
+}
+
 - (void)getNetworkInterfaces:(CDVInvokedUrlCommand*)command
 {
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
-        struct ifaddrs* interfaces = NULL;
 
-        @try {
+        NSError* error = nil;
+        NSArray* interfaces = [self _getNetworkInterfaces:&error];
 
-            NSMutableArray* ret = [NSMutableArray array];
-            
-            struct ifaddrs* temp_addr = NULL;
-
-            // retrieve the current interfaces - returns 0 on success
-            if (getifaddrs(&interfaces) != 0)
-            {
-                NSException* myException = [NSException
-                        exceptionWithName:@"InvalidOperationException"
-                        reason:[NSString stringWithFormat:@"Failed to getifaddrs, error number: %d", errno]
-                        userInfo:nil];
-                @throw myException;
-            }
-            
-            // Loop through linked list of interfaces
-            for (temp_addr = interfaces; temp_addr != NULL; temp_addr = temp_addr->ifa_next)
-            {
-                if (temp_addr->ifa_flags & IFF_LOOPBACK)
-                {
-                    // Ignore the loopback address
-                    continue;
-                }
-                
-                sa_family_t family = (temp_addr->ifa_addr ? temp_addr->ifa_addr->sa_family : 0);
-                if (family != AF_INET &&
-                    family != AF_INET6)
-                {
-                    // Ignore non-Internet interfaces
-                    continue;
-                }
-                
-                NSString* name = [NSString stringWithUTF8String:temp_addr->ifa_name];
-                
-                NSString* address = [self getIPAddress:temp_addr->ifa_addr family:family];
-
-                unsigned int prefixLength = [self getPrefixLength:temp_addr->ifa_netmask family:family];
-                
-                VERBOSE_LOG(@"interface name: %@; address: %@; prefixLength: %d", name, address, prefixLength);
-                
-                [ret addObject:@{
-                                 @"name": name,
-                                 @"address": address,
-                                 @"prefixLength": @(prefixLength)
-                                 }];
-            }
-            
-            // Free memory
-            freeifaddrs(interfaces);
-
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:ret];
-        } @catch (NSException* exception) {
-            VERBOSE_LOG(@"%@ - %@", @"Error occured while getting network interfaces", [exception debugDescription]);
-
-            // Free memory
-            freeifaddrs(interfaces);
-
+        if (interfaces)
+        {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:interfaces];
+        }
+        else
+        {
+            NSLog(@"Error occured while getting network interfaces - %@", [error localizedDescription]);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Could not get network interfaces"];
         }
 

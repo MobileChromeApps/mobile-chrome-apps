@@ -32,7 +32,6 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSystemNetwork.m" />
-    <header-file src="src/ios/ChromeSystemNetwork.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSystemNetwork">
