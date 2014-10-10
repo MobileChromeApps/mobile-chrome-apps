@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.sockets.udp"
-    version="1.0.0">
+    version="1.0.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -19,6 +19,16 @@
   <js-module src="sockets.udp.js" name="sockets.udp">
     <clobbers target="chrome.sockets.udp" />
   </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeSocketsUdp.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeSocketsUdp">
+        <param name="android-package" value="org.chromium.ChromeSocketsUdp"/>
+      </feature>
+    </config-file>
+  </platform>
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSocketsUdp.m" />
