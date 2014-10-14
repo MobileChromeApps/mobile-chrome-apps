@@ -130,7 +130,7 @@ public class ChromeGcm extends CordovaPlugin {
         for (int i = 0; i < pendingMessages.size(); i++) {
             fireOnMessage(pendingMessages.get(i));
         }
-        pendingDeleteMessages.clear();
+        pendingMessages.clear();
         for (int i = 0; i < pendingDeleteMessages.size(); i++) {
             fireOnMessagesDeleted(pendingDeleteMessages.get(i));
         }
