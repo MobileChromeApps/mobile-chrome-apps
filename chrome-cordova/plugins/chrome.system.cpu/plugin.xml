@@ -6,22 +6,36 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.system.cpu"
-    version="1.0.1-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome System CPU API</name>
+  <keywords>chrome,system,cpu</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
+
+  <js-module src="system.cpu.js" name="system.cpu">
+    <clobbers target="chrome.system.cpu" />
+  </js-module>
 
   <platform name="android">
-    <js-module src="system.cpu.js" name="system.cpu">
-      <clobbers target="chrome.system.cpu" />
-    </js-module>
     <source-file src="src/android/ChromeSystemCpu.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeSystemCpu">
         <param name="android-package" value="org.chromium.ChromeSystemCpu"/>
+      </feature>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeSystemCpu.m" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSystemCpu">
+        <param name="ios-package" value="ChromeSystemCpu"/>
       </feature>
     </config-file>
   </platform>

@@ -11,7 +11,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
-import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -67,8 +66,6 @@ public class ChromeSocket extends CordovaPlugin {
             accept(args, callbackContext);
         } else if ("getInfo".equals(action)) {
             getInfo(args, callbackContext);
-        } else if ("getNetworkList".equals(action)) {
-            getNetworkList(args, callbackContext);
         } else if ("joinGroup".equals(action)) {
             joinGroup(args, callbackContext);
         } else if ("leaveGroup".equals(action)) {
@@ -289,37 +286,6 @@ public class ChromeSocket extends CordovaPlugin {
         JSONObject info = sd.getInfo();
         callbackContext.success(info);
     }
-
-    private void getNetworkList(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        try {
-            JSONArray list = new JSONArray();
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            NetworkInterface iface;
-            // Enumerations are a crappy legacy API, can't use the for (foo : bar) syntax.
-            while(interfaces.hasMoreElements()) {
-                iface = interfaces.nextElement();
-                if (iface.isLoopback()) {
-                    continue;
-                }
-                for (InterfaceAddress interfaceAddress : iface.getInterfaceAddresses()) {
-                    InetAddress address = interfaceAddress.getAddress();
-                    if (address != null) {
-                        JSONObject data = new JSONObject();
-                        data.put("name", iface.getDisplayName());
-                        // Strip percent suffix off of ipv6 addresses to match desktop behaviour.
-                        data.put("address", address.getHostAddress().replaceAll("%.*", ""));
-                        data.put("prefixLength", interfaceAddress.getNetworkPrefixLength());
-                        list.put(data);
-                    }
-                }
-            }
-
-            callbackContext.success(list);
-        } catch (SocketException se) {
-            callbackContext.error("SocketException: " + se);
-        }
-    }
-
 
     // Multicast calls
     private void joinGroup(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {

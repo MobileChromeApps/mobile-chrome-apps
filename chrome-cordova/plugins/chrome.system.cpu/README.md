@@ -4,7 +4,7 @@ This plugin provides the ability to query basic CPU information of the system.
 
 ## Status
 
-Stable on Android; not yet supported on iOS.
+Stable on Android and iOS.
 
 ## Reference
 

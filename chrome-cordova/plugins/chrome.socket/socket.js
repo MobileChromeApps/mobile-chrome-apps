@@ -4,6 +4,7 @@
 
 var platform = cordova.require('cordova/platform');
 var exec = cordova.require('cordova/exec');
+var network = require('org.chromium.system.network.system.network');
 
 exports.create = function(socketMode, stuff, callback) {
     if (typeof stuff == 'function') {
@@ -210,7 +211,7 @@ exports.getInfo = function(socketId, callback) {
 };
 
 exports.getNetworkList = function(callback) {
-    exec(callback, null, 'ChromeSocket', 'getNetworkList', []);
+  network.getNetworkInterfaces(callback);
 };
 
 exports.joinGroup = function(socketId, address, callback) {
