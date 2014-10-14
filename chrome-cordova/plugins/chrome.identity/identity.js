@@ -176,6 +176,20 @@ exports.getRedirectURL = function(path) {
     return 'https://' + chrome.runtime.id + '.chromiumapp.org/' + (path ? path : '');
 };
 
+exports.getProfileUserInfo = function(callback) {
+    if (typeof callback !== 'function') {
+        return callbackWithError('Callback function required');
+    }
+
+    if (!cachedAccount) {
+        callback(/* email */ '', /* id */ '');
+        return;
+    }
+
+    // TODO(maxw): Return an id.
+    callback(cachedAccount, /* id */ '');
+}
+
 function getAllParametersFromUrl(url, startString, endString) {
     if (typeof url !== 'undefined' && typeof startString !== 'undefined')
         url = url.split(startString)[1];

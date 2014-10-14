@@ -49,6 +49,15 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     chrome.identity.getAuthToken({ interactive: true, accountHint: 'cordovium1@gmail.com' }, callback);
   });
 
+  addButton('Get profile user info', function() {
+    var callback = function(email, id) {
+      logger('Email: ' + email);
+      logger('ID: ' + id);
+    };
+
+    chrome.identity.getProfileUserInfo(callback);
+  });
+
   addButton('Remove cached auth token', function() {
     var onRemoveCachedAuthTokenSuccess = function() {
       logger('Token removed from cache.');
