@@ -14,9 +14,19 @@ registerAutoTests('chrome.app.window', function() {
           result.message = 'Expected ' + actual + ' to be an Array.';
           return result;
         }
-      }
+      };
     },
-  }
+    toHaveFunction : function(util, customEqualityTesters) {
+      return {
+        compare : function(actual, functionName){
+          var result = {};
+          result.pass = ((void 0 !== actual[functionName]) && (typeof actual[functionName] === 'function'));
+          result.message = 'Expected ' + actual + ' to have function ' + functionName;
+          return result;
+        }
+      };
+    },    
+  };
 
   beforeEach(function(done) {
     addMatchers(customMatchers);
@@ -57,6 +67,31 @@ registerAutoTests('chrome.app.window', function() {
 //      it ('should return the background window', function() {
 //        expect(window.opener).toEqual(chromespec.bgWnd);
 //      });
+    }
+  });
+  describe('AppWindow', function() {
+    function getCurrentWindow() {
+      var wnd = chrome.app.window.current();
+      expect(wnd).not.toBeNull();
+      return wnd;        
+    }
+
+    if (runningInBackground) {
+    } else {
+      it('hide() should be defined', function() {
+        var wnd = getCurrentWindow();
+        expect(wnd).toHaveFunction('hide');
+      });
+
+      it('show() should be defined', function() {
+        var wnd = getCurrentWindow();
+        expect(wnd).toHaveFunction('show');
+      });
+
+      it('restore() should be defined', function() {
+        var wnd = getCurrentWindow();
+        expect(wnd).toHaveFunction('restore');
+      });
     }
   });
 });

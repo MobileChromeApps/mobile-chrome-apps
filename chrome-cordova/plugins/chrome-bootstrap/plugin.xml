@@ -32,6 +32,7 @@
   <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
 
   <platform name="android">
+    <source-file src="src/android/ChromeAppWindow.java" target-dir="src/org/chromium" />
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />
     <!-- Convert 'chrome-extension://' urls -->
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/org/chromium" />
@@ -39,6 +40,10 @@
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeAppWindow">
+        <param name="android-package" value="org.chromium.ChromeAppWindow"/>
+        <param name="onload" value="true"/>
+      </feature>
       <feature name="ChromeBootstrap">
         <param name="android-package" value="org.chromium.ChromeBootstrap"/>
         <param name="onload" value="true"/>
