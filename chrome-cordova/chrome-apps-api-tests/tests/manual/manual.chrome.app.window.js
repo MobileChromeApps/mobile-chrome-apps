@@ -11,7 +11,7 @@ registerManualTests('chrome.app.window', function(rootEl, addButton) {
   document.addEventListener("resume", function onResume() {
     console.log('Received the resume event');
   });
-  
+
   addButton('AppWindow.hide()', function() {
     chrome.app.window.current().hide();
   });
@@ -27,8 +27,8 @@ registerManualTests('chrome.app.window', function(rootEl, addButton) {
 
     chrome.alarms.onAlarm.addListener(function showAlarmHandler(alarm) {
       console.log("Received alarm: " + alarm.name);
-      chrome.alarms.onAlarm.removeListener(showAlarmHandler);
       if (alarm.name === myAlarmName) {
+        chrome.alarms.onAlarm.removeListener(showAlarmHandler);
         chrome.app.window.current().show();
       }
     });

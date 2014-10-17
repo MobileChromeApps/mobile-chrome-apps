@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.bootstrap"
-    version="1.0.4-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -42,7 +42,6 @@
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeAppWindow">
         <param name="android-package" value="org.chromium.ChromeAppWindow"/>
-        <param name="onload" value="true"/>
       </feature>
       <feature name="ChromeBootstrap">
         <param name="android-package" value="org.chromium.ChromeBootstrap"/>

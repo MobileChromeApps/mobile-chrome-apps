@@ -29,7 +29,6 @@ function unsupportedApi(api) {
 AppWindow.prototype = {
   moveTo: unsupportedApi('AppWindow.moveTo'),
   clearAttention: unsupportedApi('AppWindow.clearAttention'),
-  minimize: unsupportedApi('AppWindow.minimize'),
   drawAttention: unsupportedApi('AppWindow.drawAttention'),
   focus: unsupportedApi('AppWindow.focus'),
   resizeTo: unsupportedApi('AppWindow.resizeTo'),
@@ -48,14 +47,18 @@ AppWindow.prototype.getBounds = function() {
   };
 };
 AppWindow.prototype.hide = function() {
-  exec(function() {}, function(error) {}, 'ChromeAppWindow', 'hide', []);
+  exec(null, null, 'ChromeAppWindow', 'hide', []);
 };
 AppWindow.prototype.show = function(focused) {
-  exec(function() {}, function(error) {}, 'ChromeAppWindow', 'show', []);
+  exec(null, null, 'ChromeAppWindow', 'show', []);
 };
 AppWindow.prototype.restore = function() {
-  // Same behaviour as show, given minimize/maximize are not supported
-  show();
+  // Same behaviour as show, given minimize/maximize don't really make sense on mobile
+  this.show();
+};
+AppWindow.prototype.minimize = function() {
+  // Same behaviour as hide, given minimize/maximize don't really make sense on mobile
+  this.hide();
 };
 
 function copyAttributes(srcNode, destNode) {

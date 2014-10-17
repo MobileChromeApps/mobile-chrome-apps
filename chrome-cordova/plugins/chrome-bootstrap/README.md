@@ -5,8 +5,15 @@ Cordova. It is meant to be used with the `cca` tool, and isn't useful outside
 the context of a mobile Chrome App.
 
 # Release Notes
-## 1.0.3 (Sep 24, 2014)
-* Defer HTML imports using placeholder tag (fixes non-vulcanized Polymer apps)
+
+## 1.1.0 (October 24, 2014)
+- Implement AppWindow methods: show(), hide(), minimize(), restore() (resolves #323)
+
+## 1.0.4 (October 21, 2014)
+- Documentation updates.
+
+## 1.0.3 (September 24, 2014)
+- Defer HTML imports using placeholder tag (fixes non-vulcanized Polymer apps)
 
 ## 1.0.2 (April 1, 2014)
 - Fix chrome-extension: URLs not setting no-cache headers.

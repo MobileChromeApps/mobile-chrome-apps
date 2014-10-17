@@ -20,12 +20,12 @@ registerAutoTests('chrome.app.window', function() {
       return {
         compare : function(actual, functionName){
           var result = {};
-          result.pass = ((void 0 !== actual[functionName]) && (typeof actual[functionName] === 'function'));
+          result.pass = (typeof actual[functionName] === 'function');
           result.message = 'Expected ' + actual + ' to have function ' + functionName;
           return result;
         }
       };
-    },    
+    },
   };
 
   beforeEach(function(done) {
@@ -73,7 +73,7 @@ registerAutoTests('chrome.app.window', function() {
     function getCurrentWindow() {
       var wnd = chrome.app.window.current();
       expect(wnd).not.toBeNull();
-      return wnd;        
+      return wnd;
     }
 
     if (runningInBackground) {

@@ -12,10 +12,7 @@ import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -38,48 +35,27 @@ public class ChromeAppWindow extends CordovaPlugin {
     }
 
     private void hide(final CordovaArgs args, final CallbackContext callbackContext) {
-        try {
-            cordova.getActivity().moveTaskToBack(true);
-            callbackContext.success();
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Could not hide window", e);
-            callbackContext.error("Could not hide window");
-        }
+        cordova.getActivity().moveTaskToBack(true);
+        callbackContext.success();
     }
-    
+
     private void show(final CordovaArgs args, final CallbackContext callbackContext) {
-        try {
-            Activity activity = cordova.getActivity();
-            
-            if (activity.hasWindowFocus()) {
-                // Window is already visible, nothing to do
-                callbackContext.success();
-                return;
-            }
+        Activity activity = cordova.getActivity();
 
-            Context context = activity.getApplicationContext();
-            
-            String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
-            Log.d(LOG_TAG, "Starting activity '" + activityClass + "', from package: " + context.getPackageName());
-
-            ComponentName component = new ComponentName(context, activityClass);
-            Log.d(LOG_TAG, "Component is: " + component.flattenToString());
-            
-            Intent activityIntent = Intent.makeMainActivity(component);
-            activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            Log.d(LOG_TAG, "Intent is: " + activityIntent.toUri(0));
-            
-            //boolean focused = true;
-            //if (!args.isNull(0)) {
-            //                focused = args.getBoolean(0);
-            //}
-            activity.startActivity(activityIntent);
-            
+        if (activity.hasWindowFocus()) {
+            // Window is already visible, nothing to do
             callbackContext.success();
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Could not show window", e);
-            callbackContext.error("Could not show window");
+            return;
         }
+
+        Intent activityIntent = new Intent(activity, activity.getClass());
+        activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // Use the application context to start this activity
+        //  - Using activity.startActivity() doesn't work (error seen in logcat)
+        //  - A semi-random activity will be shown instead
+        activity.getApplicationContext().startActivity(activityIntent);
+
+        callbackContext.success();
     }
 }
