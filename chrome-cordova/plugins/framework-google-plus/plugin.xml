@@ -12,6 +12,9 @@
   </engines>
 
   <name>Google Plus iOS Framework Plugin</name>
+  <keywords>google,plus,iOS,framework</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="ios">
     <dependency id="org.chromium.frameworks.googleopensource" />

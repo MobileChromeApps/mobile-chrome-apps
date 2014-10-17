@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome Apps Power API</name>
+  <keywords>chrome,power</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <js-module src="power.js" name="power">
     <clobbers target="chrome.power" />

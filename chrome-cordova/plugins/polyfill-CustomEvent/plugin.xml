@@ -12,6 +12,9 @@
   </engines>
 
   <name>CustomEvent constuctor shim</name>
+  <keywords>chrome,polyfill,custom,event</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="android">
     <js-module src="customEvent.js" name="customEvent">

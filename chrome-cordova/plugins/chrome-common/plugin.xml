@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome Apps Common Utils</name>
+  <keywords>chrome,common,util</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <js-module src="events.js" name="events">
     <clobbers target="chrome.Event" />

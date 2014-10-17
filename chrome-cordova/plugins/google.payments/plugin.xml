@@ -17,6 +17,9 @@
   </engines>
 
   <name>Chrome Payments API</name>
+  <keywords>google,payment,purchase,wallet</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="cc.fovea.plugins.inapppurchase" />
   <dependency id="org.chromium.common" />

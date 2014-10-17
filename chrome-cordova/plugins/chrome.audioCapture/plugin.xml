@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome AudioCapture API</name>
+  <keywords>chrome,audio,capture</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="android">
     <config-file target="AndroidManifest.xml" parent="/*">

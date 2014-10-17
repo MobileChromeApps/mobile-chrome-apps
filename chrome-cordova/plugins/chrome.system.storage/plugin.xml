@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome System Storage API</name>
+  <keywords>chrome,system,storage</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="android">
     <js-module src="system.storage.js" name="system.storage">

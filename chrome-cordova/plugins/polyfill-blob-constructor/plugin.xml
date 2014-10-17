@@ -11,7 +11,10 @@
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
-  <name>XHR blob returnType shim</name>
+  <name>Blob constructor shim</name>
+  <keywords>chrome,blob,polyfill</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="android">
     <js-module src="Blob.js" name="blob-constructor">

@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome Apps Sockets Tcp Server API</name>
+  <keywords>chrome,socket,sockets,tcp,server</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.sockets.tcp" />

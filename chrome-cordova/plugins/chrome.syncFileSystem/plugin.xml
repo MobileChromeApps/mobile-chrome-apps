@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome Apps SyncFileSystem API</name>
+  <keywords>chrome,sync,file,filesystem</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.runtime" />
   <dependency id="org.chromium.storage" />

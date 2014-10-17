@@ -12,6 +12,9 @@
   </engines>
 
   <name>Chrome Apps Identity API</name>
+  <keywords>chrome,identity,OAuth</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.runtime" />
