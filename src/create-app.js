@@ -150,24 +150,25 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
   .then(function() {
     // Create scripts that update the cordova app on prepare
     fs.mkdirSync(path.join('hooks', 'before_prepare'));
-    fs.mkdirSync(path.join('hooks', 'after_prepare'));
+    fs.mkdirSync(path.join('hooks', 'before_platform_add'));
 
-    function writeHook(path, ccaArg) {
+    function writeHook(path) {
       var contents = [
-          '#!/usr/bin/env node',
-          'var child_process = require("child_process");',
-          'var fs = require("fs");',
-          'var isWin = process.platform.slice(0, 3) === "win";',
-          'var cmd = isWin ? "cca.cmd" : "cca";',
-          'if (!isWin && fs.existsSync(cmd)) { cmd = "./" + cmd }',
-          'var p = child_process.spawn(cmd, ["' + ccaArg + '"], { stdio:"inherit" });',
-          'p.on("close", function(code) { process.exit(code); });',
+          "#!/usr/bin/env node",
+          "var path = require('path');",
+          "var cmdline = process.env['CORDOVA_CMDLINE'];",
+          "var re = RegExp(path.join('bin', 'cca'), 'i');",
+          "if (!re.test(cmdline)) {",
+          "  var msg = 'ERROR: This is a CCA based project! Using `cordova` rather than `cca` will have unexpected results.' ;",
+          "  console.error(msg);",
+          "  process.exit(1);",
+          "}"
           ];
       fs.writeFileSync(path, contents.join('\n'));
       fs.chmodSync(path, '777');
     }
-    writeHook(path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'), 'pre-prepare');
-    writeHook(path.join('hooks', 'after_prepare', 'cca-post-prepare.js'), 'post-prepare');
+    writeHook(path.join('hooks', 'before_prepare', 'cca-check.js'));
+    writeHook(path.join('hooks', 'before_platform_add', 'cca-check.js'));
 
     // Create a convenience link to cca
     if (isGitRepo || !shelljs.which('cca')) {

@@ -32,6 +32,8 @@ var utils = require('./utils');
 var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
 
+var cordovaLib;
+
 /******************************************************************************/
 
 function fixEnv() {
@@ -45,6 +47,13 @@ function fixEnv() {
   if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
     process.env.DEPLOY_APK_ARCH = 'armv7';
   }
+}
+/******************************************************************************/
+function setupHooks() {
+  var prePrepareHook = require('./pre-prepare');
+  var postPrepareHook = require('./post-prepare');
+  cordovaLib.events.on('before_prepare', prePrepareHook);
+  cordovaLib.events.on('after_prepare', postPrepareHook);
 }
 
 /******************************************************************************/
@@ -61,6 +70,10 @@ function main() {
 
   // TODO: Add env detection to Cordova.
   fixEnv();
+
+  // TODO: This is ugly make it better once cordova-cli with proper exports is out.
+  cordovaLib = require('cordova/node_modules/cordova-lib');
+  setupHooks();
 
   function printCcaVersionPrefix() {
     console.log('cca v' + packageVersion);
@@ -91,6 +104,14 @@ function main() {
   }
 
   function forwardCurrentCommandToCordova() {
+    // Unregister some event handlers in cordova-lib EventEmitter. Otherwise
+    // double printouts will happen because cordova-cli registers its own
+    // handlers. This is only relevant when --verbose or -d flag is used.
+    cordovaLib.events.removeListener('results', console.log);
+    cordovaLib.events.removeListener('log', console.log);
+    cordovaLib.events.removeListener('warn', console.warn);
+    cordovaLib.events.removeListener('verbose', console.log);
+
     // TODO: Can we replace use of CLI here?  Calls to cordova-lib cordova.raw?
     require('cordova/src/cli')(process.argv);
   }
@@ -196,7 +217,6 @@ function main() {
 
   // TODO(mmocny): The following few lines seem to make global changes that affect all other subcommands.
   // May want to break this out to a module as an "init" step that every other step ensures has been called.
-  var cordovaLib = require('cordova-lib');
   cordovaLib.cordova.config.setAutoPersist(false);
   var projectRoot = cordovaLib.cordova.findProjectRoot();
   if (projectRoot) {
