@@ -99,12 +99,9 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     try {
       UdpSocket socket = new UdpSocket(nextSocket++, recvContext, properties);
-      selectorMessages.put(
-          new SelectorMessage(socket, SelectorMessageType.SO_CREATE, callbackContext));
-      selector.wakeup();
-
+      sockets.put(Integer.valueOf(socket.getSocketId()), socket);
+      callbackContext.success(socket.getSocketId());
     } catch (IOException e) {
-    } catch (InterruptedException e) {
     }
   }
 
@@ -143,8 +140,11 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     socket.setPaused(paused);
-
-    callbackContext.success();
+    if (paused) {
+      callbackContext.success();
+    } else {
+      addSelectorMessage(socket, SelectorMessageType.SO_ADD_READ_INTEREST, callbackContext);
+    }
   }
 
   private void bind(CordovaArgs args, final CallbackContext callbackContext)
@@ -164,7 +164,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     try {
       socket.bind(address, port);
-      callbackContext.success();
+      addSelectorMessage(socket, SelectorMessageType.SO_BIND, callbackContext);
     } catch (SocketException e) {
       callbackContext.error(-1000);
     }
@@ -186,32 +186,13 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       return;
     }
 
-    try {
-      int bytesSent = socket.send(address, port, data);
-      if (bytesSent > 0) {
-        callbackContext.success(bytesSent);
-      } else {
-        socket.addSendPacket(address, port, data, callbackContext);
-      }
-    } catch (IOException e) {
-      callbackContext.error(-1000);
-    }
-  }
-
-  private void sendCloseMessage(UdpSocket socket, CallbackContext callbackContext)
-      throws InterruptedException {
-    selectorMessages.put(
-        new SelectorMessage(socket, SelectorMessageType.SO_CLOSE, callbackContext));
+    socket.addSendPacket(address, port, data, callbackContext);
+    addSelectorMessage(socket, SelectorMessageType.SO_ADD_WRITE_INTEREST, null);
   }
 
   private void closeAllSockets() {
-    try {
-      for (UdpSocket socket: sockets.values()) {
-        sendCloseMessage(socket, null);
-      }
-      if(selector != null)
-        selector.wakeup();
-    } catch (InterruptedException e) {
+    for (UdpSocket socket: sockets.values()) {
+      addSelectorMessage(socket, SelectorMessageType.SO_CLOSE, null);
     }
   }
 
@@ -227,11 +208,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       return;
     }
 
-    try {
-      sendCloseMessage(socket, callbackContext);
-      selector.wakeup();
-    } catch (InterruptedException e) {
-    }
+    addSelectorMessage(socket, SelectorMessageType.SO_CLOSE, callbackContext);
   }
 
   private void getInfo(CordovaArgs args, final CallbackContext callbackContext)
@@ -386,9 +363,8 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   private void stopSelectorThread() {
     if (selector == null && selectorThread == null) return;
 
+    addSelectorMessage(null, SelectorMessageType.T_STOP, null);
     try {
-      selectorMessages.put(new SelectorMessage(null, SelectorMessageType.T_STOP, null));
-      selector.wakeup();
       selectorThread.join();
       selector = null;
       selectorThread = null;
@@ -396,9 +372,22 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
   }
 
+  private void addSelectorMessage(
+      UdpSocket socket, SelectorMessageType type, CallbackContext callbackContext) {
+    try {
+      selectorMessages.put(new SelectorMessage(
+          socket, type, callbackContext));
+      if (selector != null)
+        selector.wakeup();
+    } catch (InterruptedException e) {
+    }
+  }
+
   private enum SelectorMessageType {
-    SO_CREATE,
+    SO_BIND,
     SO_CLOSE,
+    SO_ADD_READ_INTEREST,
+    SO_ADD_WRITE_INTEREST,
     T_STOP;
   }
 
@@ -440,21 +429,26 @@ public class ChromeSocketsUdp extends CordovaPlugin {
         try {
           msg = selectorMessages.take();
           switch (msg.type) {
-            case SO_CREATE:
+            case SO_BIND:
               msg.socket.register(selector, SelectionKey.OP_READ);
-              sockets.put(Integer.valueOf(msg.socket.getSocketId()), msg.socket);
-              msg.callbackContext.success(msg.socket.getSocketId());
               break;
             case SO_CLOSE:
               msg.socket.close();
               sockets.remove(Integer.valueOf(msg.socket.getSocketId()));
-              if (msg.callbackContext != null)
-                msg.callbackContext.success();
+              break;
+            case SO_ADD_READ_INTEREST:
+              msg.socket.addInterestSet(SelectionKey.OP_READ);
+              break;
+            case SO_ADD_WRITE_INTEREST:
+              msg.socket.addInterestSet(SelectionKey.OP_WRITE);
               break;
             case T_STOP:
               running = false;
               break;
           }
+
+          if (msg.callbackContext != null)
+            msg.callbackContext.success();
 
         } catch (InterruptedException e) {
         } catch (IOException e) {
@@ -544,6 +538,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       setBufferSize();
     }
 
+    // Only call this method on selector thread
     void addInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() | interestSet);
@@ -551,6 +546,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       }
     }
 
+    // Only call this method on selector thread
     void removeInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() & ~interestSet);
@@ -587,16 +583,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     void setPaused(boolean paused) {
       this.paused = paused;
-      if (paused) {
-        removeInterestSet(SelectionKey.OP_READ);
-      } else {
-        addInterestSet(SelectionKey.OP_READ);
-      }
     }
 
     void addSendPacket(String address, int port, byte[] data, CallbackContext callbackContext) {
       UdpSendPacket sendPacket = new UdpSendPacket(address, port, data, callbackContext);
-      addInterestSet(SelectionKey.OP_WRITE);
       try {
         sendPackets.put(sendPacket);
       } catch (InterruptedException e) {
@@ -608,23 +598,21 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       channel.socket().bind(new InetSocketAddress(port));
     }
 
-    int send(String address, int port, byte[] data) throws IOException {
-      return channel.send(ByteBuffer.wrap(data), new InetSocketAddress(address, port));
-    }
-
+    // This method can be only called by selector thread.
     void dequeueSend() {
-      if (sendPackets.peek() != null) {
-        UdpSendPacket sendPacket = null;
-        try {
-          sendPacket = sendPackets.take();
-          int bytesSent = channel.send(sendPacket.data, sendPacket.address);
-          sendPacket.callbackContext.success(bytesSent);
-        } catch (InterruptedException e) {
-        } catch (IOException e) {
-          sendPacket.callbackContext.error(-1000);
-        }
-      } else {
+      if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
+        return;
+      }
+
+      UdpSendPacket sendPacket = null;
+      try {
+        sendPacket = sendPackets.take();
+        int bytesSent = channel.send(sendPacket.data, sendPacket.address);
+        sendPacket.callbackContext.success(bytesSent);
+      } catch (InterruptedException e) {
+      } catch (IOException e) {
+        sendPacket.callbackContext.error(-1000);
       }
     }
 
@@ -670,7 +658,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       multicastSocket.joinGroup(InetAddress.getByName(address));
 
       if (multicastReadThread == null) {
-    	multicastSocket.setReuseAddress(true);
+        multicastSocket.setReuseAddress(true);
         multicastSocket.bind(new InetSocketAddress(channel.socket().getLocalPort()));
         multicastReadThread = new MulticastReadThread(socketId, multicastSocket, recvContext);
         multicastReadThread.start();
@@ -696,9 +684,14 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       return multicastGroups;
     }
 
+    // This method can be only called by selector thread.
     void read() {
 
-      if (paused) return;
+      if (paused) {
+        // Remove read interests to avoid seletor wakeup when readable.
+        removeInterestSet(SelectionKey.OP_READ);
+        return;
+      }
 
       ByteBuffer recvBuffer = ByteBuffer.allocate(bufferSize);
       recvBuffer.clear();
@@ -750,6 +743,15 @@ public class ChromeSocketsUdp extends CordovaPlugin {
             byte[] out = new byte[socket.getReceiveBufferSize()];
             DatagramPacket packet = new DatagramPacket(out, out.length);
             socket.receive(packet);
+
+            // Truncate the buffer if the message was shorter than it.
+            if (packet.getLength() != out.length) {
+              byte[] temp = new byte[packet.getLength()];
+              for(int i = 0; i < packet.getLength(); i++) {
+                temp[i] = out[i];
+              }
+              out = temp;
+            }
 
             PluginResult dataResult = new PluginResult(Status.OK, out);
             dataResult.setKeepCallback(true);

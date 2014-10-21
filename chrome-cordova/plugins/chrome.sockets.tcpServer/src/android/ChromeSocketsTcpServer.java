@@ -118,10 +118,14 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       return;
     }
 
-    // TODO: return a boolean to indicate whether the setPaused actually sets
-    // both for TCP, TCPServer and UDP
     socket.setPaused(paused);
-    callbackContext.success();
+
+    if (paused) {
+      callbackContext.success();
+    } else {
+      // All interests need to be modified in selector thread.
+      addSelectorMessage(socket, SelectorMessageType.SO_ADD_ACCEPT_INTEREST, callbackContext);
+    }
   }
 
   private void listen(CordovaArgs args, final CallbackContext callbackContext)
@@ -146,14 +150,10 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
         int backlog = args.getInt(3);
         socket.listen(address, port, backlog);
       }
-
-      selectorMessages.put(new SelectorMessage(socket, SelectorMessageType.SO_LISTEN, null));
-      selector.wakeup();
+      addSelectorMessage(socket, SelectorMessageType.SO_LISTEN, null);
       callbackContext.success();
-
     } catch (IOException e) {
       callbackContext.error(-1000);
-    } catch (InterruptedException e) {
     }
   }
 
@@ -168,27 +168,12 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       return;
     }
 
-    try {
-      selectorMessages.put(
-          new SelectorMessage(socket, SelectorMessageType.SO_DISCONNECTED, callbackContext));
-      selector.wakeup();
-    } catch (InterruptedException e) {
-    }
-  }
-
-  private void sendCloseMessage(TcpServerSocket socket, CallbackContext callbackContext)
-      throws InterruptedException {
-    selectorMessages.put(
-        new SelectorMessage(socket, SelectorMessageType.SO_CLOSE, callbackContext));
+    addSelectorMessage(socket, SelectorMessageType.SO_DISCONNECTED, callbackContext);
   }
 
   private void closeAllSockets() {
-    try {
-      for(TcpServerSocket socket: sockets.values()) {
-        sendCloseMessage(socket, null);
-      }
-      selector.wakeup();
-    } catch (InterruptedException e) {
+    for(TcpServerSocket socket: sockets.values()) {
+      addSelectorMessage(socket, SelectorMessageType.SO_CLOSE, null);
     }
   }
 
@@ -203,11 +188,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       return;
     }
 
-    try {
-      sendCloseMessage(socket, callbackContext);
-      selector.wakeup();
-    } catch (InterruptedException e) {
-    }
+    addSelectorMessage(socket, SelectorMessageType.SO_CLOSE, callbackContext);
   }
 
   private void getInfo(CordovaArgs args, final CallbackContext callbackContext)
@@ -259,12 +240,21 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
   private void stopSelectorThread() {
     if (selector == null && selectorThread == null) return;
 
+    addSelectorMessage(null, SelectorMessageType.T_STOP, null);
     try {
-      selectorMessages.put(new SelectorMessage(null, SelectorMessageType.T_STOP, null));
-      selector.wakeup();
       selectorThread.join();
       selector = null;
       selectorThread = null;
+    } catch (InterruptedException e) {
+    }
+  }
+
+  private void addSelectorMessage(
+      TcpServerSocket socket, SelectorMessageType type, CallbackContext callbackContext) {
+    try {
+      selectorMessages.put(new SelectorMessage(
+          socket, type, callbackContext));
+      selector.wakeup();
     } catch (InterruptedException e) {
     }
   }
@@ -273,6 +263,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     SO_LISTEN,
     SO_DISCONNECTED,
     SO_CLOSE,
+    SO_ADD_ACCEPT_INTEREST,
     T_STOP;
   }
 
@@ -315,19 +306,20 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
               break;
             case SO_DISCONNECTED:
               msg.socket.disconnect();
-              if (msg.callbackContext != null)
-                msg.callbackContext.success();
               break;
             case SO_CLOSE:
               msg.socket.disconnect();
               sockets.remove(Integer.valueOf(msg.socket.getSocketId()));
-              if (msg.callbackContext != null)
-                msg.callbackContext.success();
               break;
+            case SO_ADD_ACCEPT_INTEREST:
+              msg.socket.addInterestSet(SelectionKey.OP_ACCEPT);
+             break;
             case T_STOP:
               running = false;
               break;
           }
+          if (msg.callbackContext != null)
+            msg.callbackContext.success();
         } catch (InterruptedException e) {
         } catch (IOException e) {
           if (msg.callbackContext != null)
@@ -400,6 +392,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       setProperties(properties);
     }
 
+    // Only call this method on selector thread
     void addInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() | interestSet);
@@ -407,6 +400,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       }
     }
 
+    // Only call this method on selector thread
     void removeInterestSet(int interestSet) {
       if (key != null) {
         key.interestOps(key.interestOps() & ~interestSet);
@@ -433,11 +427,6 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
     void setPaused(boolean paused) {
       this.paused = paused;
-      if (paused) {
-        removeInterestSet(SelectionKey.OP_ACCEPT);
-      } else  {
-        addInterestSet(SelectionKey.OP_ACCEPT);
-      }
     }
 
     void setUpListen() throws IOException {
@@ -480,7 +469,15 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       return info;
     }
 
+    // This method can be only called by selector thread.
     void accept() throws JSONException {
+
+      if (paused) {
+        // Remove accept interests to avoid seletor wakeup when acceptable.
+        removeInterestSet(SelectionKey.OP_ACCEPT);
+        return;
+      }
+
       try {
         SocketChannel acceptedSocket = channel.accept();
         ChromeSocketsTcp tcpPlugin =
@@ -503,7 +500,6 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
         PluginResult errResult = new PluginResult(Status.ERROR, info);
         errResult.setKeepCallback(true);
         acceptContext.sendPluginResult(errResult);
-      } catch (InterruptedException e) {
       }
     }
   }
