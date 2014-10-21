@@ -10,3 +10,6 @@ Stable on iOS.
 
 Simply add this plugin to your project and you're good to go!
 
+# Release Notes
+## 1.0.1 (October 21, 2014)
+- Documentation updates.

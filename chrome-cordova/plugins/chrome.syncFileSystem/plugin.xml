@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.syncfilesystem"
-    version="0.1.5-dev">
+    version="0.1.5">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>

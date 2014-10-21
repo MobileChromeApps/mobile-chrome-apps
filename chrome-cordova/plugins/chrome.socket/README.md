@@ -16,7 +16,11 @@ The API reference is [here](http://developer.chrome.com/apps/socket.html).
 * Multicast support is only implemented in Android, and is not yet stable.
 
 # Release Notes
-## 1.1.3 (Aug 20, 2014)
+## 1.2.0 (October 21, 2014)
+- Update to depend on new chrome.system.network and org.chromium.iosSocketsCommon plugins.
+- Documentation updates.
+
+## 1.1.3 (August 20, 2014)
 - ios: Don't remove sockets from dictionary while iterating over it
 - ios: Close open sockets on app reset/shutdown (Fixes #203)
 - Remove static members from ChromeSocket on android, so that its not shared across webviews

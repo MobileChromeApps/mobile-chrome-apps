@@ -21,8 +21,12 @@ The API reference is [here](https://developer.chrome.com/apps/gcm), and a full d
 * You require the 'gcm' permission to use this API
 
 # Release Notes
-## 1.0.1 (Sep 24, 2014)
-* Fix #287 #290 Fix several significant GCM bugs
+## 1.0.2 (October 21, 2014)
+- Correct apparent copy/paste bug.
+- Documentation updates.
+
+## 1.0.1 (September 24, 2014)
+- Fix #287 #290 Fix several significant GCM bugs
 
 ## 1.0.0 (May 8, 2014)
 - Initial Release

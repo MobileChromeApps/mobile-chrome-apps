@@ -190,3 +190,8 @@ On failure, `options.failure` will be called with a `failureResult` as its singl
 * iOS does not support `getPurchases`.
 
 # Release Notes
+
+## 2.0.2 (October 21, 2014)
+- Fix success callback arguments for iOS `buy` method.
+- Fix iOS `getSkuDetails` response.
+- Documentation updates.

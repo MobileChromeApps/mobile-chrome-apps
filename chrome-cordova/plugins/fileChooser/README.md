@@ -7,3 +7,5 @@ Provides an Android file chooser.
 Pretty much abondoned at the moment.
 
 # Release Notes
+## 1.0.2 (October 21, 2014)
+- Documentation updates.

@@ -11,7 +11,10 @@ Stable on Android; not supported on iOS.
 The API reference is [here](http://developer.chrome.com/apps/notifications.html).
 
 # Release Notes
-## 1.0.4 (Aug 20, 2014)
+## 1.0.5 (October 21, 2014)
+- Documentation updates.
+
+## 1.0.4 (August 20, 2014)
 - Add support for progress notifications
 
 ## 1.0.3 (April 1, 2014)
