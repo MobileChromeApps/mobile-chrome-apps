@@ -83,41 +83,35 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
 
   function connectSecureAndSend(data) {
     chrome.sockets.tcp.create(function(createInfo) {
+      // Set paused to true to prevent read consume TLS handshake data, native
+      // readling loop will not pause/abort pending read when set paused after a
+      // connection has established.
       chrome.sockets.tcp.setPaused(createInfo.socketId, true, function() {
-        var hostname = 'www.sslshopper.com';
+        var hostname = 'www.httpbin.org';
         chrome.sockets.tcp.connect(createInfo.socketId, hostname, 443, function(result) {
           if (result === 0) {
-              chrome.sockets.tcp.secure(
-                createInfo.socketId,
-                {tlsVersion: {min: 'ssl3', max: 'tls1.2'}},
-                function(result) {
-                  if (result !== 0) {
-                    logger('secure connection failed: ' + result);
-                  }
-                  chrome.sockets.tcp.setPaused(createInfo.socketId, false, function() {
-                    var requestString = 'GET / HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
-                    var message = stringToArrayBuffer(requestString);
+            chrome.sockets.tcp.secure(createInfo.socketId, {tlsVersion: {min: 'ssl3', max: 'tls1.2'}}, function(result) {
+              if (result !== 0) {
+                logger('secure connection failed: ' + result);
+              }
 
+              chrome.sockets.tcp.setPaused(createInfo.socketId, false, function() {
+                var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+                var message = stringToArrayBuffer(requestString);
+
+                // Test secure send multiple times to ensure that buffer in Android is manipulated correctly.
+                for (var i = 0; i < 3; i++) {
+                  (function(i) {
                     chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
                       if (result.resultCode === 0) {
-                        logger('connectSecureAndSend: success');
+                        logger('connectSecureAndSend: success ' + i);
                       }
                     });
+                  })(i);
+                }
 
-                    chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
-                      if (result.resultCode === 0) {
-                        logger('connectSecureAndSend: success');
-                      }
-                    });
-
-                    chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
-                      if (result.resultCode === 0) {
-                        logger('connectSecureAndSend: success');
-                      }
-                    });
-
-                  });
-                });
+              });
+            });
           }
         });
       });
