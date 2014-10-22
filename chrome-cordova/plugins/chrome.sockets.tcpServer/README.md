@@ -11,5 +11,9 @@ Beta on Android and iOS.
 The API reference is [here](https://developer.chrome.com/apps/sockets_tcpServer).
 
 # Release Notes
-## 1.1.0 (October 21, 2014)
+
+## 1.0.1 (October 21, 2014)
+- Changed plugin id to be compatible with Cordova plugman
+
+## 1.0.0 (October 21, 2014)
 - Initial release
