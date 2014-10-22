@@ -4,7 +4,7 @@
 var Event = require('org.chromium.common.events');
 var platform = cordova.require('cordova/platform');
 var exec = cordova.require('cordova/exec');
-
+var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 
 var checkBufferSize = function(bufferSize) {
 
@@ -48,8 +48,8 @@ exports.bind = function(socketId, address, port, callback) {
     var win = callback && function() {
         callback(0);
     };
-    var fail = callback && function(errCode) {
-        callback(errCode);
+    var fail = callback && function(error) {
+        callbackWithError(error.message, callback, error.resultCode);
     };
     exec(win, fail, 'ChromeSocketsUdp', 'bind', [socketId, address, port]);
 };
@@ -66,12 +66,12 @@ exports.send = function(socketId, data, address, port, callback) {
         };
         callback(sendInfo);
     };
-    var fail = callback && function(errCode) {
+    var fail = callback && function(error) {
         var sendInfo = {
             bytesSent: 0,
-            resultCode: errCode
+            resultCode: error.resultCode
         };
-        callback(sendInfo);
+        callbackWithError(error.message, callback, sendInfo);
     };
     exec(win, fail, 'ChromeSocketsUdp', 'send', [socketId, address, port, data]);
 };
@@ -104,28 +104,40 @@ exports.joinGroup = function(socketId, address, callback) {
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsUdp', 'joinGroup', [socketId, address]);
+    var fail = callback && function(error) {
+        callback(error.message, callback, error.resultCode);
+    }
+    exec(win, fail, 'ChromeSocketsUdp', 'joinGroup', [socketId, address]);
 };
 
 exports.leaveGroup = function(socketId, address, callback) {
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsUdp', 'leaveGroup', [socketId, address]);
+    var fail = callback && function(error) {
+        callback(error.message, callback, error.resultCode);
+    }
+    exec(win, fail, 'ChromeSocketsUdp', 'leaveGroup', [socketId, address]);
 };
 
 exports.setMulticastTimeToLive = function(socketId, ttl, callback) {
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsUdp', 'setMulticastTimeToLive', [socketId, ttl]);
+    var fail = callback && function(error) {
+        callback(error.message, callback, error.resultCode);
+    }
+    exec(win, fail, 'ChromeSocketsUdp', 'setMulticastTimeToLive', [socketId, ttl]);
 };
 
 exports.setMulticastLoopbackMode = function(socketId, enabled, callback) {
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsUdp', 'setMulticastLoopbackMode', [socketId, enabled]);
+    var fail = callback && function(error) {
+        callback(error.message, callback, error.resultCode);
+    }
+    exec(win, fail, 'ChromeSocketsUdp', 'setMulticastLoopbackMode', [socketId, enabled]);
 };
 
 exports.getJoinedGroups = function(socketId, callback) {
@@ -175,7 +187,7 @@ function registerReceiveEvents() {
 
 
     var fail = function(info) {
-        exports.onReceiveError.fire(info);
+        callbackWithError(info.message, exports.onReceiveError.fire, info);
     };
     exec(win, fail, 'ChromeSocketsUdp', 'registerReceiveEvents', []);
 }

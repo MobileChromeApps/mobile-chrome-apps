@@ -73,6 +73,14 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     stopSelectorThread();
   }
 
+  private JSONObject buildErrorInfo(int code, String message)
+      throws JSONException {
+    JSONObject error = new JSONObject();
+    error.put("message", message);
+    error.put("resultCode", code);
+    return error;
+  }
+
   private void create(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
     JSONObject properties = args.getJSONObject(0);
@@ -82,7 +90,6 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       sockets.put(Integer.valueOf(socket.getSocketId()), socket);
       callbackContext.success(socket.getSocketId());
     } catch (IOException e) {
-      callbackContext.error(-1000);
     }
   }
 
@@ -139,7 +146,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -153,7 +160,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       addSelectorMessage(socket, SelectorMessageType.SO_LISTEN, null);
       callbackContext.success();
     } catch (IOException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -222,7 +229,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     startSelectorThread();
   }
 
-  private void startSelectorThread() {
+  private void startSelectorThread() throws JSONException {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -231,7 +238,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     } catch (IOException e) {
       selector = null;
       selectorThread = null;
-      PluginResult err = new PluginResult(Status.ERROR, -1000);
+      PluginResult err = new PluginResult(Status.ERROR, buildErrorInfo(-9, e.getMessage()));
       err.setKeepCallback(true);
       acceptContext.sendPluginResult(err);
     }
@@ -294,7 +301,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() {
+    private void processPendingMessages() throws JSONException {
 
       while (selectorMessages.peek() != null) {
         SelectorMessage msg = null;
@@ -323,7 +330,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
         } catch (InterruptedException e) {
         } catch (IOException e) {
           if (msg.callbackContext != null)
-            msg.callbackContext.error(-1000);
+            msg.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
         }
       }
     }
@@ -339,26 +346,26 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        while (it.hasNext()) {
+        try {
+          while (it.hasNext()) {
 
-          SelectionKey key = it.next();
-          it.remove();
+            SelectionKey key = it.next();
+            it.remove();
 
-          if (!key.isValid()) {
-            continue;
-          }
+            if (!key.isValid()) {
+              continue;
+            }
 
-          TcpServerSocket socket = (TcpServerSocket)key.attachment();
+            TcpServerSocket socket = (TcpServerSocket)key.attachment();
 
-          if (key.isAcceptable()) {
-            try {
+            if (key.isAcceptable()) {
               socket.accept();
-            } catch (JSONException e) {
             }
           }
-        }
 
-        processPendingMessages();
+          processPendingMessages();
+        } catch (JSONException e) {
+        }
       }
     }
   }
@@ -494,9 +501,8 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
         acceptContext.sendPluginResult(acceptedResult);
 
       } catch (IOException e) {
-        JSONObject info = new JSONObject();
+        JSONObject info = buildErrorInfo(-2, e.getMessage());
         info.put("socketId", socketId);
-        info.put("resultCode", -1000);
         PluginResult errResult = new PluginResult(Status.ERROR, info);
         errResult.setKeepCallback(true);
         acceptContext.sendPluginResult(errResult);

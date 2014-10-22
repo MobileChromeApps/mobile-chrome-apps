@@ -92,6 +92,14 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     stopSelectorThread();
   }
 
+  private JSONObject buildErrorInfo(int code, String message)
+      throws JSONException {
+    JSONObject error = new JSONObject();
+    error.put("message", message);
+    error.put("resultCode", code);
+    return error;
+  }
+
   private void create(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
 
@@ -158,7 +166,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -166,7 +174,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       socket.bind(address, port);
       addSelectorMessage(socket, SelectorMessageType.SO_BIND, callbackContext);
     } catch (SocketException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -182,7 +190,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -246,7 +254,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -254,9 +262,9 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       socket.joinGroup(address);
       callbackContext.success();
     } catch (UnknownHostException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     } catch (IOException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -269,7 +277,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -277,9 +285,9 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       socket.leaveGroup(address);
       callbackContext.success();
     } catch (UnknownHostException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     } catch (IOException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -292,7 +300,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -300,7 +308,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       socket.setMulticastTimeToLive(ttl);
       callbackContext.success();
     } catch (IOException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -313,7 +321,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -321,7 +329,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       socket.setMulticastLoopbackMode(enabled);
       callbackContext.success();
     } catch (SocketException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -345,7 +353,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     startSelectorThread();
   }
 
-  private void startSelectorThread() {
+  private void startSelectorThread() throws JSONException {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -354,7 +362,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     } catch (IOException e) {
       selector = null;
       selectorThread = null;
-      PluginResult err = new PluginResult(Status.ERROR, -1000);
+      PluginResult err = new PluginResult(Status.ERROR, buildErrorInfo(-9, e.getMessage()));
       err.setKeepCallback(true);
       recvContext.sendPluginResult(err);
     }
@@ -421,7 +429,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() {
+    private void processPendingMessages() throws JSONException {
 
       while (selectorMessages.peek() != null) {
 
@@ -453,7 +461,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
         } catch (InterruptedException e) {
         } catch (IOException e) {
           if (msg.callbackContext != null) {
-            msg.callbackContext.error(-1000);
+            msg.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
           }
         }
       }
@@ -472,27 +480,30 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        while (it.hasNext()) {
+        try {
+          while (it.hasNext()) {
 
-          SelectionKey key = it.next();
-          it.remove();
+            SelectionKey key = it.next();
+            it.remove();
 
-          if (!key.isValid()) {
-            continue;
-          }
+            if (!key.isValid()) {
+              continue;
+            }
 
-          UdpSocket socket = (UdpSocket)key.attachment();
+            UdpSocket socket = (UdpSocket)key.attachment();
 
-          if (key.isReadable()) {
-            socket.read();
-          }
+            if (key.isReadable()) {
+              socket.read();
+            }
 
-          if (key.isWritable()) {
-            socket.dequeueSend();
-          }
-        } // while next
+            if (key.isWritable()) {
+              socket.dequeueSend();
+            }
+          } // while next
 
-        processPendingMessages();
+          processPendingMessages();
+        } catch (JSONException e) {
+        }
 
       }
     }
@@ -599,7 +610,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     // This method can be only called by selector thread.
-    void dequeueSend() {
+    void dequeueSend() throws JSONException {
       if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
         return;
@@ -612,7 +623,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
         sendPacket.callbackContext.success(bytesSent);
       } catch (InterruptedException e) {
       } catch (IOException e) {
-        sendPacket.callbackContext.error(-1000);
+        sendPacket.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
       }
     }
 

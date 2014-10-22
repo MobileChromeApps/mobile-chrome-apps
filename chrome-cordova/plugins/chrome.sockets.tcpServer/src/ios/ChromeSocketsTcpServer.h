@@ -31,6 +31,6 @@
 
 - (void)fireAcceptEventsWithSocketId:(NSUInteger)theSocketId clientSocket:(GCDAsyncSocket*)theClientSocket;
 
-- (void)fireAcceptErrorEventsWithSocketId:(NSUInteger)theSocketId code:(NSInteger)theCode;
+- (void)fireAcceptErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 
 @end

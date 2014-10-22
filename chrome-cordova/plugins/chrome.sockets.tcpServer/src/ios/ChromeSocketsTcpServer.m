@@ -157,7 +157,7 @@ static NSString* stringFromData(NSData* data) {
         _disconnectCallback = nil;
         callback();
     } else if (err) {
-        [_plugin fireAcceptErrorEventsWithSocketId:_socketId code:[err code]];
+        [_plugin fireAcceptErrorEventsWithSocketId:_socketId error:err];
     }
     
     [self resetSocket];
@@ -183,6 +183,14 @@ static NSString* stringFromData(NSData* data) {
     for (NSNumber* socketId in _sockets) {
         [self closeSocketWithId:socketId callbackId:nil];
     }
+}
+
+- (NSDictionary*)buildErrorInfoWithErrorCode:(NSInteger)theErrorCode message:(NSString*)message
+{
+    return @{
+        @"resultCode": [NSNumber numberWithInteger:theErrorCode],
+        @"message": message,
+    };
 }
 
 - (void)create:(CDVInvokedUrlCommand*)command
@@ -237,7 +245,7 @@ static NSString* stringFromData(NSData* data) {
     ChromeSocketsTcpServerSocket* socket = [_sockets objectForKey:socketId];
     
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:ENOTSOCK] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"Invalid Argument"]] callbackId:command.callbackId];
         return;
     }
     
@@ -252,7 +260,7 @@ static NSString* stringFromData(NSData* data) {
         
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:[err code]] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[err code] message:[err localizedDescription]]] callbackId:command.callbackId];
     }
 }
 
@@ -344,13 +352,14 @@ static NSString* stringFromData(NSData* data) {
     [self.commandDelegate sendPluginResult:result callbackId:_acceptEventsCallbackId];
 }
 
-- (void)fireAcceptErrorEventsWithSocketId:(NSUInteger)theSocketId code:(NSInteger)theCode
+- (void)fireAcceptErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError
 {
     assert(_acceptEventsCallbackId != nil);
     
     NSDictionary* info = @{
         @"socketId": [NSNumber numberWithUnsignedInteger:theSocketId],
-        @"resultCode": [NSNumber numberWithUnsignedInteger:theCode],
+        @"resultCode": [NSNumber numberWithUnsignedInteger:[theError code]],
+        @"message": [theError localizedDescription],
     };
     
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:info];

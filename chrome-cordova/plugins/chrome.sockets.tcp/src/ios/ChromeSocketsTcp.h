@@ -38,7 +38,7 @@
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
 
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId code:(NSInteger)theCode;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 
 - (NSUInteger)registerAcceptedSocket:(GCDAsyncSocket*)theSocket;
 

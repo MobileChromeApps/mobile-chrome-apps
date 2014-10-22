@@ -88,6 +88,14 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     stopSelectorThread();
   }
 
+  private JSONObject buildErrorInfo(int code, String message)
+      throws JSONException {
+    JSONObject error = new JSONObject();
+    error.put("message", message);
+    error.put("resultCode", code);
+    return error;
+  }
+
   public int registerAcceptedSocketChannel(SocketChannel socketChannel)
       throws IOException {
     TcpSocket socket = new TcpSocket(nextSocket++, recvContext, socketChannel);
@@ -160,7 +168,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -168,7 +176,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       socket.setKeepAlive(enable);
       callbackContext.success();
     } catch (SocketException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -181,7 +189,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -189,7 +197,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       socket.setNoDelay(noDelay);
       callbackContext.success();
     } catch (SocketException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
 
@@ -203,7 +211,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
@@ -214,7 +222,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         addSelectorMessage(socket, SelectorMessageType.SO_CONNECT, null);
       }
     } catch (IOException e) {
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-104, e.getMessage()));
     }
   }
 
@@ -241,13 +249,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
     if (!socket.isConnected()) {
       Log.e(LOG_TAG, "Socket is not connected with host " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-15, "Socket not connected"));
       return;
     }
 
@@ -278,13 +286,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
       return;
     }
 
     if (!socket.isConnected()) {
       Log.e(LOG_TAG, "Socket is not connected with host " + socketId);
-      callbackContext.error(-1000);
+      callbackContext.error(buildErrorInfo(-15, "Socket not connected"));
       return;
     }
 
@@ -345,7 +353,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     startSelectorThread();
   }
 
-  private void startSelectorThread() {
+  private void startSelectorThread() throws JSONException {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -354,7 +362,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     } catch (IOException e) {
       selector = null;
       selectorThread = null;
-      PluginResult err = new PluginResult(Status.ERROR, -1000);
+      PluginResult err = new PluginResult(Status.ERROR, buildErrorInfo(-9, e.getMessage()));
       err.setKeepCallback(true);
       recvContext.sendPluginResult(err);
     }
@@ -422,7 +430,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() {
+    private void processPendingMessages() throws JSONException {
 
       while (selectorMessages.peek() != null) {
         SelectorMessage msg = null;
@@ -470,7 +478,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         } catch (InterruptedException e) {
         } catch (IOException e) {
           if (msg.callbackContext != null)
-            msg.callbackContext.error(-1000);
+            msg.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
         } catch (JSONException e) {
         }
       }
@@ -489,38 +497,38 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        while (it.hasNext()) {
+        try {
+          while (it.hasNext()) {
 
-          SelectionKey key = it.next();
-          it.remove();
+            SelectionKey key = it.next();
+            it.remove();
 
-          if (!key.isValid()) {
-            continue;
-          }
+            if (!key.isValid()) {
+              continue;
+            }
 
-          TcpSocket socket = (TcpSocket)key.attachment();
+            TcpSocket socket = (TcpSocket)key.attachment();
 
-          if (key.isReadable()) {
-            try {
+            if (key.isReadable()) {
               if (socket.read() < 0) {
                 addSelectorMessage(socket, SelectorMessageType.SO_DISCONNECTED, null);
               }
-            } catch (JSONException e) {
+
             }
-          }
 
-          if (key.isWritable()) {
-            socket.dequeueSend();
-          }
-
-          if (key.isConnectable()) {
-            if (socket.finishConnect()) {
-              addSelectorMessage(socket, SelectorMessageType.SO_CONNECTED, null);
+            if (key.isWritable()) {
+              socket.dequeueSend();
             }
-          }
-        } // while next
 
-        processPendingMessages();
+            if (key.isConnectable()) {
+              if (socket.finishConnect()) {
+                addSelectorMessage(socket, SelectorMessageType.SO_CONNECTED, null);
+              }
+            }
+          } // while next
+          processPendingMessages();
+        } catch (JSONException e) {
+        }
       }
     }
   }
@@ -665,7 +673,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       return connected;
     }
 
-    boolean finishConnect() {
+    boolean finishConnect() throws JSONException {
       if (channel.isConnectionPending() && connectCallback != null) {
         try {
           boolean connected = channel.finishConnect();
@@ -675,7 +683,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
           }
           return connected;
         } catch (IOException e) {
-          connectCallback.error(-1000);
+          connectCallback.error(buildErrorInfo(-104, e.getMessage()));
           connectCallback = null;
         }
       }
@@ -729,9 +737,9 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       }
     }
 
-    void handshakeFailed() {
+    void handshakeFailed() throws JSONException {
       if (secureCallback != null) {
-        secureCallback.error(-1000);
+        secureCallback.error(buildErrorInfo(-148, "SSL handshake not completed"));
         secureCallback = null;
       }
       tearDownSSLEngine();
@@ -853,7 +861,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     // This method can be only called by selector thread.
-    void dequeueSend() {
+    void dequeueSend() throws JSONException {
       if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
         return;
@@ -881,7 +889,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         sendPacket.callbackContext.success(bytesSent);
       } catch (InterruptedException e) {
       } catch (IOException e) {
-        sendPacket.callbackContext.error(-1000);
+        sendPacket.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
       }
     }
 
@@ -943,7 +951,11 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         receiveDataBuffer.compact();
 
       } catch (IOException e) {
-        sendReceiveError();
+        JSONObject info = buildErrorInfo(-2, e.getMessage());
+        info.put("socketId", socketId);
+        PluginResult errResult = new PluginResult(Status.ERROR, info);
+        errResult.setKeepCallback(true);
+        recvContext.sendPluginResult(errResult);
       }
       return bytesRead;
     }
@@ -963,15 +975,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       PluginResult metadataResult = new PluginResult(Status.OK, metadata);
       metadataResult.setKeepCallback(true);
       recvContext.sendPluginResult(metadataResult);
-    }
-
-    private void sendReceiveError() throws JSONException {
-      JSONObject info = new JSONObject();
-      info.put("socketId", socketId);
-      info.put("resultCode", -1000);
-      PluginResult errResult = new PluginResult(Status.ERROR, info);
-      errResult.setKeepCallback(true);
-      recvContext.sendPluginResult(errResult);
     }
 
     private class TcpSendPacket {
