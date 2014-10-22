@@ -8,6 +8,7 @@
 #import <ifaddrs.h> // For getifaddrs()
 #import <net/if.h> // For IFF_LOOPBACK
 #import <netinet/in.h> // For sockaddr_in
+#import <arpa/inet.h> // For inet_ntop
 
 #if CHROME_SYSTEM_NETWORK_VERBOSE_LOGGING
 #define VERBOSE_LOG NSLog
@@ -31,7 +32,7 @@
 	NSDictionary* userInfo = @{
                               NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%@: %d - %@", errMsg, code, codeDescription]
                               };
-	
+
 	return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
 }
 
@@ -40,7 +41,7 @@
     // IP address has different data structure, for IPv4 vs IPv6
     void* addressPointer = NULL;
     char addressBuffer[100];
-    
+
     if (family == AF_INET6)
     {
         addressPointer = &((struct sockaddr_in6 *)ifa_addr)->sin6_addr;
@@ -49,10 +50,10 @@
     {
         addressPointer = &((struct sockaddr_in *)ifa_addr)->sin_addr;
     }
-    inet_ntop(family, addressPointer, &addressBuffer, sizeof(addressBuffer));
-    
+    inet_ntop(family, addressPointer, (char*)&addressBuffer, sizeof(addressBuffer));
+
     NSString* address = [NSString stringWithUTF8String:addressBuffer];
-    
+
     // Strip address scope zones for IPv6 address.
     if (family == AF_INET6)
     {
@@ -62,7 +63,7 @@
             address = [address substringToIndex:range.location];
         }
     }
-    
+
     return address;
 }
 
@@ -72,7 +73,7 @@
     {
         return 0;
     }
-    
+
     unsigned int prefixLength = 0;
 
     // Compute the network prefix length by using the "address" of the net mask
@@ -83,11 +84,11 @@
     if (family == AF_INET6)
     {
         struct in6_addr address = ((struct sockaddr_in6 *)ifa_netmask)->sin6_addr;
-        
+
         // Count all the set bits in the 16 bytes of the IPv6 address
         for (int i = 0; i < 16; i++) {
             u_int8_t mask_part = address.s6_addr[i];
-            
+
             while ( mask_part & 0x80 ) {
                 prefixLength++;
                 mask_part <<= 1;
@@ -98,14 +99,14 @@
     {
         struct in_addr address = ((struct sockaddr_in *)ifa_netmask)->sin_addr;
         uint32_t subnet_mask = ntohl( address.s_addr );
-        
+
         // Count all the set bits in the 32 bit IPv4 address
         while ( subnet_mask & 0x80000000 ) {
           prefixLength++;
           subnet_mask <<= 1;
         }
     }
-    
+
     return prefixLength;
 }
 
@@ -125,7 +126,7 @@
 
     NSMutableArray* ret = [NSMutableArray array];
     struct ifaddrs* temp_addr = NULL;
-    
+
     // Loop through linked list of interfaces
     for (temp_addr = interfaces; temp_addr != NULL; temp_addr = temp_addr->ifa_next)
     {
@@ -134,7 +135,7 @@
             // Ignore the loopback address
             continue;
         }
-        
+
         sa_family_t family = (temp_addr->ifa_addr ? temp_addr->ifa_addr->sa_family : 0);
         if (family != AF_INET &&
             family != AF_INET6)
@@ -142,25 +143,25 @@
             // Ignore non-Internet interfaces
             continue;
         }
-        
+
         NSString* name = [NSString stringWithUTF8String:temp_addr->ifa_name];
-        
+
         NSString* address = [self getIPAddress:temp_addr->ifa_addr family:family];
 
         unsigned int prefixLength = [self getPrefixLength:temp_addr->ifa_netmask family:family];
-        
+
         VERBOSE_LOG(@"interface name: %@; address: %@; prefixLength: %d", name, address, prefixLength);
-        
+
         [ret addObject:@{
                          @"name": name,
                          @"address": address,
                          @"prefixLength": @(prefixLength)
                          }];
     }
-    
+
     // Free memory
     freeifaddrs(interfaces);
-    
+
     return ret;
 }
 
@@ -183,7 +184,7 @@
         }
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];    
+    }];
 }
 
 @end
