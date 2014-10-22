@@ -209,7 +209,8 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       for (UdpSocket socket: sockets.values()) {
         sendCloseMessage(socket, null);
       }
-      selector.wakeup();
+      if(selector != null)
+        selector.wakeup();
     } catch (InterruptedException e) {
     }
   }
