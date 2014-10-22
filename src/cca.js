@@ -100,7 +100,7 @@ function main() {
     if (!fs.existsSync(path.join('www', 'manifest.json'))) {
       return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
     }
-    return require('./auto-upgrade')();
+    return require('./upgrade-project').upgradeProjectIfStale();
   }
 
   function forwardCurrentCommandToCordova() {
@@ -179,7 +179,7 @@ function main() {
     },
     'upgrade': function() {
       printCcaVersionPrefix();
-      return require('./upgrade-project')(commandLineFlags.y);
+      return require('./upgrade-project').upgradeProject(commandLineFlags.y);
     },
     'version': function() {
       console.log(packageVersion);
