@@ -17,7 +17,7 @@
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
-  <dependency id="org.chromium.iosSocketsCommon" />
+  <dependency id="org.chromium.iossocketscommon" />
 
   <js-module src="sockets.udp.js" name="sockets.udp">
     <clobbers target="chrome.sockets.udp" />

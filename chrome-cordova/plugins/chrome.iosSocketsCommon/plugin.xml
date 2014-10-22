@@ -5,7 +5,7 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.iosSocketsCommon"
+    id="org.chromium.iossocketscommon"
     version="1.0.1-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
