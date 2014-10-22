@@ -5,7 +5,7 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-    id="org.chromium.sockets.tcpServer"
+    id="org.chromium.sockets.tcpserver"
     version="1.0.1-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
