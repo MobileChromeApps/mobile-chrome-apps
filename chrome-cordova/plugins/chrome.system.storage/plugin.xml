@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.system.storage"
-    version="1.0.2-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -16,19 +16,43 @@
   <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
+  <dependency id="org.chromium.common" />
+
+  <js-module src="system.storage.js" name="system.storage">
+    <clobbers target="chrome.system.storage" />
+  </js-module>
+
   <platform name="android">
-    <js-module src="system.storage.js" name="system.storage">
-      <clobbers target="chrome.system.storage" />
-    </js-module>
     <source-file src="src/android/ChromeSystemStorage.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/ChromeSystemStorageReceiver.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeSystemStorage">
         <param name="android-package" value="org.chromium.ChromeSystemStorage"/>
+        <param name="onload" value="true" />
       </feature>
     </config-file>
-    <config-file target="AndroidManifest.xml" parent="/manifest">
-      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <receiver android:name="org.chromium.ChromeSystemStorageReceiver">
+        <intent-filter>
+          <data android:scheme="file" />
+          <action android:name="android.intent.action.MEDIA_BAD_REMOVAL" />
+          <action android:name="android.intent.action.MEDIA_MOUNTED" />
+          <action android:name="android.intent.action.MEDIA_REMOVED" />
+          <action android:name="android.intent.action.MEDIA_SHARED" />
+          <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
+        </intent-filter>
+      </receiver>
+    </config-file>
+  </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeSystemStorage.m" />
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeSystemStorage">
+        <param name="ios-package" value="ChromeSystemStorage"/>
+      </feature>
     </config-file>
   </platform>
 </plugin>
