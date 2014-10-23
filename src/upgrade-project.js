@@ -62,6 +62,10 @@ function upgradeProject(skipPrompt) {
     shelljs.rm('-f', path.join('plugins', 'android.json'));
     shelljs.rm('-f', path.join('plugins', 'ios.json'));
 
+    // Remove the old pre/post prepare hooks
+    shelljs.rm('-f', path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'));
+    shelljs.rm('-f', path.join('hooks', 'after_prepare', 'cca-post-prepare.js'));
+
     console.log('## First-time build. Detecting available SDKs:');
   })
   .then(require('./tools-check'))
