@@ -11,19 +11,26 @@ exports.upgradeProjectIfStale = upgradeProjectIfStale;
 
 function upgradeProjectIfStale() {
   var packageVersion = require('../package').version;
-  var versionFile = path.join('platforms', 'created-with-cca-version');
-  var projectIsStale = false;
+  var androidInstalled = fs.existsSync(path.join('platforms', 'android'));
+  var iosInstalled = fs.existsSync(path.join('platforms', 'ios'));
 
-  // If you have at least one platform already installed, check to see if you need to do an upgrade
-  if (fs.existsSync(path.join('platforms', 'android')) || fs.existsSync(path.join('platforms', 'ios'))) {
-    projectIsStale = !fs.existsSync(versionFile) || fs.readFileSync(versionFile, 'utf-8') != packageVersion;
-  }
-
-  if(projectIsStale) {
-    console.log('This project was not upgraded to cca v' + packageVersion + ' yet.  Attempting to upgrade now...');
-    return exports.upgradeProject();
+  if (!androidInstalled && !iosInstalled) {
+    // No platforms installed yet, (ab)use upgradeProject(skipPrompt=true) to install both.
+    return exports.upgradeProject(true);
   } else {
-    return Q();
+
+    var versionFile = path.join('platforms', 'created-with-cca-version');
+    var createdWith;
+    if (fs.existsSync(versionFile)) {
+      createdWith = fs.readFileSync(versionFile, 'utf-8');
+    }
+    if (createdWith == packageVersion) {
+      return Q();
+    } else {
+      // The platforms/created-with-cca-version file does not exist or contains older version string. Upgrading.
+      console.log('This project was not upgraded to cca v' + packageVersion + ' yet.  Attempting to upgrade now...');
+      return exports.upgradeProject();
+    }
   }
 }
 
