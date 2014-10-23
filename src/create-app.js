@@ -180,9 +180,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
   .then(function() {
     // Create a convenience gitignore
     shelljs.cp('-f', path.join(ccaRoot, 'templates', 'DEFAULT_GITIGNORE'), path.join('.', '.gitignore'));
-    return Q();
-  })
-  .then(function() {
+
     // Add default platforms:
     var cmds = [];
     if (flags.ios) {

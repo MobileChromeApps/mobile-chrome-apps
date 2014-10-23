@@ -113,7 +113,7 @@ function main() {
     cordovaLib.events.removeListener('verbose', console.log);
 
     // TODO: Can we replace use of CLI here?  Calls to cordova-lib cordova.raw?
-    require('cordova/src/cli')(process.argv);
+    return require('cordova/src/cli')(process.argv);
   }
 
   function printVersionThenPrePrePrepareThenForwardCommandToCordova() {
@@ -159,7 +159,7 @@ function main() {
           spawn('open', ['-n', '-a', 'Google Chrome Canary', '--args', '--user-data-dir=/tmp/cca_chrome_data_dir', '--load-and-launch-app=' + path.resolve('www')]); // '--disable-web-security'
           return;
         }
-        forwardCurrentCommandToCordova();
+        return forwardCurrentCommandToCordova();
       });
     },
     'create': function() {
@@ -193,14 +193,12 @@ function main() {
     'platform': function() {
       printCcaVersionPrefix();
       // Do not run auto-upgrade step if doing a platforms command
-      forwardCurrentCommandToCordova();
-      return Q.when();
+      return forwardCurrentCommandToCordova();
     },
     'platforms': function() {
       printCcaVersionPrefix();
       // Do not run auto-upgrade step if doing a platforms command
-      forwardCurrentCommandToCordova();
-      return Q.when();
+      return forwardCurrentCommandToCordova();
     },
     'analytics': function() {
       // Do nothing.  This is handled as a special-case below.
@@ -255,7 +253,13 @@ function main() {
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
   }).then(commandActions[command])
-  .done(null, utils.fatal);
+  .then(null, function(e) {
+    if (e instanceof cordovaLib.CordovaError) {
+      utils.fatal(e.message.replace(/\bcordova /, 'cca '));
+    } else {
+      throw e;
+    }
+  }).done();
 }
 
 if (require.main === module) {
