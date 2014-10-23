@@ -261,7 +261,8 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     try {
       selectorMessages.put(new SelectorMessage(
           socket, type, callbackContext));
-      selector.wakeup();
+      if (selector != null)
+        selector.wakeup();
     } catch (InterruptedException e) {
     }
   }
