@@ -32,9 +32,8 @@ var utils = require('./utils');
 var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
 
-// TODO: This is ugly make it better once cordova-cli with proper exports is out.
-var cordovaLib;
-try { cordovaLib = require('cordova/node_modules/cordova-lib'); } catch(e) { cordovaLib = require('cordova-lib'); }
+var cordova = require('cordova');
+var cordovaLib = cordova.cordova_lib;
 
 /******************************************************************************/
 
@@ -113,7 +112,7 @@ function main() {
     cordovaLib.events.removeListener('verbose', console.log);
 
     // TODO: Can we replace use of CLI here?  Calls to cordova-lib cordova.raw?
-    return require('cordova/src/cli')(process.argv);
+    return cordova.cli(process.argv);
   }
 
   function printVersionThenPrePrePrepareThenForwardCommandToCordova() {
