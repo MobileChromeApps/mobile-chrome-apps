@@ -17,7 +17,6 @@
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
-  <dependency id="org.chromium.iossocketscommon" />
   <dependency id="org.chromium.system.network" />
 
   <js-module src="socket.js" name="Socket">
@@ -35,6 +34,7 @@
   </platform>
 
   <platform name="ios">
+    <dependency id="org.chromium.iossocketscommon" />
     <source-file src="src/ios/ChromeSocket.m" />
     <header-file src="src/ios/ChromeSocket.h" />
 

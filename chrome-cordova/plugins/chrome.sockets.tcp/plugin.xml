@@ -17,7 +17,6 @@
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
-  <dependency id="org.chromium.iossocketscommon" />
 
   <js-module src="sockets.tcp.js" name="sockets.tcp">
     <clobbers target="chrome.sockets.tcp" />
@@ -34,6 +33,7 @@
   </platform>
 
   <platform name="ios">
+    <dependency id="org.chromium.iossocketscommon" />
     <framework src="Security.framework" />
     <framework src="CFNetwork.framework" />
     <source-file src="src/ios/ChromeSocketsTcp.m" />
