@@ -10,7 +10,8 @@ var Q = require('q');
 var utils = require('./utils');
 var cordova = require('cordova');
 // TODO: This is ugly make it better once cordova-cli with proper exports is out.
-var cordovaLib = require('cordova/node_modules/cordova-lib');
+var cordovaLib;
+try { cordovaLib = require('cordova/node_modules/cordova-lib'); } catch(e) { cordovaLib = require('cordova-lib'); }
 
 // Returns a promise.
 module.exports = exports = function postPrepareCommand(opts) {

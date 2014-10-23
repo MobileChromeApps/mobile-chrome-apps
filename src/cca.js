@@ -32,7 +32,9 @@ var utils = require('./utils');
 var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
 
+// TODO: This is ugly make it better once cordova-cli with proper exports is out.
 var cordovaLib;
+try { cordovaLib = require('cordova/node_modules/cordova-lib'); } catch(e) { cordovaLib = require('cordova-lib'); }
 
 /******************************************************************************/
 
@@ -71,8 +73,6 @@ function main() {
   // TODO: Add env detection to Cordova.
   fixEnv();
 
-  // TODO: This is ugly make it better once cordova-cli with proper exports is out.
-  cordovaLib = require('cordova/node_modules/cordova-lib');
   setupHooks();
 
   function printCcaVersionPrefix() {
