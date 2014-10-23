@@ -155,10 +155,8 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     function writeHook(path) {
       var contents = [
           "#!/usr/bin/env node",
-          "var path = require('path');",
           "var cmdline = process.env['CORDOVA_CMDLINE'];",
-          "var re = RegExp(path.join('bin', 'cca'), 'i');",
-          "if (!re.test(cmdline)) {",
+          "if (!/cca/.test(cmdline)) {",
           "  var msg = 'ERROR: This is a CCA based project! Using `cordova` rather than `cca` will have unexpected results.' ;",
           "  console.error(msg);",
           "  process.exit(1);",
