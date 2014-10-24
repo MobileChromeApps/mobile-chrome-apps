@@ -25,8 +25,6 @@ registerManualTests('chrome.sockets.tcpServer', function(rootEl, addButton) {
       chrome.sockets.tcp.send(info.clientSocketId, arr.buffer, function(result) {
         if (result.resultCode === 0) {
           logger('TCP send: success');
-          chrome.sockets.tcp.disconnect(info.clientSocketId);
-          chrome.sockets.tcp.close(info.clientSocketId);
         }
       });
     });

@@ -24,7 +24,7 @@
 
 - (void)disconnect:(CDVInvokedUrlCommand*)command;
 
-// - (void)secure:(CDVInvokedUrlCommand*)command;
+- (void)secure:(CDVInvokedUrlCommand*)command;
 
 - (void)send:(CDVInvokedUrlCommand*)command;
 
@@ -38,7 +38,7 @@
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
 
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId code:(NSInteger)theCode;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 
 - (NSUInteger)registerAcceptedSocket:(GCDAsyncSocket*)theSocket;
 

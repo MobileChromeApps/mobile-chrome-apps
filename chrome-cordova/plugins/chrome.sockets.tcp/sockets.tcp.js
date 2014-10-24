@@ -4,6 +4,7 @@
 var Event = require('org.chromium.common.events');
 var platform = cordova.require('cordova/platform');
 var exec = cordova.require('cordova/exec');
+var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 
 exports.create = function(properties, callback) {
     if (typeof properties == 'function') {
@@ -39,7 +40,10 @@ exports.connect = function(socketId, peerAddress, peerPort, callback) {
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsTcp', 'connect', [socketId, peerAddress, peerPort]);
+    var fail = callback && function(error) {
+        callbackWithError(error.message, callback, error.resultCode);
+    };
+    exec(win, fail, 'ChromeSocketsTcp', 'connect', [socketId, peerAddress, peerPort]);
 };
 
 exports.disconnect = function(socketId, callback) {
@@ -47,7 +51,17 @@ exports.disconnect = function(socketId, callback) {
 };
 
 exports.secure = function(socketId, options, callback) {
-    console.warn('chrome.sockets.tcp.secure not implemented yet');
+    if (typeof options == 'function') {
+        callback = options;
+        options = {};
+    }
+    var win = callback && function() {
+        callback(0);
+    };
+    var fail = callback && function(error) {
+        callbackWithError(error.message, callback, error.resultCode);
+    };
+    exec(win, fail, 'ChromeSocketsTcp', 'secure', [socketId, options]);
 };
 
 exports.send = function(socketId, data, callback) {
@@ -62,12 +76,12 @@ exports.send = function(socketId, data, callback) {
         };
         callback(sendInfo);
     };
-    var fail = callback && function(errCode) {
+    var fail = callback && function(error) {
         var sendInfo = {
             bytesSent: 0,
-            resultCode: errCode
+            resultCode: error.resultCode
         };
-        callback(sendInfo);
+        callbackWithError(error.message, callback, sendInfo);
     };
     exec(win, fail, 'ChromeSocketsTcp', 'send', [socketId, data]);
 };
@@ -133,7 +147,7 @@ function registerReceiveEvents() {
     }
 
     var fail = function(info) {
-        exports.onReceiveError.fire(info);
+        callbackWithError(info.message, exports.onReceiveError.fire, info);
     };
 
     exec(win, fail, 'ChromeSocketsTcp', 'registerReceiveEvents', []);
