@@ -83,6 +83,11 @@ registerAutoTests('chrome.app.window', function() {
         expect(wnd).toHaveFunction('hide');
       });
 
+      it('minimize() should be defined', function() {
+        var wnd = getCurrentWindow();
+        expect(wnd).toHaveFunction('minimize');
+      });
+
       it('show() should be defined', function() {
         var wnd = getCurrentWindow();
         expect(wnd).toHaveFunction('show');

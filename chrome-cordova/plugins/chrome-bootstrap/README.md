@@ -4,6 +4,25 @@ This plugin contains the code used to wrap a Chrome app and make it run using
 Cordova. It is meant to be used with the `cca` tool, and isn't useful outside
 the context of a mobile Chrome App.
 
+## Status
+
+The support for various functionality, across platforms, is summarized in the table below.
+
+| API | Android | iOS  |
+| -------------- |:-------:|:----:|
+| AppWindow: hide, minimize, restore, show | Yes     | No-op<sup>1</sup> |
+| AppWindow: all other methods      | No      | No   |
+Notes:
+1. The iOS (Human Interaction Guidelines)[https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/StartingStopping.html]
+    do not allow apps to show/hide/close programmatically.
+    Thus, these methods are implemented as a no-op
+    (will execute without error on iOS, but have no behavior)
+
+## Reference
+
+The API references are:
+- chrome.app.window: [here](https://developer.chrome.com/apps/app_window).
+
 # Release Notes
 
 ## 1.1.0 (October 24, 2014)

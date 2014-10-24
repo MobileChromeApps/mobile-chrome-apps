@@ -59,12 +59,16 @@
   </platform>
 
   <platform name="ios">
+    <source-file src="src/ios/ChromeAppWindow.m" />
     <source-file src="src/ios/ChromeBootstrap.m" />
     <source-file src="src/ios/ChromeExtensionURLs.m" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeAppWindow">
+        <param name="ios-package" value="ChromeAppWindow"/>
+      </feature>
       <feature name="ChromeBootstrap">
         <param name="ios-package" value="ChromeBootstrap"/>
         <param name="onload" value="true"/>
