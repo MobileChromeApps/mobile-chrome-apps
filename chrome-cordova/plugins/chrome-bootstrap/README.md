@@ -12,8 +12,9 @@ The support for various functionality, across platforms, is summarized in the ta
 | -------------- |:-------:|:----:|
 | AppWindow: hide, minimize, restore, show | Yes     | No-op<sup>1</sup> |
 | AppWindow: all other methods      | No      | No   |
-Notes:
-1. The iOS (Human Interaction Guidelines)[https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/StartingStopping.html]
+**Notes:**
+
+1. The [iOS Human Interaction Guidelines](https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/StartingStopping.html)
     do not allow apps to show/hide/close programmatically.
     Thus, these methods are implemented as a no-op
     (will execute without error on iOS, but have no behavior)
@@ -21,7 +22,7 @@ Notes:
 ## Reference
 
 The API references are:
-- chrome.app.window: [here](https://developer.chrome.com/apps/app_window).
+- chrome.app.window: [here](https://developer.chrome.com/apps/app_window)
 
 # Release Notes
 
