@@ -118,6 +118,37 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
     });
   }
 
+  // This method should fail on iOS and Desktop.
+  function simpleStartTLS() {
+
+    var startTLSReceiver = function(info) {
+      var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
+      if (message.indexOf('Ready to start TLS' > -1)) {
+        chrome.sockets.tcp.secure(info.socketId, function(result) {
+          logger('secure result:' + result);
+          chrome.sockets.tcp.onReceive.removeListener(startTLSReceiver);
+        });
+      }
+    }
+
+    chrome.sockets.tcp.onReceive.addListener(startTLSReceiver);
+
+    var addr = 'smtp.gmail.com';
+    var port = 25;
+    var command = stringToArrayBuffer('HELO me.com\r\nSTARTTLS\r\n');
+
+    chrome.sockets.tcp.create(function(createInfo) {
+      chrome.sockets.tcp.connect(createInfo.socketId, addr, port, function(result) {
+        chrome.sockets.tcp.send(createInfo.socketId, command, function(result) {
+          if (result === 0) {
+            logger('send command success');
+          }
+        });
+      });
+    });
+
+  }
+
   function send(data) {
     chrome.sockets.tcp.create(function(createInfo) {
       chrome.sockets.tcp.send(createInfo.socketId, data, function(result) {
@@ -215,6 +246,10 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
 
     addButton('TCP: connect & secure & send', function() {
       connectSecureAndSend(arr.buffer);
+    });
+
+    addButton('TCP: test startTLS', function() {
+      simpleStartTLS();
     });
 
     addButton('TCP: send to unconnected', function() {
