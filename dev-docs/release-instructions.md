@@ -73,7 +73,7 @@ TODO
 
 First, make sure to unlink any local modules.  I like to just start with:
 
-    rm -rf node_modules && npm install
+    rm -rf node_modules && npm install --production
 
 See what is stale (newer versions available)
 

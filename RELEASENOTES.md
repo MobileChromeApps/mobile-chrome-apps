@@ -4,6 +4,10 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+
+### v0.4.3 (Oct 24, 2014)
+* Teach cca that org.chromium.system.network is a dep of socket (fixes #381)
+
 ### v0.4.2 (Oct 21, 2014)
 * Added chrome.sockets.tcp, chrome.sockets.tcpServer, and chrome.sockets.udp APIs for Android and iOS (BETA)
 * Added chrome.identity.getProfileUserInfo.
