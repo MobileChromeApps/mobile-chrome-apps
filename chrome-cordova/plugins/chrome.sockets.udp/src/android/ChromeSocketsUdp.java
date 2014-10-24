@@ -92,11 +92,13 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     stopSelectorThread();
   }
 
-  private JSONObject buildErrorInfo(int code, String message)
-      throws JSONException {
+  private JSONObject buildErrorInfo(int code, String message) {
     JSONObject error = new JSONObject();
-    error.put("message", message);
-    error.put("resultCode", code);
+    try {
+      error.put("message", message);
+      error.put("resultCode", code);
+    } catch (JSONException e) {
+    }
     return error;
   }
 
@@ -149,6 +151,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     socket.setPaused(paused);
     if (paused) {
+      // Read interest will be removed when socket is readable on selector thread.
       callbackContext.success();
     } else {
       addSelectorMessage(socket, SelectorMessageType.SO_ADD_READ_INTEREST, callbackContext);
@@ -347,13 +350,12 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     callbackContext.success(new JSONArray(socket.getJoinedGroups()));
   }
 
-  private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext)
-      throws JSONException {
+  private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext) {
     recvContext = callbackContext;
     startSelectorThread();
   }
 
-  private void startSelectorThread() throws JSONException {
+  private void startSelectorThread() {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -429,7 +431,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() throws JSONException {
+    private void processPendingMessages() {
 
       while (selectorMessages.peek() != null) {
 
@@ -480,31 +482,27 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        try {
-          while (it.hasNext()) {
+        while (it.hasNext()) {
 
-            SelectionKey key = it.next();
-            it.remove();
+          SelectionKey key = it.next();
+          it.remove();
 
-            if (!key.isValid()) {
-              continue;
-            }
+          if (!key.isValid()) {
+            continue;
+          }
 
-            UdpSocket socket = (UdpSocket)key.attachment();
+          UdpSocket socket = (UdpSocket)key.attachment();
 
-            if (key.isReadable()) {
-              socket.read();
-            }
+          if (key.isReadable()) {
+            socket.read();
+          }
 
-            if (key.isWritable()) {
-              socket.dequeueSend();
-            }
-          } // while next
+          if (key.isWritable()) {
+            socket.dequeueSend();
+          }
+        } // while next
 
-          processPendingMessages();
-        } catch (JSONException e) {
-        }
-
+        processPendingMessages();
       }
     }
   }
@@ -610,7 +608,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     // This method can be only called by selector thread.
-    void dequeueSend() throws JSONException {
+    void dequeueSend() {
       if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
         return;

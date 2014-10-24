@@ -88,11 +88,14 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     stopSelectorThread();
   }
 
-  private JSONObject buildErrorInfo(int code, String message)
-      throws JSONException {
+  private JSONObject buildErrorInfo(int code, String message) {
+
     JSONObject error = new JSONObject();
-    error.put("message", message);
-    error.put("resultCode", code);
+    try {
+      error.put("message", message);
+      error.put("resultCode", code);
+    } catch (JSONException e) {
+    }
     return error;
   }
 
@@ -152,6 +155,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     socket.setPaused(paused);
     if (paused) {
+      // Read interest will be removed when socket is readable on selector thread.
       callbackContext.success();
     } else {
       // All interests need to be modified in selector thread.
@@ -347,13 +351,12 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     callbackContext.success(results);
   }
 
-  private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext)
-      throws JSONException {
+  private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext) {
     recvContext = callbackContext;
     startSelectorThread();
   }
 
-  private void startSelectorThread() throws JSONException {
+  private void startSelectorThread() {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -430,7 +433,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() throws JSONException {
+    private void processPendingMessages() {
 
       while (selectorMessages.peek() != null) {
         SelectorMessage msg = null;
@@ -448,7 +451,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
               break;
             case SO_DISCONNECTED:
               msg.socket.disconnect();
-             break;
+              break;
             case SO_CLOSE:
               msg.socket.disconnect();
               sockets.remove(Integer.valueOf(msg.socket.getSocketId()));
@@ -497,38 +500,37 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        try {
-          while (it.hasNext()) {
+        while (it.hasNext()) {
 
-            SelectionKey key = it.next();
-            it.remove();
+          SelectionKey key = it.next();
+          it.remove();
 
-            if (!key.isValid()) {
-              continue;
-            }
+          if (!key.isValid()) {
+            continue;
+          }
 
-            TcpSocket socket = (TcpSocket)key.attachment();
+          TcpSocket socket = (TcpSocket)key.attachment();
 
-            if (key.isReadable()) {
+          if (key.isReadable()) {
+            try {
               if (socket.read() < 0) {
                 addSelectorMessage(socket, SelectorMessageType.SO_DISCONNECTED, null);
               }
-
+            } catch (JSONException e) {
             }
+          }
 
-            if (key.isWritable()) {
-              socket.dequeueSend();
-            }
+          if (key.isWritable()) {
+            socket.dequeueSend();
+          }
 
-            if (key.isConnectable()) {
-              if (socket.finishConnect()) {
-                addSelectorMessage(socket, SelectorMessageType.SO_CONNECTED, null);
-              }
+          if (key.isConnectable()) {
+            if (socket.finishConnect()) {
+              addSelectorMessage(socket, SelectorMessageType.SO_CONNECTED, null);
             }
-          } // while next
-          processPendingMessages();
-        } catch (JSONException e) {
-        }
+          }
+        } // while next
+        processPendingMessages();
       }
     }
   }
@@ -673,7 +675,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       return connected;
     }
 
-    boolean finishConnect() throws JSONException {
+    boolean finishConnect() {
       if (channel.isConnectionPending() && connectCallback != null) {
         try {
           boolean connected = channel.finishConnect();
@@ -700,7 +702,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
      * @return whether further handshake need to be performed.
      */
     boolean performNextHandshakeStep() throws IOException, JSONException {
-      SSLEngineResult res;
       switch(sslEngine.getHandshakeStatus()) {
         case FINISHED:
           return false;
@@ -716,19 +717,11 @@ public class ChromeSocketsTcp extends CordovaPlugin {
             handshakeFailed();
             return false;
           }
-          sslPeerAppBuffer.clear();
-          receiveDataBuffer.flip();
-
-          do {
-            res = sslEngine.unwrap(receiveDataBuffer, sslPeerAppBuffer);
-          } while (shouldRedoUnwrap(res));
-
-          sslPeerAppBuffer.flip();
-          receiveDataBuffer.compact();
+          tryUnwrapReceiveData();
           return true;
         case NEED_WRAP:
           ByteBuffer wrapData = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
-          res = sslEngine.wrap(ByteBuffer.allocate(0), wrapData);
+          sslEngine.wrap(ByteBuffer.allocate(0), wrapData);
           wrapData.flip();
           channel.write(wrapData);
           return true;
@@ -737,7 +730,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       }
     }
 
-    void handshakeFailed() throws JSONException {
+    void handshakeFailed() {
       if (secureCallback != null) {
         secureCallback.error(buildErrorInfo(-148, "SSL handshake not completed"));
         secureCallback = null;
@@ -752,7 +745,23 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       }
     }
 
-    boolean shouldRedoUnwrap(SSLEngineResult res) {
+    SSLEngineResult tryUnwrapReceiveData() throws SSLException {
+
+      receiveDataBuffer.flip();
+      sslPeerAppBuffer.clear();
+
+      SSLEngineResult res;
+      do {
+        res = sslEngine.unwrap(receiveDataBuffer, sslPeerAppBuffer);
+      } while (maybeGrowBuffersForUnwrap(res));
+
+      sslPeerAppBuffer.flip();
+      receiveDataBuffer.compact();
+
+      return res;
+    }
+
+    boolean maybeGrowBuffersForUnwrap(SSLEngineResult res) {
       switch (res.getStatus()) {
         case BUFFER_OVERFLOW:
           increaseSSLPeerAppBuffer();
@@ -768,7 +777,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       }
     }
 
-    boolean shouldRedoWrap(SSLEngineResult res) {
+    boolean maybeGrowBuffersForWrap(SSLEngineResult res) {
       switch (res.getStatus()) {
         case BUFFER_OVERFLOW:
           increaseSSLNetBuffer();
@@ -861,7 +870,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     // This method can be only called by selector thread.
-    void dequeueSend() throws JSONException {
+    void dequeueSend() {
       if (sendPackets.peek() == null) {
         removeInterestSet(SelectionKey.OP_WRITE);
         return;
@@ -875,7 +884,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
           SSLEngineResult res;
           do {
             res = sslEngine.wrap(sendPacket.data, sslNetBuffer);
-          } while (shouldRedoWrap(res));
+          } while (maybeGrowBuffersForWrap(res));
 
           sslNetBuffer.flip();
           bytesSent = res.bytesConsumed();
@@ -931,24 +940,20 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         bytesRead = channel.read(receiveDataBuffer);
         if (bytesRead < 0)
           return bytesRead;
-        receiveDataBuffer.flip();
 
         if (sslEngine != null) {
-          SSLEngineResult res;
-          do {
-            res = sslEngine.unwrap(receiveDataBuffer, sslPeerAppBuffer);
-          } while (shouldRedoUnwrap(res));
+
+          SSLEngineResult res = tryUnwrapReceiveData();
 
           if (res.getStatus() == SSLEngineResult.Status.OK) {
-            sslPeerAppBuffer.flip();
             sendReceive(sslPeerAppBuffer);
           }
-          sslPeerAppBuffer.clear();
         } else {
+          receiveDataBuffer.flip();
           sendReceive(receiveDataBuffer);
+          receiveDataBuffer.clear();
         }
 
-        receiveDataBuffer.compact();
 
       } catch (IOException e) {
         JSONObject info = buildErrorInfo(-2, e.getMessage());
@@ -956,6 +961,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         PluginResult errResult = new PluginResult(Status.ERROR, info);
         errResult.setKeepCallback(true);
         recvContext.sendPluginResult(errResult);
+      } catch (JSONException e) {
       }
       return bytesRead;
     }

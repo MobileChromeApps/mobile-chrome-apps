@@ -73,11 +73,13 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     stopSelectorThread();
   }
 
-  private JSONObject buildErrorInfo(int code, String message)
-      throws JSONException {
+  private JSONObject buildErrorInfo(int code, String message) {
     JSONObject error = new JSONObject();
-    error.put("message", message);
-    error.put("resultCode", code);
+    try {
+      error.put("message", message);
+      error.put("resultCode", code);
+    } catch (JSONException e) {
+    }
     return error;
   }
 
@@ -128,6 +130,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     socket.setPaused(paused);
 
     if (paused) {
+      // Accept interest will be removed when socket is acceptable on selector thread.
       callbackContext.success();
     } else {
       // All interests need to be modified in selector thread.
@@ -223,13 +226,12 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     callbackContext.success(results);
   }
 
-  private void registerAcceptEvents(CordovaArgs args, final CallbackContext callbackContext)
-      throws JSONException {
+  private void registerAcceptEvents(CordovaArgs args, final CallbackContext callbackContext) {
     acceptContext = callbackContext;
     startSelectorThread();
   }
 
-  private void startSelectorThread() throws JSONException {
+  private void startSelectorThread() {
     if (selector != null && selectorThread != null) return;
     try {
       selector = Selector.open();
@@ -302,7 +304,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       this.sockets = sockets;
     }
 
-    private void processPendingMessages() throws JSONException {
+    private void processPendingMessages() {
 
       while (selectorMessages.peek() != null) {
         SelectorMessage msg = null;
@@ -321,7 +323,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
               break;
             case SO_ADD_ACCEPT_INTEREST:
               msg.socket.addInterestSet(SelectionKey.OP_ACCEPT);
-             break;
+              break;
             case T_STOP:
               running = false;
               break;
@@ -347,26 +349,26 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
         it = selector.selectedKeys().iterator();
 
-        try {
-          while (it.hasNext()) {
+        while (it.hasNext()) {
 
-            SelectionKey key = it.next();
-            it.remove();
+          SelectionKey key = it.next();
+          it.remove();
 
-            if (!key.isValid()) {
-              continue;
-            }
+          if (!key.isValid()) {
+            continue;
+          }
 
-            TcpServerSocket socket = (TcpServerSocket)key.attachment();
+          TcpServerSocket socket = (TcpServerSocket)key.attachment();
 
+          try {
             if (key.isAcceptable()) {
               socket.accept();
             }
+          } catch (JSONException e) {
           }
-
-          processPendingMessages();
-        } catch (JSONException e) {
         }
+
+        processPendingMessages();
       }
     }
   }
