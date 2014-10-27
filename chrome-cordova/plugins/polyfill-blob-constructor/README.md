@@ -14,3 +14,6 @@ http://updates.html5rocks.com/2012/06/Don-t-Build-Blobs-Construct-Them)
     var blob = new Blob(['Today is a good day'], {type: 'text/x-optimistic'});
 
 # Release Notes
+
+## 1.0.1 (October 21, 2014)
+- Documentation updates.

@@ -123,11 +123,15 @@ When using this plugin outside the context of a Chrome App, this information mus
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
 
 # Release Notes
-## 1.2.3 (Sep 24, 2014)
-* Replaced a deprecated method call.
-* Added cached token refreshing.
+## 1.3.0 (October 21, 2014)
+- Added `chrome.identity.getProfileUserInfo` API.
+- Documentation updates.
 
-## 1.2.2 (Aug 20, 2014)
+## 1.2.3 (September 24, 2014)
+- Replaced a deprecated method call.
+- Added cached token refreshing.
+
+## 1.2.2 (August 20, 2014)
 - Fixed swizzling linker error
 - Added a prompt to update Google Play Services
 

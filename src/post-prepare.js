@@ -8,9 +8,12 @@ var shelljs = require('shelljs');
 var Q = require('q');
 
 var utils = require('./utils');
+var cordova = require('cordova');
+var cordovaLib = cordova.cordova_lib;
+
 
 // Returns a promise.
-module.exports = exports = function postPrepareCommand() {
+module.exports = exports = function postPrepareCommand(opts) {
   var hasAndroid = fs.existsSync(path.join('platforms', 'android'));
   var hasIos = fs.existsSync(path.join('platforms', 'ios'));
 
@@ -99,7 +102,7 @@ function postPrepareInternal(platform) {
         "192": [path.join('res','drawable-xxxhdpi','icon.png')]
       };
     } else if (platform === "ios") {
-      var platforms = require('cordova-lib').cordova_platforms;
+      var platforms = cordovaLib.cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       iconMap = {
         "-1": [path.join(parser.originalName, 'Resources','icons','icon-60.png')], // this file exists in the template but isn't used.

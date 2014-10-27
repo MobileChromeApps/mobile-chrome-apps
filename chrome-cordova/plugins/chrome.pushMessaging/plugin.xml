@@ -6,12 +6,15 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"    xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.chromium.pushmessaging"
-    version="1.0.2-dev">
+    version="1.0.3-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Push Messaging API</name>
+  <keywords>chrome,push,message,messaging</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.identity" />

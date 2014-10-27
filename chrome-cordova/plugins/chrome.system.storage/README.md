@@ -15,3 +15,11 @@ Alpha quality on Android; not yet supported on iOS.
 ## Reference
 
 The API reference is [here](https://developer.chrome.com/apps/system_storage).
+
+# Release Notes
+## 1.0.1 (October 21, 2014)
+- Documentation updates.
+
+
+## 1.0.0
+- Initial release

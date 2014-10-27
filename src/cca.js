@@ -32,6 +32,9 @@ var utils = require('./utils');
 var origDir = process.cwd();
 var ccaRoot = path.join(__dirname, '..');
 
+var cordova = require('cordova');
+var cordovaLib = cordova.cordova_lib;
+
 /******************************************************************************/
 
 function fixEnv() {
@@ -45,6 +48,13 @@ function fixEnv() {
   if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
     process.env.DEPLOY_APK_ARCH = 'armv7';
   }
+}
+/******************************************************************************/
+function setupHooks() {
+  var prePrepareHook = require('./pre-prepare');
+  var postPrepareHook = require('./post-prepare');
+  cordovaLib.events.on('before_prepare', prePrepareHook);
+  cordovaLib.events.on('after_prepare', postPrepareHook);
 }
 
 /******************************************************************************/
@@ -61,6 +71,8 @@ function main() {
 
   // TODO: Add env detection to Cordova.
   fixEnv();
+
+  setupHooks();
 
   function printCcaVersionPrefix() {
     console.log('cca v' + packageVersion);
@@ -87,12 +99,20 @@ function main() {
     if (!fs.existsSync(path.join('www', 'manifest.json'))) {
       return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
     }
-    return require('./auto-upgrade')();
+    return require('./upgrade-project').upgradeProjectIfStale();
   }
 
   function forwardCurrentCommandToCordova() {
+    // Unregister some event handlers in cordova-lib EventEmitter. Otherwise
+    // double printouts will happen because cordova-cli registers its own
+    // handlers. This is only relevant when --verbose or -d flag is used.
+    cordovaLib.events.removeListener('results', console.log);
+    cordovaLib.events.removeListener('log', console.log);
+    cordovaLib.events.removeListener('warn', console.warn);
+    cordovaLib.events.removeListener('verbose', console.log);
+
     // TODO: Can we replace use of CLI here?  Calls to cordova-lib cordova.raw?
-    require('cordova/src/cli')(process.argv);
+    return cordova.cli(process.argv);
   }
 
   function printVersionThenPrePrePrepareThenForwardCommandToCordova() {
@@ -138,7 +158,7 @@ function main() {
           spawn('open', ['-n', '-a', 'Google Chrome Canary', '--args', '--user-data-dir=/tmp/cca_chrome_data_dir', '--load-and-launch-app=' + path.resolve('www')]); // '--disable-web-security'
           return;
         }
-        forwardCurrentCommandToCordova();
+        return forwardCurrentCommandToCordova();
       });
     },
     'create': function() {
@@ -158,7 +178,7 @@ function main() {
     },
     'upgrade': function() {
       printCcaVersionPrefix();
-      return require('./upgrade-project')(commandLineFlags.y);
+      return require('./upgrade-project').upgradeProject(commandLineFlags.y);
     },
     'version': function() {
       console.log(packageVersion);
@@ -172,14 +192,12 @@ function main() {
     'platform': function() {
       printCcaVersionPrefix();
       // Do not run auto-upgrade step if doing a platforms command
-      forwardCurrentCommandToCordova();
-      return Q.when();
+      return forwardCurrentCommandToCordova();
     },
     'platforms': function() {
       printCcaVersionPrefix();
       // Do not run auto-upgrade step if doing a platforms command
-      forwardCurrentCommandToCordova();
-      return Q.when();
+      return forwardCurrentCommandToCordova();
     },
     'analytics': function() {
       // Do nothing.  This is handled as a special-case below.
@@ -196,7 +214,6 @@ function main() {
 
   // TODO(mmocny): The following few lines seem to make global changes that affect all other subcommands.
   // May want to break this out to a module as an "init" step that every other step ensures has been called.
-  var cordovaLib = require('cordova-lib');
   cordovaLib.cordova.config.setAutoPersist(false);
   var projectRoot = cordovaLib.cordova.findProjectRoot();
   if (projectRoot) {
@@ -235,7 +252,13 @@ function main() {
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
   }).then(commandActions[command])
-  .done(null, utils.fatal);
+  .then(null, function(e) {
+    if (e instanceof cordovaLib.CordovaError) {
+      utils.fatal(e.message.replace(/\bcordova /, 'cca '));
+    } else {
+      throw e;
+    }
+  }).done();
 }
 
 if (require.main === module) {

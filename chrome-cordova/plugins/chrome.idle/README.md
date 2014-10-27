@@ -14,3 +14,6 @@ The API reference is [here](http://developer.chrome.com/apps/idle.html).
 
 * The concept of "idle" in this implementation refers to a lack of input to the **app**, not the device.
 
+# Release Notes
+## 1.0.1 (October 21, 2014)
+- Documentation updates.

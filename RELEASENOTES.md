@@ -4,6 +4,31 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+
+### v0.4.3 (Oct 24, 2014)
+* Teach cca that org.chromium.system.network is a dep of socket (fixes #381)
+
+### v0.4.2 (Oct 21, 2014)
+* Added chrome.sockets.tcp, chrome.sockets.tcpServer, and chrome.sockets.udp APIs for Android and iOS (BETA)
+* Added chrome.identity.getProfileUserInfo.
+* Added chrome.system.cpu, chrome.system.display, chrome.system.memory, and chrome.system.network for ios
+* Added a new APIStatus page to docs
+* Add missing files for cca-manifest-logic and update .gitignore
+* Added force launch params.
+* Removing stale gcm code
+* Added a failure when pushing with an unknown flag.
+* Improve the way cca run chrome works, as per cordova-browser
+* elementtree->xmldom within update-config-xml.js (browser-compatible interface)
+* Android: Build fixes in cordova-android:
+  * gradle: Allow storeType to be set (allows using .p12 files)
+  * gradle: Allow absolute paths to keystore files
+  * Fix build for android when app name contains unicode characters.
+  * Detect JAVA\_HOME properly on Ubuntu
+  * Teach check\_reqs about brew's install location for android SDK
+  * Fix --shared flag of create script (broke in recent gradle changes)
+* Android: Added multipart PluginResult
+* Android: CB-6837 Fix leaked window when hitting back button while alert being rendered
+
 ### v0.4.1 (Sep 24, 2014)
 * Android: Fix build warning about dynamic properties being deprecated
 * Android: Make Android Studio project imports work properly

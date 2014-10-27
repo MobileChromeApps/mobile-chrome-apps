@@ -50,6 +50,10 @@ exports.boot = function() {
 exports.bgInit = function(bgWnd) {
   exports.bgWindow = bgWnd;
 
+  bgWnd.addEventListener('unload', function() {
+    throw new Error('Chrome background page has been unloaded! Likely caused by <iframe> being detatched from the <body>');
+  });
+
   bgWnd.navigator = navigator;
   require('cordova/modulemapper').mapModules(bgWnd.window);
 

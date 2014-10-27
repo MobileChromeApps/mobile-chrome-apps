@@ -23,18 +23,24 @@ var fs = require('fs');
 var et = require('elementtree');
 var xmldom = require('xmldom');
 var path = require('path');
+// Use double underscore because the Node REPL uses "_" to hold the result of the last operation.
+var __ = require('underscore');
 var utils = require('./utils');
 var ccaManifestLogic = require('cca-manifest-logic');
+var cordova = require('cordova');
+var cordovaLib = cordova.cordova_lib;
 
 // Returns a promise.
-module.exports = exports = function prePrepareCommand() {
+module.exports = exports = function prePrepareCommand(context) {
+  // context is the Context object passed in by cordova-lib/HooksRunner.
   var pluginsToBeInstalled = [];
   var pluginsToBeNotInstalled = [];
   var pluginsNotRecognized = [];
   var manifest, whitelist;
+  // Convert all plugin IDs to lower case (registry has problems with upper case).
+  var installedPlugins = context.cordova.plugins.map(function(s) { return s.toLowerCase(); });
 
-  var cordovaCmdline = process.env['CORDOVA_CMDLINE'].split(/\s+/);
-  var argv = require('optimist')(cordovaCmdline)
+  var argv = require('optimist')
       .options('webview', { type: 'string' })
       .options('release', { type: 'boolean' })
       .argv;
@@ -65,7 +71,7 @@ module.exports = exports = function prePrepareCommand() {
     }
   })
   .then(function() {
-    if (/android/.exec(process.env['CORDOVA_PLATFORMS']) && argv['release']) {
+    if ( (context.cordova.platforms.indexOf('android') != -1) && argv['release']) {
       if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
         utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.');
       }
@@ -74,7 +80,7 @@ module.exports = exports = function prePrepareCommand() {
     // This is necessary for chrome.identity to redirect back to the app after authentication.
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
     if (hasIos) {
-      var platforms = require('cordova-lib').cordova_platforms;
+      var platforms = cordovaLib.cordova_platforms;
       var parser = new platforms.ios.parser(path.join('platforms','ios'));
       var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
       var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
@@ -107,18 +113,9 @@ module.exports = exports = function prePrepareCommand() {
     }
   })
   .then(function() {
-    // Update installed plugins
-    return require('cordova-lib/src/cordova/plugin')('ls');
-  })
-  .then(function(installedPlugins) {
-    // Convert all plugin IDs to lower case (registry has problems with upper case).
-    installedPlugins = installedPlugins.map(function(s) {return s.toLowerCase(); });
-    var missingPlugins = pluginsToBeInstalled.filter(function(p) {
-      return installedPlugins.indexOf(p) == -1;
-    });
-    var excessPlugins = pluginsToBeNotInstalled.filter(function(p) {
-      return installedPlugins.indexOf(p) != -1;
-    });
+    var missingPlugins = __.difference(pluginsToBeInstalled, installedPlugins);
+    var excessPlugins = __.intersection(installedPlugins, pluginsToBeNotInstalled);
+
     if (missingPlugins.length || excessPlugins.length || pluginsNotRecognized.length) {
       console.log('## Updating plugins based on manifest.json');
       pluginsNotRecognized.forEach(function(unknownPermission) {
@@ -133,9 +130,8 @@ module.exports = exports = function prePrepareCommand() {
     }
   })
   .then(function() {
-    return require('cordova-lib/src/cordova/plugin')('ls');
-  })
-  .then(function(installedPlugins) {
+    // After adding/removing plugins above, the list of installed plugins is:
+    installedPlugins = __.difference(__.union(installedPlugins, pluginsToBeInstalled), pluginsToBeNotInstalled);
     // If chrome.identity is installed, we need a client id.
     if (installedPlugins.indexOf('org.chromium.identity') >= 0) {
       if (!manifest.oauth2 || !manifest.oauth2.client_id) {

@@ -6,12 +6,15 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.frameworks.googleplus"
-    version="1.0.2-dev">
+    version="1.0.3-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Google Plus iOS Framework Plugin</name>
+  <keywords>google,plus,iOS,framework</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="ios">
     <dependency id="org.chromium.frameworks.googleopensource" />

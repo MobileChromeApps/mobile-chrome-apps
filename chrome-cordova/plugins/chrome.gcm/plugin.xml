@@ -5,12 +5,15 @@
   found in the LICENSE file.
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"    xmlns:android="http://schemas.android.com/apk/res/android"    id="org.chromium.gcm"
-    version="1.0.2-dev">
+    version="1.0.3-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Google Cloud Messaging API</name>
+  <keywords>chrome,gcm,messaging</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
   
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.storage" />

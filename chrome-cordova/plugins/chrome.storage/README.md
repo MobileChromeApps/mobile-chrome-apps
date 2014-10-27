@@ -23,5 +23,8 @@ The API reference is [here](https://developer.chrome.com/apps/storage.html).
 
 # Release Notes
 
-## 1.0.2 (Sep 12, 2014)
+## 1.0.3 (October 21, 2014)
+- Documentation updates.
+
+## 1.0.2 (September 12, 2014)
 - Fixed race condition in read/writes (Issue #181)

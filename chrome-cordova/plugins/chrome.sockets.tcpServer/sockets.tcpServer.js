@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 var Event = require('org.chromium.common.events');
 var exec = cordova.require('cordova/exec');
+var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 
 exports.create = function(properties /** optional */, callback) {
     if (typeof properties == 'function') {
@@ -35,7 +36,11 @@ exports.listen = function(socketId, address, port, backlog /** optional */, call
     var win = callback && function() {
         callback(0);
     };
-    exec(win, callback, 'ChromeSocketsTcpServer', 'listen', [socketId, address, port, backlog]);
+
+    var fail = callback && function(error) {
+        callbackWithError(error.message, callback, error.resultCode);
+    };
+    exec(win, fail, 'ChromeSocketsTcpServer', 'listen', [socketId, address, port, backlog]);
 };
 
 exports.disconnect = function(socketId, callback) {
@@ -75,7 +80,7 @@ function registerAcceptEvents() {
     };
 
     var fail = function(info) {
-        exports.onAcceptError.fire(info);
+        callbackWithError(info.message, exports.onAcceptError.fire, info);
     };
 
     exec(win, fail, 'ChromeSocketsTcpServer', 'registerAcceptEvents', []);

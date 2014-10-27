@@ -17,7 +17,7 @@
   under the License.
  */
 
-var cordova = require('cordova-lib').cordova;
+var cordova = require('cordova');
 var Q = require('q');
 
 // Returns the promise from the raw Cordova command.
@@ -37,14 +37,7 @@ exports.runCmd = function runCmd(cmd) {
     }
   });
   console.log('## Running Cordova Command: ' + msg);
-  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1))
-  .fail(function(err) {
-    if (err.name == 'CordovaError') {
-        return Q.reject(err.message);
-    } else {
-        return Q.reject(err.stack);
-    }
-  });
+  return cordova.raw[cmd[0]].apply(cordova, cmd.slice(1));
 };
 
 // Chains a list of cordova commands, returning a promise.

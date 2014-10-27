@@ -6,12 +6,15 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.frameworks.googleopensource"
-    version="1.0.1-dev">
+    version="1.0.2-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Google Open Source iOS Framework Plugin</name>
+  <keywords>google,iOS,framework</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="ios">
     <framework src="src/ios/GoogleOpenSource.framework" custom="true" />

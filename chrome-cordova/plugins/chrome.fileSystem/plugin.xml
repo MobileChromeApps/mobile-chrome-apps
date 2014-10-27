@@ -6,12 +6,15 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.filesystem"
-    version="1.0.4-dev">
+    version="1.0.5-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps FileSystem API</name>
+  <keywords>chrome,file,filesystem</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
 

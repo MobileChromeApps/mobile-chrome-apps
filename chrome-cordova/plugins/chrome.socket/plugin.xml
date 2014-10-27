@@ -6,15 +6,17 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.socket"
-    version="1.1.4-dev">
+    version="1.2.2-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome Apps Socket API</name>
+  <keywords>chrome,socket</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
-  <dependency id="org.chromium.iosSocketsCommon" />
   <dependency id="org.chromium.system.network" />
 
   <js-module src="socket.js" name="Socket">
@@ -32,6 +34,7 @@
   </platform>
 
   <platform name="ios">
+    <dependency id="org.chromium.iossocketscommon" />
     <source-file src="src/ios/ChromeSocket.m" />
     <header-file src="src/ios/ChromeSocket.h" />
 

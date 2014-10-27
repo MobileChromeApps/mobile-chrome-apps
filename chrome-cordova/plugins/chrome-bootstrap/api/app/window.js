@@ -93,26 +93,26 @@ function evalScripts(rootNode, afterFunc) {
                            /application\/javascript/i.exec(node.type) ||
                            /application\/dart/i.exec(node.type))) {
         onLoadCallback();
-      } else if (node.src) {
+      } else {
         var replacement = doc.createElement('script');
         copyAttributes(node, replacement);
-        replacement.onload = onLoadCallback;
-        replacement.onerror = onLoadCallback;
-        replacement.async = false;
-        node.parentNode.replaceChild(replacement, node);
-      } else {
-        // Skip over inline scripts.
-        console.warn('Refused to execute inline script because it violates the following Content Security Policy directive: "default-src \'self\' chrome-extension-resource:"');
-        console.warn('Script contents:');
-        console.warn(node.textContent.slice(0, 100) + (node.textContent.length > 100 ? '<truncated>' : ''));
-        onLoadCallback();
+        replacement.textContent = node.textContent;
+        if (node.src) {
+          replacement.onload = onLoadCallback;
+          replacement.onerror = onLoadCallback;
+          replacement.async = false;
+          node.parentNode.replaceChild(replacement, node);
+        } else {
+          node.parentNode.replaceChild(replacement, node);
+          onLoadCallback();
+        }
       }
-   } else {
-    var replacement = document.createElement('link');
-    copyAttributes(node, replacement);
-    replacement.onload = onLoadCallback;
-    replacement.onerror = onLoadCallback;
-    node.parentNode.replaceChild(replacement, node);
+    } else {
+      var replacement = document.createElement('link');
+      copyAttributes(node, replacement);
+      replacement.onload = onLoadCallback;
+      replacement.onerror = onLoadCallback;
+      node.parentNode.replaceChild(replacement, node);
     }
   }
   // Handle the no scripts case.
@@ -145,11 +145,14 @@ function rewritePage(pageContent, filePath) {
   }
 
   // Put everything before the body tag in the head.
-  var endIndex = pageContent.search(/<body([\s\S]*?)>/i);
-  if (endIndex == -1) {
+  // Ignore <body> within <!-- comments -->, which vulcanize can insert.
+  var bodyPattern = /(?:<!--[\s\S]*?-->[\s\S]*)*<body([\s\S]*?)>/gi;
+  var bodyMatch = bodyPattern.exec(pageContent);
+  var endIndex = bodyPattern.lastIndex;
+  if (!bodyMatch) {
     mobile.eventIframe.insertAdjacentHTML('afterend', 'Load error: Page is missing body tag.');
   } else {
-    applyAttributes(RegExp.lastParen, fgBody);
+    applyAttributes(bodyMatch[1], fgBody);
 
     // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
     var headHtml = pageContent.slice(startIndex, endIndex);

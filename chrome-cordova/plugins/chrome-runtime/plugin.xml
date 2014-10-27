@@ -7,12 +7,15 @@
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.chromium.runtime"
-    version="1.0.3-dev">
+    version="1.0.4-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
 
   <name>Chrome App Runtime</name>
+  <keywords>chrome,runtime</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.storage" />

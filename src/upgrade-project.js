@@ -1,10 +1,93 @@
+var fs = require('fs');
 var Q = require('q');
 var path = require('path');
 var shelljs = require('shelljs');
+var __ = require('underscore');
 var utils = require('./utils');
+var cordova = require('cordova');
 
-module.exports = exports = function upgradeProject(skipPrompt) {
-  return Q.fcall(function() {
+// Exports
+exports.upgradeProject = upgradeProject;
+exports.upgradeProjectIfStale = upgradeProjectIfStale;
+
+// The list of platforms we currently have installed
+function getInstalledPlatfroms() {
+  return ['ios', 'android'].filter(function(p){
+    return fs.existsSync(path.join('platforms', p));
+  });
+}
+
+// Get the list of supported platforms. Returns a promise.
+function getSupportedPlatforms() {
+  var plats = [];
+  return require('./tools-check')()
+  .then(function(toolsCheckResults) {
+    // TODO(mmocny): any way to use .raw so as not to also call prepare after each platform add?
+    if (toolsCheckResults.hasAndroidPlatform) {
+      plats.push('android');
+    }
+    if (toolsCheckResults.hasXcode ) {
+      plats.push('ios');
+    }
+    return plats;
+  });
+}
+
+// Get the list of all plugins managed by CCA
+function getCcaPlugins() {
+  var pluginMaps = require('cca-manifest-logic').pluginMaps;
+  // The list of plugins is constructed from all plugin IDs in:
+  // pluginMaps.DEFAULT_PLUGINS (Array)
+  // pluginMaps.*_MAP (objects)
+
+  var ccaPlugins = __.map(pluginMaps, function(key, val) {
+    return /_MAP/.test(key) ? val : [];
+  });
+  ccaPlugins.push(pluginMaps.DEFAULT_PLUGINS);
+  ccaPlugins = __.uniq(__.flatten(ccaPlugins));
+
+  return ccaPlugins;
+}
+
+
+// This function is run on almost any cca invocation
+// It will run "upgrade" if either:
+//  1. The project has not platforms installed
+//  2. The file ./platforms/created-with-cca-version contains older version string
+//  3. The file ./platforms/created-with-cca-version does not exist
+function upgradeProjectIfStale() {
+  var packageVersion = require('../package').version;
+  var installedPlatfroms = getInstalledPlatfroms();
+
+  if (!installedPlatfroms.length) {
+    // No platforms installed yet, (ab)use upgradeProject(skipPrompt=true) to install both.
+    // Ideally we would do this in pre-prepare, but cordova doesn't run pre-prepare scripts if there
+    // are no target platforms, and its unclear how to make it do so with a difference concept
+    // for pre-prepare scripts.
+    return exports.upgradeProject(true);
+  } else {
+
+    var versionFile = path.join('platforms', 'created-with-cca-version');
+    var createdWith;
+    if (fs.existsSync(versionFile)) {
+      createdWith = fs.readFileSync(versionFile, 'utf-8');
+    }
+    if (createdWith == packageVersion) {
+      return Q();
+    } else {
+      // The platforms/created-with-cca-version file does not exist or contains older version string. Upgrading.
+      console.log('This project was not upgraded to cca v' + packageVersion + ' yet.  Attempting to upgrade now...');
+      return exports.upgradeProject();
+    }
+  }
+}
+
+
+function upgradeProject(skipPrompt) {
+  var hadPlatforms = [];
+
+  return Q()
+  .then(function(){
     if (skipPrompt) return 'y';
     return utils.waitForKey('Warning: Upgrade will replace all files in platforms and plugins. Continue? [y/N] ');
   })
@@ -12,10 +95,44 @@ module.exports = exports = function upgradeProject(skipPrompt) {
     if (key != 'y' && key != 'Y') {
       return Q.reject('Okay, nevermind.');
     }
-    shelljs.rm('-rf', path.join('platforms'));
-    shelljs.rm('-rf', path.join('plugins'));
-    // TODO: this is a bit odd, auto-upgrade calls upgrade calls auto-upgrade.
-    // It works, because the state changes in second round, but we should make it more clear and less prone to mistakes.
-    return require('./auto-upgrade')();
-  });
-};
+  })
+  .then(function() {
+    // Upgrading!
+
+    // Remove the old pre/post prepare hooks
+    // TODO: Remove this later. Last version to use file based hooks was 4.0.0 released in Oct 2014.
+    shelljs.rm('-f', path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'));
+    shelljs.rm('-f', path.join('hooks', 'after_prepare', 'cca-post-prepare.js'));
+
+    // Remember what platforms we had before deleting them. If we only had one, don't install the other after upgrade.
+    hadPlatforms = getInstalledPlatfroms();
+    shelljs.rm('-rf', 'platforms');
+
+    shelljs.rm('-f', path.join('plugins', 'android.json'));
+    shelljs.rm('-f', path.join('plugins', 'ios.json'));
+
+    var installedPlugins = cordova.cordova_lib.PluginInfo.loadPluginsDir('plugins');
+    installedPlugins = __.pluck(installedPlugins, 'id');
+
+    // Only remove the CCA managed plugins
+    var allCcaPlugins = getCcaPlugins();
+    var pluginsToRemove = __.intersection(allCcaPlugins, installedPlugins);
+    if (pluginsToRemove && pluginsToRemove.length) {
+      return require('./cordova-commands').runCmd(['plugin', 'rm', pluginsToRemove]);
+    }
+  })
+  .then(function() {
+    console.log('## First-time build. Detecting available SDKs:');
+    return getSupportedPlatforms();
+  })
+  .then(function(plats) {
+    if (plats.length) {
+      // If this is a real upgrade, only install the platforms we had before.
+      if (hadPlatforms.length) {
+        plats = __.intersection(plats, hadPlatforms);
+      }
+      return require('./cordova-commands').runCmd(['platform', 'add', plats]);
+    }
+  })
+  .then(require('./write-out-cca-version'));
+}

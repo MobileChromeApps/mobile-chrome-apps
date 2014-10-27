@@ -39,7 +39,7 @@
 * See which have changes:
 
     cd chrome-cordova/plugins
-    ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); [[ -n $(git log -n 1 "$LAST_VERSION_BUMP"..master .) ]] && echo $l); done | xargs echo)
+    ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); [[ -z $"$LAST_VERSION_BUMP" || -n $(git log -n 1 "$LAST_VERSION_BUMP"..master .) ]] && echo $l); done | xargs echo)
     # See what's changed so you have an idea:
     (for l in $ACTIVE; do (cd $l; echo $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master -- . ; echo); done) | less
 
@@ -73,7 +73,7 @@ TODO
 
 First, make sure to unlink any local modules.  I like to just start with:
 
-    rm -rf node_modules && npm install
+    rm -rf node_modules && npm install --production
 
 See what is stale (newer versions available)
 
