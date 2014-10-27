@@ -29,11 +29,35 @@ exports.setPaused = function(socketId, paused, callback) {
 };
 
 exports.setKeepAlive = function(socketId, enabled, delay, callback) {
-    console.warn('chrome.sockets.tcp.setKeepAlive not implemented yet');
+    if (typeof delay == 'function') {
+        callback = delay;
+        delay = 0;
+    }
+    if (platform.id == 'android') {
+        var win = callback && function() {
+            callback(0);
+        };
+        var fail = callback && function(error) {
+            callbackWithError(error.message, callback, error.resultCode);
+        };
+        exec(win, fail, 'ChromeSocketsTcp', 'setKeepAlive', [socketId, enabled, delay]);
+    } else {
+        console.warn('chrome.sockets.tcp.setKeepAlive not implemented yet');
+    }
 };
 
 exports.setNoDelay = function(socketId, noDelay, callback) {
-    console.warn('chrome.sockets.tcp.setNoDelay not implemented yet');
+    if (platform.id == 'android') {
+        var win = callback && function() {
+            callback(0);
+        };
+        var fail = callback && function(error) {
+            callbackWithError(error.message, callback, error.resultCode);
+        };
+        exec(win, fail, 'ChromeSocketsTcp', 'setNoDelay', [socketId, noDelay]);
+    } else {
+        console.warn('chrome.sockets.tcp.setNoDelay not implemented yet');
+    }
 };
 
 exports.connect = function(socketId, peerAddress, peerPort, callback) {
