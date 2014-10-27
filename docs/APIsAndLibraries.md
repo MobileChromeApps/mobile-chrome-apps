@@ -13,6 +13,8 @@ _Current as of July 2014_.
 * [alarms](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.alarms) - run tasks periodically
     * Working on Android and iOS.
     * Caveat: on iOS alarms only fire when app is active (foreground).
+* [app.window](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome-bootstrap) - manipulate app window(s)
+    * Partially supported on Android and iOS (see README).
 * [fileSystem](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.fileSystem)
     * Exists but is buggy. Requires attention.
 * [gcm](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.gcm) - receive push messages from your server
@@ -71,7 +73,6 @@ _Current as of July 2014_.
 
 ### APIs Coming in the Medium Term
 * bluetooth
-* app.window.*
 * fileSystem (fixes)
 * system.*
 * location

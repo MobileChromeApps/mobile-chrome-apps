@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.bootstrap"
-    version="1.0.6-dev">
+    version="1.1.0-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -35,6 +35,7 @@
   <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
 
   <platform name="android">
+    <source-file src="src/android/ChromeAppWindow.java" target-dir="src/org/chromium" />
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />
     <!-- Convert 'chrome-extension://' urls -->
     <source-file src="src/android/ChromeExtensionURLs.java" target-dir="src/org/chromium" />
@@ -42,6 +43,9 @@
     <js-module src="api/helpers/ChromeExtensionURLs.android.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeAppWindow">
+        <param name="android-package" value="org.chromium.ChromeAppWindow"/>
+      </feature>
       <feature name="ChromeBootstrap">
         <param name="android-package" value="org.chromium.ChromeBootstrap"/>
         <param name="onload" value="true"/>
@@ -58,12 +62,16 @@
   </platform>
 
   <platform name="ios">
+    <source-file src="src/ios/ChromeAppWindow.m" />
     <source-file src="src/ios/ChromeBootstrap.m" />
     <source-file src="src/ios/ChromeExtensionURLs.m" />
 
     <js-module src="api/helpers/ChromeExtensionURLs.ios.js" name="helpers.ChromeExtensionURLs" />
 
     <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeAppWindow">
+        <param name="ios-package" value="ChromeAppWindow"/>
+      </feature>
       <feature name="ChromeBootstrap">
         <param name="ios-package" value="ChromeBootstrap"/>
         <param name="onload" value="true"/>

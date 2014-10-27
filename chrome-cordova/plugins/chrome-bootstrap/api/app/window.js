@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+var exec = require('cordova/exec');
 var Event = require('org.chromium.common.events');
 var mobile = require('org.chromium.bootstrap.mobile.impl');
 var runtime = require('org.chromium.runtime.runtime');
@@ -12,7 +13,7 @@ var createdAppWindow = null;
 var dummyNode = document.createElement('a');
 
 // The temporary tag name used for deferring HTML import processing
-var linkReplacementTag = "x-txpspgbc"
+var linkReplacementTag = "x-txpspgbc";
 
 function AppWindow() {
   this.contentWindow = mobile.fgWindow;
@@ -26,10 +27,8 @@ function unsupportedApi(api) {
 }
 
 AppWindow.prototype = {
-  restore: unsupportedApi('AppWindow.restore'),
   moveTo: unsupportedApi('AppWindow.moveTo'),
   clearAttention: unsupportedApi('AppWindow.clearAttention'),
-  minimize: unsupportedApi('AppWindow.minimize'),
   drawAttention: unsupportedApi('AppWindow.drawAttention'),
   focus: unsupportedApi('AppWindow.focus'),
   resizeTo: unsupportedApi('AppWindow.resizeTo'),
@@ -46,6 +45,20 @@ AppWindow.prototype.getBounds = function() {
     left: 0,
     top: 0
   };
+};
+AppWindow.prototype.hide = function() {
+  exec(null, null, 'ChromeAppWindow', 'hide', []);
+};
+AppWindow.prototype.show = function(focused) {
+  exec(null, null, 'ChromeAppWindow', 'show', []);
+};
+AppWindow.prototype.restore = function() {
+  // Same behaviour as show, given minimize/maximize don't really make sense on mobile
+  this.show();
+};
+AppWindow.prototype.minimize = function() {
+  // Same behaviour as hide, given minimize/maximize don't really make sense on mobile
+  this.hide();
 };
 
 function copyAttributes(srcNode, destNode) {
