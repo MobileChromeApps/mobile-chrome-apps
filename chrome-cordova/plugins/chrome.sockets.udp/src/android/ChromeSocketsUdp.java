@@ -549,7 +549,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     // Only call this method on selector thread
     void addInterestSet(int interestSet) {
-      if (key != null) {
+      if (key != null && key.isValid()) {
         key.interestOps(key.interestOps() | interestSet);
         key.selector().wakeup();
       }
@@ -557,7 +557,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     // Only call this method on selector thread
     void removeInterestSet(int interestSet) {
-      if (key != null) {
+      if (key != null && key.isValid()) {
         key.interestOps(key.interestOps() & ~interestSet);
         key.selector().wakeup();
       }
