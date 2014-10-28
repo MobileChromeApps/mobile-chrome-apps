@@ -42,7 +42,7 @@ exports.setKeepAlive = function(socketId, enabled, delay, callback) {
         };
         exec(win, fail, 'ChromeSocketsTcp', 'setKeepAlive', [socketId, enabled, delay]);
     } else {
-        console.warn('chrome.sockets.tcp.setKeepAlive not implemented yet');
+        console.warn('chrome.sockets.tcp.setKeepAlive not implemented yet, issue #391');
     }
 };
 
@@ -56,7 +56,7 @@ exports.setNoDelay = function(socketId, noDelay, callback) {
         };
         exec(win, fail, 'ChromeSocketsTcp', 'setNoDelay', [socketId, noDelay]);
     } else {
-        console.warn('chrome.sockets.tcp.setNoDelay not implemented yet');
+        console.warn('chrome.sockets.tcp.setNoDelay not implemented yet, issue #391');
     }
 };
 
