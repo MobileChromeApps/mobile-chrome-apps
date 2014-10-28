@@ -165,6 +165,7 @@ function registerReceiveEvents() {
                     call = 0;
 
                     exports.onReceive.fire(info);
+                    exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
                 }
             };
         })();
