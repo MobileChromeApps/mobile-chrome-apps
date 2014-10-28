@@ -5,21 +5,57 @@
 package org.chromium;
 
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.ConfigXmlParser;
+import android.content.res.XmlResourceParser;
+
 
 import android.content.Intent;
-import android.net.Uri;
+import java.net.URL;
+import java.net.MalformedURLException;
 import android.util.Log;
 
 public class ChromeNavigation extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeNavigation";
+    private String startUrl = null;
     private String prevUrl = null;
 
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        final URL baseURL;
+        try {
+            baseURL = new URL("file:///android_asset/www/");
+            new ConfigXmlParser(){
+                public void handleStartTag(XmlResourceParser xml) {
+                    String strNode = xml.getName();
+                    if (strNode.equals("content")) {
+                        String src = xml.getAttributeValue(null, "src");
+                        if (src != null) {
+                            try {
+                                startUrl = new URL(baseURL, src).toString();
+                            } catch (MalformedURLException err) {}
+                        }
+                    }
+                }
+                public void handleEndTag(XmlResourceParser xml) {
+                }
+            }.parse(cordova.getActivity());
+        } catch (MalformedURLException err) {}
+    }
+
     @Override
-    public boolean onOverrideUrlLoading(String url) {
+    public Boolean shouldAllowRequest(String url) {
+        return true;
+    }
+
+    @Override
+    public Boolean shouldAllowNavigation(String url) {
+        return url.equals(startUrl);
+    }
+
+    @Override
+    public Boolean shouldOpenExternalUrl(String url) {
         if (url.startsWith("http:") || url.startsWith("https:")) {
-            Log.i(LOG_TAG, "Opening URL in external browser: " + url);
-            Intent systemBrowserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            cordova.getActivity().startActivity(systemBrowserIntent);
             return true;
         }
         return false;

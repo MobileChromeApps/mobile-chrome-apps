@@ -113,5 +113,20 @@ static NSString *stripFragment(NSString* url)
     return NO;
 }
 
+- (BOOL)shouldAllowRequestForURL:(NSURL *)url
+{
+    return YES;
+}
+
+- (BOOL)shouldAllowNavigationToURL:(NSURL *)url
+{
+    return [[[url path] stringByDeletingLastPathComponent] hasSuffix:@"/www/plugins/org.chromium.bootstrap"];
+}
+
+- (BOOL)shouldOpenExternalURL:(NSURL *)url
+{
+    return ([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https:"]);
+}
+
 @end
 
