@@ -34,6 +34,7 @@ var ccaRoot = path.join(__dirname, '..');
 
 var cordova = require('cordova');
 var cordovaLib = cordova.cordova_lib;
+var hooks = require('./hooks');
 
 /******************************************************************************/
 
@@ -48,13 +49,6 @@ function fixEnv() {
   if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
     process.env.DEPLOY_APK_ARCH = 'armv7';
   }
-}
-/******************************************************************************/
-function setupHooks() {
-  var prePrepareHook = require('./pre-prepare');
-  var postPrepareHook = require('./post-prepare');
-  cordovaLib.events.on('before_prepare', prePrepareHook);
-  cordovaLib.events.on('after_prepare', postPrepareHook);
 }
 
 /******************************************************************************/
@@ -72,7 +66,7 @@ function main() {
   // TODO: Add env detection to Cordova.
   fixEnv();
 
-  setupHooks();
+  hooks.registerHooks();
 
   function printCcaVersionPrefix() {
     console.log('cca v' + packageVersion);

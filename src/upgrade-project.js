@@ -5,6 +5,7 @@ var shelljs = require('shelljs');
 var __ = require('underscore');
 var utils = require('./utils');
 var cordova = require('cordova');
+var hooks = require('./hooks');
 
 // Exports
 exports.upgradeProject = upgradeProject;
@@ -99,7 +100,10 @@ function upgradeProject(skipPrompt) {
   .then(function() {
     // Upgrading!
 
-    // Remove the old pre/post prepare hooks
+    // We don't want the pre/post prepare hooks to fire during upgrade.
+    hooks.unregisterHooks();
+
+    // Remove the old file based pre/post prepare hooks
     // TODO: Remove this later. Last version to use file based hooks was 4.0.0 released in Oct 2014.
     shelljs.rm('-f', path.join('hooks', 'before_prepare', 'cca-pre-prepare.js'));
     shelljs.rm('-f', path.join('hooks', 'after_prepare', 'cca-post-prepare.js'));
@@ -133,6 +137,12 @@ function upgradeProject(skipPrompt) {
       }
       return require('./cordova-commands').runCmd(['platform', 'add', plats]);
     }
+  })
+  .then(function() {
+    // Turn the hooks back on and fire prepare. The pre-prepare hook is what
+    // installs all the cca plugins back.
+    hooks.registerHooks();
+    return cordova.raw.prepare();
   })
   .then(require('./write-out-cca-version'));
 }
