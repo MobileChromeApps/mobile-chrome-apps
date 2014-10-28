@@ -152,7 +152,7 @@ static NSString* stringFromData(NSData* data) {
         _name = name;
     
     if (bufferSize && _bufferSize == 0 && ![_paused boolValue]) // read delegate method won't be called when _bufferSize == 0
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[bufferSize unsignedIntegerValue] tag:_readTag++];
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[bufferSize unsignedIntegerValue] tag:++_readTag];
     
     if (bufferSize)
         _bufferSize = bufferSize;
@@ -176,8 +176,9 @@ static NSString* stringFromData(NSData* data) {
             for (NSData* data in _pausedBuffers) {
                 [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
             }
+            [_pausedBuffers removeAllObjects];
             if (_readTag == _receivedTag) {
-                [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
+                [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
             }
         }
     }
@@ -194,7 +195,7 @@ static NSString* stringFromData(NSData* data) {
     callback(YES, nil);
     
     if (![_paused boolValue])
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
@@ -207,7 +208,7 @@ static NSString* stringFromData(NSData* data) {
         [_pausedBuffers addObject:data];
     } else {
         [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
     }
 }
 
