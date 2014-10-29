@@ -36,7 +36,7 @@ chrome.notifications.onClosed.addListener(function(notificationId, byUser) {
 chrome.notifications.onClicked.addListener(function(notificationId) {
   logger('onClicked fired. notificationId = ' + notificationId);
   chrome.notifications.clear(notificationId, function(wasCleared) {});
-  logger('Showing window after 1 second');
+  logger('Showing window after 2 second');
   setTimeout(function() {
     var wnd = chrome.app.window.getAll()[0];
     if (wnd) {
@@ -44,11 +44,10 @@ chrome.notifications.onClicked.addListener(function(notificationId) {
     } else {
       logger('Creating Ui Window & showing');
       createUiWindow(function(appWnd) {
-        appWnd.show();
         // Todo: figure out how to navigate to notifications manual test page.
       });
     }
-  }, 1000);
+  }, 2000);
 });
 
 chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
@@ -144,8 +143,8 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
     });
   });
 
-  addButton('Notification after 2 second alarm', function() {
-    var expectedFireTime = Date.now() + 2000;
+  addButton('Notification after 3 second alarm', function() {
+    var expectedFireTime = Date.now() + 3000;
     chrome.alarms.create(NOTIFICATION_ALARM_NAME, { when:expectedFireTime });
   });
 });
