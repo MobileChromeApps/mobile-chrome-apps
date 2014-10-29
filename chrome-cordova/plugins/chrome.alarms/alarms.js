@@ -5,11 +5,13 @@
 var exports = module.exports;
 var exec = require('cordova/exec');
 var storage = require('org.chromium.storage.Storage');
+var helpers = require('org.chromium.common.helpers');
 var platform = require('cordova/platform');
 var channel = require('cordova/channel');
 var Event = require('org.chromium.common.events');
 var useNativeAlarms = platform.id == 'android';
 var alarms = Object.create(null);
+var alarmsToFireOnStartUp = [];
 
 function makeAlarm(name, scheduledTime, periodInMinutes, timeoutId) {
     var alarm = { };
@@ -20,21 +22,21 @@ function makeAlarm(name, scheduledTime, periodInMinutes, timeoutId) {
     return alarm;
 }
 
-exports.triggerAlarm = function(name) {
+function triggerAlarm(name) {
     if (!(name in alarms)) {
         return;
     }
     alarm = alarms[name];
-    exports.onAlarm.fire(alarm);
     if (alarm.periodInMinutes) {
         alarm.scheduledTime += alarm.periodInMinutes*60000;
         if (!useNativeAlarms) {
-            alarm.timeoutId = setTimeout(function() { exports.triggerAlarm(name) }, alarm.scheduledTime - Date.now());
+            alarm.timeoutId = setTimeout(function() { triggerAlarm(name) }, alarm.scheduledTime - Date.now());
         }
     } else {
         delete alarms[name];
     }
     storage.internal.set({'alarms':alarms});
+    exports.onAlarm.fire(alarm);
 }
 
 exports.create = function(name, alarmInfo) {
@@ -78,7 +80,7 @@ exports.create = function(name, alarmInfo) {
         if (name in alarms) {
             clearTimeout(alarms[name].timeoutId);
         }
-        var timeoutId = setTimeout(function() { exports.triggerAlarm(name) }, when - Date.now());
+        var timeoutId = setTimeout(function() { triggerAlarm(name) }, when - Date.now());
         alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes, timeoutId);
     }
     storage.internal.set({'alarms':alarms});
@@ -141,6 +143,7 @@ exports.clearAll = function() {
 }
 
 exports.onAlarm = new Event('onAlarm');
+
 function reregisterAlarms() {
     // Iterate over Object.keys(alarms) rather than using a normal
     // for (var name in alarms) loop because alarms can be deleted as we are
@@ -152,9 +155,9 @@ function reregisterAlarms() {
             // the alarm initially and if periodInMinutes is set, then schedule so that the firing points
             // are aligned with what they originally were when the alarm was previously created. We try to
             // emulate this behavior here.
-            exports.triggerAlarm(name);
+            alarmsToFireOnStartUp.push(name);
             if (!(name in alarms)) {
-              return;
+                return;
             }
             clearTimeout(alarms[name].timeoutId);
             var periodInMillis = alarms[name].periodInMinutes*60000;
@@ -169,17 +172,47 @@ function reregisterAlarms() {
     });
 }
 
+function firePendingAlarms() {
+    var alarmId;
+    while (alarmId = alarmsToFireOnStartUp.shift()) {
+        triggerAlarm(alarmId);
+    }
+    alarmsToFireOnStartUp = null;
+}
+
+function onMessageFromNative(msg) {
+    if (msg.charAt(0) === 'f') {
+        var alarmId = msg.slice(1);
+        if (alarmsToFireOnStartUp) {
+            alarmsToFireOnStartUp.push(alarmId);
+        } else {
+            triggerAlarm(alarmId);
+        }
+    } else {
+        throw new Error('alarms unknown message: ' + msg);
+    }
+}
+
 channel.createSticky('onChromeAlarmsReady');
 channel.waitForInitialization('onChromeAlarmsReady');
 channel.onCordovaReady.subscribe(function() {
     storage.internal.get('alarms', function(values) {
-        if (!values.alarms) {
-            channel.initializationComplete('onChromeAlarmsReady');
-            return;
-        }
-        alarms = values.alarms;
+        alarms = values.alarms || {};
         alarms.__proto__ = null;
+
+        if (useNativeAlarms) {
+            exec(onMessageFromNative, undefined, 'ChromeAlarms', 'messageChannel', []);
+        } else {
+            reregisterAlarms();
+        }
+
+        helpers.runAtStartUp(function() {
+            if (alarmsToFireOnStartUp.length) {
+                helpers.queueLifeCycleEvent(firePendingAlarms);
+            } else {
+                alarmsToFireOnStartUp = null;
+            }
+        });
         channel.initializationComplete('onChromeAlarmsReady');
-        require('org.chromium.common.helpers').runAtStartUp(reregisterAlarms);
     });
 });

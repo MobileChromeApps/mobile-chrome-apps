@@ -17,6 +17,9 @@ exports.eventIframe = null;
 // loaded, and the JS has executed.
 exports.onBackgroundPageLoaded = channel.createSticky('onBackgroundPageLoaded');
 
+// List of functions that will fire events. If none, then onLaunched will be fired.
+exports.lifeCycleEventFuncs = [];
+
 function createBgChrome() {
   return {
     __proto__: window.chrome,
@@ -118,16 +121,21 @@ function fireLifecycleEvents(manifestJson) {
       // If launching for UI, fire onLaunched event
       var exec = require("cordova/exec");
       exec(function(data) {
-        if (data) {
+        // lifeCycleEventFuncs would determine if app is started from an alarm, notification, etc.
+        if (data && !exports.lifeCycleEventFuncs.length) {
           app_runtime.onLaunched.fire();
+          // Log a warning if no window is created after a bit of a grace period.
+          setTimeout(function() {
+            var app_window = require('org.chromium.bootstrap.app.window');
+            if (!app_window.current()) {
+              console.warn('No page loaded because chrome.app.window.create() was never called.');
+            }
+          }, 500);
         }
-        // Log a warning if no window is created after a bit of a grace period.
-        setTimeout(function() {
-          var app_window = require('org.chromium.bootstrap.app.window');
-          if (!app_window.current()) {
-            console.warn('No page loaded because chrome.app.window.create() was never called.');
-          }
-        }, 500);
+        for (var i = 0; i < exports.lifeCycleEventFuncs.length; ++i) {
+          exports.lifeCycleEventFuncs[i]();
+        }
+        exports.lifeCycleEventFuncs = null;
       }, null, "ChromeBootstrap", "doesNeedLaunch", []);
     });
   });

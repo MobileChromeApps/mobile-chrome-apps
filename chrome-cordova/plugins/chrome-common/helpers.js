@@ -13,3 +13,12 @@ exports.runAtStartUp = function(func) {
     document.addEventListener('deviceready', func, false);
   }
 };
+
+exports.queueLifeCycleEvent = function(func) {
+  if (isChromeApp) {
+    var mobile = require('org.chromium.bootstrap.mobile.impl');
+    mobile.lifeCycleEventFuncs.push(func);
+  } else {
+    document.addEventListener('deviceready', func, false);
+  }
+};

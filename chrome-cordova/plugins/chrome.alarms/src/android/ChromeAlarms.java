@@ -4,6 +4,7 @@
 
 package org.chromium;
 
+import org.apache.cordova.PluginResult;
 import org.chromium.Alarm;
 
 import org.apache.cordova.CordovaArgs;
@@ -22,32 +23,48 @@ import android.util.Log;
 
 import org.apache.cordova.Config;
 
+import java.util.ArrayList;
+
 public class ChromeAlarms extends CordovaPlugin {
 
     public static final String ALARM_NAME_LABEL = "alarmName";
     private static final String LOG_TAG = "ChromeAlarms";
-    private static CordovaWebView webView;
+    private static ChromeAlarms pluginInstance;
+    private static ArrayList<String> alarmsToFire = new ArrayList<String>();
     private AlarmManager alarmManager;
+    private CallbackContext messageChannel;
 
     public static void triggerAlarm(Context context, Intent intent) {
-        if (webView != null) {
-            String name = intent.getStringExtra(ALARM_NAME_LABEL);
-            String javascript = "chrome.alarms.triggerAlarm('" + name + "')";
-            webView.sendJavascript(javascript);
+        String alarmId = intent.getStringExtra(ALARM_NAME_LABEL);
+        if (pluginInstance != null && pluginInstance.messageChannel != null) {
+            Log.w(LOG_TAG, "Firing alarm to already running webview");
+            pluginInstance.sendFireAlarmMessage(alarmId);
         } else {
-            intent.addFlags(Intent.FLAG_FROM_BACKGROUND);
-            context.startActivity(intent);
+            alarmsToFire.add(alarmId);
+            if (pluginInstance == null) {
+                intent.addFlags(Intent.FLAG_FROM_BACKGROUND);
+                context.startActivity(intent);
+            }
         }
     }
 
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova,  webView);
-        if (ChromeAlarms.webView == null && cordova.getActivity().getIntent().hasExtra(ALARM_NAME_LABEL)) {
+    public void pluginInitialize() {
+        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(ALARM_NAME_LABEL)) {
             cordova.getActivity().moveTaskToBack(true);
         }
-        ChromeAlarms.webView = webView;
+        pluginInstance = this;
         alarmManager = (AlarmManager) cordova.getActivity().getSystemService(Context.ALARM_SERVICE);
+    }
+
+    @Override
+    public void onReset() {
+        messageChannel = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        messageChannel = null;
     }
 
     @Override
@@ -58,9 +75,22 @@ public class ChromeAlarms extends CordovaPlugin {
         } else if ("clear".equals(action)) {
             clear(args, callbackContext);
             return true;
+        } else if ("messageChannel".equals(action)) {
+            messageChannel = callbackContext;
+            for (String alarmId : alarmsToFire) {
+                sendFireAlarmMessage(alarmId);
+            }
+            alarmsToFire.clear();
+            return true;
         }
 
         return false;
+    }
+
+    private void sendFireAlarmMessage(String alarmId) {
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "f" + alarmId);
+        pluginResult.setKeepCallback(true);
+        messageChannel.sendPluginResult(pluginResult);
     }
 
     private PendingIntent makePendingIntentForAlarm(final String name, int flags) {
