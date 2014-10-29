@@ -5,11 +5,10 @@
 package org.chromium;
 
 import org.apache.cordova.CordovaArgs;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaResourceApi;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,23 +31,20 @@ import android.util.Log;
 import java.io.InputStream;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
 
 public class ChromeNotifications extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeNotifications";
-    private static final String NOTIFICATION_ID_LABEL = "notificationId";
-    private static final String NOTIFICATION_ACTION_LABEL = "notificationAction";
-    private static final String NOTIFICATION_BUTTON_INDEX_LABEL = "notificationButtonIndex";
-    private static final String COMPONENT_NAME_LABEL = "componentName";
-    private static final String NOTIFICATION_CLICKED_ACTION = "NOTIFICATION_CLICKED";
-    private static final String NOTIFICATION_CLOSED_ACTION = "NOTIFICATION_CLOSED";
-    private static final String NOTIFICATION_BUTTON_CLICKED_ACTION = "NOTIFICATION_BUTTON_CLICKED";
+    private static final String INTENT_PREFIX = "ChromeNotifications.";
+    private static final String MAIN_ACTIVITY_LABEL = INTENT_PREFIX + "MainActivity";
+    private static final String NOTIFICATION_CLICKED_ACTION = INTENT_PREFIX + "Click";
+    private static final String NOTIFICATION_CLOSED_ACTION = INTENT_PREFIX + "Close";
+    private static final String NOTIFICATION_BUTTON_CLICKED_ACTION = INTENT_PREFIX + "ButtonClick";
 
-    private static CordovaWebView webView;
-    private static boolean safeToFireEvents = false;
+    private static ChromeNotifications pluginInstance;
     private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
     private NotificationManager notificationManager;
-    private ExecutorService executorService;
+    private CallbackContext messageChannel;
+
 
     private static class EventInfo {
         public String action;
@@ -61,21 +57,43 @@ public class ChromeNotifications extends CordovaPlugin {
             this.buttonIndex = buttonIndex;
         }
     }
-    
+
+    public static void handleNotificationAction(Context context, Intent intent) {
+        String[] strings = intent.getAction().split("\\|", 3);
+        int buttonIndex = strings.length >= 3 ? Integer.parseInt(strings[2]) : -1;
+
+        if (pluginInstance != null && pluginInstance.messageChannel != null) {
+            Log.w(LOG_TAG, "Firing notification to already running webview");
+            pluginInstance.sendNotificationMessage(strings[0], strings[1], buttonIndex);
+        } else {
+            pendingEvents.add(new EventInfo(strings[0], strings[1], buttonIndex));
+            if (pluginInstance == null) {
+                Intent activityIntent = IntentCompat.makeMainActivity((ComponentName)intent.getParcelableExtra(MAIN_ACTIVITY_LABEL));
+                activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
+                activityIntent.putExtra(MAIN_ACTIVITY_LABEL, MAIN_ACTIVITY_LABEL);
+                context.startActivity(activityIntent);
+            }
+        }
+    }
+
     @Override
-    public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
-        safeToFireEvents = false;
-        super.initialize(cordova, webView);
-        notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-        if (ChromeNotifications.webView == null &&
-            NOTIFICATION_CLOSED_ACTION.equals(cordova.getActivity().getIntent().getStringExtra(NOTIFICATION_ACTION_LABEL))) {
-            // In this case we are starting up the activity again in response to a notification being closed. We do not
-            // want to interrupt the user by bringing the activity to the foreground in this case so move it to the
-            // background.
+    public void pluginInitialize() {
+        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
+            Log.w("ANDREW", "O*#@$U@#*UR@DI*J@#(JD#@JD*(#@J@(#*JD(#@*DJ(#@D");
             cordova.getActivity().moveTaskToBack(true);
         }
-        ChromeNotifications.webView = webView;
-        executorService = cordova.getThreadPool();
+        pluginInstance = this;
+        notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+    }
+
+    @Override
+    public void onReset() {
+        messageChannel = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        messageChannel = null;
     }
 
     @Override
@@ -89,64 +107,30 @@ public class ChromeNotifications extends CordovaPlugin {
         } else if ("clear".equals(action)) {
             clear(args, callbackContext);
             return true;
-        } else if ("fireStartupEvents".equals(action)) {
-            fireStartupEvents(args, callbackContext);
+        } else if ("messageChannel".equals(action)) {
+            messageChannel = callbackContext;
+            for (EventInfo event : pendingEvents) {
+                sendNotificationMessage(event.action, event.notificationId, event.buttonIndex);
+            }
+            pendingEvents.clear();
             return true;
         }
         return false;
     }
 
-    public static void handleNotificationAction(Context context, Intent intent) {
-        String[] strings = intent.getAction().substring(context.getPackageName().length() + 1).split("\\.", 3);
-        int buttonIndex = strings.length >= 3 ? Integer.parseInt(strings[2]) : -1;
-        triggerJavascriptEvent(context, (ComponentName) intent.getExtras().getParcelable(COMPONENT_NAME_LABEL),
-                               new EventInfo(strings[0], strings[1], buttonIndex));
-    }
-    
-    private static void triggerJavascriptEventNow(Context context, ComponentName componentName, EventInfo eventInfo) {
-        Intent intent = new Intent();
-        intent.setComponent(componentName);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        if (NOTIFICATION_CLICKED_ACTION.equals(eventInfo.action)) {
-            webView.sendJavascript("chrome.notifications.triggerOnClicked('" + eventInfo.notificationId + "')");
-            context.startActivity(intent);
-        } else if (NOTIFICATION_CLOSED_ACTION.equals(eventInfo.action)) {
-            PendingIntent pendingIntent = makePendingIntent(context, componentName, NOTIFICATION_CLICKED_ACTION, eventInfo.notificationId, -1,
-                                                            PendingIntent.FLAG_NO_CREATE);
-            if (pendingIntent != null) {
-                pendingIntent.cancel();
+    private void sendNotificationMessage(String action, String notificationId, int buttonIndex) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("action", action.substring(INTENT_PREFIX.length()));
+            obj.put("id", notificationId);
+            if (NOTIFICATION_BUTTON_CLICKED_ACTION.equals(action)) {
+                obj.put("buttonIndex", buttonIndex);
             }
-            webView.sendJavascript("chrome.notifications.triggerOnClosed('" + eventInfo.notificationId + "')");
-        } else if (NOTIFICATION_BUTTON_CLICKED_ACTION.equals(eventInfo.action)) {
-            webView.sendJavascript("chrome.notifications.triggerOnButtonClicked('" + eventInfo.notificationId + "', " + eventInfo.buttonIndex + ")");
-            context.startActivity(intent);
+        } catch (JSONException e) {
         }
-    }
-
-    private static void triggerJavascriptEvent(Context context, ComponentName componentName, EventInfo eventInfo) {
-        if (webView == null) {
-            // In this case the main activity has been closed and will need to be started up again in order to execute
-            // the appropriate event handler.
-            Intent intent = IntentCompat.makeMainActivity(componentName);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.putExtra(NOTIFICATION_ACTION_LABEL, eventInfo.action);
-            intent.putExtra(NOTIFICATION_ID_LABEL, eventInfo.notificationId);
-            if (eventInfo.buttonIndex >= 0) {
-                intent.putExtra(NOTIFICATION_BUTTON_INDEX_LABEL, eventInfo.buttonIndex);
-            }
-            pendingEvents.add(eventInfo);
-            context.startActivity(intent);
-            return;
-        } else if (!safeToFireEvents) {
-            // In this case the activity has been started up but initialization has not completed so the javascript is not
-            // yet ready to run event handlers, so queue the event until javascript is ready.
-            pendingEvents.add(eventInfo);
-            return;
-        }
-        // This is the "normal" case in which the main activity is still around and ready to execute event handlers
-        // in javascript immediately. The activity may not necessarily be in the foreground so we still need to send
-        // an intent that brings it to the foreground if the notification or a notification button was clicked.
-        triggerJavascriptEventNow(context, componentName, eventInfo);
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, obj);
+        pluginResult.setKeepCallback(true);
+        messageChannel.sendPluginResult(pluginResult);
     }
 
     private boolean doesNotificationExist(String notificationId) {
@@ -178,19 +162,14 @@ public class ChromeNotifications extends CordovaPlugin {
     }
     
     public PendingIntent makePendingIntent(String action, String notificationId, int buttonIndex, int flags) {
-        return makePendingIntent(cordova.getActivity(), cordova.getActivity().getIntent().getComponent(), action, notificationId, buttonIndex, flags);
-    }
-
-    static public PendingIntent makePendingIntent(Context context, ComponentName componentName, String action, String notificationId,
-                                                  int buttonIndex, int flags) {
-        Intent intent = new Intent(context, NotificationReceiver.class);
-        String fullAction = context.getPackageName() + "." + action + "." + notificationId;
+        Intent intent = new Intent(cordova.getActivity(), ChromeNotificationsReceiver.class);
+        String fullAction = action + "|" + notificationId;
         if (buttonIndex >= 0) {
-            fullAction += "." + buttonIndex;
+            fullAction += "|" + buttonIndex;
         }
         intent.setAction(fullAction);
-        intent.putExtra(COMPONENT_NAME_LABEL, componentName);
-        return PendingIntent.getBroadcast(context, 0, intent, flags);
+        intent.putExtra(MAIN_ACTIVITY_LABEL, cordova.getActivity().getIntent().getComponent());
+        return PendingIntent.getBroadcast(cordova.getActivity(), 0, intent, flags);
     }
 
     private void makeNotification(final CordovaArgs args) throws JSONException {
@@ -257,7 +236,7 @@ public class ChromeNotifications extends CordovaPlugin {
     }
 
     private void create(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -272,7 +251,7 @@ public class ChromeNotifications extends CordovaPlugin {
     }
 
     private void update(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -294,25 +273,20 @@ public class ChromeNotifications extends CordovaPlugin {
         try {
             String notificationId = args.getString(0);
             PendingIntent pendingIntent = makePendingIntent(NOTIFICATION_CLICKED_ACTION, notificationId, -1, PendingIntent.FLAG_NO_CREATE);
+
             if (pendingIntent != null) {
+                Log.w(LOG_TAG, "Cancel notification: " + notificationId);
                 notificationManager.cancel(notificationId.hashCode());
                 pendingIntent.cancel();
                 callbackContext.success(1);
             } else {
+                Log.w(LOG_TAG, "Cancel notification does not exist: " + notificationId);
                 callbackContext.success(0);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "Could not clear notification", e);
             callbackContext.error("Could not clear notification");
         }
-    }
-
-    private void fireStartupEvents(final CordovaArgs args, final CallbackContext callbackContext) {
-        safeToFireEvents = true;
-        for (int i = 0; i < pendingEvents.size(); i++) {
-            triggerJavascriptEventNow(cordova.getActivity(), cordova.getActivity().getIntent().getComponent(), pendingEvents.get(i));
-        }
-        pendingEvents.clear();
     }
 }
 

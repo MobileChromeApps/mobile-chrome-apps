@@ -26,7 +26,7 @@
       <clobbers target="chrome.notifications" />
     </js-module>
     <source-file src="src/android/ChromeNotifications.java" target-dir="src/org/chromium" />
-    <source-file src="src/android/NotificationReceiver.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/ChromeNotificationsReceiver.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeNotifications">
@@ -35,7 +35,7 @@
       </feature>
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-        <receiver android:name="org.chromium.NotificationReceiver" />
+        <receiver android:name="org.chromium.ChromeNotificationsReceiver" />
     </config-file>
   </platform>
 
