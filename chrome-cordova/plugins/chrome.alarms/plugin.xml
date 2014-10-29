@@ -25,8 +25,7 @@
 
   <platform name="android">
     <source-file src="src/android/ChromeAlarms.java" target-dir="src/org/chromium" />
-    <source-file src="src/android/AlarmReceiver.java" target-dir="src/org/chromium" />
-    <source-file src="src/android/Alarm.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/ChromeAlarmsReceiver.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeAlarms">
@@ -35,7 +34,7 @@
       </feature>
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <receiver android:name="org.chromium.AlarmReceiver" />
+      <receiver android:name="org.chromium.ChromeAlarmsReceiver" />
     </config-file>
   </platform>
 </plugin>

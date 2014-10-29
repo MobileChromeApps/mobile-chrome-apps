@@ -5,52 +5,50 @@
 package org.chromium;
 
 import org.apache.cordova.PluginResult;
-import org.chromium.Alarm;
-
 import org.apache.cordova.CordovaArgs;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import org.apache.cordova.Config;
-
 import java.util.ArrayList;
 
 public class ChromeAlarms extends CordovaPlugin {
-
-    public static final String ALARM_NAME_LABEL = "alarmName";
     private static final String LOG_TAG = "ChromeAlarms";
+    private static final String MAIN_ACTIVITY_LABEL = "ChromeAlarms.MainActivity";
     private static ChromeAlarms pluginInstance;
     private static ArrayList<String> alarmsToFire = new ArrayList<String>();
     private AlarmManager alarmManager;
     private CallbackContext messageChannel;
 
     public static void triggerAlarm(Context context, Intent intent) {
-        String alarmId = intent.getStringExtra(ALARM_NAME_LABEL);
+        int idIdx = intent.getAction().indexOf(".ALARM.");
+        String alarmId = intent.getAction().substring(idIdx + 7);
+
         if (pluginInstance != null && pluginInstance.messageChannel != null) {
             Log.w(LOG_TAG, "Firing alarm to already running webview");
             pluginInstance.sendFireAlarmMessage(alarmId);
         } else {
             alarmsToFire.add(alarmId);
             if (pluginInstance == null) {
-                intent.addFlags(Intent.FLAG_FROM_BACKGROUND);
-                context.startActivity(intent);
+                Intent activityIntent = Intent.makeMainActivity((ComponentName)intent.getParcelableExtra(MAIN_ACTIVITY_LABEL));
+                activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
+                activityIntent.putExtra(MAIN_ACTIVITY_LABEL, MAIN_ACTIVITY_LABEL);
+                context.startActivity(activityIntent);
             }
         }
     }
 
     @Override
     public void pluginInitialize() {
-        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(ALARM_NAME_LABEL)) {
+        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
             cordova.getActivity().moveTaskToBack(true);
         }
         pluginInstance = this;
@@ -96,12 +94,11 @@ public class ChromeAlarms extends CordovaPlugin {
     private PendingIntent makePendingIntentForAlarm(final String name, int flags) {
         Intent activityIntent = new Intent(cordova.getActivity().getIntent());
         activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        activityIntent.putExtra(ALARM_NAME_LABEL, name);
-        Intent broadcastIntent = new Intent(cordova.getActivity(), AlarmReceiver.class);
+        Intent broadcastIntent = new Intent(cordova.getActivity(), ChromeAlarmsReceiver.class);
         // Use different actions for different alarm names so that PendingIntent.getBroadcast returns different PendingIntents for
         // alarms with different names but replaces existing PendingIntents with a new one if one exists with the same name.
         broadcastIntent.setAction(cordova.getActivity().getPackageName() + ".ALARM." + name);
-        broadcastIntent.putExtra(AlarmReceiver.startIntent, activityIntent);
+        broadcastIntent.putExtra(MAIN_ACTIVITY_LABEL, cordova.getActivity().getIntent().getComponent());
         return PendingIntent.getBroadcast(cordova.getActivity(), 0, broadcastIntent, flags);
     }
 
@@ -115,14 +112,15 @@ public class ChromeAlarms extends CordovaPlugin {
 
     private void create(final CordovaArgs args, final CallbackContext callbackContext) {
         try {
-            String name = args.getString(0);
-            Alarm alarm = new Alarm(name, (long) args.getDouble(1), (long) (args.optDouble(2)*60000));
-            PendingIntent alarmPendingIntent = makePendingIntentForAlarm(name, PendingIntent.FLAG_CANCEL_CURRENT);
+            String alarmId = args.getString(0);
+            long scheduledTime = (long) args.getDouble(1);
+            long periodInMillis = (long) (args.optDouble(2)*60000);
+            PendingIntent alarmPendingIntent = makePendingIntentForAlarm(alarmId, PendingIntent.FLAG_CANCEL_CURRENT);
             alarmManager.cancel(alarmPendingIntent);
-            if (alarm.periodInMillis == 0) {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, alarm.scheduledTime, alarmPendingIntent);
+            if (periodInMillis == 0) {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, scheduledTime, alarmPendingIntent);
             } else {
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, alarm.scheduledTime, alarm.periodInMillis, alarmPendingIntent);
+                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, scheduledTime, periodInMillis, alarmPendingIntent);
             }
             callbackContext.success();
         } catch (Exception e) {
