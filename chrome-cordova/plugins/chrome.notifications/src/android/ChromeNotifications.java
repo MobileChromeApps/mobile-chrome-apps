@@ -79,7 +79,6 @@ public class ChromeNotifications extends CordovaPlugin {
     @Override
     public void pluginInitialize() {
         if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
-            Log.w("ANDREW", "O*#@$U@#*UR@DI*J@#(JD#@JD*(#@J@(#*JD(#@*DJ(#@D");
             cordova.getActivity().moveTaskToBack(true);
         }
         pluginInstance = this;
@@ -289,4 +288,3 @@ public class ChromeNotifications extends CordovaPlugin {
         }
     }
 }
-
