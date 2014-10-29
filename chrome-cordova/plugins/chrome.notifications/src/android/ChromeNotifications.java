@@ -104,12 +104,8 @@ public class ChromeNotifications extends CordovaPlugin {
     }
     
     private static void triggerJavascriptEventNow(Context context, ComponentName componentName, EventInfo eventInfo) {
-        Intent intent = new Intent();
-        intent.setComponent(componentName);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         if (NOTIFICATION_CLICKED_ACTION.equals(eventInfo.action)) {
             webView.sendJavascript("chrome.notifications.triggerOnClicked('" + eventInfo.notificationId + "')");
-            context.startActivity(intent);
         } else if (NOTIFICATION_CLOSED_ACTION.equals(eventInfo.action)) {
             PendingIntent pendingIntent = makePendingIntent(context, componentName, NOTIFICATION_CLICKED_ACTION, eventInfo.notificationId, -1,
                                                             PendingIntent.FLAG_NO_CREATE);
@@ -119,7 +115,6 @@ public class ChromeNotifications extends CordovaPlugin {
             webView.sendJavascript("chrome.notifications.triggerOnClosed('" + eventInfo.notificationId + "')");
         } else if (NOTIFICATION_BUTTON_CLICKED_ACTION.equals(eventInfo.action)) {
             webView.sendJavascript("chrome.notifications.triggerOnButtonClicked('" + eventInfo.notificationId + "', " + eventInfo.buttonIndex + ")");
-            context.startActivity(intent);
         }
     }
 
