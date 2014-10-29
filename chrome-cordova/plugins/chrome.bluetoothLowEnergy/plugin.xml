@@ -18,4 +18,14 @@
   <js-module src="bluetoothLowEnergy.js" name="bluetoothLowEnergy">
     <clobbers target="chrome.bluetoothLowEnergy" />
   </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeBluetoothLowEnergy.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBluetoothLowEnergy">
+        <param name="android-package" value="org.chromium.ChromeBluetoothLowEnergy" />
+      </feature>
+    </config-file>
+  </platform>
 </plugin>

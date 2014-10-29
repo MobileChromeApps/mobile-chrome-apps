@@ -14,10 +14,37 @@
   <name>Chrome Apps Bluetooth API</name>
 
   <dependency id="org.chromium.common" />
+  <dependency id="android.support.v4" />
 
   <js-module src="bluetooth.js" name="bluetooth">
     <clobbers target="chrome.bluetooth" />
   </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeBluetooth.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/libs/blescan.jar" target-dir="libs" />
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+      <uses-permission android:name="android.permission.BLUETOOTH" />
+      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+      <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+      <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21" />
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <service
+          android:name="org.uribeacon.scan.compat.ScanWakefulService"
+          android:exported="false" />
+      <receiver android:name="org.uribeacon.scan.compat.ScanWakefulBroadcastReceiver" />
+    </config-file>
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBluetooth">
+        <param name="android-package" value="org.chromium.ChromeBluetooth" />
+      </feature>
+    </config-file>
+  </platform>
 
   <platform name="ios">
     <framework src="CoreBluetooth.framework" />

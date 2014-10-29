@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 var Event = require('org.chromium.common.events');
+var platform = cordova.require('cordova/platform');
 var exec = require('cordova/exec');
 var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 
@@ -17,19 +18,35 @@ exports.connect = function(deviceAddress, properties, callback) {
         callback = properties;
         properties = {};
     }
-    exec(callback, fail(callback), 'ChromeBluetooth', 'connect', [deviceAddress, properties]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'connect', [deviceAddress, properties]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'connect', [deviceAddress, properties]);
+    }
 };
 
 exports.disconnect = function(deviceAddress, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'disconnect', [deviceAddress]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'disconnect', [deviceAddress]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'disconnect', [deviceAddress]);
+    }
 };
 
 exports.getService = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getService', [serviceId]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getService', [serviceId]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'getService', [serviceId]);
+    }
 };
 
 exports.getServices = function(deviceAddress, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getServices', [deviceAddress]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getServices', [deviceAddress]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'getServices', [deviceAddress]);
+    }
 };
 
 exports.getCharacteristic = function(characteristicId, callback) {
@@ -43,15 +60,27 @@ exports.getCharacteristic = function(characteristicId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'getCharacteristic', [characteristicId]);
+    if (platform.id === 'android') {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'getCharacteristic', [characteristicId]);
+    } else {
+        exec(win, fail(callback), 'ChromeBluetooth', 'getCharacteristic', [characteristicId]);
+    }
 };
 
 exports.getCharacteristics = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getCharacteristics', [serviceId]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getCharacteristics', [serviceId]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'getCharacteristics', [serviceId]);
+    }
 };
 
 exports.getIncludedServices = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getIncludedServices', [serviceId]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getIncludedServices', [serviceId]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'getIncludedServices', [serviceId]);
+    }
 };
 
 exports.getDescriptor = function(descriptorId, callback) {
@@ -64,11 +93,20 @@ exports.getDescriptor = function(descriptorId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'getDescriptor', [descriptorId]);
+
+    if (platform.id === 'android') {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'getDescriptor', [descriptorId]);
+    } else {
+        exec(win, fail(callback), 'ChromeBluetooth', 'getDescriptor', [descriptorId]);
+    }
 };
 
 exports.getDescriptors = function(characteristicId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getDescriptors', [characteristicId]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getDescriptors', [characteristicId]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'getDescriptors', [characteristicId]);
+    }
 };
 
 exports.readCharacteristicValue = function(characteristicId, callback) {
@@ -82,11 +120,19 @@ exports.readCharacteristicValue = function(characteristicId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'readCharacteristicValue', [characteristicId]);
+    if (platform.id === 'android') {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'readCharacteristicValue', [characteristicId]);
+    } else {
+        exec(win, fail(callback), 'ChromeBluetooth', 'readCharacteristicValue', [characteristicId]);
+    }
 };
 
 exports.writeCharacteristicValue = function(characteristicId, value, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'writeCharacteristicValue', [characteristicId, value]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'writeCharacteristicValue', [characteristicId, value]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'writeCharacteristicValue', [characteristicId, value]);
+    }
 };
 
 exports.startCharacteristicNotifications = function(characteristicId, properties, callback) {
@@ -94,11 +140,20 @@ exports.startCharacteristicNotifications = function(characteristicId, properties
         callback = properties;
         properties = {};
     }
-    exec(callback, fail(callback), 'ChromeBluetooth', 'startCharacteristicNotifications', [characteristicId, properties]);
+
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'startCharacteristicNotifications', [characteristicId, properties]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'startCharacteristicNotifications', [characteristicId, properties]);
+    }
 };
 
 exports.stopCharacteristicNotifications = function(characteristicId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'stopCharacteristicNotifications', [characteristicId]);
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'stopCharacteristicNotifications', [characteristicId]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'stopCharacteristicNotifications', [characteristicId]);
+    }
 };
 
 exports.readDescriptorValue = function(descriptorId, callback) {
@@ -111,11 +166,22 @@ exports.readDescriptorValue = function(descriptorId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'readDescriptorValue', [descriptorId]);
+    if (platform.id === 'android') {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'readDescriptorValue', [descriptorId]);
+    } else {
+        exec(win, fail(callback), 'ChromeBluetooth', 'readDescriptorValue', [descriptorId]);
+    }
+
 };
 
 exports.writeDescriptorValue = function(descriptorId, value, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'writeDescriptorValue', [descriptorId, value]);
+
+    if (platform.id === 'android') {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'writeDescriptorValue', [descriptorId, value]);
+    } else {
+        exec(callback, fail(callback), 'ChromeBluetooth', 'writeDescriptorValue', [descriptorId, value]);
+    }
+
 };
 
 exports.onServiceAdded = new Event('onServiceAdded');
@@ -157,7 +223,13 @@ function registerEvents() {
             break;
         }
     };
-    exec(onEventsCallback, null, 'ChromeBluetooth', 'registerBluetoothLowEnergyEvents', []);
+
+    if (platform.id === 'android') {
+        exec(onEventsCallback, null, 'ChromeBluetoothLowEnergy', 'registerBluetoothLowEnergyEvents', []);
+    } else {
+        exec(onEventsCallback, null, 'ChromeBluetooth', 'registerBluetoothLowEnergyEvents', []);
+    }
+
 }
 
 require('org.chromium.common.helpers').runAtStartUp(registerEvents);
