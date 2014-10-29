@@ -144,6 +144,7 @@ function registerReceiveEvents() {
             data: arguments[1]
         };
         exports.onReceive.fire(info);
+        exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
     };
 
     // TODO: speical callback for android, DELETE when multipart result for
@@ -165,6 +166,7 @@ function registerReceiveEvents() {
                     call = 0;
 
                     exports.onReceive.fire(info);
+                    exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
                 }
             };
         })();

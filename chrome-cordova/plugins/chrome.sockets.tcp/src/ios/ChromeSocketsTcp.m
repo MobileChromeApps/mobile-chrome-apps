@@ -64,8 +64,13 @@ static NSString* stringFromData(NSData* data) {
     NSMutableDictionary* _sockets;
     NSUInteger _nextSocketId;
     NSString* _receiveEventsCallbackId;
+    
+    @public
+    NSInteger _pendingReceive;
 }
 
+- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 @end
 
 @implementation ChromeSocketsTcpSocket
@@ -152,7 +157,7 @@ static NSString* stringFromData(NSData* data) {
         _name = name;
     
     if (bufferSize && _bufferSize == 0 && ![_paused boolValue]) // read delegate method won't be called when _bufferSize == 0
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[bufferSize unsignedIntegerValue] tag:_readTag++];
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[bufferSize unsignedIntegerValue] tag:++_readTag];
     
     if (bufferSize)
         _bufferSize = bufferSize;
@@ -168,6 +173,13 @@ static NSString* stringFromData(NSData* data) {
         _bufferSize = [NSNumber numberWithUnsignedInteger:4096];
 }
 
+- (void)resumeReadIfNotReading
+{
+    if (_readTag == _receivedTag && _plugin->_pendingReceive == 0) {
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
+    }   
+}
+
 - (void)setPaused:(NSNumber*)paused
 {
     if (![_paused isEqualToNumber:paused]) {
@@ -176,9 +188,8 @@ static NSString* stringFromData(NSData* data) {
             for (NSData* data in _pausedBuffers) {
                 [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
             }
-            if (_readTag == _receivedTag) {
-                [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
-            }
+            [_pausedBuffers removeAllObjects];
+            [self resumeReadIfNotReading];
         }
     }
 }
@@ -194,7 +205,7 @@ static NSString* stringFromData(NSData* data) {
     callback(YES, nil);
     
     if (![_paused boolValue])
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
+        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
@@ -207,7 +218,6 @@ static NSString* stringFromData(NSData* data) {
         [_pausedBuffers addObject:data];
     } else {
         [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
-        [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:_readTag++];
     }
 }
 
@@ -258,6 +268,7 @@ static NSString* stringFromData(NSData* data) {
         _sockets = [NSMutableDictionary dictionary];
         _nextSocketId = 1;
         _receiveEventsCallbackId = nil;
+        _pendingReceive = 0;
     }
     return self;
 }
@@ -505,6 +516,7 @@ static NSString* stringFromData(NSData* data) {
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:info];
     [result setKeepCallbackAsBool:YES];
     
+    _pendingReceive++;
     [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
 }
 
@@ -532,6 +544,16 @@ static NSString* stringFromData(NSData* data) {
     [socket setPaused:[NSNumber numberWithBool:YES]];
     
     return socket->_socketId;
+}
+
+- (void)readyToRead:(CDVInvokedUrlCommand*)command
+{
+    _pendingReceive--;
+    if (_pendingReceive == 0) {
+        for (ChromeSocketsTcpSocket* socket in [_sockets allValues]) {
+            [socket resumeReadIfNotReading];
+        }              
+    }
 }
 
 @end

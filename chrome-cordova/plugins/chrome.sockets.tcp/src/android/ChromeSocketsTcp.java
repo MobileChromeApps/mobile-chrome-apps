@@ -41,6 +41,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   private CallbackContext recvContext;
   private Selector selector;
   private SelectorThread selectorThread;
+  private boolean isReadyToRead;
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -72,6 +73,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       getSockets(args, callbackContext);
     } else if ("registerReceiveEvents".equals(action)) {
       registerReceiveEvents(args, callbackContext);
+    } else if ("readyToRead".equals(action)) {
+      readyToRead();
     } else {
       return false;
     }
@@ -354,6 +357,11 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext) {
     recvContext = callbackContext;
     startSelectorThread();
+    readyToRead();
+  }
+
+  private void readyToRead() {
+    isReadyToRead = true;
   }
 
   private void startSelectorThread() {
@@ -936,6 +944,12 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         return bytesRead;
       }
 
+      // This may cause starvation if multiple sockets are trying to reading
+      // large amount of data at same time.
+      if (!isReadyToRead) {
+        return bytesRead;
+      }
+
       try {
         bytesRead = channel.read(receiveDataBuffer);
         if (bytesRead < 0)
@@ -980,6 +994,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       metadata.put("socketId", socketId);
       PluginResult metadataResult = new PluginResult(Status.OK, metadata);
       metadataResult.setKeepCallback(true);
+
+      isReadyToRead = false;
       recvContext.sendPluginResult(metadataResult);
     }
 

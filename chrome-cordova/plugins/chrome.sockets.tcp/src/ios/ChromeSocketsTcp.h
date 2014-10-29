@@ -36,10 +36,8 @@
 
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
 
-- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
-
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
-
 - (NSUInteger)registerAcceptedSocket:(GCDAsyncSocket*)theSocket;
+
+- (void)readyToRead:(CDVInvokedUrlCommand*)command;
 
 @end
