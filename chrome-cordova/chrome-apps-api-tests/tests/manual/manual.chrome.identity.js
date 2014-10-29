@@ -23,6 +23,21 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
   }
 
+  addButton('Get accounts', function() {
+    var callback = function(accounts) {
+      if (!accounts) {
+        logger('Failed to get accounts. lastError = ' + JSON.stringify(chrome.runtime.lastError));
+      } else {
+        logger('Got ' + accounts.length + ' account(s):');
+        for (var i = 0; i < accounts.length; i++) {
+          logger('  ' + accounts[i].id);
+        }
+      }
+    };
+
+    chrome.identity.getAccounts(callback);
+  });
+
   addButton('Get auth token', function() {
     var callback = function(token, account) {
       if (!token) {

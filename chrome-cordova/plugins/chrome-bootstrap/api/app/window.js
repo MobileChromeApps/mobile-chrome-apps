@@ -119,7 +119,7 @@ function evalScripts(rootNode, afterFunc) {
   onLoadCallback();
 }
 
-function rewritePage(pageContent, filePath) {
+function rewritePage(pageContent, filePath, callback) {
   var fgBody = document.body;
   var fgHead = fgBody.previousElementSibling;
 
@@ -162,7 +162,7 @@ function rewritePage(pageContent, filePath) {
     fgHead.insertAdjacentHTML('beforeend', headHtml);
     evalScripts(fgHead, function() {
       mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody, ChromeExtensionURLs.releaseReadyWait);
+      evalScripts(fgBody, callback);
     });
   }
 }
@@ -249,7 +249,10 @@ exports.create = function(filePath, options, callback) {
       callback(createdAppWindow);
     }
     var pageContent = xhr.responseText || 'Page load failed.';
-    rewritePage(pageContent, filePath);
+    rewritePage(pageContent, filePath, function() {
+      ChromeExtensionURLs.releaseReadyWait();
+      createdAppWindow.show();
+    });
   };
   xhr.send();
 };

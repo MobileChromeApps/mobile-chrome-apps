@@ -24,5 +24,6 @@ function createUiWindow(callback) {
 }
 
 chrome.app.runtime.onLaunched.addListener(function() {
+  console.log('onLaunched fired.');
   createUiWindow();
 });

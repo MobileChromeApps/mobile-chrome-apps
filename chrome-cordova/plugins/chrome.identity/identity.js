@@ -190,6 +190,10 @@ exports.getProfileUserInfo = function(callback) {
     callback(cachedAccount, /* id */ '');
 }
 
+exports.getAccounts = function(callback) {
+    exec(callback, null, 'ChromeIdentity', 'getAccounts', []);
+}
+
 function getAllParametersFromUrl(url, startString, endString) {
     if (typeof url !== 'undefined' && typeof startString !== 'undefined')
         url = url.split(startString)[1];

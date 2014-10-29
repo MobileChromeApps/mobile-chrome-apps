@@ -7,8 +7,9 @@ var storage = require('org.chromium.storage.Storage');
 var exec = require('cordova/exec');
 var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
-
-var notifications = Object.create(null);
+var helpers = require('org.chromium.common.helpers');
+var eventsToFireOnStartUp = [];
+var notifications = null;
 
 function resolveUri(uri) {
     if (uri.indexOf('chrome-extension') == 0) {
@@ -115,37 +116,57 @@ exports.getAll = function(callback) {
     }, 0);
 }
 
-exports.triggerOnClicked = function(notificationId) {
-    exports.onClicked.fire(notificationId);
-}
-
-exports.triggerOnClosed = function(notificationId) {
-    delete notifications[notificationId];
-    storage.internal.set({'notifications':notifications});
-    exports.onClosed.fire(notificationId, true);
-}
-
-exports.triggerOnButtonClicked = function(notificationId, buttonIndex) {
-    exports.onButtonClicked.fire(notificationId, buttonIndex);
-}
-
 exports.onClosed = new Event('onClosed');
 exports.onClicked = new Event('onClicked');
 exports.onButtonClicked = new Event('onButtonClicked');
 
-function fireStartupEvents() {
-    exec(undefined, undefined, 'ChromeNotifications', 'fireStartupEvents', []);
+function firePendingEvents() {
+    var msg;
+    while (msg = eventsToFireOnStartUp.shift()) {
+        processMessage(msg);
+    }
+    eventsToFireOnStartUp = null;
+}
+
+function onMessageFromNative(msg) {
+    if (eventsToFireOnStartUp) {
+        eventsToFireOnStartUp.push(msg);
+    } else {
+        processMessage(msg);
+    }
+}
+
+function processMessage(msg) {
+    var action = msg.action;
+    var notificationId = msg.id;
+    var buttonIndex = msg.buttonIndex;
+    if (action == 'Click') {
+        exports.onClicked.fire(notificationId);
+    } else if (action == 'Close') {
+        delete notifications[notificationId];
+        storage.internal.set({'notifications':notifications});
+        exports.onClosed.fire(notificationId, true);
+    } else if (action == 'ButtonClick') {
+        exports.onButtonClicked.fire(notificationId, buttonIndex);
+    } else {
+        throw new Error('Unknown notification action' + msg.action);
+    }
 }
 
 channel.createSticky('onChromeNotificationsReady');
 channel.waitForInitialization('onChromeNotificationsReady');
 channel.onCordovaReady.subscribe(function() {
     storage.internal.get('notifications', function(values) {
-        if (values.notifications) {
-            notifications = values.notifications;
-            notifications.__proto__ = null;
-        }
+        notifications = values.notifications || {};
+        notifications.__proto__ = null;
+        exec(onMessageFromNative, undefined, 'ChromeNotifications', 'messageChannel', []);
+        helpers.runAtStartUp(function() {
+            if (eventsToFireOnStartUp.length) {
+                helpers.queueLifeCycleEvent(firePendingEvents);
+            } else {
+                eventsToFireOnStartUp = null;
+            }
+        });
         channel.initializationComplete('onChromeNotificationsReady');
-        require('org.chromium.common.helpers').runAtStartUp(fireStartupEvents);
     });
 });

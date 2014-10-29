@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
@@ -57,6 +58,9 @@ public class ChromeIdentity extends CordovaPlugin {
             return true;
         } else if ("removeCachedAuthToken".equals(action)) {
             removeCachedAuthToken(args, callbackContext);
+            return true;
+        } else if ("getAccounts".equals(action)) {
+            getAccounts(args, callbackContext);
             return true;
         }
 
@@ -286,6 +290,28 @@ public class ChromeIdentity extends CordovaPlugin {
         } catch (IOException e) {
             callbackContext.error("Could not invalidate token due to IOException.");
         }
+    }
+
+    private void getAccounts(CordovaArgs args, CallbackContext callbackContext) {
+        // First, get the account manager.
+        Context context = this.cordova.getActivity();
+        AccountManager accountManager = AccountManager.get(context);
+
+        // Next, get the accounts and put them into the desired array of objects.
+        // Note: each account's id is set to an email address.
+        // In the documentation, the id is apparently something else.
+        Account[] accounts = accountManager.getAccounts();
+        JSONArray resultAccounts = new JSONArray();
+        for (Account account : accounts) {
+            JSONObject resultAccount = new JSONObject();
+            try {
+                resultAccount.put("id", account.name);
+            } catch (JSONException e) { }
+            resultAccounts.put(resultAccount);
+        }
+
+        // Pass the accounts to the callback.
+        callbackContext.success(resultAccounts);
     }
 }
 
