@@ -33,8 +33,8 @@ registerAutoTests('pageload', function() {
         n = document.getElementById('dont-execute');
         expect(n.innerHTML).toBe('shouldNotExecute=1', 'shouldNotExecute=1');
       });
-      it('should not have executed inline scripts', function() {
-        expect(window.shouldNotExecute).toBeUndefined();
+      it('should have executed inline scripts', function() {
+        expect(window.shouldExecuteInline).toBe(1);
       });
       it('should have executed scripts in order', function() {
         expect(scriptExec1).toBe(1);

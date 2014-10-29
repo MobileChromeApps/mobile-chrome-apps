@@ -10,8 +10,8 @@
   <head>
     <title>Chrome Apps Api Tests</title>
     <link rel="stylesheet" type="text/css" href="assets/topcoat-0.7.5/css/topcoat-mobile-light.min.css">
-    <link rel="stylesheet" type="text/css" href="assets/jasmine-2.0.0/jasmine.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="assets/jasmine-2.0.0/jasmine.css">
+    <link rel="stylesheet" type="text/css" href="main.css">
 
     <script type="text/javascript" src="assets/jasmine-2.0.0/jasmine.js"></script>
     <script type="text/javascript" src="assets/jasmine-2.0.0/jasmine-html.js"></script>
@@ -105,7 +105,7 @@
     <script src="asdf:::"></script><!-- test that invalid tags are skipped over -->
     <script type=foo>Some data</script>
     <script type=foo src=foo></script>
-    <script id="dont-execute">shouldNotExecute=1</script>
+    <script id="dont-execute">shouldExecuteInline=1</script>
     <div style="display:none" id="i18n-html-test">__MSG_description__</div>
 <!-- -------------------------------------------- -->
 
