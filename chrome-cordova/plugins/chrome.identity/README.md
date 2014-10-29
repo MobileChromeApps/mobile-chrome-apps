@@ -27,7 +27,9 @@ Revokes the permissions associated with an OAuth2 access token and removes it fr
 
 #### Amended Functions
 
-    chrome.identity.getAuthToken(object details, function callback)
+```
+chrome.identity.getAuthToken(object details, function callback)
+```
 
 * object `details` recognizes an additional option:
     * string `accountHint`: The account to authenticate in the event that the account chooser dialog is to appear.
@@ -36,6 +38,13 @@ Revokes the permissions associated with an OAuth2 access token and removes it fr
 * function `callback` has two parameters:
     * string `token`: The authentication token.
     * string `account`: The account associated with the token.
+
+```
+chrome.identity.getAccounts(function callback)
+```
+
+* function `callback` has one parameter:
+    * string `id`: In this implementation, this is the e-mail address associated with the account.
 
 ## Preparing Your Application
 
