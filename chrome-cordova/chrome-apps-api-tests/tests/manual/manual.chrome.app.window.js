@@ -3,12 +3,13 @@
 // found in the LICENSE file.
 
 registerManualTests('chrome.app.window', function(rootEl, addButton) {
+  var $document = roolEl.ownerDocument;
 
-  document.addEventListener("pause", function onPause() {
+  $document.addEventListener("pause", function onPause() {
     console.log('Received the pause event');
   });
 
-  document.addEventListener("resume", function onResume() {
+  $document.addEventListener("resume", function onResume() {
     console.log('Received the resume event');
   });
 

@@ -61,4 +61,22 @@ exports.defineManualTests = function(contentEl, beforeEach, createActionButton) 
   });
 };
 
+// TODO: make a better logger
+exports.logger = function() {
+  console.log.apply(console, arguments);
+  medic.log.apply(medic.log, arguments);
+
+  var el = top.document.getElementById('log--content');
+  if (el) {
+    var div = top.document.createElement('div');
+    div.classList.add('log--content--line');
+    div.textContent = Array.prototype.slice.apply(arguments).map(function(arg) {
+        return (typeof arg === 'string') ? arg : JSON.stringify(arg);
+      }).join(' ');
+    el.appendChild(div);
+    // scroll to bottom
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
 }());
