@@ -2,34 +2,61 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-registerManualTests('chrome.notifications', function(rootEl, addButton) {
-  chrome.notifications.onClosed.addListener(function(notificationId, byUser) {
-    logger('onClosed fired. notificationId = ' + notificationId + ', byUser = ' + byUser);
+var NOTIFICATION_ALARM_NAME = 'NOTIFICATION_ALARM1';
+var numIds = 0;
+
+function createNotification(options, callback) {
+  var notificationId = 'id' + numIds;
+  numIds++;
+  if (!('iconUrl' in options)) {
+    options.iconUrl = 'assets/inbox-64x64.png';
+  }
+  options.message = options.message || 'notificationId = ' + notificationId;
+  chrome.notifications.create(notificationId, options, function(notificationId) {
+    if (callback) callback(notificationId);
   });
+}
 
-  chrome.notifications.onClicked.addListener(function(notificationId) {
-    logger('onClicked fired. notificationId = ' + notificationId);
-    chrome.notifications.clear(notificationId, function(wasCleared) {});
-  });
+console.log('Notifications test registered for alarms');
 
-  chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
-    logger('onButtonClicked fired. notificationId = ' + notificationId + ', buttonIndex = ' + buttonIndex);
-  });
-
-  var numIds = 0;
-
-  function createNotification(options, callback) {
-    var notificationId = 'id' + numIds;
-    numIds++;
-    if (!('iconUrl' in options)) {
-      options.iconUrl = 'assets/inbox-64x64.png';
-    }
-    options.message = options.message || 'notificationId = ' + notificationId;
-    chrome.notifications.create(notificationId, options, function(notificationId) {
-      if (callback) callback(notificationId);
+chrome.alarms.onAlarm.addListener(function(alarm) {
+  if (alarm.name === NOTIFICATION_ALARM_NAME) {
+    console.log("Received alarm: " + alarm.name);
+    createNotification({
+      type:'basic',
+      title:'Alarm notification',
     });
   }
+});
 
+chrome.notifications.onClosed.addListener(function(notificationId, byUser) {
+  logger('onClosed fired. notificationId = ' + notificationId + ', byUser = ' + byUser);
+});
+
+chrome.notifications.onClicked.addListener(function(notificationId) {
+  logger('onClicked fired. notificationId = ' + notificationId);
+  chrome.notifications.clear(notificationId, function(wasCleared) {});
+  logger('Showing window after 1 second');
+  setTimeout(function() {
+    var wnd = chrome.app.window.getAll()[0];
+    if (wnd) {
+      wnd.show();
+    } else {
+      logger('Creating Ui Window & showing');
+      createUiWindow(function(appWnd) {
+        appWnd.show();
+        // Todo: figure out how to navigate to notifications manual test page.
+      });
+    }
+  }, 1000);
+});
+
+chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
+  logger('onButtonClicked fired. notificationId = ' + notificationId + ', buttonIndex = ' + buttonIndex);
+});
+
+
+registerManualTests('chrome.notifications', function(rootEl, addButton) {
   addButton('Basic Notification', function() {
     createNotification({
       type:'basic',
@@ -115,5 +142,10 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
       title:'Button Test',
       buttons:[{title:'Button 0'}, {title:'Button 1'}, {title:'Button 2'}]
     });
+  });
+
+  addButton('Notification after 2 second alarm', function() {
+    var expectedFireTime = Date.now() + 2000;
+    chrome.alarms.create(NOTIFICATION_ALARM_NAME, { when:expectedFireTime });
   });
 });
