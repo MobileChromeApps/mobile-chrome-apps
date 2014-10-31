@@ -8,6 +8,7 @@ import org.apache.cordova.PluginResult;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.chromium.BackgroundActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 public class ChromeAlarms extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeAlarms";
     private static final String MAIN_ACTIVITY_LABEL = "ChromeAlarms.MainActivity";
+    // TODO: we should make these maps of viewId -> pluginInstance in order to support
+    // multiple webviews.
     private static ChromeAlarms pluginInstance;
     private static ArrayList<String> alarmsToFire = new ArrayList<String>();
     private AlarmManager alarmManager;
@@ -38,19 +41,13 @@ public class ChromeAlarms extends CordovaPlugin {
         } else {
             alarmsToFire.add(alarmId);
             if (pluginInstance == null) {
-                Intent activityIntent = Intent.makeMainActivity((ComponentName)intent.getParcelableExtra(MAIN_ACTIVITY_LABEL));
-                activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
-                activityIntent.putExtra(MAIN_ACTIVITY_LABEL, MAIN_ACTIVITY_LABEL);
-                context.startActivity(activityIntent);
+                BackgroundActivity.launchBackground(context);
             }
         }
     }
 
     @Override
     public void pluginInitialize() {
-        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
-            cordova.getActivity().moveTaskToBack(true);
-        }
         pluginInstance = this;
         alarmManager = (AlarmManager) cordova.getActivity().getSystemService(Context.ALARM_SERVICE);
     }

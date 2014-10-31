@@ -222,19 +222,28 @@ function postPrepareInternal(platform) {
   .then(function() {
     return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
-    return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
-  })
-  // Write manifest.short_name as launcher_name in Android strings.xml
-  .then(function() {
-    return require('./get-manifest')('www', platform);
-  }).then(function(manifest) {
-    // Android
+    fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest));
     if (platform === 'android' && manifest) {
+      // Write manifest.short_name as launcher_name in Android strings.xml
       if (manifest.short_name) {
         var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
         var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
         strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
         fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
+      }
+      // Make MainActivity.java extend BackgroundAppMainActivity.
+      if (!manifest.packageId) {
+        throw new Error('manifest.mobile.json is missing required field "packageId"');
+      }
+      var packagePath = path.join.apply(path, manifest.packageId.split('.'));
+      var mainActivityPath = path.join('platforms', 'android', 'src', packagePath, 'MainActivity.java');
+      var origContents = fs.readFileSync(mainActivityPath, 'utf8');
+      var pluginExists = fs.existsSync(path.join('platforms', 'android', 'src', 'org', 'chromium', 'BackgroundAppMainActivity.java'));
+      var snippetWithPlugin = 'MainActivity extends org.chromium.BackgroundAppMainActivity // extends CordovaActivity';
+      var snippetWithoutPlugin = 'MainActivity extends CordovaActivity';
+      var newContents = origContents.replace(pluginExists ? snippetWithoutPlugin : snippetWithPlugin, pluginExists ? snippetWithPlugin : snippetWithoutPlugin);
+      if (newContents != origContents) {
+        fs.writeFileSync(mainActivityPath, newContents);
       }
     }
   });

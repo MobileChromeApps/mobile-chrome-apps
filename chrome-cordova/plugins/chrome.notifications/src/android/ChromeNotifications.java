@@ -9,6 +9,7 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.PluginResult;
+import org.chromium.BackgroundActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +17,6 @@ import org.json.JSONObject;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.NotificationManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -24,7 +24,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.IntentCompat;
 import android.text.Html;
 import android.util.Log;
 
@@ -40,6 +39,8 @@ public class ChromeNotifications extends CordovaPlugin {
     private static final String NOTIFICATION_CLOSED_ACTION = INTENT_PREFIX + "Close";
     private static final String NOTIFICATION_BUTTON_CLICKED_ACTION = INTENT_PREFIX + "ButtonClick";
 
+    // TODO: we should make these maps of viewId -> pluginInstance in order to support
+    // multiple webviews.
     private static ChromeNotifications pluginInstance;
     private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
     private NotificationManager notificationManager;
@@ -68,19 +69,13 @@ public class ChromeNotifications extends CordovaPlugin {
         } else {
             pendingEvents.add(new EventInfo(strings[0], strings[1], buttonIndex));
             if (pluginInstance == null) {
-                Intent activityIntent = IntentCompat.makeMainActivity((ComponentName)intent.getParcelableExtra(MAIN_ACTIVITY_LABEL));
-                activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
-                activityIntent.putExtra(MAIN_ACTIVITY_LABEL, MAIN_ACTIVITY_LABEL);
-                context.startActivity(activityIntent);
+                BackgroundActivity.launchBackground(context);
             }
         }
     }
 
     @Override
     public void pluginInitialize() {
-        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
-            cordova.getActivity().moveTaskToBack(true);
-        }
         pluginInstance = this;
         notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
     }

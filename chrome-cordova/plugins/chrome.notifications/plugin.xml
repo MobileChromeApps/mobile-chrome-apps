@@ -22,6 +22,8 @@
   <dependency id="org.chromium.storage" />
 
   <platform name="android">
+    <dependency id="org.chromium.backgroundapp" />
+
     <js-module src="notifications.js" name="notifications">
       <clobbers target="chrome.notifications" />
     </js-module>
