@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.backgroundapp"
+    version="0.0.1-dev">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Background App</name>
+  <keywords>chrome,background</keywords>
+  <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
+  <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
+
+  <platform name="android">
+    <source-file src="BackgroundActivity.java" target-dir="src/org/chromium" />
+    <source-file src="BackgroundAppMainActivity.java" target-dir="src/org/chromium" />
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
+          android:excludeFromRecents="true"
+          android:launchMode="singleInstance"
+          android:name="org.chromium.BackgroundActivity"
+          android:theme="@android:style/Theme.NoDisplay" />
+    </config-file>
+  </platform>
+</plugin>
