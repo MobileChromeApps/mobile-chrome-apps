@@ -122,8 +122,8 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
         console.error(e);
         return Q.reject('Unable to parse manifest ' + manifestMobileFilename);
       }
-      if (manifestMobile.packageId === 'com.your.company.HelloWorld') {
-        manifestMobile.packageId = packageId || ('com.your.company.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
+      if (manifestMobile.packageId === 'com.yourcompany.HelloWorld') {
+        manifestMobile.packageId = packageId || ('com.yourcompany.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
         Q.ninvoke(fs, 'writeFile', manifestMobileFilename, JSON.stringify(manifestMobile, null, 4));
       }
     });
