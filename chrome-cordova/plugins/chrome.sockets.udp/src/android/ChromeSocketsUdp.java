@@ -22,7 +22,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
@@ -82,14 +84,27 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     return true;
   }
 
-  public void onDestory() {
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
     closeAllSockets();
     stopSelectorThread();
   }
 
+  @Override
   public void onReset() {
+    super.onReset();
     closeAllSockets();
     stopSelectorThread();
+  }
+
+  @Override
+  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    super.initialize(cordova, webView);
+    try {
+      selector = Selector.open();
+    } catch (IOException e) {
+    }
   }
 
   private JSONObject buildErrorInfo(int code, String message) {
@@ -356,27 +371,17 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   }
 
   private void startSelectorThread() {
-    if (selector != null && selectorThread != null) return;
-    try {
-      selector = Selector.open();
-      selectorThread = new SelectorThread(selector, selectorMessages, sockets);
-      selectorThread.start();
-    } catch (IOException e) {
-      selector = null;
-      selectorThread = null;
-      PluginResult err = new PluginResult(Status.ERROR, buildErrorInfo(-9, e.getMessage()));
-      err.setKeepCallback(true);
-      recvContext.sendPluginResult(err);
-    }
+    if (selectorThread != null) return;
+    selectorThread = new SelectorThread(selector, selectorMessages, sockets);
+    selectorThread.start();
   }
 
   private void stopSelectorThread() {
-    if (selector == null && selectorThread == null) return;
+    if (selectorThread == null) return;
 
     addSelectorMessage(null, SelectorMessageType.T_STOP, null);
     try {
       selectorThread.join();
-      selector = null;
       selectorThread = null;
     } catch (InterruptedException e) {
     }
