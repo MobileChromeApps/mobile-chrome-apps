@@ -257,7 +257,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
     });
 
     it('TCP secure get https website', function(done) {
-      var hostname = 'www.httpbin.org';
+      var hostname = 'httpbin.org';
       var port = 443;
       var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
       var request = new ArrayBuffer(requestString.length);
@@ -290,7 +290,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
     });
 
     it('TCP secure get https website three times', function(done) {
-      var hostname = 'www.httpbin.org';
+      var hostname = 'httpbin.org';
       var port = 443;
       var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
       var request = new ArrayBuffer(requestString.length);

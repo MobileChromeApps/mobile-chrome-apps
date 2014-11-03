@@ -175,7 +175,7 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)resumeReadIfNotReading
 {
-    if (_readTag == _receivedTag && _plugin->_pendingReceive == 0) {
+    if (_readTag == _receivedTag && _plugin->_pendingReceive == 0 && [_socket isConnected] && ![_paused boolValue]) {
         [_socket readDataWithTimeout:-1 buffer:nil bufferOffset:0 maxLength:[_bufferSize unsignedIntegerValue] tag:++_readTag];
     }   
 }
