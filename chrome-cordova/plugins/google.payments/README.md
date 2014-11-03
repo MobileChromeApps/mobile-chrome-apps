@@ -84,7 +84,8 @@ If the purchase is successful, `options.success` will be called with a `purchase
             "consume": <boolean consume from original request>
         },
         "response": {
-            "orderId": <Unique order ID from the back-end store>
+            "orderId": <Unique order ID from the back-end store>,
+            "purchaseToken": <Google token for API use> //Only Android
         }
     }
 

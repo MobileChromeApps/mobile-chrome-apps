@@ -60,7 +60,8 @@ exports.inapp = {
         var purchaseSuccess = function(purchaseDetails) {
                 var result = {
                     request: {
-                        sku: purchaseDetails.productId
+                        sku: purchaseDetails.productId,
+                        consume: options.consume
                     },
                     response: {
                         orderId: purchaseDetails.orderId,
@@ -70,7 +71,7 @@ exports.inapp = {
                 options.success(result);
             },
             purchaseConsumableSuccess = function(purchaseDetails) {
-                exec(options.success, failure, "InAppBillingV3", "consumePurchase", [purchaseDetails.purchaseToken]);
+                exec(purchaseSuccess, failure, "InAppBillingV3", "consumePurchase", [purchaseDetails.purchaseToken]);
             },
 
             failure = function(err) {
