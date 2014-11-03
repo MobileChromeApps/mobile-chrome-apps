@@ -80,6 +80,12 @@ static void swizzleMethod(Class class, SEL destinationSelector, SEL sourceSelect
     [[self commandDelegate] sendPluginResult:pluginResult callbackId:[command callbackId]];
 }
 
+- (void)getAccounts:(CDVInvokedUrlCommand*)command
+{
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_INVALID_ACTION messageAsString:@"getAccounts not supported on iOS."];
+    [[self commandDelegate] sendPluginResult:pluginResult callbackId:[command callbackId]];
+}
+
 #pragma mark GPPSignInDelegate
 
 - (void)finishedWithAuth:(GTMOAuth2Authentication *)auth error:(NSError *) error
