@@ -28,6 +28,15 @@ Revokes the permissions associated with an OAuth2 access token and removes it fr
 #### Amended Functions
 
 ```
+chrome.identity.getAccounts(function callback)
+```
+
+This function is only supported on Android.
+
+* function `callback` has one parameter:
+    * string `id`: In this implementation, this is the e-mail address associated with the account.
+
+```
 chrome.identity.getAuthToken(object details, function callback)
 ```
 
@@ -40,11 +49,11 @@ chrome.identity.getAuthToken(object details, function callback)
     * string `account`: The account associated with the token.
 
 ```
-chrome.identity.getAccounts(function callback)
+chrome.identity.getProfileUserInfo(function callback)
 ```
 
 * function `callback` has one parameter:
-    * string `id`: In this implementation, this is the e-mail address associated with the account.
+    * string `email`: The e-mail address associated with the account.
 
 ## Preparing Your Application
 
