@@ -5,8 +5,6 @@
 registerAutoTests('chrome.system.storage', function() {
   'use strict';
 
-  var platform = cordova.require('cordova/platform');
-
   var customMatchers = {
 
     toHaveProperty : function(util, customEqualityTesters) {
