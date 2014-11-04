@@ -19,4 +19,14 @@
   <js-module src="idle.js" name="idle">
     <clobbers target="chrome.idle" />
   </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeIdle.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeIdle">
+        <param name="android-package" value="org.chromium.ChromeIdle" />
+      </feature>
+    </config-file>
+  </platform>
 </plugin>

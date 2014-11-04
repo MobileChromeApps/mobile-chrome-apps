@@ -24,6 +24,14 @@ var idleTimer = null;
 var lastInputDate = new Date();
 
 exports.queryState = function(_detectionIntervalInSeconds, callback) {
+    // If the device is locked, this is easy.
+    if (currentState === STATE_LOCKED) {
+        callback(STATE_LOCKED);
+        return;
+    }
+
+    // We can't simply return the current state.
+    // This is because the specified detection interval may be different than the one used to determine the current state.
     var currentDate = new Date();
     msSinceLastInput = currentDate.getTime() - lastInputDate.getTime();
     if (msSinceLastInput >= _detectionIntervalInSeconds * 1000) {
@@ -81,3 +89,16 @@ resetIdleTimer();
 
 // Add a touch listener.
 document.addEventListener('touchstart', handleTouchEvent);
+
+// Add a listener for screen locking.
+var lockCallback = function(newState) {
+    // If the device has been unlocked, there must have been a touch event, so we handle that.
+    // If the device has been locked, we merely want to change the state to reflect this.
+    if (newState === STATE_ACTIVE) {
+        handleTouchEvent();
+    } else if (newState === STATE_LOCKED) {
+        changeState(STATE_LOCKED);
+    }
+}
+exec(lockCallback, undefined, 'ChromeIdle', 'initialize', []);
+
