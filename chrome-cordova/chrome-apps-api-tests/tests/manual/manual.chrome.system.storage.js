@@ -3,6 +3,15 @@
 // found in the LICENSE file.
 
 registerManualTests('chrome.system.storage', function(rootEl, addButton) {
+
+  chrome.system.storage.onAttached.addListener(function(info) {
+    logger('onAttached fired. info = ' + JSON.stringify(info, null, 4));
+  });
+
+  chrome.system.storage.onDetached.addListener(function(id) {
+    logger('onDetached fired. id = ' + id);
+  });
+
   addButton('Get Storage Info', function() {
     chrome.system.storage.getInfo(function(storageInfo) {
       logger(JSON.stringify(storageInfo, null, 4));

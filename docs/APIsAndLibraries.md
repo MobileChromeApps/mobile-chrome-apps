@@ -53,7 +53,7 @@ _Current as of July 2014_.
 * [system.network](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.network) - retrieves information about local network adapters
     * Working on Android and iOS.
 * [system.storage](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.system.storage) - query storage device information and be notified when a removable storage device is attached and detached.
-    * Alpha quality on Android only
+    * Working on Android and iOS.
 
 ### Other APIs
 
@@ -74,7 +74,6 @@ _Current as of July 2014_.
 ### APIs Coming in the Medium Term
 * bluetooth
 * fileSystem (fixes)
-* system.*
 * location
 
 ### APIs Coming in the Long Term
