@@ -276,6 +276,8 @@ public class InAppBillingV3 extends CordovaPlugin {
 					try {
 						JSONObject pluginResponse = new JSONObject();
 						pluginResponse.put("orderId", purchase.getOrderId());
+						pluginResponse.put("productId", purchase.getSku());
+						pluginResponse.put("purchaseToken", purchase.getToken());
 						callbackContext.success(pluginResponse);
 					} catch (JSONException e) {
 						callbackContext.error("Consume succeeded but success handler failed");
@@ -354,7 +356,6 @@ public class InAppBillingV3 extends CordovaPlugin {
 								detailsJson.put("packageName", purchase.getPackageName());
 								detailsJson.put("purchaseTime", purchase.getPurchaseTime());
 								detailsJson.put("purchaseState", purchaseStateName);
-								detailsJson.put("itemType", purchase.getItemType());
 								detailsJson.put("itemType", purchase.getItemType());
 								response.put(detailsJson);
 							}
