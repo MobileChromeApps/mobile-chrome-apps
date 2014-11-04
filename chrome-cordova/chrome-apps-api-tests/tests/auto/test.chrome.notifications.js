@@ -121,17 +121,17 @@ registerAutoTests("chrome.notifications", function() {
     });
   });
 
-  describe('parameter validation for notifications', function() {
+  describe('parameter validation', function() {
 
     function createNotificationWithMissingOption(done) {
-      createInvalidNotification(done, true, true);
+      createNotification(true, true, done);
     }
 
     function createNotificationWithInvalidOptionValue(done) {
-      createInvalidNotification(done, false, false);
+      createNotification(false, false, done);
     }
 
-    function createInvalidNotification(done, notificationCallbackShouldExecute, lastErrorShouldBeSet) {
+    function createNotification(notificationCallbackShouldExecute, lastErrorShouldBeSet, done) {
       var callbackExecuted = false;
       var lastErrorSet = false;
 
@@ -144,7 +144,9 @@ registerAutoTests("chrome.notifications", function() {
       setTimeout(function() {
         expect(callbackExecuted).toBe(notificationCallbackShouldExecute);
         expect(lastErrorSet).toBe(lastErrorShouldBeSet);
-        done();
+
+        // Verify that the notification was *not* created
+        checkNotificationsEmpty(done);
       }, 250);
     }
 
@@ -155,6 +157,40 @@ registerAutoTests("chrome.notifications", function() {
         }
         callback();
       });
+    }
+
+    function updateNotificationWithMissingOption(applyChangesToBeUpdated, done) {
+      updateNotification(true, false, applyChangesToBeUpdated, done);
+    }
+
+    function updateNotificationWithInvalidOptionValue(applyChangesToBeUpdated, done) {
+      updateNotification(false, false, applyChangesToBeUpdated, done);
+    }
+
+    function updateNotification(notificationCallbackShouldExecute, lastErrorShouldBeSet, applyChangesToBeUpdated, done) {
+      var callbackExecuted = false;
+      var lastErrorSet = false;
+      var notificationId = ids[0];
+
+      chrome.notifications.create(notificationId, options, function(id) {
+        // Make changes to the options to be passed to the update
+        applyChangesToBeUpdated();
+
+        chrome.notifications.update(notificationId, options, function(wasUpdated) {
+          callbackExecuted = true;
+          lastErrorSet = (chrome.runtime.lastError !== null);
+          // Should have been updated if expecting callback + no error
+          expect(wasUpdated).toBe(notificationCallbackShouldExecute && !lastErrorShouldBeSet);
+        });
+      });
+
+      // Wait briefly to give the callback time to be executed
+      setTimeout(function() {
+        expect(callbackExecuted).toBe(notificationCallbackShouldExecute);
+        expect(lastErrorSet).toBe(lastErrorShouldBeSet);
+
+        done();
+      }, 250);
     }
 
     function removeOption(paramToOmit)
@@ -214,5 +250,54 @@ registerAutoTests("chrome.notifications", function() {
       options.type = 'invalid';
       createNotificationWithInvalidOptionValue(done);
     });
+
+    it('update should not require: type', function(done) {
+      updateNotificationWithMissingOption(function() {
+        removeOption('type');
+      }, done);
+    });
+
+    it('update should not require: iconUrl', function(done) {
+      updateNotificationWithMissingOption(function() {
+        removeOption('iconUrl');
+      }, done);
+    });
+
+    it('update should not require: title', function(done) {
+      updateNotificationWithMissingOption(function() {
+        removeOption('title');
+      }, done);
+    });
+
+    it('update should not require: message', function(done) {
+      updateNotificationWithMissingOption(function() {
+        removeOption('message');
+      }, done);
+    });
+
+    it('update should enforce valid value for: type', function(done) {
+      updateNotificationWithInvalidOptionValue(function() {
+        options.type = 'invalid';
+      }, done);
+    });
+
+    it('update should allow only progress to be specified', function(done) {
+      options.type = 'progress';
+      updateNotificationWithMissingOption(function() {
+        options = {'progress' : 42};
+      }, done);
+    });
+
+    it('update should allow only list items to be specified', function(done) {
+      options.type = 'list';
+      updateNotificationWithMissingOption(function() {
+        options = { 'items':
+          [
+            {'title':'Item 1','message':'This is a list item'},
+            {'title':'Second Item','message':'Another list item'}
+          ]};
+      }, done);
+    });
+
   }); // describe 'parameter validation'
 });
