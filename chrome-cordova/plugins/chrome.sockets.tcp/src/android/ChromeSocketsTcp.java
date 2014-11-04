@@ -21,9 +21,7 @@ import javax.net.ssl.SSLException;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
-import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
@@ -95,15 +93,6 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     super.onReset();
     closeAllSockets();
     stopSelectorThread();
-  }
-
-  @Override
-  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-    super.initialize(cordova, webView);
-    try {
-      selector = Selector.open();
-    } catch (IOException e) {
-    }
   }
 
   private JSONObject buildErrorInfo(int code, String message) {
@@ -381,7 +370,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
   private void startSelectorThread() {
     if (selectorThread != null) return;
-    selectorThread = new SelectorThread(selector, selectorMessages, sockets);
+    selectorThread = new SelectorThread(selectorMessages, sockets);
     selectorThread.start();
   }
 
@@ -433,15 +422,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   }
 
   private class SelectorThread extends Thread {
-    private final Selector selector;
     private BlockingQueue<SelectorMessage> selectorMessages;
     private Map<Integer, TcpSocket> sockets;
     private boolean running = true;
 
     SelectorThread(
-        Selector selector, BlockingQueue<SelectorMessage> selectorMessages,
+        BlockingQueue<SelectorMessage> selectorMessages,
         Map<Integer, TcpSocket> sockets) {
-      this.selector = selector;
       this.selectorMessages = selectorMessages;
       this.sockets = sockets;
     }
@@ -502,7 +489,19 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     public void run() {
+
+      try {
+        selector = Selector.open();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      // process possible messages that send during openning the selector
+      // before select.
+      processPendingMessages();
+
       Iterator<SelectionKey> it;
+
       while (running) {
 
         try {
