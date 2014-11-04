@@ -17,6 +17,9 @@ import org.apache.cordova.PluginResult.Status;
 import org.json.JSONException;
 
 public class ChromeIdle extends CordovaPlugin {
+    private BroadcastReceiver lockReceiver;
+    private CallbackContext lockCallbackContext;
+
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("initialize".equals(action)) {
@@ -28,23 +31,36 @@ public class ChromeIdle extends CordovaPlugin {
     }
 
     private void initialize(final CallbackContext callbackContext) {
+        // Store the callback context for later use.
+        this.lockCallbackContext = callbackContext;
+
         // Set up an intent filter for lock intents.
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         
         // Create the broadcast receiver, passing along the callback context to use, and then register it.
-        BroadcastReceiver lockReceiver = new LockReceiver(callbackContext);
-        this.cordova.getActivity().registerReceiver(lockReceiver, intentFilter);
+        this.lockReceiver = new LockReceiver();
+        webView.getContext().registerReceiver(this.lockReceiver, intentFilter);
     }
     
+    private void cleanUp() {
+        // Unregister the broadcast receiver.
+        webView.getContext().unregisterReceiver(this.lockReceiver);
+        this.lockReceiver = null;
+        
+        // Null out the callback context.
+        this.lockCallbackContext = null;
+    }
+
+    public void onDestroy() {
+        cleanUp();
+    }
+
+    public void onReset() {
+        cleanUp();
+    }
+
     private class LockReceiver extends BroadcastReceiver {
-        private CallbackContext lockCallbackContext;
-        
-        private LockReceiver(CallbackContext callbackContext) {
-             super();
-             this.lockCallbackContext = callbackContext;
-        }
-        
         @Override
         public void onReceive(Context context, Intent intent) {
             // Determine the new state, based on the intent.
@@ -58,7 +74,7 @@ public class ChromeIdle extends CordovaPlugin {
             // Create and the plugin result, making sure to keep the callback around for later state changes.
             PluginResult pluginResult = new PluginResult(Status.OK, newState);
             pluginResult.setKeepCallback(true);
-            this.lockCallbackContext.sendPluginResult(pluginResult);
+            lockCallbackContext.sendPluginResult(pluginResult);
         }
     }
 }
