@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.bluetoothLowEnergy"
+    version="1.0.0-dev">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Bluetooth Low Energy API</name>
+
+  <dependency id="org.chromium.bluetooth" />
+
+  <js-module src="bluetoothLowEnergy.js" name="bluetoothLowEnergy">
+    <clobbers target="chrome.bluetoothLowEnergy" />
+  </js-module>
+</plugin>
