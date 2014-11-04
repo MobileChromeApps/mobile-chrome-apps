@@ -196,11 +196,17 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
 {
     VERBOSE_LOG(@"udbSocketDidClose:withError socketId: %u", _socketId);
-    assert(_closeCallback != nil);
+
+    // Commented out assert, causes app to crash
+    // when there is no network available.
+    //assert(_closeCallback != nil);
     void (^callback)() = _closeCallback;
     _closeCallback = nil;
     
-    callback();
+    // Check that callback is not nil before calling.
+    if (nil != callback) {
+        callback();
+    }
 }
 @end
 
