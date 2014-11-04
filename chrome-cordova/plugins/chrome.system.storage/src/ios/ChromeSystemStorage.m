@@ -22,19 +22,23 @@
 
 @implementation ChromeSystemStorage
 {
-    NSString* _externalStorageId;
+    NSString* _builtinStorageId;
 }
 
 NSString *const StorageErrorDomain = @"ChromeSystemStorageErrorDomain";
 
 typedef enum {Total, Available} CapacityType;
 
+- (void)pluginInitialize
+{
+    if (_builtinStorageId == nil) {
+        _builtinStorageId = [[NSUUID UUID] UUIDString];
+    }
+}
+
 - (NSString*)builtInStorageId
 {
-    if (_externalStorageId == nil) {
-        _externalStorageId = [[NSUUID UUID] UUIDString];
-    }
-    return _externalStorageId;
+    return _builtinStorageId;
 }
 
 - (BOOL)isBuiltInStorageId:(NSString*)unitId

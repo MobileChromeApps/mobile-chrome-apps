@@ -9,7 +9,7 @@ there are notable differences.
 A summary of the similarities and differences:
 
 - Each mobile device has built-in storage (on both Android and iOS).  This is
-    is reported as storage unit, similar to the physical hard drive in a desktop
+    reported as storage unit, similar to the physical hard drive in a desktop
 
 - Neither Android nor iOS officially support external storage attached via cable,
     like USB devices for desktops.  Instead, both platforms expect only special-purpose
@@ -32,8 +32,8 @@ The implementation of various functionality, across platforms, is summarized in 
 | getInfo          | Yes     | Yes<sup>1</sup>    |
 | ejectDevice      | Yes<sup>2</sup>      | Yes  |
 | getAvailableCapacity | Yes      | Yes   |
-| onAttached      | Yes      | No-op<sup>3</sup>   |
-| onDetached      | Yes      | No-op<sup>3</sup>   |
+| onAttached      | Yes<sup>3</sup> | No-op<sup>4</sup>   |
+| onDetached      | Yes<sup>3</sup> | No-op<sup>4</sup>   |
 
 1. As iOS does not support generic storages devices, nor SD cards, this method
     will only ever return a single storage unit (representing built-in storage).
@@ -41,7 +41,9 @@ The implementation of various functionality, across platforms, is summarized in 
 2. On Android, this method will always return "in use" for any removable storage -
     it is not currently supported to eject/unmount an SD card programmatically.
 
-2. As above, no iOS devices support removable storage. Thus, these events are
+3. On Android, these events will start the app, even if it is not already running.
+
+4. As above, no iOS devices support removable storage. Thus, these events are
     implemented as a no-op (listeners can be attached, but will never be fired).
 
 ## Reference

@@ -23,6 +23,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -143,10 +144,7 @@ public class ChromeSystemStorage extends CordovaPlugin {
         }
 
         // Sanitize the path provided with the event
-        if (storagePath.startsWith(FILE_SCHEME)) {
-            storagePath = storagePath.substring(FILE_SCHEME.length());
-        }
-        storagePath = getBaseStoragePath(storagePath);
+        storagePath = getBaseStoragePath(Uri.parse(storagePath).getPath());
 
         // The attached/detached events may fire before the client has a chance to call getInfo().
         // Thus, must initialize the external storage here (if not already done), to ensure that
@@ -233,6 +231,10 @@ public class ChromeSystemStorage extends CordovaPlugin {
                 continue;
             }
 
+            // The underlying file system may (or may not) be case-sensitive (e.g. SD cards often
+            // use FAT, which is case-insensitive).
+            // Regardless, the matching of unit id to directory ignores case, as we do not expect
+            // to have two external storage directories, whose path differs only by case
             if (getBaseStoragePath(storage).equalsIgnoreCase(path)) {
                 return storage;
             }
