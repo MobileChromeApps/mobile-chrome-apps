@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 var exec = require('cordova/exec');
+var platform = require('cordova/platform');
 
 var STATE_ACTIVE = 'active';
 var STATE_IDLE = 'idle';
@@ -90,15 +91,17 @@ resetIdleTimer();
 // Add a touch listener.
 document.addEventListener('touchstart', handleTouchEvent);
 
-// Add a listener for screen locking.
-var lockCallback = function(newState) {
-    // If the device has been unlocked, there must have been a touch event, so we handle that.
-    // If the device has been locked, we merely want to change the state to reflect this.
-    if (newState === STATE_ACTIVE) {
-        handleTouchEvent();
-    } else if (newState === STATE_LOCKED) {
-        changeState(STATE_LOCKED);
+// If we're on Android, add a listener for screen locking.
+if (platform.id === 'android') {
+    var lockCallback = function(newState) {
+        // If the device has been unlocked, there must have been a touch event, so we handle that.
+        // If the device has been locked, we merely want to change the state to reflect this.
+        if (newState === STATE_ACTIVE) {
+            handleTouchEvent();
+        } else if (newState === STATE_LOCKED) {
+            changeState(STATE_LOCKED);
+        }
     }
+    exec(lockCallback, undefined, 'ChromeIdle', 'initialize', []);
 }
-exec(lockCallback, undefined, 'ChromeIdle', 'initialize', []);
 
