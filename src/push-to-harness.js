@@ -34,7 +34,18 @@ module.exports = exports = function push(target, watch) {
 
 function extractTargets() {
   // TODO: Use adbkit for smarter auto-detection.
-  return Q.when(['localhost:2424']);
+  var PushClient = require('chrome-app-developer-tool-client');
+  return PushClient.detectAdbTargets()
+  .then(function(targets) {
+      if (!targets.length) {
+          console.warn('No connected android devices detected. Defaulting to localhost.');
+          targets = ['localhost:2424'];
+      }
+      return targets;
+  }, function() {
+      console.warn('Could not use adb to detect connected devices');
+      return ['localhost:2424'];
+  });
 }
 
 function createSession(targets) {
