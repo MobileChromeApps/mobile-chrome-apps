@@ -19,6 +19,16 @@
     <clobbers target="chrome.bluetooth" />
   </js-module>
 
+  <platform name="android">
+    <source-file src="src/android/ChromeBluetooth.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBluetooth">
+        <param name="android-package" value="org.chromium.ChromeBluetooth" />
+      </feature>
+    </config-file>
+  </platform>
+
   <platform name="ios">
     <framework src="CoreBluetooth.framework" />
     <source-file src="src/ios/ChromeBluetooth.m" />
