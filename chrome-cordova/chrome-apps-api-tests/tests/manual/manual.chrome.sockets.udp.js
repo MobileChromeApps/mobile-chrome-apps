@@ -177,6 +177,23 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     });
   }
 
+  function sendBroadcast(data) {
+    var port = 1667;
+    chrome.sockets.udp.create(function(createInfo) {
+      chrome.sockets.udp.bind(createInfo.socketId, '0.0.0.0', port, function(result) {
+        chrome.sockets.udp.send(createInfo.socketId, data, '255.255.255.255', port, function(result) {
+          if (result < 0) {
+            logger('send fail: ' + result);
+            chrome.sockets.udp.close(createInfo.socketId);
+          } else {
+            logger('sendTo: success ' + port);
+            chrome.sockets.udp.close(createInfo.socketId);
+          }
+        });
+      });
+    });
+  }
+
   function initPage() {
 
     var defaultAddr = '127.0.0.1';
@@ -227,6 +244,10 @@ registerManualTests('chrome.sockets.udp', function(rootEl, addButton) {
     addButton('send to a paused socket', function() {
       pauseBindRecvFromSendTo(arr.buffer);
       bindPauseRecvFromSendTo(arr.buffer);
+    });
+
+    addButton('send broadcast message', function() {
+      sendBroadcast(arr.buffer);
     });
 
     addButton('close sockets', function() {
