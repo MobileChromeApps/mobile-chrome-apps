@@ -173,7 +173,10 @@ function registerReceiveEvents() {
     }
 
     var fail = function(info) {
-        callbackWithError(info.message, exports.onReceiveError.fire, info);
+        var error = function() {
+            exports.onReceiveError.fire(info);
+        };
+        callbackWithError(info.message, error);
     };
 
     exec(win, fail, 'ChromeSocketsTcp', 'registerReceiveEvents', []);

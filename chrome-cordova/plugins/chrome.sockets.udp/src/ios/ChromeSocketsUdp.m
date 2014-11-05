@@ -62,6 +62,10 @@ static NSString* stringFromData(NSData* data) {
     NSUInteger _nextSocketId;
     NSString* _receiveEventsCallbackId;
 }
+
+- (void)closeSocketWithId:(NSNumber*)socketId callbackId:(NSString*)theCallbackId;
+- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 @end
 
 @implementation ChromeSocketsUdpSocket
@@ -204,8 +208,11 @@ static NSString* stringFromData(NSData* data) {
     _closeCallback = nil;
     
     // Check that callback is not nil before calling.
-    if (nil != callback) {
+    if (callback != nil) {
         callback();
+    } else if (error) {
+        [_plugin fireReceiveErrorEventsWithSocketId:_socketId error:error];
+        [_plugin closeSocketWithId:[NSNumber numberWithUnsignedInteger:_socketId] callbackId:nil];
     }
 }
 @end
@@ -534,4 +541,19 @@ static NSString* stringFromData(NSData* data) {
     [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
 }
 
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError
+{
+    assert(_receiveEventsCallbackId != nil);
+    
+    NSDictionary* info = @{
+        @"socketId": [NSNumber numberWithUnsignedInteger:theSocketId],
+        @"resultCode": [NSNumber numberWithUnsignedInt:[theError code]],
+        @"message": [theError localizedDescription],
+    };
+    
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:info];
+    [result setKeepCallbackAsBool:YES];
+    
+    [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
+}
 @end

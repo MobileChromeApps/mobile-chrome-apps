@@ -37,5 +37,4 @@
 
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
 
-- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;
 @end

@@ -80,7 +80,10 @@ function registerAcceptEvents() {
     };
 
     var fail = function(info) {
-        callbackWithError(info.message, exports.onAcceptError.fire, info);
+        var error = function() {
+            exports.onAcceptError.fire(info);
+        };
+        callbackWithError(info.message, error);
     };
 
     exec(win, fail, 'ChromeSocketsTcpServer', 'registerAcceptEvents', []);
