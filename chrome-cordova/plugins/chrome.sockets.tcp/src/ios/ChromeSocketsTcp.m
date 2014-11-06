@@ -509,7 +509,7 @@ static NSString* stringFromData(NSData* data) {
     assert(_receiveEventsCallbackId != nil);
     
     NSArray* info = @[
-        [NSNumber numberWithUnsignedInteger:theSocketId],
+        @{@"socketId":[NSNumber numberWithUnsignedInteger:theSocketId]},
         theData,
     ];
     

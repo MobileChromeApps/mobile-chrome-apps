@@ -138,11 +138,11 @@ exports.onReceive = new Event('onReceive');
 exports.onReceiveError = new Event('onReceiveError');
 
 function registerReceiveEvents() {
-    var win = function() {
-        var info = {
-            socketId: arguments[0],
-            data: arguments[1]
-        };
+
+    var win = function(info, data) {
+        if (data) {
+            info.data = data;
+        }
         exports.onReceive.fire(info);
         exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
     };
@@ -151,23 +151,22 @@ function registerReceiveEvents() {
     // android is avaliable
     if (platform.id == 'android') {
         win = (function() {
-            var data;
+            var recvInfo;
             var call = 0;
-            return function(arg) {
+            return function(info) {
                 if (call === 0) {
-                    data = arg;
-                    call++;
-                } else  {
-                    var info = {
-                        socketId: arg.socketId,
-                        data: data
-                    };
-
-                    call = 0;
-
-                    exports.onReceive.fire(info);
-                    exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
+                    recvInfo = info;
+                    if (!recvInfo.destUri) {
+                        call++;
+                        return;
+                    }
+                } else {
+                    recvInfo.data = info;
                 }
+
+                call = 0;
+                exports.onReceive.fire(recvInfo);
+                exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
             };
         })();
     }
