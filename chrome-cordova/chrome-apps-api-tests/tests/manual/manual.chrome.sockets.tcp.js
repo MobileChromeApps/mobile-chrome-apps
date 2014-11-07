@@ -16,8 +16,10 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
   function receiveListener(info) {
     logger('Client Recv: success');
     logger(info);
-    var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
-    logger(message);
+    if (info.data) {
+      var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
+      logger(message);
+    }
     chrome.sockets.tcp.disconnect(info.socketId);
     chrome.sockets.tcp.close(info.socketId);
 
@@ -96,14 +98,16 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
     return buf;
   }
 
-  function redirectToFile() {
+  function redirectToFile(append) {
     var hostname = 'httpbin.org';
     var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
     var message = stringToArrayBuffer(requestString);
     var properties = {
-      destUri: cordova.file.applicationStorageDirectory + 'redirectToFile.txt',
-      append: false
+      destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
+      append: append
     };
+
+    logger(properties);
 
     chrome.sockets.tcp.create(properties, function(createInfo) {
       chrome.sockets.tcp.connect(createInfo.socketId, hostname, 80, function(result) {
@@ -279,8 +283,12 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
       connectAndSend(arr.buffer);
     });
 
-    addButton('TCP: test redirect to file', function() {
-      redirectToFile();
+    addButton('TCP: test redirect to file with append', function() {
+      redirectToFile(true);
+    });
+
+    addButton('TCP: test redirect to file without append', function() {
+      redirectToFile(false);
     });
 
     addButton('TCP: connect & secure & send', function() {

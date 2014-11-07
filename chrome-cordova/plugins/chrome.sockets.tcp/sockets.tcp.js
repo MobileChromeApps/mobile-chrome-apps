@@ -144,7 +144,10 @@ function registerReceiveEvents() {
             info.data = data;
         }
         exports.onReceive.fire(info);
-        exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
+
+        if (data) { // Only exec readyToRead when not redirect ot file
+            exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
+        }
     };
 
     // TODO: speical callback for android, DELETE when multipart result for
@@ -162,11 +165,12 @@ function registerReceiveEvents() {
                     }
                 } else {
                     recvInfo.data = info;
+                    call = 0;
                 }
-
-                call = 0;
                 exports.onReceive.fire(recvInfo);
-                exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
+                if (recvInfo.data) { // Only exec readyToRead when not redirect ot file
+                    exec(null, null, 'ChromeSocketsTcp', 'readyToRead', []);
+                }
             };
         })();
     }

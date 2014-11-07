@@ -627,6 +627,14 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       paused = true;
     }
 
+    void resetDestOutputStream() throws IOException {
+      if (destOutputStream != null) {
+        destOutputStream.close();
+        destOutputStream = null;
+        destUri = null;
+      }
+    }
+
     void setDefaultProperties() throws IOException {
       paused = false;
       persistent = false;
@@ -634,10 +642,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       name = "";
       destUri = null;
       append = false;
-      if (destOutputStream != null) {
-        destOutputStream.close();
-        destOutputStream = null;
-      }
+      resetDestOutputStream();
     }
 
     // Only call this method on selector thread
@@ -684,11 +689,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
       if (!properties.isNull("destUri")) {
         try {
-          if (destOutputStream != null) {
-            destOutputStream.close();
-            destOutputStream = null;
-            destUri = null;
-          }
+          resetDestOutputStream();
 
           String uriString = properties.getString("destUri");
 
@@ -761,10 +762,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     void disconnect() throws IOException {
       if (key != null && channel.isRegistered())
         key.cancel();
-      if (destOutputStream != null) {
-        destOutputStream.close();
-        destOutputStream = null;
-      }
+      resetDestOutputStream();
       channel.close();
     }
 
@@ -1013,7 +1011,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
       // This may cause starvation if multiple sockets are trying to reading
       // large amount of data at same time.
-      if (!isReadyToRead) {
+      if (!isReadyToRead && destOutputStream == null) {
         return bytesRead;
       }
 

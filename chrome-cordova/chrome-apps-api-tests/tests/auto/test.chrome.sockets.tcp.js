@@ -266,7 +266,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
         reqView[i] = requestString.charCodeAt(i);
       }
       var properties = {
-        destUri: cordova.file.applicationStorageDirectory + 'redirectToFile.txt',
+        destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
         append: false
       };
 

@@ -40,6 +40,9 @@ static NSString* stringFromData(NSData* data) {
     NSNumber* _persistent;
     NSString* _name;
     NSNumber* _bufferSize;
+    NSNumber* _append;
+    NSString* _destUri;
+    NSFileHandle* _destUriFileHandle;
     
     NSUInteger _readTag;
     NSUInteger _receivedTag;
@@ -70,7 +73,8 @@ static NSString* stringFromData(NSData* data) {
 }
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
+- (void)fireReceiveEventsWithInfo:(NSDictionary*)theInfo waitReadyToRead:(BOOL)waitReadyToRead;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId errorCode:(NSUInteger)theErrorCode message:(NSString*)theMessage;
 @end
 
 @implementation ChromeSocketsTcpSocket
@@ -113,6 +117,16 @@ static NSString* stringFromData(NSData* data) {
     _connectCallback = nil;
     _disconnectCallback = nil;
     _secureCallback = nil;
+    [self resetDestUriFileHandle];
+}
+
+- (void)resetDestUriFileHandle
+{
+    if (_destUriFileHandle) {
+        [_destUriFileHandle closeFile];
+        _destUriFileHandle = nil;
+        _destUri = nil;
+    }
 }
 
 - (NSDictionary*)getInfo
@@ -129,7 +143,12 @@ static NSString* stringFromData(NSData* data) {
         @"bufferSize": _bufferSize,
         @"connected": [NSNumber numberWithBool:[_socket isConnected]],
         @"paused": _paused,
+        @"append": _append,
     } mutableCopy];
+    
+    if (_destUri) {
+        socketInfo[@"destUri"] = _destUri;
+    }
     
     if (localAddress) {
         socketInfo[@"localAddress"] = localAddress;
@@ -141,6 +160,7 @@ static NSString* stringFromData(NSData* data) {
         socketInfo[@"peerPort"] = peerPort;
     }
     
+    
     return [socketInfo copy];
 }
 
@@ -149,6 +169,8 @@ static NSString* stringFromData(NSData* data) {
     NSNumber* persistent = theProperties[@"persistent"];
     NSString* name = theProperties[@"name"];
     NSNumber* bufferSize = theProperties[@"bufferSize"];
+    NSNumber* append = theProperties[@"append"];
+    NSString* destUri = theProperties[@"destUri"];
     
     if (persistent)
         _persistent = persistent;
@@ -162,6 +184,35 @@ static NSString* stringFromData(NSData* data) {
     if (bufferSize)
         _bufferSize = bufferSize;
     
+    if (append)
+        _append = append;
+    
+    if (destUri) {
+
+        [self resetDestUriFileHandle];
+       
+        if (destUri.length > 0) {
+            
+            NSString* filePath = [[NSURL URLWithString:destUri] path];
+            
+            if(![NSFileManager.defaultManager fileExistsAtPath:filePath]) {
+                [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
+            }
+            
+            _destUriFileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
+            
+            if (append.boolValue) {
+                [_destUriFileHandle seekToEndOfFile];
+            } 
+            
+            if (_destUriFileHandle) {
+                _destUri = destUri;
+            } else {
+                [_plugin fireReceiveErrorEventsWithSocketId:_socketId errorCode:-1000 message:@"Invalid destUri"];
+            }
+        }
+    }
+    
     // Set undefined properties to default value
     if (_persistent == nil)
         _persistent = [NSNumber numberWithBool:NO];
@@ -171,6 +222,9 @@ static NSString* stringFromData(NSData* data) {
     
     if (_bufferSize == nil)
         _bufferSize = [NSNumber numberWithUnsignedInteger:4096];
+    
+    if (_append == nil)
+        _append = [NSNumber numberWithBool:NO];
 }
 
 - (void)resumeReadIfNotReading
@@ -216,6 +270,15 @@ static NSString* stringFromData(NSData* data) {
     
     if ([_paused boolValue]) {
         [_pausedBuffers addObject:data];
+    } else if (_destUriFileHandle) {
+        [_destUriFileHandle writeData:data];
+        NSDictionary *info = @{
+            @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
+            @"destUri": _destUri,
+            @"bytesRead": [NSNumber numberWithUnsignedInteger:[data length]],
+        };
+        [_plugin fireReceiveEventsWithInfo:info waitReadyToRead:NO];
+        [self resumeReadIfNotReading];
     } else {
         [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
     }
@@ -241,7 +304,7 @@ static NSString* stringFromData(NSData* data) {
         _disconnectCallback = nil;
         callback();
     } else if (err) {
-        [_plugin fireReceiveErrorEventsWithSocketId:_socketId error:err];
+        [_plugin fireReceiveErrorEventsWithSocketId:_socketId errorCode:[err code] message:[err localizedDescription]];
     }
     
     [self resetSocket];
@@ -506,28 +569,37 @@ static NSString* stringFromData(NSData* data) {
 
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData
 {
-    assert(_receiveEventsCallbackId != nil);
-    
-    NSArray* info = @[
+    NSArray* multipart = @[
         @{@"socketId":[NSNumber numberWithUnsignedInteger:theSocketId]},
         theData,
     ];
-    
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:info];
+    [self fireReceiveEventsWithMultiPart:multipart waitReadyToRead:YES];
+}
+
+- (void)fireReceiveEventsWithInfo:(NSDictionary*)theInfo waitReadyToRead:(BOOL)waitReadyToRead
+{
+    [self fireReceiveEventsWithMultiPart:@[theInfo] waitReadyToRead:waitReadyToRead];
+}
+
+- (void)fireReceiveEventsWithMultiPart:(NSArray*)theMultiPart waitReadyToRead:(BOOL)waitReadyToRead
+{
+    assert(_receiveEventsCallbackId != nil);
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:theMultiPart];
     [result setKeepCallbackAsBool:YES];
-    
-    _pendingReceive++;
+    if (waitReadyToRead) {
+        _pendingReceive++;
+    }
     [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
 }
 
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId errorCode:(NSUInteger)theErrorCode message:(NSString*)theMessage
 {
     assert(_receiveEventsCallbackId != nil);
     
     NSDictionary* info = @{
         @"socketId": [NSNumber numberWithUnsignedInteger:theSocketId],
-        @"resultCode": [NSNumber numberWithUnsignedInteger:[theError code]],
-        @"message": [theError localizedDescription],
+        @"resultCode": [NSNumber numberWithUnsignedInteger:theErrorCode],
+        @"message": theMessage,
     };
     
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:info];
