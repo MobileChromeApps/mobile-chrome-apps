@@ -21,6 +21,42 @@
 
   <platform name="android">
     <source-file src="src/android/ChromeBluetooth.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/scan/compat/Utils.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanWakefulService.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanWakefulBroadcastReceiver.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanSettings.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanResult.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanRecord.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanFilter.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/ScanCallback.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/Objects.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/JbBluetoothLeScannerCompat.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/BluetoothUuid.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/BluetoothLeScannerCompatProvider.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/BluetoothLeScannerCompat.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/compat/LBluetoothLeScannerCompat.java" target-dir="src/org/uribeacon/scan/compat" />
+    <source-file src="src/android/scan/util/WeightedAverage.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/SystemClock.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/RegionResolver.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/RangingUtils.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/Logger.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/Clock.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/AssignedNumbers.java" target-dir="src/org/uribeacon/scan/util" />
+    <source-file src="src/android/scan/util/AdvertisingData.java" target-dir="src/org/uribeacon/scan/util" />
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+      <uses-permission android:name="android.permission.BLUETOOTH" />
+      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+      <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <service
+          android:name="org.uribeacon.scan.compat.ScanWakefulService"
+          android:exported="false" />
+      <receiver android:name="org.uribeacon.scan.compat.ScanWakefulBroadcastReceiver" />
+    </config-file>
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="ChromeBluetooth">
