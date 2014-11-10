@@ -129,11 +129,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       throws JSONException {
     final JSONObject properties = args.getJSONObject(0);
 
+    final int socketId = nextSocket++;
+
     // Use a background thread beacause TcpSocket constructor may perform IO operations
     cordova.getThreadPool().execute(new Runnable() {
         public void run() {
           try {
-            TcpSocket socket = new TcpSocket(nextSocket++, properties);
+            TcpSocket socket = new TcpSocket(socketId, properties);
             sockets.put(Integer.valueOf(socket.getSocketId()), socket);
             callbackContext.success(socket.getSocketId());
           } catch (SocketException e) {
@@ -980,9 +982,9 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       info.put("connected", channel.isConnected());
       info.put("name", name);
       info.put("paused", paused);
-      info.put("append", append);
 
       if (destUri != null) {
+        info.put("append", append);
         info.put("destUri", destUri.toString());
       }
 

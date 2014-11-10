@@ -368,7 +368,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
           });
         });
       });
-    });
+    }, 5000);
   });
 
 });
