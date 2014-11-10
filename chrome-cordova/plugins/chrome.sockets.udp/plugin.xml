@@ -35,7 +35,6 @@
   <platform name="ios">
     <dependency id="org.chromium.iossocketscommon" />
     <source-file src="src/ios/ChromeSocketsUdp.m" />
-    <header-file src="src/ios/ChromeSocketsUdp.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSocketsUdp">

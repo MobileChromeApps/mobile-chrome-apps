@@ -1,8 +1,7 @@
 // Copyright (c) 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-#import "ChromeSocketsTcpServer.h"
+#import <Cordova/CDVPlugin.h>
 #import "ChromeSocketsTcp.h"
 #import "GCDAsyncSocket.h"
 #import <sys/errno.h>
@@ -32,6 +31,29 @@ static NSString* stringFromData(NSData* data) {
 }
 #endif  // CHROME_SOCKETS_TCP_SERVER_VERBOSE_LOGGING
 
+#pragma mark ChromeSocketsTcpServer interface
+
+@interface ChromeSocketsTcpServer : CDVPlugin {
+    NSMutableDictionary* _sockets;
+    NSUInteger _nextSocketId;
+    NSString* _acceptEventsCallbackId;
+}
+
+- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
+- (void)create:(CDVInvokedUrlCommand*)command;
+- (void)update:(CDVInvokedUrlCommand*)command;
+- (void)setPaused:(CDVInvokedUrlCommand*)command;
+- (void)listen:(CDVInvokedUrlCommand*)command;
+- (void)disconnect:(CDVInvokedUrlCommand*)command;
+- (void)close:(CDVInvokedUrlCommand*)command;
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+- (void)getSockets:(CDVInvokedUrlCommand*)command;
+- (void)registerAcceptEvents:(CDVInvokedUrlCommand*)command;
+- (void)fireAcceptEventsWithSocketId:(NSUInteger)theSocketId clientSocket:(GCDAsyncSocket*)theClientSocket;
+- (void)fireAcceptErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
+
+@end
+
 #pragma mark ChromeSocketsTcpServerSocket interface
 
 @interface ChromeSocketsTcpServerSocket : NSObject {
@@ -47,16 +69,6 @@ static NSString* stringFromData(NSData* data) {
     GCDAsyncSocket* _socket;
     
     id _disconnectCallback;
-}
-
-@end
-
-#pragma mark ChromeSocketsTcpServer interface
-
-@interface ChromeSocketsTcpServer() {
-    NSMutableDictionary* _sockets;
-    NSUInteger _nextSocketId;
-    NSString* _acceptEventsCallbackId;
 }
 
 @end

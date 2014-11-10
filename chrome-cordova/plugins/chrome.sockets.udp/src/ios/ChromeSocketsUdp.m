@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSocketsUdp.h"
+#import <Cordova/CDVPlugin.h>
 #import "GCDAsyncUdpSocket.h"
 #import <arpa/inet.h>
 #import <ifaddrs.h>
@@ -33,6 +33,34 @@ static NSString* stringFromData(NSData* data) {
 }
 #endif  // CHROME_SOCKETS_UDP_VERBOSE_LOGGING
 
+#pragma mark ChromeSocketsUdp interface
+
+@interface ChromeSocketsUdp : CDVPlugin {
+    NSMutableDictionary* _sockets;
+    NSUInteger _nextSocketId;
+    NSString* _receiveEventsCallbackId;
+}
+
+- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
+- (void)create:(CDVInvokedUrlCommand*)command;
+- (void)update:(CDVInvokedUrlCommand*)command;
+- (void)setPaused:(CDVInvokedUrlCommand*)command;
+- (void)bind:(CDVInvokedUrlCommand*)command;
+- (void)send:(CDVInvokedUrlCommand*)command;
+- (void)close:(CDVInvokedUrlCommand*)command;
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+- (void)getSockets:(CDVInvokedUrlCommand*)command;
+- (void)joinGroup:(CDVInvokedUrlCommand*)command;
+- (void)leaveGroup:(CDVInvokedUrlCommand*)command;
+- (void)setMulticastTimeToLive:(CDVInvokedUrlCommand*)command;
+- (void)setMulticastLoopbackMode:(CDVInvokedUrlCommand*)command;
+- (void)getJoinedGroups:(CDVInvokedUrlCommand*)command;
+- (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
+- (void)closeSocketWithId:(NSNumber*)socketId callbackId:(NSString*)theCallbackId;
+- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
+@end
+
 #pragma mark ChromeSocketsUdpSocket interface
 
 @interface ChromeSocketsUdpSocket : NSObject {
@@ -53,19 +81,6 @@ static NSString* stringFromData(NSData* data) {
     
     NSMutableSet* _multicastGroups;
 }
-@end
-
-#pragma mark ChromeSocketsUdp interface
-
-@interface ChromeSocketsUdp() {
-    NSMutableDictionary* _sockets;
-    NSUInteger _nextSocketId;
-    NSString* _receiveEventsCallbackId;
-}
-
-- (void)closeSocketWithId:(NSNumber*)socketId callbackId:(NSString*)theCallbackId;
-- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;
-- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
 @end
 
 @implementation ChromeSocketsUdpSocket
