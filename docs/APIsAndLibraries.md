@@ -36,8 +36,13 @@ _Current as of July 2014_.
 * [pushMessaging](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.pushMessaging) - receive push messages from your server
     * Beta quality on Android and iOS.
 * [socket](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.socket) - send and receive data over the network using TCP and UDP
+    * Working on Android and iOS (as of Nov 2014).
+* [sockets.udp](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.sockets.udp)
+    * Working on Android and iOS (as of Nov 2014).
+* [sockets.tcp](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.sockets.tcp)
+    * Working on Android and iOS (as of Nov 2014).
+* [sockets.tcpServer](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.sockets.tcpServer)
     * Working on Android and iOS.
-    * New socket APIs (`chrome.socket.tcp`, `chrome.socket.udp`, `chrome.socket.tcpServer` not implemented)
 * [storage](https://github.com/MobileChromeApps/mobile-chrome-apps/tree/master/chrome-cordova/plugins/chrome.storage) - store and retrieve key-value data locally
     * Working on Android and iOS.
     * `chrome.storage.sync` storage does not sync, but works like `chrome.storage.local`.
@@ -66,7 +71,6 @@ _Current as of July 2014_.
     * Working on Android only.
 
 ### APIs Coming in the Near Term
-* chrome.sockets.tcp / udp / tcpServer
 * runtime.getPackageDirectoryEntry
 * mediaGalleries
 * Better notifications and alarms support
