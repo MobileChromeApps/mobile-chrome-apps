@@ -14,6 +14,7 @@
   <name>Chrome Apps Bluetooth API</name>
 
   <dependency id="org.chromium.common" />
+  <dependency id="android.support.v4" />
 
   <js-module src="bluetooth.js" name="bluetooth">
     <clobbers target="chrome.bluetooth" />
@@ -49,6 +50,7 @@
       <uses-permission android:name="android.permission.BLUETOOTH" />
       <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
       <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+      <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21" />
     </config-file>
 
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
