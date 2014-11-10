@@ -327,13 +327,14 @@ static NSString* stringFromData(NSData* data) {
         return;
     }
   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_sendCallbacks addObject:[^(BOOL success, NSError* error) {
         VERBOSE_LOG(@"ACK %@.%@ Write: %d", socketId, command.callbackId, success);
 
         if (success) {
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
         } else {
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription]]] callbackId:command.callbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription]]] callbackId:command.callbackId];
         }
     } copy]];
 
@@ -347,9 +348,10 @@ static NSString* stringFromData(NSData* data) {
     if (socket == nil)
         return;
   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     socket->_closeCallback = [^() {
         if (theCallbackId)
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
         
         [_sockets removeObjectForKey:socketId];
     } copy];
@@ -449,24 +451,25 @@ static NSString* stringFromData(NSData* data) {
     }
     
     VERBOSE_LOG(@"REQ %@.%@ setMulticastTimeToLive", socketId, command.callbackId);
-   
+  
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_socket performBlock:^{
         
         if ([socket->_socket isIPv4]) {
             unsigned char ttlCpy = [ttl intValue];
             if (setsockopt([socket->_socket socket4FD], IPPROTO_IP, IP_MULTICAST_TTL, &ttlCpy, sizeof(ttlCpy)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
         if ([socket->_socket isIPv6]) {
             int ttlCpy = [ttl intValue];
             if (setsockopt([socket->_socket socket6FD], IPPROTO_IPV6, IP_MULTICAST_TTL, &ttlCpy, sizeof(ttlCpy)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     }];
 }
 
@@ -483,24 +486,25 @@ static NSString* stringFromData(NSData* data) {
     }
 
     VERBOSE_LOG(@"REQ %@.%@ setMulticastLoopbackMode", socketId, command.callbackId);
-    
+   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_socket performBlock:^{
 
         if ([socket->_socket isIPv4]) {
             unsigned char loop = [enabled intValue];
             if (setsockopt([socket->_socket socketFD], IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
         if ([socket->_socket isIPv6]) {
             int loop = [enabled intValue];
             if (setsockopt([socket->_socket socket6FD], IPPROTO_IPV6, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     }];
 }
 

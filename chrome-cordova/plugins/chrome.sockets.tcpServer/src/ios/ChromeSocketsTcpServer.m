@@ -271,9 +271,10 @@ static NSString* stringFromData(NSData* data) {
     if (socket == nil)
         return;
     
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     socket->_disconnectCallback = [^(){
         if (theCallbackId)
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
         if (close)
             [_sockets removeObjectForKey:socketId];
     } copy];
