@@ -16,10 +16,27 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
   function receiveListener(info) {
     logger('Client Recv: success');
     logger(info);
-    var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
-    logger(message);
+    if (info.data) {
+      var message = String.fromCharCode.apply(null, new Uint8Array(info.data));
+      logger(message);
+    }
     chrome.sockets.tcp.disconnect(info.socketId);
     chrome.sockets.tcp.close(info.socketId);
+
+    if (info.destUri) {
+      window.resolveLocalFileSystemURL(info.destUri, function(fe) {
+        fe.file(function(file) {
+          var reader = new FileReader();
+          reader.onloadend = function(e) {
+            logger('Onload End');
+            logger(e);
+            logger('result is ' + this.result);
+          };
+
+          reader.readAsText(file);
+        });
+      }, logger);
+    }
   }
 
   function addReceiveListeners() {
@@ -81,13 +98,38 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
     return buf;
   }
 
-  function connectSecureAndSend(data) {
+  function redirectToFile(append) {
+    var hostname = 'httpbin.org';
+    var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+    var message = stringToArrayBuffer(requestString);
+    var properties = {
+      destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
+      append: append
+    };
+
+    logger(properties);
+
+    chrome.sockets.tcp.create(properties, function(createInfo) {
+      chrome.sockets.tcp.connect(createInfo.socketId, hostname, 80, function(result) {
+        if (result === 0) {
+          chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {
+            logger('send result: ' + result);
+          });
+        }
+      });
+    });
+  }
+
+  function connectSecureAndSend() {
+    var hostname = 'httpbin.org';
+    var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+    var message = stringToArrayBuffer(requestString);
+
     chrome.sockets.tcp.create(function(createInfo) {
       // Set paused to true to prevent read consume TLS handshake data, native
       // readling loop will not pause/abort pending read when set paused after a
       // connection has established.
       chrome.sockets.tcp.setPaused(createInfo.socketId, true, function() {
-        var hostname = 'www.httpbin.org';
         chrome.sockets.tcp.connect(createInfo.socketId, hostname, 443, function(result) {
           if (result === 0) {
             chrome.sockets.tcp.secure(createInfo.socketId, {tlsVersion: {min: 'ssl3', max: 'tls1.2'}}, function(result) {
@@ -96,9 +138,6 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
               }
 
               chrome.sockets.tcp.setPaused(createInfo.socketId, false, function() {
-                var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
-                var message = stringToArrayBuffer(requestString);
-
                 // Test secure send multiple times to ensure that buffer in Android is manipulated correctly.
                 for (var i = 0; i < 3; i++) {
                   (function(i) {
@@ -244,8 +283,16 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
       connectAndSend(arr.buffer);
     });
 
+    addButton('TCP: test redirect to file with append', function() {
+      redirectToFile(true);
+    });
+
+    addButton('TCP: test redirect to file without append', function() {
+      redirectToFile(false);
+    });
+
     addButton('TCP: connect & secure & send', function() {
-      connectSecureAndSend(arr.buffer);
+      connectSecureAndSend();
     });
 
     addButton('TCP: test startTLS', function() {

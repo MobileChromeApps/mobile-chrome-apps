@@ -256,6 +256,48 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
       });
     });
 
+    it('TCP file redirect', function(done) {
+      var hostname = 'httpbin.org';
+      var port = 80;
+      var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+      var request = new ArrayBuffer(requestString.length);
+      var reqView = new Uint8Array(request);
+      for (var i = 0, strLen = requestString.length; i < strLen; i++) {
+        reqView[i] = requestString.charCodeAt(i);
+      }
+      var properties = {
+        destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
+        append: false
+      };
+
+      var recvListener = function(info) {
+        expect(info.socketId).toEqual(clientSockets[0].socketId);
+        expect(info.destUri).toBeDefined();
+        window.resolveLocalFileSystemURL(info.destUri, function(fe) {
+          fe.file(function(file) {
+            var reader = new FileReader();
+            reader.onloadend = function(fileEntry) {
+              expect(this.result.byteLength).toEqual(info.bytesRead);
+              chrome.sockets.tcp.onReceive.removeListener(recvListener);
+              done();
+            };
+            reader.readAsArrayBuffer(file);
+          });
+          }, null);
+      };
+      chrome.sockets.tcp.onReceive.addListener(recvListener);
+
+      chrome.sockets.tcp.update(clientSockets[0].socketId, properties, function() {
+        chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
+          expect(connectResult).toEqual(0);
+          chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
+            expect(sendResult.resultCode).toEqual(0);
+            expect(sendResult.bytesSent).toEqual(requestString.length);
+          });
+        });
+      });
+    });
+
     it('TCP secure get https website', function(done) {
       var hostname = 'httpbin.org';
       var port = 443;
@@ -326,7 +368,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
           });
         });
       });
-    });
+    }, 5000);
   });
 
 });

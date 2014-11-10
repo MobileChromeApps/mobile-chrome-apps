@@ -9,35 +9,6 @@
 
 @interface ChromeSocketsTcp : CDVPlugin
 
-- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
-
-- (void)create:(CDVInvokedUrlCommand*)command;
-
-- (void)update:(CDVInvokedUrlCommand*)command;
-
-- (void)setPaused:(CDVInvokedUrlCommand*)command;
-
-// - (void)setKeepAlive:(CDVInvokedUrlCommand*)command;
-// - (void)setNoDelay:(CDVInvokedUrlCommand*)command;
-
-- (void)connect:(CDVInvokedUrlCommand*)command;
-
-- (void)disconnect:(CDVInvokedUrlCommand*)command;
-
-- (void)secure:(CDVInvokedUrlCommand*)command;
-
-- (void)send:(CDVInvokedUrlCommand*)command;
-
-- (void)close:(CDVInvokedUrlCommand*)command;
-
-- (void)getInfo:(CDVInvokedUrlCommand*)command;
-
-- (void)getSockets:(CDVInvokedUrlCommand*)command;
-
-- (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
-
 - (NSUInteger)registerAcceptedSocket:(GCDAsyncSocket*)theSocket;
-
-- (void)readyToRead:(CDVInvokedUrlCommand*)command;
 
 @end
