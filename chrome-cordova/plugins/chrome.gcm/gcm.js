@@ -13,6 +13,9 @@ var GCM_REGKEY = GCM_STORAGE_PREFIX + 'RegID';
 
 var Event = require('org.chromium.common.events');
 var exec = require('cordova/exec');
+var channel = require('cordova/channel');
+var helpers = require('org.chromium.common.helpers');
+var eventsToFireOnStartUp = [];
 
 exports.MAX_MESSAGE_SIZE = 4096;
 
@@ -56,7 +59,7 @@ exports.register = function(senderids, callback) {
     chrome.runtime.lastError = '[chrome.gcm] Registration failed: ' + msg;
     callback();
   };
-  if (!Array.isArray(senderids) || typeof senderids[0] !== "string" || senderids[0].length == 0) {
+  if (!Array.isArray(senderids) || typeof senderids[0] !== "string" || senderids[0].length === 0) {
     throw(new Error("Invalid senderids.  Must be an array with 1 non empty string."));
   }
   getRegistrationID(function(regid) {
@@ -97,14 +100,51 @@ function getRegistrationID(callback) {
   });
 }
 
-function fireQueuedMessages() {
-  exec(undefined, undefined, 'ChromeGcm', 'fireQueuedMessages', []);
-}
-
 exports.onMessage = new Event('onMessage');
 exports.onMessagesDeleted = new Event('onMessagesDeleted');
 exports.onSendError = new Event('onSendError');
 
+function firePendingEvents() {
+    var msg;
+    while (msg = eventsToFireOnStartUp.shift()) {
+        processMessage(msg);
+    }
+    eventsToFireOnStartUp = null;
+}
+
+function onMessageFromNative(msg) {
+    if (eventsToFireOnStartUp) {
+        eventsToFireOnStartUp.push(msg);
+    } else {
+        processMessage(msg);
+    }
+}
+
+function processMessage(msg) {
+    var action = msg.action;
+    if (action == 'message') {
+        exports.onMessage.fire(msg.message);
+    } else if (action == 'deleted') {
+        exports.onMessagesDeleted.fire();
+    } else if (action == 'senderror') {
+        exports.onSendError.fire(msg.error);
+    } else {
+        throw new Error('Unknown gcm action' + msg.action);
+    }
+}
+
 if (platform.id == 'android') {
-  require('org.chromium.common.helpers').runAtStartUp(fireQueuedMessages);
+  channel.createSticky('onChromeGcmReady');
+  channel.waitForInitialization('onChromeGcmReady');
+  channel.onCordovaReady.subscribe(function() {
+    exec(onMessageFromNative, undefined, 'ChromeGcm', 'messageChannel', []);
+    helpers.runAtStartUp(function() {
+        if (eventsToFireOnStartUp.length) {
+            helpers.queueLifeCycleEvent(firePendingEvents);
+        } else {
+            eventsToFireOnStartUp = null;
+        }
+    });
+    channel.initializationComplete('onChromeGcmReady');
+  });
 }

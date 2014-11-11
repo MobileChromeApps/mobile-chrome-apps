@@ -40,15 +40,22 @@ public class GcmIntentService extends IntentService {
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
         String messageType = gcm.getMessageType(intent);
 
-        ChromeGcm.startApp(this);
+        //ChromeGcm.startApp(this);
+        String action = null;
         if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-            ChromeGcm.handleSendError( payloadString);
+            action = ChromeGcm.EVENT_ACTION_SEND_ERROR;
+            //ChromeGcm.handleSendError( payloadString);
         } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
-            ChromeGcm.handleDeletedMessages( payloadString);
+            action = ChromeGcm.EVENT_ACTION_DELETED;
+            //ChromeGcm.handleDeletedMessages( payloadString);
         } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-            ChromeGcm.handleRxMessage( payloadString);
+            action = ChromeGcm.EVENT_ACTION_MESSAGE;
+            //ChromeGcm.handleRxMessage( payloadString);
         } else {
 //        	Log.w(LOG_TAG, "got msgtype: "+messageType);
+        }
+        if (action != null) {
+            ChromeGcm.handleGcmAction(getBaseContext(), intent, action, payloadString);
         }
         GcmReceiver.completeWakefulIntent(intent);
     }

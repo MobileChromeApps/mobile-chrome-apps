@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import sys, json, random, string
+import sys, json, random, string, threading
 import xmpp
 
 ################################################################################
@@ -73,12 +73,22 @@ def handleMessageInApplicationSpecificManner(msg):
   payload = msg['data']
   # payload['type'] is not a requirement, its just a convention I chose to use
 
+  def handleDelayMessage(msg, payload):
+    # Reply with same message, after a delay
+    delay = 30.0
+    t = threading.Timer(
+            delay,
+            sendMessage,
+            [msg['from'], { 'type': 'pong', 'message': payload['message'] }])
+    t.start()
+
   def handlePingMessage(msg, payload):
     # Reply with same message
     sendMessage(msg['from'], { 'type': 'pong', 'message': payload['message'] })
 
   handlers = {
-    'ping': handlePingMessage
+    'ping': handlePingMessage,
+    'delay': handleDelayMessage
   }
 
   if not payload.has_key('type') or not handlers.has_key(payload['type']):
