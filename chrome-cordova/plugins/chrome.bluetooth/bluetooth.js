@@ -26,19 +26,11 @@ exports.getDevices = function(callback) {
 };
 
 exports.startDiscovery = function(callback) {
-    if (platform.id == 'android') {
-        exec(callback, fail(callback), 'ChromeBluetooth', 'startDiscovery', []);
-    } else {
-        console.warn('chrome.bluetooth.startDiscovery not implemented yet');
-    }
+    exec(callback, fail(callback), 'ChromeBluetooth', 'startDiscovery', []);
 };
 
 exports.stopDiscovery = function(callback) {
-    if (platform.id == 'android') {
-        exec(callback, fail(callback), 'ChromeBluetooth', 'stopDiscovery', []);
-    } else {
-        console.warn('chrome.bluetooth.stopDiscovery not implemented yet');
-    }
+    exec(callback, fail(callback), 'ChromeBluetooth', 'stopDiscovery', []);
 };
 
 exports.onAdapterStateChanged = new Event('onAdapterStateChanged');
@@ -47,25 +39,23 @@ exports.onDeviceChanged = new Event('onDeviceChanged');
 exports.onDeviceRemoved = new Event('onDeviceRemoved');
 
 function registerEvents() {
-    var onAdapterStateChangedCallback = function(adapterState) {
-        exports.onAdapterStateChanged.fire(adapterState);
+    var onEventsCallback = function(eventType, info) {
+        switch (eventType) {
+        case 'onAdapterStateChanged':
+            exports.onAdapterStateChanged.fire(info);
+            break;
+        case 'onDeviceAdded':
+            exports.onDeviceAdded.fire(info);
+            break;
+        case 'onDeviceChanged':
+            exports.onDeviceChanged.fire(info);
+            break;
+        case 'onDeviceRemoved':
+            exports.onDeviceRemoved.fire(info);
+            break;
+        }
     };
-    exec(onAdapterStateChangedCallback, null, 'ChromeBluetooth', 'registerAdapterStateChangedEvent', []);
-
-    var onDeviceAddedCallback = function(deviceInfo) {
-        exports.onDeviceAdded.fire(deviceInfo);
-    };
-    exec(onDeviceAddedCallback, null, 'ChromeBluetooth', 'registerDeviceAddedEvent', []);
-
-    var onDeviceChangedCallback = function(deviceInfo) {
-        exports.onDeviceChanged.fire(deviceInfo);
-    };
-    exec(onDeviceChangedCallback, null, 'ChromeBluetooth', 'registerDeviceChangedEvent', []);
-
-    var onDeviceRemovedCallback = function(deviceInfo) {
-        exports.onDeviceRemoved.fire(deviceInfo);
-    };
-    exec(onDeviceRemovedCallback, null, 'ChromeBluetooth', 'registerDeviceRemovedEvent', []);
+    exec(onEventsCallback, null, 'ChromeBluetooth', 'registerBluetoothEvents', []);
 }
 
 require('org.chromium.common.helpers').runAtStartUp(registerEvents);
