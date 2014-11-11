@@ -40,9 +40,8 @@ function getCcaPlugins() {
   // The list of plugins is constructed from all plugin IDs in:
   // pluginMaps.DEFAULT_PLUGINS (Array)
   // pluginMaps.*_MAP (objects)
-
-  var ccaPlugins = __.map(pluginMaps, function(key, val) {
-    return /_MAP/.test(key) ? val : [];
+  var ccaPlugins = __.map(pluginMaps, function(val, key) {
+    return /_MAP/.test(key) ? __.values(val) : [];
   });
   ccaPlugins.push(pluginMaps.DEFAULT_PLUGINS);
   ccaPlugins = __.uniq(__.flatten(ccaPlugins));
