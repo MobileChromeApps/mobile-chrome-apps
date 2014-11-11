@@ -62,16 +62,10 @@
     NSMutableDictionary* _addressUUIDMap;
     NSMutableSet* _activePeripherals;
     
-    NSString* _adapterStateChangedCallbackId;
-    NSString* _deviceAddedCallbackId;
-    NSString* _deviceChangedCallbackId;
-    NSString* _deviceRemovedCallbackId;
-    NSString* _serviceAddedCallbackId;
-    NSString* _serviceChangedCallbackId;
-    NSString* _serviceRemovedCallbackId;
-    NSString* _characteristicValueChangedCallbackId;
-    NSString* _descriptorValueChangedCallbackId;
-    
+    NSString* _bluetoothCallbackId;
+    NSString* _bluetoothLowEnergyCallbackId;
+   
+    BOOL _isScanning;
     NSTimer* _removedDeviceTimer;
 }
 #pragma mark chrome.bluetooth interface
@@ -79,16 +73,9 @@
 - (void)getAdapterState:(CDVInvokedUrlCommand*)command;
 - (void)getDevice:(CDVInvokedUrlCommand*)command;
 - (void)getDevices:(CDVInvokedUrlCommand*)command;
-
-// startDiscovery and stopDiscovery are not implemented because on Chrome OS, bluetooth low engergy
-// devices can be discoveried without calling these API.
-// - (void)startDiscovery:(CDVInvokedUrlCommand*)command;
-// - (void)stopDiscovery:(CDVInvokedUrlCommand*)command;
-
-- (void)registerAdapterStateChangedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerDeviceAddedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerDeviceChangedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerDeviceRemovedEvent:(CDVInvokedUrlCommand*)command;
+- (void)startDiscovery:(CDVInvokedUrlCommand*)command;
+- (void)stopDiscovery:(CDVInvokedUrlCommand*)command;
+- (void)registerBluetoothEvents:(CDVInvokedUrlCommand*)command;
 
 #pragma mark chrome.bluetoothLowEnergy interface
 // chrome.bluetooth and chrome.bluetoothLowEnergy uses same file because connect, and disconnect
@@ -109,12 +96,7 @@
 - (void)stopCharacteristicNotifications:(CDVInvokedUrlCommand*)command;
 - (void)readDescriptorValue:(CDVInvokedUrlCommand*)command;
 - (void)writeDescriptorValue:(CDVInvokedUrlCommand*)command;
-- (void)registerServiceAddedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerServiceChangedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerServiceRemovedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerCharacteristicValueChangedEvent:(CDVInvokedUrlCommand*)command;
-- (void)registerDescriptorValueChangedEvent:(CDVInvokedUrlCommand*)command;
-
+- (void)registerBluetoothLowEnergyEvents:(CDVInvokedUrlCommand*)command;
 
 - (void)sendDeviceChangedEvent:(NSDictionary*)deviceInfo;
 - (void)sendServiceAddedEvent:(NSDictionary*)serviceInfo;
@@ -647,6 +629,7 @@
         _peripherals = [NSMutableDictionary dictionary];
         _addressUUIDMap = [NSMutableDictionary dictionary];
         _activePeripherals = [NSMutableSet set];
+        _isScanning = NO;
     }
     return self;
 }
@@ -673,7 +656,7 @@
         @"name": [[UIDevice currentDevice] name],
         // getifaddrs() returns 02:00:00:00:00:00 since iOS7
         @"address": @"02:00:00:00:00:00",
-        @"discovering": [NSNumber numberWithBool:NO],
+        @"discovering": [NSNumber numberWithBool:_isScanning],
         @"available": [NSNumber numberWithBool:isPoweredOn],
         @"powered": [NSNumber numberWithBool:isPoweredOn],
     };
@@ -710,31 +693,67 @@
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:allDeviceInfo] callbackId:command.callbackId];
 }
 
-- (void)registerAdapterStateChangedEvent:(CDVInvokedUrlCommand*)command
+- (void)startDiscovery:(CDVInvokedUrlCommand *)command
 {
-    _adapterStateChangedCallbackId = command.callbackId;
+    if (!_isScanning) {
+        [_centralManager scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
+        [_removedDeviceTimer invalidate];
+        _removedDeviceTimer = [NSTimer scheduledTimerWithTimeInterval:REMOVED_DEVICE_CHECKING_INTERVAL target:self selector:@selector(checkRemovedDevice:) userInfo:nil repeats:YES];
+        _isScanning = YES;
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth adapter is scanning"] callbackId:command.callbackId];
+    }
 }
 
-- (void)registerDeviceAddedEvent:(CDVInvokedUrlCommand*)command
+- (void)stopDiscovery:(CDVInvokedUrlCommand *)command
 {
-    _deviceAddedCallbackId = command.callbackId;
+    if (_isScanning) {
+        [_removedDeviceTimer invalidate];
+        [_centralManager stopScan];
+        [_activePeripherals removeAllObjects];
+        _isScanning = NO;
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    } else {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth adapter is not scanning"] callbackId:command.callbackId];
+    }
+}
+
+- (void)registerBluetoothEvents:(CDVInvokedUrlCommand *)command
+{
+    _bluetoothCallbackId = command.callbackId;
+}
+
+- (void)sendAdapterStateChangedEvent:(NSDictionary*)adapterStateInfo
+{
+    NSArray* eventResult = @[@"onAdapterStateChanged", adapterStateInfo];
+    CDVPluginResult* adapterStateChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
+    [adapterStateChangedResult setKeepCallbackAsBool:YES];
+    [self.commandDelegate sendPluginResult:adapterStateChangedResult callbackId:_bluetoothCallbackId];
+}
+
+- (void)sendDeviceAddedEvent:(NSDictionary*)deviceInfo
+{
+    NSArray* eventResult = @[@"onDeviceAdded", deviceInfo];
+    CDVPluginResult* deviceAddedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
+    [deviceAddedResult setKeepCallbackAsBool:YES];
+    [self.commandDelegate sendPluginResult:deviceAddedResult callbackId:_bluetoothCallbackId];
 }
 
 - (void)sendDeviceChangedEvent:(NSDictionary*)deviceInfo
 {
-    CDVPluginResult* deviceChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:deviceInfo];
+    NSArray* eventResult = @[@"onDeviceChanged", deviceInfo];
+    CDVPluginResult* deviceChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
     [deviceChangedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:deviceChangedResult callbackId:_deviceChangedCallbackId];
+    [self.commandDelegate sendPluginResult:deviceChangedResult callbackId:_bluetoothCallbackId];
 }
 
-- (void)registerDeviceChangedEvent:(CDVInvokedUrlCommand*)command
+- (void)sendDeviceRemovedEvent:(NSDictionary*)deviceInfo
 {
-    _deviceChangedCallbackId = command.callbackId;
-}
-
-- (void)registerDeviceRemovedEvent:(CDVInvokedUrlCommand*)command
-{
-    _deviceRemovedCallbackId = command.callbackId;
+    NSArray* eventResult = @[@"onDeviceRemoved", deviceInfo];
+    CDVPluginResult* deviceRemovedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
+    [deviceRemovedResult setKeepCallbackAsBool:YES];
+    [self.commandDelegate sendPluginResult:deviceRemovedResult callbackId:_bluetoothCallbackId];
 }
 
 // There is no remove device events on iOS. This method checks whether some devices did not advertise
@@ -750,9 +769,7 @@
     
     for (NSString* deviceAddr in removedDeviceAddrs) {
         ChromeBluetoothPeripheral* peripheral = _peripherals[deviceAddr];
-        CDVPluginResult* deviceRemovedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[peripheral getDeviceInfo]];
-        [deviceRemovedResult setKeepCallbackAsBool:YES];
-        [self.commandDelegate sendPluginResult:deviceRemovedResult callbackId:_deviceRemovedCallbackId];
+        [self sendDeviceRemovedEvent:[peripheral getDeviceInfo]];
         [peripheral cleanup];
         [_addressUUIDMap removeObjectForKey:[peripheral->_peripheral identifier]];
         [_peripherals removeObjectForKey:deviceAddr];
@@ -772,23 +789,13 @@
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    CDVPluginResult* adapterStateChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[self getAdapterStateInfo]];
-    [adapterStateChangedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:adapterStateChangedResult callbackId:_adapterStateChangedCallbackId];
+    [self sendAdapterStateChangedEvent:[self getAdapterStateInfo]];
     
-    if (_centralManager.state == CBCentralManagerStatePoweredOn) {
-        [_centralManager scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
-        [_removedDeviceTimer invalidate];
-        _removedDeviceTimer = [NSTimer scheduledTimerWithTimeInterval:REMOVED_DEVICE_CHECKING_INTERVAL target:self selector:@selector(checkRemovedDevice:) userInfo:nil repeats:YES];
-    } else {
-        [_removedDeviceTimer invalidate];
-        
-        [_centralManager stopScan];
-        [_activePeripherals removeAllObjects];
+    if (_centralManager.state != CBCentralManagerStatePoweredOn) {
         for (NSUUID* uuid in _peripherals) {
             [_peripherals[uuid] cleanup];
         }
-        [_peripherals removeAllObjects];
+        [_peripherals removeAllObjects];       
     }
 }
 
@@ -807,9 +814,8 @@
     
     _addressUUIDMap[[chromePeripheral peripheralAddress]] = peripheral.identifier;
     _peripherals[uuid] = chromePeripheral;
-    CDVPluginResult* deviceAddedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[chromePeripheral getDeviceInfo]];
-    [deviceAddedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:deviceAddedResult callbackId:_deviceAddedCallbackId];
+    
+    [self sendDeviceAddedEvent:[chromePeripheral getDeviceInfo]];
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
@@ -1249,64 +1255,49 @@
     }
 }
 
-- (void)registerServiceAddedEvent:(CDVInvokedUrlCommand*)command
+- (void)registerBluetoothLowEnergyEvents:(CDVInvokedUrlCommand *)command
 {
-    _serviceAddedCallbackId = command.callbackId;
+    _bluetoothLowEnergyCallbackId = command.callbackId;
 }
 
 - (void)sendServiceAddedEvent:(NSDictionary*)serviceInfo
 {
-    CDVPluginResult* serviceAddedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:serviceInfo];
+    NSArray* eventResult = @[@"onServiceAdded", serviceInfo];
+    CDVPluginResult* serviceAddedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
     [serviceAddedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:serviceAddedResult callbackId:_serviceAddedCallbackId];
-}
-
-- (void)registerServiceChangedEvent:(CDVInvokedUrlCommand*)command
-{
-    _serviceChangedCallbackId = command.callbackId;
+    [self.commandDelegate sendPluginResult:serviceAddedResult callbackId:_bluetoothLowEnergyCallbackId];
 }
 
 - (void)sendServiceChangedEvent:(NSDictionary*)serviceInfo
 {
-    CDVPluginResult* serviceChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:serviceInfo];
+    NSArray* eventResult = @[@"onServiceChanged", serviceInfo];
+    CDVPluginResult* serviceChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
     [serviceChangedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:serviceChangedResult callbackId:_serviceChangedCallbackId];
-}
-
-- (void)registerServiceRemovedEvent:(CDVInvokedUrlCommand*)command
-{
-    _serviceRemovedCallbackId = command.callbackId;
+    [self.commandDelegate sendPluginResult:serviceChangedResult callbackId:_bluetoothLowEnergyCallbackId];
 }
 
 - (void)sendServiceRemovedEvent:(NSDictionary*)serviceInfo
 {
-    CDVPluginResult* serviceRemovedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:serviceInfo];
+    NSArray* eventResult = @[@"onServiceRemoved", serviceInfo];
+    CDVPluginResult* serviceRemovedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
     [serviceRemovedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:serviceRemovedResult callbackId:_serviceRemovedCallbackId];
-}
-
-- (void)registerCharacteristicValueChangedEvent:(CDVInvokedUrlCommand*)command
-{
-    _characteristicValueChangedCallbackId = command.callbackId;
+    [self.commandDelegate sendPluginResult:serviceRemovedResult callbackId:_bluetoothLowEnergyCallbackId];
 }
 
 - (void)sendCharacteristicValueChangedEvent:(NSArray*)characteristicInfo
 {
-    CDVPluginResult* characteristicValueChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:characteristicInfo];
+    NSArray* eventResult = [@[@"onCharacteristicValueChanged"] arrayByAddingObjectsFromArray:characteristicInfo];
+    CDVPluginResult* characteristicValueChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:eventResult];
     [characteristicValueChangedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:characteristicValueChangedResult callbackId:_characteristicValueChangedCallbackId];
-}
-
-- (void)registerDescriptorValueChangedEvent:(CDVInvokedUrlCommand*)command
-{
-    _descriptorValueChangedCallbackId = command.callbackId;
+    [self.commandDelegate sendPluginResult:characteristicValueChangedResult callbackId:_bluetoothLowEnergyCallbackId];
 }
 
 - (void)sendDescriptorValueChangedEvent:(NSArray*)descriptorInfo
 {
-    CDVPluginResult* descriptorValueChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:descriptorInfo];
+    NSArray* evnetResult = [@[@"onDescriptorValueChanged"] arrayByAddingObjectsFromArray:descriptorInfo];
+    CDVPluginResult* descriptorValueChangedResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsMultipart:evnetResult];
     [descriptorValueChangedResult setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:descriptorValueChangedResult callbackId:_descriptorValueChangedCallbackId];
+    [self.commandDelegate sendPluginResult:descriptorValueChangedResult callbackId:_bluetoothLowEnergyCallbackId];
 }
 
 @end

@@ -125,44 +125,39 @@ exports.onCharacteristicValueChanged = new Event('onCharacteristicValueChanged')
 exports.onDescriptorValueChanged = new Event('onDescriptorValueChanged');
 
 function registerEvents() {
-
-    var onServiceAddedCallback = function(service) {
-        exports.onServiceAdded.fire(service);
+    var onEventsCallback = function(eventType) {
+        switch (eventType) {
+        case 'onServiceAdded':
+            exports.onServiceAdded.fire(arguments[1]);
+            break;
+        case 'onServiceChanged':
+            exports.onServiceChanged.fire(arguments[1]);
+            break;
+        case 'onServiceRemoved':
+            exports.onServiceChanged.fire(arguments[1]);
+            break;
+        case 'onCharacteristicValueChanged':
+            var info = {
+                uuid: arguments[1],
+                service: arguments[2],
+                properties: arguments[3],
+                instanceId: arguments[4],
+                value: arguments[5]
+            };
+            exports.onCharacteristicValueChanged.fire(info);
+            break;
+        case 'onDescriptorValueChanged':
+            var info = {
+                uuid: arguments[1],
+                characteristic: arguments[2],
+                instanceId: arguments[3],
+                value:arguments[4]
+            };
+            exports.onDescriptorValueChanged.fire(info);
+            break;
+        }
     };
-    exec(onServiceAddedCallback, null, 'ChromeBluetooth', 'registerServiceAddedEvent', []);
-
-    var onServiceChangedCallback = function(service) {
-        exports.onServiceChanged.fire(service);
-    };
-    exec(onServiceChangedCallback, null, 'ChromeBluetooth', 'registerServiceChangedEvent', []);
-
-    var onServiceRemovedCallback = function(service) {
-        exports.onServiceRemoved.fire(service);
-    };
-    exec(onServiceRemovedCallback, null, 'ChromeBluetooth', 'registerServiceRemovedEvent', []);
-
-    var onCharacteristicValueChangedCallback = function(uuid, service, properties, instanceId, value) {
-        var info = {
-            uuid: uuid,
-            service: service,
-            properties: properties,
-            instanceId: instanceId,
-            value: value
-        };
-        exports.onCharacteristicValueChanged.fire(info);
-    };
-    exec(onCharacteristicValueChangedCallback, null, 'ChromeBluetooth', 'registerCharacteristicValueChangedEvent', []);
-
-    var onDescriptorValueChangedCallback = function(uuid, characteristic, instanceId, value) {
-        var info = {
-            uuid: uuid,
-            characteristic: characteristic,
-            instanceId: instanceId,
-            value: value
-        };
-        exports.onDescriptorValueChanged.fire(info);
-    };
-    exec(onDescriptorValueChangedCallback, null, 'ChromeBluetooth', 'registerDescriptorValueChangedEvent', []);
+    exec(onEventsCallback, null, 'ChromeBluetooth', 'registerBluetoothLowEnergyEvents', []);
 }
 
 require('org.chromium.common.helpers').runAtStartUp(registerEvents);
