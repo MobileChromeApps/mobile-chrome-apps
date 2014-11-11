@@ -67,13 +67,10 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
   }
 
   var ver = manifest.version || '0.0.1';
-  if (!/^\d+(\.\d+(\.\d+(-.*)?)?)?$/.exec(ver)) {
-    throw new Error('Invalid version: "' + ver + '" Must contain at most 3 numbers separated by periods.');
+  if (!/^\d+(\.\d+){0,3}$/.test(ver)) {
+    throw new Error('Invalid version: "' + ver + '" Must contain at most 4 numbers separated by periods.');
   }
-  // Work-around for soon-to-be-fixed bug in cordova-lib (fix is in 4.0.1-dev)
-  while (ver.split('.').length < 3) {
-    ver += '.0';
-  }
+
   widget.setAttribute('version', ver);
   widget.setAttribute('id', manifest.packageId || 'com.your.company.HelloWorld');
   setOrDeleteAttribute(widget, 'android-versionCode', manifest.versionCode);
