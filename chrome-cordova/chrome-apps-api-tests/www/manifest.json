@@ -21,6 +21,7 @@
         "tests/manual/manual.chrome.bluetoothSocket.js",
         "tests/manual/manual.chrome.embed.js",
         "tests/manual/manual.chrome.fileSystem.js",
+        "tests/manual/manual.chrome.gcm.js",
         "tests/manual/manual.chrome.identity.js",
         "tests/manual/manual.chrome.idle.js",
         "tests/manual/manual.chrome.notifications.js",
