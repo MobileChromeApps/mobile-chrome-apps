@@ -13,10 +13,8 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -25,26 +23,20 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChromeGcm extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeGcm";
-    private static final String PAYLOAD_LABEL = "payload";
     // TODO: Make these private when all logic moved into this class
     public static final String EVENT_ACTION_DELETED = "deleted";
     public static final String EVENT_ACTION_MESSAGE = "message";
     public static final String EVENT_ACTION_SEND_ERROR = "send_error";
 
-    private static CordovaWebView webView;
-    private static boolean safeToFireMessages = false;
     private static ChromeGcm pluginInstance;
     private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
-    private ExecutorService executorService;
 
     AtomicInteger msgId = new AtomicInteger();
     GoogleCloudMessaging gcm;
-    private static Context context;
     private CallbackContext messageChannel;
 
     private static class EventInfo {
@@ -66,22 +58,11 @@ public class ChromeGcm extends CordovaPlugin {
         } else {
             pendingEvents.add(new EventInfo(action, null, payload));
             if (pluginInstance == null) {
-                startApp(context);
+                BackgroundActivity.launchBackground(context);
             }
         }
     }
 
-    @Override
-    public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
-        safeToFireMessages = false;
-        super.initialize(cordova, webView);
-        ChromeGcm.webView = webView;
-        executorService = cordova.getThreadPool();
-        if (cordova.getActivity().getIntent().hasExtra(PAYLOAD_LABEL)) {
-            cordova.getActivity().moveTaskToBack(true);
-        }
-        context = cordova.getActivity().getApplicationContext();
-    }
     @Override
     public void pluginInitialize() {
         pluginInstance = this;
@@ -114,20 +95,6 @@ public class ChromeGcm extends CordovaPlugin {
             return true;
         }
         return false;
-    }
-
-    static public void startApp(Context context) {
-        if (webView == null) {
-            try {
-                String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
-                Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
-                activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                activityIntent.putExtra(PAYLOAD_LABEL, "dummy");
-                context.startActivity(activityIntent);
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Failed to make startActivity intent: " + e);
-            }
-        }
     }
 
     private void sendGCMEvent(String action, String payloadContent) {
@@ -174,7 +141,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     private void unregister(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -192,7 +159,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     private void sendMessage(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -220,7 +187,7 @@ public class ChromeGcm extends CordovaPlugin {
     }
 
     private void getRegistrationId(final CordovaArgs args, final CallbackContext callbackContext) {
-        executorService.execute(new Runnable() {
+        cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
