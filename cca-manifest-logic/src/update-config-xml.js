@@ -42,6 +42,30 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     }
   }
 
+  // Find a <preference name="name" value=...> tag
+  // If multiple exist, return the last one, if none - undefined.
+  function getPreference(name) {
+    var prefs = widget.getElementsByTagName('preference');
+    var pref;
+    for (var i = 0; i < prefs.length; i++) {
+      if (prefs[i].getAttribute('name') == name) {
+        pref = prefs[i];
+      }
+    }
+    return pref;
+  }
+
+  function setOrCreatePreference(name, value) {
+    var pref = getPreference(name);
+    if (!pref) {
+      pref = configXmlDom.createElement('preference');
+      pref.setAttribute('name', name);
+      widget.appendChild(pref);
+    }
+    pref.setAttribute('value', value);
+    return pref;
+  }
+
   var ver = manifest.version || '0.0.1';
   if (!/^\d+(\.\d+(\.\d+(-.*)?)?)?$/.exec(ver)) {
     throw new Error('Invalid version: "' + ver + '" Must contain at most 3 numbers separated by periods.');
@@ -59,6 +83,14 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
   getOrCreateRootNode('description').textContent = manifest.description || 'Plain text description of this app';
   getOrCreateRootNode('author').textContent = manifest.author || 'Author Name <a@b.com>';
   getOrCreateRootNode('content').setAttribute('src', 'plugins/org.chromium.bootstrap/chromeapp.html');
+
+  // Set minSdkVersion and targetSdkVersion, corodva-lib copies them to AndoridManifest.xml
+  // Default minSdkVersion is 14 for Android 4.0 (ICS)
+  var minSdkVersion = manifest.minSdkVersion || '14';
+  setOrCreatePreference('android-minSdkVersion', minSdkVersion);
+  if (manifest.targetSdkVersion) {
+    setOrCreatePreference('android-targetSdkVersion', manifest.targetSdkVersion);
+  }
 
   var access;
   while ((access = $('access'))) {
