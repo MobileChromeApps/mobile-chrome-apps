@@ -29,7 +29,7 @@ registerAutoTests('chrome.app.window', function() {
   };
 
   beforeEach(function(done) {
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
     done();
   });
 

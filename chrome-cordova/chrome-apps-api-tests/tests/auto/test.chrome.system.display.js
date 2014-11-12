@@ -43,7 +43,7 @@ registerAutoTests('chrome.system.display', function() {
   }
   
   beforeEach(function(done) {
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
     done();
   });
   

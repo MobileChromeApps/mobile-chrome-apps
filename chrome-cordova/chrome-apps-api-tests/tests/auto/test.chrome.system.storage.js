@@ -42,7 +42,7 @@ registerAutoTests('chrome.system.storage', function() {
   };
 
   beforeEach(function(done) {
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
     done();
   });
 

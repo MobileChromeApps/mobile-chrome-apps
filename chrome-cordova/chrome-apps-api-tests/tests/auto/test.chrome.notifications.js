@@ -74,7 +74,7 @@ registerAutoTests("chrome.notifications", function() {
       ids = [ 'id0', 'id1' ];
       options = {'type':'basic', 'iconUrl':'assets/icon-128x128.png', 'title':'Notification Title',
                  'message':'Notification Message' };
-      addMatchers(customMatchers);
+      jasmine.addMatchers(customMatchers);
       done();
     });
 

@@ -101,7 +101,7 @@ registerAutoTests("chrome.alarms", function() {
    describe('testing alarms', function() {
 
     beforeEach(function() {
-      addMatchers(customMatchers);
+      jasmine.addMatchers(customMatchers);
     });
 
     describe('testing create', function() {

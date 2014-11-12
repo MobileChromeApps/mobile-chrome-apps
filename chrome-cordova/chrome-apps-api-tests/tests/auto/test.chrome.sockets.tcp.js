@@ -67,7 +67,7 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
       }
     };
 
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
   });
 
   beforeEach(function(done) {
