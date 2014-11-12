@@ -7,7 +7,6 @@
 
 var DEFAULT_PLUGINS = [
     'org.apache.cordova.file',
-    'org.apache.cordova.inappbrowser',
     'org.apache.cordova.network-information',
     'org.apache.cordova.statusbar',
     'org.apache.cordova.labs.keyboard',
