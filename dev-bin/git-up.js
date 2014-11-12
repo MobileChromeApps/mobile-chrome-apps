@@ -79,11 +79,11 @@ function initCommand() {
   .then(function() {
     console.log('## Updating mobile-chrome-apps');
     return spawn('git', ['pull', '--rebase']);
-  })
-  .then(function() {
+  }).then(function() {
     return spawn('git', ['submodule', 'update', '--init', '--recursive']);
-  })
-  .then(function() {
+  }).then(function() {
+    return spawn('npm', ['link', './cca-manifest-logic']);
+  }).then(function() {
     return spawn('npm', ['install']);
   }).done();
 }
