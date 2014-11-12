@@ -39,7 +39,7 @@ Try out Chrome Apps for Mobile by following these steps:
 
 * [Step 3: Develop](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md)
 
-* [Step 4: Next Steps](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/NextSteps.md)
+* [Step 4: Next Steps (Icons, etc)](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/NextSteps.md)
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
