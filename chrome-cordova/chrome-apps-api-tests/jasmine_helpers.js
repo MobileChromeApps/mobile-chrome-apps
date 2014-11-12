@@ -71,7 +71,7 @@ function addJasmineHelpers(jasmineInterface) {
     jasmineInterface.describeExcludeIos = jasmineInterface.describe;
     jasmineInterface.describeExcludeAndroid = jasmineInterface.describe;
   } else {
-    jasmineInterface.describeCordovaOnly = jasmineInterface.describe;
+    jasmineInterface.describeExcludeChrome = jasmineInterface.describe;
 
     var platform = cordova.require('cordova/platform');
     if (platform.id == "android") {
