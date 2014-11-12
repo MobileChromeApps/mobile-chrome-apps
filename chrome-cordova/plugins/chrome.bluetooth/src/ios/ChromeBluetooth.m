@@ -700,6 +700,7 @@
         [_removedDeviceTimer invalidate];
         _removedDeviceTimer = [NSTimer scheduledTimerWithTimeInterval:REMOVED_DEVICE_CHECKING_INTERVAL target:self selector:@selector(checkRemovedDevice:) userInfo:nil repeats:YES];
         _isScanning = YES;
+        [self sendAdapterStateChangedEvent:[self getAdapterStateInfo]];
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth adapter is scanning"] callbackId:command.callbackId];
@@ -713,6 +714,7 @@
         [_centralManager stopScan];
         [_activePeripherals removeAllObjects];
         _isScanning = NO;
+        [self sendAdapterStateChangedEvent:[self getAdapterStateInfo]];
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth adapter is not scanning"] callbackId:command.callbackId];
