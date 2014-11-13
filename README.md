@@ -43,6 +43,8 @@ Try out Chrome Apps for Mobile by following these steps:
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
 
+It's also a good idea to go through our [codelab](https://github.com/MobileChromeApps/workshop-cca-eh), where you will learn to use `chrome.gcm` and `chrome.notifications` to build a simple chat app.
+
 ## Notes and Resources
 
 * The Chrome Apps for Mobile project is built on top of [Apache Cordova](http://cordova.apache.org), the open source mobile development framework for building mobile apps with native capabilities using HTML, CSS and JavaScript. By default, Chrome Apps for Mobile leverage an embeddable Chromium WebView provided by the [Crosswalk](http://crosswalk-project.org/) project by default, which has both [advantages and some tradeoffs](docs/Crosswalk.md).
