@@ -192,6 +192,9 @@ On failure, `options.failure` will be called with a `failureResult` as its singl
 
 # Release Notes
 
+## 2.1.0 (November 17, 2014)
+- Improves google.payments for consumable products
+
 ## 2.0.2 (October 21, 2014)
 - Fix success callback arguments for iOS `buy` method.
 - Fix iOS `getSkuDetails` response.

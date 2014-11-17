@@ -11,6 +11,10 @@ Stable on Android; not supported on iOS.
 The API reference is [here](http://developer.chrome.com/apps/notifications.html).
 
 # Release Notes
+
+## 1.0.6 (November 17, 2014)
+- Refactor notifications to follow same paradigm as Alarms on Android
+
 ## 1.0.5 (October 21, 2014)
 - Documentation updates.
 

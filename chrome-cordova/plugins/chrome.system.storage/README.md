@@ -51,7 +51,8 @@ The implementation of various functionality, across platforms, is summarized in 
 The API reference is [here](https://developer.chrome.com/apps/system_storage).
 
 # Release Notes
-## 1.1.0 (October 31, 2014)
+
+## 1.1.1 (November 17, 2014)
 - Add Android support for ejectDevice, getAvailableCapacity, onAttached/onDetached
 - Add iOS support for all methods/events
 
