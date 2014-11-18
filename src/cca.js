@@ -138,29 +138,10 @@ function main() {
     'run': function() {
       printCcaVersionPrefix();
       var platform = commandLineFlags._[1];
-      var runOnChrome = (platform === 'chrome' || platform === 'canary');
-
-      if (!runOnChrome) {
-        return forwardCurrentCommandToCordova();
+      if (platform === 'chrome' || platform === 'canary') {
+        return require('./run-in-chrome')(platform);
       } else {
-        var spawn = require('child_process').spawn;
-        chromeAppRunRoot = null;
-        if (fs.existsSync('www/manifest.json')) {
-          chromeAppRunRoot = 'www';
-        } else if (fs.existsSync('manifest.json')) {
-          chromeAppRunRoot = '.';
-        } else {
-          return Q.reject('Not a chrome app.');
-        }
-        return Q.fcall(function() {
-          var chrome = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
-          var chromeArgs = ['--load-and-launch-app=' + path.resolve(chromeAppRunRoot)]; // '--disable-web-security'
-          if (platform === 'canary') {
-            chromeArgs.push('--user-data-dir=/tmp/cca_chrome_data_dir');
-          }
-          spawn('open', ['-n', '-a', chrome, '--args'].concat(chromeArgs));
-          return;
-        });
+        return forwardCurrentCommandToCordova();
       }
     },
     'create': function() {
