@@ -137,19 +137,22 @@ function main() {
     },
     'run': function() {
       printCcaVersionPrefix();
-      return Q.fcall(function() {
-        var platform = commandLineFlags._[1];
-        if (platform === 'chrome' || platform === 'canary') {
-          // TODO: For some reason --user-data-dir and --load-and-launch-app do not play well together.  Seems you must still quit Chrome Canary first for this to work.
-          var spawn = require('child_process').spawn;
-          chromeAppRunRoot = null;
-          if (fs.existsSync('www/manifest.json')) {
-            chromeAppRunRoot = 'www';
-          } else if (fs.existsSync('manifest.json')) {
-            chromeAppRunRoot = '.';
-          } else {
-            return Q.reject('Not a chrome app.');
-          }
+      var platform = commandLineFlags._[1];
+      var runOnChrome = (platform === 'chrome' || platform === 'canary');
+
+      if (!runOnChrome) {
+        return forwardCurrentCommandToCordova();
+      } else {
+        var spawn = require('child_process').spawn;
+        chromeAppRunRoot = null;
+        if (fs.existsSync('www/manifest.json')) {
+          chromeAppRunRoot = 'www';
+        } else if (fs.existsSync('manifest.json')) {
+          chromeAppRunRoot = '.';
+        } else {
+          return Q.reject('Not a chrome app.');
+        }
+        return Q.fcall(function() {
           var chrome = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
           var chromeArgs = ['--load-and-launch-app=' + path.resolve(chromeAppRunRoot)]; // '--disable-web-security'
           if (platform === 'canary') {
@@ -157,9 +160,8 @@ function main() {
           }
           spawn('open', ['-n', '-a', chrome, '--args'].concat(chromeArgs));
           return;
-        }
-        return forwardCurrentCommandToCordova();
-      });
+        });
+      }
     },
     'create': function() {
       printCcaVersionPrefix();
