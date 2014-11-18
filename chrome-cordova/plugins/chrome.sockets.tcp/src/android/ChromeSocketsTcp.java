@@ -1020,7 +1020,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       try {
         bytesRead = channel.read(receiveDataBuffer);
         if (bytesRead < 0)
-          return bytesRead;
+          throw new IOException("Socket closed by remote peer");
 
         if (sslEngine != null) {
 
