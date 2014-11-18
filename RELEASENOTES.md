@@ -4,6 +4,66 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.4.4 (Nov 17, 2014)
+* Fix describeExcludeChrome & exclude tcp redirect-to-file test on desktop
+* Bumping ios version to 3.7.0
+* Update cordova-android and cordova-crosswalk-engine submodules
+* Allow versions with 4 dot separated numbers
+* CB-7980 Set min/target SDK version via manifest
+* CB-7980 Set BUILD_MULTIPLE_APKS only if webview != system
+* Reset chrome-apps-api-tests webview to crosswalk by default
+* sockets.tcp - redirect to file
+* Use adbkit functionality of HarnessClient for cca push
+* Improves google.payments for consumable products
+* chrome.bluetooth and chrome.bluetoothLowEnergy for iOS
+* chrome.sockets: open selector in selector thread
+* Added "locked" status to chrome.idle on Android
+* Implement chrome.system.storage for Android and iOS
+* Fix auto tests & resumeRead accidentally read paused or unconnected sockets on iOS
+* chrome.alarms: Make it more robust and prevent onLaunched when onAlarm is the cause of the Activity starting up
+* Improve chrome.sockets.tcp throughput
+* Fix setPaused for iOS
+* Disable pre/post prepare hooks during upgrade
+* Use cordova.cordova_lib and cordova.cli rather than cordova-lib as direct dependency
+* Only remove cca plugins during `cca upgrade`
+* Updated plugin release notes and version numbers for release.
+* Stop disabling inline &lt;script&gt; (fixes #384)
+* Fix rewritePage when <!-- &lt;body&gt; --> exists (fixes #364)
+* Add chrome.sockets.secure.tcp and refactor chrome.sockets.*
+* Teach cca that org.chromium.system.network is a dep of socket (fixes #381)
+* Refactor pre/post-prepare hooks as in-process events based hooks
+
+* Android:
+  * CB-7980: Add 9 to versionCode for minSdk 20+ if not multiarch
+  * CB-7976 Use webView's context rather than Activity's context for intent receiver
+  * CB-7974 Cancel timeout timer if view is destroyed
+  * CB-7940 Disable exec bridge if bridgeSecret is wrong
+  * CB-7758: Allow content-url-hosted pages to access the bridge
+
+* cordova-crosswalk-engine: CB-7974 Cancel load timeout within handleDestroy
+* iOS
+  * CB-7882 - viewDidUnload instance method is missing [super viewDidUnload] call
+  * CB-7872 - XCode 6.1's xcrun PackageApplication fails at packaging / resigning Cordova applications (closes #115)
+  * CB-6510 - Support for ErrorUrl preference on iOS
+  * CB-7857 - Load appURL after plugins have loaded
+  * CB-7606 - handleOpenURL handler firing more than necessary
+  * CB-7597 - Localizable.strings for Media Capture are in the default template, it should be in the plugin
+  * CB-7818 - CLI builds ignore Distribution certificates (closes #114)
+  * Suppress output of cordova/lib/start-emulator for harmless message (we don't need to specify a template to Instruments)
+  * Add ios-sim version check (3.0) to cordova/lib/list-emulator-images
+  * Fix cordova/lib/install-emulator to pass in the correct prefix for ios-sim --devicetypeid
+  * Fix cordova/lib/list-started-emulators for Xcode 6
+  * Remove non-working applescript to start emulator, use Instruments to start iOS Simulator now.
+  * Add support for the iPod in cordova/lib/list-devices script.
+  * Remove "Valid values for --target" in script headers. Use "cordova/lib/list-emulator-images" to get the list.
+  * Update cordova/lib/list-emulator-images for ios-sim 3.0
+  * Increment ios-deploy min version to 1.2.0 and ios-sim min version to 3.0
+  * CB-7729 - Support ios-sim 3.0 (Xcode 6) and new targets (iPhone 6/6+) (closes #107)
+  * CB-7630 - Deprecate CDV_IsIPhone5 and CDV_IsIPad macro in CDVAvailability.h
+  * CB-7727 add resolution part to 'backup to icloud' warning message
+  * CB-7648 - [iOS 8] Add iPhone 6 Plus icon to default template
+  * CB-7560 - Tel and Mailto links don't work in iframe
+  * CB-7546 - [Contacts][iOS] Prevent exception when index is out of range
 
 ### v0.4.3 (Oct 24, 2014)
 * Teach cca that org.chromium.system.network is a dep of socket (fixes #381)

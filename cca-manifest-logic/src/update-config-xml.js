@@ -71,10 +71,26 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     throw new Error('Invalid version: "' + ver + '" Must contain at most 4 numbers separated by periods.');
   }
 
-  widget.setAttribute('version', ver);
   widget.setAttribute('id', manifest.packageId || 'com.your.company.HelloWorld');
-  setOrDeleteAttribute(widget, 'android-versionCode', manifest.versionCode);
-  setOrDeleteAttribute(widget, 'ios-CFBundleVersion', manifest.CFBundleVersion);
+  if (manifest.android && manifest.android.packageId) {
+    widget.setAttribute('android-packageName', manifest.android.packageId);
+  }
+  if (manifest.ios && manifest.ios.packageId) {
+    widget.setAttribute('ios-CFBundleIdentifier', manifest.ios.packageId);
+  }
+
+  widget.setAttribute('version', ver);
+  var androidVersionCode = manifest.versionCode || (manifest.android && manifest.android.versionCode);
+  if (!androidVersionCode && manifest.android && manifest.android.version) {
+    androidVersionCode = default_versionCode(manifest.android.version);
+  }
+  setOrDeleteAttribute(widget, 'android-versionCode', androidVersionCode);
+
+  var iosBundleVersion = manifest.CFBundleVersion || (manifest.ios && manifest.ios.CFBundleVersion);
+  if (!iosBundleVersion && manifest.ios && manifest.ios.version) {
+    iosBundleVersion = default_CFBundleVersion(manifest.ios.version);
+  }
+  setOrDeleteAttribute(widget, 'ios-CFBundleVersion', iosBundleVersion);
 
   getOrCreateRootNode('name').textContent = manifest.name || manifest.packageId || 'Your App Name';
   getOrCreateRootNode('description').textContent = manifest.description || 'Plain text description of this app';
@@ -99,3 +115,24 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     widget.appendChild(tag);
   });
 };
+
+// Taken from cordova-lib/src/cordova/metadata/android_parser.js
+function default_versionCode(version) {
+    var nums = version.split('-')[0].split('.');
+    var versionCode = 0;
+    if (+nums[0]) {
+        versionCode += +nums[0] * 10000;
+    }
+    if (+nums[1]) {
+        versionCode += +nums[1] * 100;
+    }
+    if (+nums[2]) {
+        versionCode += +nums[2];
+    }
+    return versionCode;
+}
+
+// Taken from cordova-lib/src/cordova/metadata/ios_parser.js
+function default_CFBundleVersion(version) {
+    return version.split('-')[0];
+}

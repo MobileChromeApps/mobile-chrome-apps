@@ -141,6 +141,11 @@ When using this plugin outside the context of a Chrome App, this information mus
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
 
 # Release Notes
+
+## 1.3.1 (November 17, 2014)
+- Added an unsupported result for iOS getAccounts
+- Added getAccounts on Android
+
 ## 1.3.0 (October 21, 2014)
 - Added `chrome.identity.getProfileUserInfo` API.
 - Documentation updates.
