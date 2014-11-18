@@ -137,13 +137,18 @@ function main() {
     },
     'run': function() {
       printCcaVersionPrefix();
-      return beforeCordovaPrepare()
-      .then(function() {
+      return Q.fcall(function() {
         var platform = commandLineFlags._[1];
         if (platform === 'chrome') {
           // TODO: For some reason --user-data-dir and --load-and-launch-app do not play well together.  Seems you must still quit Chrome Canary first for this to work.
           var spawn = require('child_process').spawn;
-          spawn('open', ['-n', '-a', 'Google Chrome Canary', '--args', '--user-data-dir=/tmp/cca_chrome_data_dir', '--load-and-launch-app=' + path.resolve('www')]); // '--disable-web-security'
+          chromeAppRunRoot = null;
+          if (fs.existsSync('www/manifest.json')) {
+            chromeAppRunRoot = 'www';
+          } else if (fs.existsSync('manifest.json')) {
+            chromeAppRunRoot = '.';
+          }
+          spawn('open', ['-n', '-a', 'Google Chrome Canary', '--args', '--user-data-dir=/tmp/cca_chrome_data_dir', '--load-and-launch-app=' + path.resolve(chromeAppRunRoot)]); // '--disable-web-security'
           return;
         }
         return forwardCurrentCommandToCordova();
