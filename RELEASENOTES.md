@@ -27,8 +27,8 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * Use cordova.cordova_lib and cordova.cli rather than cordova-lib as direct dependency
 * Only remove cca plugins during `cca upgrade`
 * Updated plugin release notes and version numbers for release.
-* Stop disabling inline <script> (fixes #384)
-* Fix rewritePage when <!-- <body> --> exists (fixes #364)
+* Stop disabling inline &lt;script&gt; (fixes #384)
+* Fix rewritePage when <!-- &lt;body&gt; --> exists (fixes #364)
 * Add chrome.sockets.secure.tcp and refactor chrome.sockets.*
 * Teach cca that org.chromium.system.network is a dep of socket (fixes #381)
 * Refactor pre/post-prepare hooks as in-process events based hooks
