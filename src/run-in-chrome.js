@@ -13,13 +13,19 @@ module.exports = exports = function runInChrome(platform) {
   } else {
     return Q.reject('Not a chrome app.');
   }
+
+  var chromeArgs = ['--load-and-launch-app=' + path.resolve(chromeAppRunRoot)]; // '--disable-web-security'
+  if (platform === 'canary') {
+    chromeArgs.push('--user-data-dir=/tmp/cca_chrome_data_dir');
+  }
+
   return Q.fcall(function() {
-    var chrome = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
-    var chromeArgs = ['--load-and-launch-app=' + path.resolve(chromeAppRunRoot)]; // '--disable-web-security'
-    if (platform === 'canary') {
-      chromeArgs.push('--user-data-dir=/tmp/cca_chrome_data_dir');
+    if (process.platform === 'win32') {
+      var chrome = 'Chrome' + (platform === 'canary' ? ' Canary' : '');
+      child_process.spawn('cmd', ['/s', '/c', 'start', chrome].concat(chromeArgs));
+    } else if (process.platform === 'darwin') {
+      var chrome = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
+      child_process.spawn('open', ['-n', '-a', chrome, '--args'].concat(chromeArgs));
     }
-    child_process.spawn('open', ['-n', '-a', chrome, '--args'].concat(chromeArgs));
-    return;
   });
 };
