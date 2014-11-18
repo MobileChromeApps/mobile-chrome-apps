@@ -11,6 +11,11 @@ To publish your Android application to the Play Store:
        * This also sets the version of your desktop packaged app.
     * `android:versionCode` can be set using the `versionCode` key in `www/manifest.mobile.js`.
        * If omitted, `versionCode` will default to `major * 10000 + minor * 100 + rev` (assuming `version` looks like `"major.minor.rev"`)
+       * Finally, a digit is appended to the versionCode to distinguish the apk type:
+         * 0 - multi architecture
+         * 2 - arm
+         * 4 - x86
+         * 9 - APK using system webview and `minSdkVersion >= 20`
 
 2. Generate a keystore and key pair (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
    ```
