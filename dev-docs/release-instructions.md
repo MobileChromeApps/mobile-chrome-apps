@@ -77,7 +77,14 @@ Bump version
 Increment & add -dev suffix
 
     vim package.json
-    Set version of cca-manifest-logic to 0.0.5-dev
+    git commit -am "Set version of cca-manifest-logic to $(grep '"version"' package.json | cut -d'"' -f4)"
+    git push origin master
+
+Update version in chrome-app-developer-tool's package.json
+
+    cd ../chrome-app-developer-tool
+    npm install --save-dev cca-manifest-logic
+    git commit -am "Updated cca-manifest-logic to v$(npm ls --depth=0 --parseable --long | grep cca-manifest-logic | cut -d: -f2 | cut -d@ -f2)"
     git push origin master
 
 
