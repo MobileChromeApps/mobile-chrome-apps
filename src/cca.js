@@ -141,7 +141,8 @@ function main() {
       if (platform === 'chrome' || platform === 'canary') {
         return require('./run-in-chrome')(platform);
       } else {
-        return forwardCurrentCommandToCordova();
+        return beforeCordovaPrepare()
+          .then(forwardCurrentCommandToCordova);
       }
     },
     'create': function() {
