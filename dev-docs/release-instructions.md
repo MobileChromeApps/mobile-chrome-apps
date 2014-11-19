@@ -67,7 +67,19 @@ Vim helper command:
 
 ## Publish cca-manifest-logic Module (if changes exist)
 
-TODO
+Bump version
+
+    cd cca-manifest-logic
+    vim package.json ../package.json
+    git commit -am "Releasing cca-manifest-logic@$(grep '"version"' package.json | cut -d'"' -f4)"
+    npm publish .
+
+Increment & add -dev suffix
+
+    vim package.json
+    Set version of cca-manifest-logic to 0.0.5-dev
+    git push origin master
+
 
 ## Update npm Dependencies
 
