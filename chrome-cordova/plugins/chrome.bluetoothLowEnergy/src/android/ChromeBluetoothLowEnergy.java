@@ -976,14 +976,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
               if (connectCallback != null) {
                 connectCallback.success();
                 connectCallback = null;
-
-                try {
-                  gattAsyncCommandSemaphore.acquire();
-                  if (!gatt.discoverServices()) {
-                    gattAsyncCommandSemaphore.release();
-                  }
-                } catch (InterruptedException e) {
-                }
+                gatt.discoverServices();
               }
 
               break;
@@ -1097,8 +1090,6 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-
-          gattAsyncCommandSemaphore.release();
 
           if (status == BluetoothGatt.GATT_SUCCESS) {
             List<BluetoothGattService> discoveredServices = gatt.getServices();
