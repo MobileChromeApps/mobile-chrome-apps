@@ -23,8 +23,8 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
     chrome.sockets.tcp.disconnect(info.socketId);
     chrome.sockets.tcp.close(info.socketId);
 
-    if (info.destUri) {
-      window.resolveLocalFileSystemURL(info.destUri, function(fe) {
+    if (info.uri) {
+      window.resolveLocalFileSystemURL(info.uri, function(fe) {
         fe.file(function(file) {
           var reader = new FileReader();
           reader.onloadend = function(e) {
@@ -102,14 +102,21 @@ registerManualTests('chrome.sockets.tcp', function(rootEl, addButton) {
     var hostname = 'httpbin.org';
     var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
     var message = stringToArrayBuffer(requestString);
-    var properties = {
-      destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
-      append: append
+
+    var options = {
+      uri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
+      append: append,
+      numBytes: 15
     };
 
-    logger(properties);
+    logger(options);
 
-    chrome.sockets.tcp.create(properties, function(createInfo) {
+    chrome.sockets.tcp.create(function(createInfo) {
+
+      chrome.sockets.tcp.pipeToFile(createInfo.socketId, options, function() {
+        logger('file redirection is done');
+      });
+
       chrome.sockets.tcp.connect(createInfo.socketId, hostname, 80, function(result) {
         if (result === 0) {
           chrome.sockets.tcp.send(createInfo.socketId, message, function(result) {

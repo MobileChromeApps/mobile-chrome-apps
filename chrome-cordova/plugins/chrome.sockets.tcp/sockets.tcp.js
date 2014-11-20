@@ -134,6 +134,10 @@ exports.getSockets = function(callback) {
     exec(win, null, 'ChromeSocketsTcp', 'getSockets', []);
 };
 
+exports.pipeToFile = function(socketId, options, callback) {
+    exec(callback, null, 'ChromeSocketsTcp', 'pipeToFile', [socketId, options]);
+};
+
 exports.onReceive = new Event('onReceive');
 exports.onReceiveError = new Event('onReceiveError');
 
@@ -163,10 +167,10 @@ function registerReceiveEvents() {
             return function(info) {
                 if (call === 0) {
                     recvInfo = info;
-                    if (!recvInfo.destUri) {
+                    if (!recvInfo.uri) {
                         call++;
 
-                        // destUri implies only one callback becasue redirect to
+                        // uri implies only one callback becasue redirect to
                         // file is enabled, and binary data is not included in
                         // the receiveInfo.
                         return;

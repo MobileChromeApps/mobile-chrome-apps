@@ -40,10 +40,14 @@ static NSString* stringFromData(NSData* data) {
     NSNumber* _persistent;
     NSString* _name;
     NSNumber* _bufferSize;
-    NSNumber* _append;
-    NSString* _destUri;
-    NSFileHandle* _destUriFileHandle;
     
+    // pipeToFile options
+    NSNumber* _append;
+    NSString* _uri;
+    NSFileHandle* _uriFileHandle;
+    NSInteger _numBytes;
+    id _pipeToFileCompleteCallback;
+
     NSUInteger _readTag;
     NSUInteger _receivedTag;
     
@@ -85,6 +89,7 @@ static NSString* stringFromData(NSData* data) {
 - (void)close:(CDVInvokedUrlCommand*)command;
 - (void)getInfo:(CDVInvokedUrlCommand*)command;
 - (void)getSockets:(CDVInvokedUrlCommand*)command;
+- (void)pipeToFile:(CDVInvokedUrlCommand*)command;
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
 - (void)readyToRead:(CDVInvokedUrlCommand*)command;
 - (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData;
@@ -132,16 +137,19 @@ static NSString* stringFromData(NSData* data) {
     _connectCallback = nil;
     _disconnectCallback = nil;
     _secureCallback = nil;
-    [self resetDestUriFileHandle];
+    [self resetPipeToFileProperties];
 }
 
-- (void)resetDestUriFileHandle
+- (void)resetPipeToFileProperties
 {
-    if (_destUriFileHandle) {
-        [_destUriFileHandle closeFile];
-        _destUriFileHandle = nil;
-        _destUri = nil;
+    if (_uriFileHandle) {
+        [_uriFileHandle closeFile];
+        _uriFileHandle = nil;
+        _uri = nil;
     }
+    _append = nil;
+    _pipeToFileCompleteCallback = nil;
+    _numBytes = 0;
 }
 
 - (NSDictionary*)getInfo
@@ -158,14 +166,9 @@ static NSString* stringFromData(NSData* data) {
         @"bufferSize": _bufferSize,
         @"connected": [NSNumber numberWithBool:[_socket isConnected]],
         @"paused": _paused,
-        @"append": _append,
     } mutableCopy];
     
-    if (_destUri) {
-        socketInfo[@"destUri"] = _destUri;
-    }
-    
-    if (localAddress) {
+   if (localAddress) {
         socketInfo[@"localAddress"] = localAddress;
         socketInfo[@"localPort"] = localPort;
     }
@@ -184,9 +187,7 @@ static NSString* stringFromData(NSData* data) {
     NSNumber* persistent = theProperties[@"persistent"];
     NSString* name = theProperties[@"name"];
     NSNumber* bufferSize = theProperties[@"bufferSize"];
-    NSNumber* append = theProperties[@"append"];
-    NSString* destUri = theProperties[@"destUri"];
-    
+   
     if (persistent)
         _persistent = persistent;
     
@@ -199,36 +200,7 @@ static NSString* stringFromData(NSData* data) {
     if (bufferSize)
         _bufferSize = bufferSize;
     
-    if (append)
-        _append = append;
-    
-    if (destUri) {
-
-        [self resetDestUriFileHandle];
-       
-        if (destUri.length > 0) {
-            
-            NSString* filePath = [[NSURL URLWithString:destUri] path];
-            
-            if(![NSFileManager.defaultManager fileExistsAtPath:filePath]) {
-                [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
-            }
-            
-            _destUriFileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
-            
-            if (append.boolValue) {
-                [_destUriFileHandle seekToEndOfFile];
-            } 
-            
-            if (_destUriFileHandle) {
-                _destUri = destUri;
-            } else {
-                [_plugin fireReceiveErrorEventsWithSocketId:_socketId errorCode:-1000 message:@"Invalid destUri"];
-            }
-        }
-    }
-    
-    // Set undefined properties to default value
+   // Set undefined properties to default value
     if (_persistent == nil)
         _persistent = [NSNumber numberWithBool:NO];
     
@@ -237,9 +209,50 @@ static NSString* stringFromData(NSData* data) {
     
     if (_bufferSize == nil)
         _bufferSize = [NSNumber numberWithUnsignedInteger:4096];
+}
+
+- (BOOL)setPipeToFileProperties:(NSDictionary*)theProperties
+{
+    NSNumber* append = theProperties[@"append"];
+    NSNumber* numBytes = theProperties[@"numBytes"];
+    NSString* uri = theProperties[@"uri"];
     
-    if (_append == nil)
+    [self resetPipeToFileProperties];
+    
+    if (append) {
+        _append = append;
+    } else {
         _append = [NSNumber numberWithBool:NO];
+    }
+    
+    if (numBytes && [numBytes integerValue] > 0) {
+        _numBytes = [numBytes integerValue];
+    } else {
+        return NO;
+    }
+    
+    if (uri && uri.length > 0) {
+        NSString* filePath = [[NSURL URLWithString:uri] path];
+        
+        if(![NSFileManager.defaultManager fileExistsAtPath:filePath]) {
+            [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
+        }
+        
+        _uriFileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
+        
+        if (append.boolValue) {
+            [_uriFileHandle seekToEndOfFile];
+        } 
+        
+        if (_uriFileHandle) {
+            _uri = uri;
+        } else {
+            return NO;
+        }
+    } else {
+        return NO;
+    }
+    return YES;
 }
 
 - (void)resumeReadIfNotReading
@@ -255,11 +268,58 @@ static NSString* stringFromData(NSData* data) {
         _paused = paused;
         if (![_paused boolValue]) {
             for (NSData* data in _pausedBuffers) {
-                [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
+                [self sendReceivedData:data];
             }
             [_pausedBuffers removeAllObjects];
             [self resumeReadIfNotReading];
         }
+    }
+}
+
+- (void)sendReceivedData:(NSData*)data
+{
+    if (_uriFileHandle) {
+        
+        NSUInteger bytesRead = 0;
+        
+        // extra data that need to send to the webveiw
+        NSData* extraData = nil;
+        
+        if (_numBytes >= [data length]) {
+            [_uriFileHandle writeData:data];
+            bytesRead = data.length;
+        } else {
+            NSData* writeData = [data subdataWithRange:NSMakeRange(0, _numBytes)];
+            extraData = [data subdataWithRange:NSMakeRange(_numBytes, data.length - _numBytes)];
+            [_uriFileHandle writeData:writeData];
+            bytesRead = writeData.length;
+        }
+        
+        _numBytes -= bytesRead;
+        
+        NSDictionary *info = @{
+            @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
+            @"uri": _uri,
+            @"bytesRead": [NSNumber numberWithUnsignedInteger:bytesRead],
+        };
+        
+        [_plugin fireReceiveEventsWithInfo:info waitReadyToRead:NO];
+        
+        if (_numBytes == 0) {
+            void (^callback)() = _pipeToFileCompleteCallback;
+            [self resetPipeToFileProperties];
+            assert(callback != nil);
+            callback();
+        }
+        
+        if (extraData) {
+            [_plugin fireReceiveEventsWithSocketId:_socketId data:extraData];
+        } else {
+            [self resumeReadIfNotReading];
+        }
+
+    } else {
+        [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
     }
 }
 
@@ -285,17 +345,8 @@ static NSString* stringFromData(NSData* data) {
     
     if ([_paused boolValue]) {
         [_pausedBuffers addObject:data];
-    } else if (_destUriFileHandle) {
-        [_destUriFileHandle writeData:data];
-        NSDictionary *info = @{
-            @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
-            @"destUri": _destUri,
-            @"bytesRead": [NSNumber numberWithUnsignedInteger:[data length]],
-        };
-        [_plugin fireReceiveEventsWithInfo:info waitReadyToRead:NO];
-        [self resumeReadIfNotReading];
     } else {
-        [_plugin fireReceiveEventsWithSocketId:_socketId data:data];
+        [self sendReceivedData:data];
     }
 }
 
@@ -577,6 +628,26 @@ static NSString* stringFromData(NSData* data) {
     }
     
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:socketsInfo] callbackId:command.callbackId];
+}
+
+- (void)pipeToFile:(CDVInvokedUrlCommand *)command
+{
+    NSNumber* socketId = [command argumentAtIndex:0];
+    NSDictionary* options = [command argumentAtIndex:1];
+    
+    ChromeSocketsTcpSocket* socket = _sockets[socketId];
+    
+    if (socket == nil)
+        return;
+    
+    if ([socket setPipeToFileProperties:options]) {
+        id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
+        socket->_pipeToFileCompleteCallback = [^() {
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        } copy];
+    } else {
+        [self fireReceiveErrorEventsWithSocketId:socket->_socketId errorCode:-1000 message:@"Failed to start pipeToFile"];
+    }
 }
 
 - (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command
