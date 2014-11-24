@@ -6,7 +6,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     id="org.chromium.sockets.tcpserver"
-    version="1.1.1-dev">
+    version="1.2.1-dev">
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>
@@ -35,7 +35,6 @@
 
   <platform name="ios">
     <source-file src="src/ios/ChromeSocketsTcpServer.m" />
-    <header-file src="src/ios/ChromeSocketsTcpServer.h" />
 
     <config-file target="config.xml" parent="/widget">
       <feature name="ChromeSocketsTcpServer">

@@ -49,6 +49,16 @@ module.exports = exports = function prePrepareCommand(context) {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
+
+    // Android: If using system webview, don't build multiple APKs
+    if (manifest.webview != 'system') {
+      if (typeof process.env.BUILD_MULTIPLE_APKS == 'undefined') {
+        process.env.BUILD_MULTIPLE_APKS = '1';
+      }
+      if (process.env.BUILD_MULTIPLE_APKS && typeof process.env.DEPLOY_APK_ARCH == 'undefined') {
+        process.env.DEPLOY_APK_ARCH = 'armv7';
+      }
+    }
     return ccaManifestLogic.analyseManifest(manifest, { webview: argv.webview });
   })
   .then(function(manifestData) {

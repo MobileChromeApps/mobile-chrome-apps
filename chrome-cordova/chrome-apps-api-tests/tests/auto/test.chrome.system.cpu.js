@@ -41,7 +41,7 @@ registerAutoTests('chrome.system.cpu', function() {
   };
   
   beforeEach(function(done) {
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
     done();
   });
   

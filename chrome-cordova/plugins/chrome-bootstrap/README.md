@@ -26,7 +26,9 @@ The API references are:
 
 # Release Notes
 
-## 1.1.0 (October 24, 2014)
+## 1.1.0 (November 17, 2014)
+* chrome.alarms: Make it more robust and prevent onLaunched when onAlarm is the cause of the Activity starting up
+* Have window.create() call window.show().
 * Implement AppWindow methods: show(), hide(), minimize(), restore() (resolves #323)
 
 ## 1.0.5 (October 24, 2014)

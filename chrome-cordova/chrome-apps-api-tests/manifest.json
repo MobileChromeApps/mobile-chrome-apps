@@ -16,6 +16,8 @@
         "tests.js",
         "medic.js",
         "tests/manual/manual.chrome.app.window.js",
+        "tests/manual/manual.chrome.bluetooth.js",
+        "tests/manual/manual.chrome.bluetoothLowEnergy.js",
         "tests/manual/manual.chrome.embed.js",
         "tests/manual/manual.chrome.fileSystem.js",
         "tests/manual/manual.chrome.gcm.js",
@@ -39,6 +41,10 @@
         "tests/manual/manual.navigation.js"
       ]
     }
+  },
+  "bluetooth": {
+    "low_energy": true,
+    "uuids": ["C9D3", "180D"]
   },
   "sockets": {
     "udp": {

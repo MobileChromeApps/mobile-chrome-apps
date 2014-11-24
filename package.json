@@ -1,7 +1,7 @@
 {
   "name": "cca",
   "author": "The Chrome Team",
-  "version": "0.4.4-dev",
+  "version": "0.5.1-dev",
   "description": "Run Chrome Apps on mobile using Apache Cordova",
   "preferGlobal": "true",
   "keywords": [
@@ -24,10 +24,9 @@
     "crypto-js": "is not meant to be pinned, but 3.1.2-5 IS later than 3.1.2 (incorrect use of semver), and this works"
   },
   "dependencies": {
-    "cca-manifest-logic": "^0.0.4-dev",
-    "chrome-app-developer-tool-client": "^0.0.3",
-    "cordova": "^4.0.1-dev",
-    "cordova-lib": "^4.0.0",
+    "cca-manifest-logic": "^0.0.5",
+    "chrome-app-developer-tool-client": "^0.0.4",
+    "cordova": "^4.1.2",
     "crypto-js": "3.1.2-5",
     "debounce": "^1.0.0",
     "elementtree": "0.1.6",

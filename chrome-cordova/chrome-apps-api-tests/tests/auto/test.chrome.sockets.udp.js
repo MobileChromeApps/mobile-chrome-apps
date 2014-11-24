@@ -62,7 +62,7 @@ registerAutoTests('chrome.sockets.udp', function() {
       }
     };
 
-    addMatchers(customMatchers);
+    jasmine.addMatchers(customMatchers);
   });
 
   beforeEach(function(done) {

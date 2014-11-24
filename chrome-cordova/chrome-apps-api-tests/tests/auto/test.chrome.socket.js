@@ -106,7 +106,7 @@ registerAutoTests('chrome.socket', function() {
         }
       };
 
-      addMatchers(customMatchers);
+      jasmine.addMatchers(customMatchers);
     });
 
     beforeEach(function(done) {
@@ -321,7 +321,7 @@ registerAutoTests('chrome.socket', function() {
         }
       };
 
-      addMatchers(customMatchers);
+      jasmine.addMatchers(customMatchers);
     });
 
     beforeEach(function(done) {

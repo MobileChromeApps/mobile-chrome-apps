@@ -84,7 +84,8 @@ If the purchase is successful, `options.success` will be called with a `purchase
             "consume": <boolean consume from original request>
         },
         "response": {
-            "orderId": <Unique order ID from the back-end store>
+            "orderId": <Unique order ID from the back-end store>,
+            "purchaseToken": <Google token for API use> //Only Android
         }
     }
 
@@ -190,6 +191,9 @@ On failure, `options.failure` will be called with a `failureResult` as its singl
 * iOS does not support `getPurchases`.
 
 # Release Notes
+
+## 2.1.0 (November 17, 2014)
+- Improves google.payments for consumable products
 
 ## 2.0.2 (October 21, 2014)
 - Fix success callback arguments for iOS `buy` method.

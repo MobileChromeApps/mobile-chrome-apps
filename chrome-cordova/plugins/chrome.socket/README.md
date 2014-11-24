@@ -16,6 +16,10 @@ The API reference is [here](http://developer.chrome.com/apps/socket.html).
 * Multicast support is only implemented in Android, and is not yet stable.
 
 # Release Notes
+
+## 1.2.2 (November 17, 2014)
+ - Make iossocketcommon a `<dependency>` only for iOS platform
+
 ## 1.2.1 (October 23, 2014)
 - Fix the dependency on iosSocketsCommon so that it works with the Cordova plugin registry.
 

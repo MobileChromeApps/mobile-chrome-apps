@@ -5,47 +5,50 @@
 var exports = window;
 
 exports.setUpJasmine = function() {
-  // Set up jasmine
   var jasmine = jasmineRequire.core(jasmineRequire);
   jasmineRequire.html(jasmine);
-  var jasmineEnv = jasmine.currentEnv_ = new jasmine.Env();
+  var env = jasmine.getEnv();
 
-  jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
-  jasmineEnv.catchExceptions(false);
-
-  // Set up jasmine interface
-  var jasmineInterface = Object.create(null);
+  var jasmineInterface = jasmineRequire.interface(jasmine, env);
   jasmineInterface.jasmine = jasmine;
-
-  // Fill in jasmineInterface with built-ins
-  var jasmine_env_functions = ['describe',
-                               'xdescribe',
-                               'it',
-                               'xit',
-                               'beforeEach',
-                               'afterEach',
-                               'expect',
-                               'pending',
-                               'spyOn',
-                               'addCustomEqualityTester',
-                               'addMatchers'];
-
-  jasmine_env_functions.forEach(function(fn) {
-    jasmineInterface[fn] = jasmineEnv[fn].bind(jasmineEnv);
-  });
-  jasmineInterface.clock = jasmineEnv.clock;
-
-  // Extend jasmineInterface with custom helpers
   addJasmineHelpers(jasmineInterface);
 
-  // Add Reporters
-  addJasmineReporters(jasmineInterface, jasmineEnv);
+  var queryString = new jasmine.QueryString({
+    getWindowLocation: function() { return window.location; }
+  });
 
-  // Add Spec Filter
-  jasmineEnv.specFilter = function(spec) {
-    //console.log(spec.getFullName());
-    return true;
+  var catchingExceptions = queryString.getParam("catch");
+  env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);
+
+  var specFilter = new jasmine.HtmlSpecFilter({
+    filterString: function() { return queryString.getParam("spec"); }
+  });
+  env.specFilter = function(spec) {
+    return specFilter.matches(spec.getFullName());
   };
+
+  var htmlReporter = new jasmine.HtmlReporter({
+    env: env,
+    onRaiseExceptionsClick: function() { queryString.setParam("catch", !env.catchingExceptions()); },
+    getContainer: function() { return document.getElementById('content'); },
+    createElement: function() { return document.createElement.apply(document, arguments); },
+    createTextNode: function() { return document.createTextNode.apply(document, arguments); },
+    timer: new jasmine.Timer()
+  });
+  htmlReporter.initialize()
+
+  env.addReporter(jasmineInterface.jsApiReporter);
+  env.addReporter(htmlReporter);
+
+  addJasmineReporters(jasmineInterface, env);
+
+  /**
+   * Setting up timing functions to be able to be overridden. Certain browsers (Safari, IE 8, phantomjs) require this hack.
+   */
+  window.setTimeout = window.setTimeout;
+  window.setInterval = window.setInterval;
+  window.clearTimeout = window.clearTimeout;
+  window.clearInterval = window.clearInterval;
 
   return jasmineInterface;
 }
@@ -71,7 +74,7 @@ function addJasmineHelpers(jasmineInterface) {
     jasmineInterface.describeExcludeIos = jasmineInterface.describe;
     jasmineInterface.describeExcludeAndroid = jasmineInterface.describe;
   } else {
-    jasmineInterface.describeCordovaOnly = jasmineInterface.describe;
+    jasmineInterface.describeExcludeChrome = jasmineInterface.describe;
 
     var platform = cordova.require('cordova/platform');
     if (platform.id == "android") {
@@ -97,21 +100,6 @@ function addJasmineHelpers(jasmineInterface) {
 }
 
 function addJasmineReporters(jasmineInterface, jasmineEnv) {
-  jasmineInterface.jsApiReporter = new jasmineInterface.jasmine.JsApiReporter({ timer: new jasmineInterface.jasmine.Timer() });
-  jasmineEnv.addReporter(jasmineInterface.jsApiReporter);
-
-  jasmineInterface.htmlReporter = new jasmineInterface.jasmine.HtmlReporter({
-    env: jasmineEnv,
-    queryString: function() { return null; },
-    onRaiseExceptionsClick: function() { },
-    getContainer: function() { return document.getElementById('content'); },
-    createElement: function() { return document.createElement.apply(document, arguments); },
-    createTextNode: function() { return document.createTextNode.apply(document, arguments); },
-    timer: new jasmineInterface.jasmine.Timer()
-  });
-  jasmineInterface.htmlReporter.initialize();
-  jasmineEnv.addReporter(jasmineInterface.htmlReporter);
-
   if (window.medic.enabled) {
     jasmineRequire.medic(jasmineInterface.jasmine);
     jasmineInterface.MedicReporter = new jasmineInterface.jasmine.MedicReporter({

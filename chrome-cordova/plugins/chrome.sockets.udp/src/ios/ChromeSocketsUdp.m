@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#import "ChromeSocketsUdp.h"
+#import <Cordova/CDVPlugin.h>
 #import "GCDAsyncUdpSocket.h"
 #import <arpa/inet.h>
 #import <ifaddrs.h>
@@ -33,6 +33,34 @@ static NSString* stringFromData(NSData* data) {
 }
 #endif  // CHROME_SOCKETS_UDP_VERBOSE_LOGGING
 
+#pragma mark ChromeSocketsUdp interface
+
+@interface ChromeSocketsUdp : CDVPlugin {
+    NSMutableDictionary* _sockets;
+    NSUInteger _nextSocketId;
+    NSString* _receiveEventsCallbackId;
+}
+
+- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
+- (void)create:(CDVInvokedUrlCommand*)command;
+- (void)update:(CDVInvokedUrlCommand*)command;
+- (void)setPaused:(CDVInvokedUrlCommand*)command;
+- (void)bind:(CDVInvokedUrlCommand*)command;
+- (void)send:(CDVInvokedUrlCommand*)command;
+- (void)close:(CDVInvokedUrlCommand*)command;
+- (void)getInfo:(CDVInvokedUrlCommand*)command;
+- (void)getSockets:(CDVInvokedUrlCommand*)command;
+- (void)joinGroup:(CDVInvokedUrlCommand*)command;
+- (void)leaveGroup:(CDVInvokedUrlCommand*)command;
+- (void)setMulticastTimeToLive:(CDVInvokedUrlCommand*)command;
+- (void)setMulticastLoopbackMode:(CDVInvokedUrlCommand*)command;
+- (void)getJoinedGroups:(CDVInvokedUrlCommand*)command;
+- (void)registerReceiveEvents:(CDVInvokedUrlCommand*)command;
+- (void)closeSocketWithId:(NSNumber*)socketId callbackId:(NSString*)theCallbackId;
+- (void)fireReceiveEventsWithSocketId:(NSUInteger)theSocketId data:(NSData*)theData address:(NSString*)theAddress port:(NSUInteger)thePort;
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError;
+@end
+
 #pragma mark ChromeSocketsUdpSocket interface
 
 @interface ChromeSocketsUdpSocket : NSObject {
@@ -52,15 +80,6 @@ static NSString* stringFromData(NSData* data) {
     id _closeCallback;
     
     NSMutableSet* _multicastGroups;
-}
-@end
-
-#pragma mark ChromeSocketsUdp interface
-
-@interface ChromeSocketsUdp() {
-    NSMutableDictionary* _sockets;
-    NSUInteger _nextSocketId;
-    NSString* _receiveEventsCallbackId;
 }
 @end
 
@@ -196,11 +215,20 @@ static NSString* stringFromData(NSData* data) {
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error
 {
     VERBOSE_LOG(@"udbSocketDidClose:withError socketId: %u", _socketId);
-    assert(_closeCallback != nil);
+
+    // Commented out assert, causes app to crash
+    // when there is no network available.
+    //assert(_closeCallback != nil);
     void (^callback)() = _closeCallback;
     _closeCallback = nil;
     
-    callback();
+    // Check that callback is not nil before calling.
+    if (callback != nil) {
+        callback();
+    } else if (error) {
+        [_plugin fireReceiveErrorEventsWithSocketId:_socketId error:error];
+        [_plugin closeSocketWithId:[NSNumber numberWithUnsignedInteger:_socketId] callbackId:nil];
+    }
 }
 @end
 
@@ -314,13 +342,14 @@ static NSString* stringFromData(NSData* data) {
         return;
     }
   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_sendCallbacks addObject:[^(BOOL success, NSError* error) {
         VERBOSE_LOG(@"ACK %@.%@ Write: %d", socketId, command.callbackId, success);
 
         if (success) {
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[data length]] callbackId:command.callbackId];
         } else {
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription]]] callbackId:command.callbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription]]] callbackId:command.callbackId];
         }
     } copy]];
 
@@ -334,9 +363,10 @@ static NSString* stringFromData(NSData* data) {
     if (socket == nil)
         return;
   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     socket->_closeCallback = [^() {
         if (theCallbackId)
-            [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:theCallbackId];
         
         [_sockets removeObjectForKey:socketId];
     } copy];
@@ -436,24 +466,25 @@ static NSString* stringFromData(NSData* data) {
     }
     
     VERBOSE_LOG(@"REQ %@.%@ setMulticastTimeToLive", socketId, command.callbackId);
-   
+  
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_socket performBlock:^{
         
         if ([socket->_socket isIPv4]) {
             unsigned char ttlCpy = [ttl intValue];
             if (setsockopt([socket->_socket socket4FD], IPPROTO_IP, IP_MULTICAST_TTL, &ttlCpy, sizeof(ttlCpy)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
         if ([socket->_socket isIPv6]) {
             int ttlCpy = [ttl intValue];
             if (setsockopt([socket->_socket socket6FD], IPPROTO_IPV6, IP_MULTICAST_TTL, &ttlCpy, sizeof(ttlCpy)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     }];
 }
 
@@ -470,24 +501,25 @@ static NSString* stringFromData(NSData* data) {
     }
 
     VERBOSE_LOG(@"REQ %@.%@ setMulticastLoopbackMode", socketId, command.callbackId);
-    
+   
+    id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     [socket->_socket performBlock:^{
 
         if ([socket->_socket isIPv4]) {
             unsigned char loop = [enabled intValue];
             if (setsockopt([socket->_socket socketFD], IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
         if ([socket->_socket isIPv6]) {
             int loop = [enabled intValue];
             if (setsockopt([socket->_socket socket6FD], IPPROTO_IPV6, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
+                [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:errno message:@"setsockopt() failed"]] callbackId:command.callbackId];
             }
         }
         
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+        [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     }];
 }
 
@@ -528,4 +560,19 @@ static NSString* stringFromData(NSData* data) {
     [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
 }
 
+- (void)fireReceiveErrorEventsWithSocketId:(NSUInteger)theSocketId error:(NSError*)theError
+{
+    assert(_receiveEventsCallbackId != nil);
+    
+    NSDictionary* info = @{
+        @"socketId": [NSNumber numberWithUnsignedInteger:theSocketId],
+        @"resultCode": [NSNumber numberWithUnsignedInt:[theError code]],
+        @"message": [theError localizedDescription],
+    };
+    
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:info];
+    [result setKeepCallbackAsBool:YES];
+    
+    [self.commandDelegate sendPluginResult:result callbackId:_receiveEventsCallbackId];
+}
 @end

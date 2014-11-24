@@ -82,12 +82,16 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     return true;
   }
 
-  public void onDestory() {
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
     closeAllSockets();
     stopSelectorThread();
   }
 
+  @Override
   public void onReset() {
+    super.onReset();
     closeAllSockets();
     stopSelectorThread();
   }
@@ -356,27 +360,17 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   }
 
   private void startSelectorThread() {
-    if (selector != null && selectorThread != null) return;
-    try {
-      selector = Selector.open();
-      selectorThread = new SelectorThread(selector, selectorMessages, sockets);
-      selectorThread.start();
-    } catch (IOException e) {
-      selector = null;
-      selectorThread = null;
-      PluginResult err = new PluginResult(Status.ERROR, buildErrorInfo(-9, e.getMessage()));
-      err.setKeepCallback(true);
-      recvContext.sendPluginResult(err);
-    }
+    if (selectorThread != null) return;
+    selectorThread = new SelectorThread(selectorMessages, sockets);
+    selectorThread.start();
   }
 
   private void stopSelectorThread() {
-    if (selector == null && selectorThread == null) return;
+    if (selectorThread == null) return;
 
     addSelectorMessage(null, SelectorMessageType.T_STOP, null);
     try {
       selectorThread.join();
-      selector = null;
       selectorThread = null;
     } catch (InterruptedException e) {
     }
@@ -417,16 +411,13 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
   private class SelectorThread extends Thread {
 
-    private final Selector selector;
     private BlockingQueue<SelectorMessage> selectorMessages;
     private Map<Integer, UdpSocket> sockets;
     private boolean running = true;
 
     SelectorThread(
-        Selector selector, BlockingQueue<SelectorMessage> selectorMessages,
+        BlockingQueue<SelectorMessage> selectorMessages,
         Map<Integer, UdpSocket> sockets) {
-
-      this.selector = selector;
       this.selectorMessages = selectorMessages;
       this.sockets = sockets;
     }
@@ -471,7 +462,19 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     public void run() {
+
+      try {
+        selector = Selector.open();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      // process possible messages that send during openning the selector
+      // before select.
+      processPendingMessages();
+
       Iterator<SelectionKey> it;
+
       while (running) {
 
         try {

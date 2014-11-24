@@ -39,9 +39,11 @@ Try out Chrome Apps for Mobile by following these steps:
 
 * [Step 3: Develop](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Develop.md)
 
-* [Step 4: Next Steps](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/NextSteps.md)
+* [Step 4: Next Steps (Icons, etc)](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/NextSteps.md)
 
 * [Step 5: Publish](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Publish.md)
+
+It's also a good idea to go through our [codelab](https://github.com/MobileChromeApps/workshop-cca-eh), where you will learn to use `chrome.gcm` and `chrome.notifications` to build a simple chat app.
 
 ## Notes and Resources
 

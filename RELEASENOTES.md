@@ -4,6 +4,23 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.5.0 (Nov 18, 2014)
+* Bumping cordova-ios version to 3.7.0
+* Update cordova-android and cordova-crosswalk-engine submodules
+* Allow versions with 4 dot separated numbers
+* Allow setting min/target SDK version via manifest
+* Don't build arch-specific APKs when webview == system
+* `cca push` now auto-detects connected Android devices (no need to `adb forward`)
+* Only remove cca plugins during `cca upgrade`
+* Stop disabling inline &lt;script&gt; (fixes #384)
+* Teach cca that org.chromium.system.network is a dep of socket (fixes #381)
+* Allow platform-specific packageId and version (fixes #432)
+* Fix for cca run not auto-upgrading
+* `cca run chrome` now works on Windows and in non-cca Chrome Apps
+* Added `cca run canary` command
+* Remove labs.keyboard plugin (no longer required)
+* Refactor pre/post-prepare hooks as in-process events based hooks
+* Disable pre/post prepare hooks during upgrade
 
 ### v0.4.3 (Oct 24, 2014)
 * Teach cca that org.chromium.system.network is a dep of socket (fixes #381)

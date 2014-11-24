@@ -9,11 +9,11 @@ Understanding these can be critical to developing an application that can save a
 
 ## The Events
 
-onRestarted
-onInstalled
-onLaunched
-onSuspend
-onSuspendCanceled
+* onRestarted
+* onInstalled
+* onLaunched
+* onSuspend
+* onSuspendCanceled
 
 ## Desktop Event Firing Triggers and Sequence
 
