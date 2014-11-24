@@ -23,16 +23,9 @@
 
 #define REMOVED_DEVICE_CHECKING_INTERVAL 5 //second
 
-@interface CBUUID (UUIDString)
-
-- (NSString *)UUIDString;
-
-@end
-
 @implementation CBUUID (UUIDString)
 
-// build-in UUIDString only exist for CBUUID after iOS 7.1
-- (NSString *)UUIDString;
+- (NSString*) UUIDStringFromData
 {
     NSData *data = [self data];
     
@@ -50,7 +43,24 @@
         }
     }
     
-    return outputString;
+    return outputString;   
+}
+
+// Generate the 128 bit UUIDString. If the UUID is 16 bit, it will be prefilled to 128 bit.
+- (NSString *)fullUUIDString;
+{
+    NSString* outputString;
+    if ([self respondsToSelector:@selector(UUIDString)]) {
+        outputString = [self UUIDString];
+    } else {
+        outputString = [self UUIDStringFromData];
+    }
+    
+    if ([outputString length] == 4) { // 16bit UUIDString
+        outputString = [NSString stringWithFormat:@"0000%@-0000-1000-8000-00805F9B34FB", outputString];
+    }
+    
+    return [outputString lowercaseString];
 }
 
 @end
@@ -178,17 +188,17 @@
 
 - (NSString*)serviceIdFromService:(CBService*)service
 {
-    return [NSString stringWithFormat:@"%@/%@", [self peripheralAddress], [service.UUID UUIDString]];
+    return [NSString stringWithFormat:@"%@/%@", [self peripheralAddress], [service.UUID fullUUIDString]];
 }
 
 - (NSString*)characteristicIdFromCharacteristic:(CBCharacteristic*)characteristic
 {
-    return [NSString stringWithFormat:@"%@/%@%@", [self peripheralAddress], [characteristic.service.UUID UUIDString], [characteristic.UUID UUIDString]];
+    return [NSString stringWithFormat:@"%@/%@%@", [self peripheralAddress], [characteristic.service.UUID fullUUIDString], [characteristic.UUID fullUUIDString]];
 }
 
 - (NSString*)descriptorIdFromDescriptor:(CBDescriptor*)descriptor
 {
-    return [NSString stringWithFormat:@"%@/%@%@%@", [self peripheralAddress], [descriptor.characteristic.service.UUID UUIDString], [descriptor.characteristic.UUID UUIDString], [descriptor.UUID UUIDString]];
+    return [NSString stringWithFormat:@"%@/%@%@%@", [self peripheralAddress], [descriptor.characteristic.service.UUID fullUUIDString], [descriptor.characteristic.UUID fullUUIDString], [descriptor.UUID fullUUIDString]];
 }
 
 - (BOOL)isConnected
@@ -213,14 +223,14 @@
     NSArray* adServices = _adData[CBAdvertisementDataServiceUUIDsKey];
     if (adServices && [adServices count] > 0) {
         for (CBUUID* serviceUuid in adServices) {
-            [serviceUuids addObject:[serviceUuid UUIDString]];
+            [serviceUuids addObject:[serviceUuid fullUUIDString]];
         }
     }
     
     NSArray* services = [_peripheral services];
     if (services && [services count] > 0) {
         for (CBService* service in services) {
-            [serviceUuids addObject:[service.UUID UUIDString]];
+            [serviceUuids addObject:[service.UUID fullUUIDString]];
         }
     }
     
@@ -237,7 +247,7 @@
     }
     
     return @{
-        @"uuid": [service.UUID UUIDString],
+        @"uuid": [service.UUID fullUUIDString],
         @"deviceAddress": [self peripheralAddress],
         @"instanceId": serviceId,
         @"isPrimary": [NSNumber numberWithBool:service.isPrimary],
@@ -319,7 +329,7 @@
     }
     
     return @{
-        @"uuid": [characteristic.UUID UUIDString],
+        @"uuid": [characteristic.UUID fullUUIDString],
         @"service": [self buildServiceInfo:characteristic.service],
         @"properties": properties,
         @"instanceId": characteristicId,
@@ -396,7 +406,7 @@
     }
     
     return @{
-        @"uuid": [descriptor.UUID UUIDString],
+        @"uuid": [descriptor.UUID fullUUIDString],
         @"characteristic": [self buildCharacteristicInfo:descriptor.characteristic],
         @"instanceId": descriptorId,
     };
