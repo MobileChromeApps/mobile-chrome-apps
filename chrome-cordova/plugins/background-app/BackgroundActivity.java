@@ -193,7 +193,7 @@ public class BackgroundActivity extends CordovaActivity
 
         @Override
         public Object onMessage(String id, Object data) {
-            return underlying.getActivity();
+            return underlying.onMessage(id, data);
         }
 
         @Override
