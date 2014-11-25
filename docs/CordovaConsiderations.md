@@ -1,6 +1,10 @@
 ## Special considerations
 
+### Chrome Apps limitations compare to Cordova
+
 If you're new to Chrome Apps, the biggest gotcha is that some [web features are disabled](http://developer.chrome.com/apps/app_deprecated). However, several of these do currently work within Cordova.
+
+### When porting a Chrome App to mobile
 
 A Chrome App may not work out of the box on mobile. Some common problems with porting to mobile:
 
@@ -18,7 +22,7 @@ A Chrome App may not work out of the box on mobile. Some common problems with po
 * Flashes when tapping on things
   * _Suggested fix:_ Add `-webkit-tap-hightlight-color` and `-webkit-touch-callout` to your CSS
 
-### Supported Chrome APIs 
+#### Supported Chrome APIs 
 
 We've made many of the core Chrome APIs [available to Chrome Apps for Mobile](APIsAndLibraries.md).
 
