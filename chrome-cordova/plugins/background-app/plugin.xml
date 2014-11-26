@@ -17,8 +17,8 @@
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
 
   <platform name="android">
-    <source-file src="BackgroundActivity.java" target-dir="src/org/chromium" />
-    <source-file src="BackgroundAppMainActivity.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/BackgroundActivity.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/BackgroundAppMainActivity.java" target-dir="src/org/chromium" />
 
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
       <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
