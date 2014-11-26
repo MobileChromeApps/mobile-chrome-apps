@@ -205,6 +205,8 @@ public class ChromeBluetooth extends CordovaPlugin {
     if(leScanner.startScan(null, settings, leScanCallback)) {
       setIsLeScanning(true);
       callbackContext.success();
+    } else {
+      callbackContext.error("Starting discovery failed");
     }
   }
 
@@ -213,6 +215,8 @@ public class ChromeBluetooth extends CordovaPlugin {
       leScanner.stopScan(leScanCallback);
       setIsLeScanning(false);
       callbackContext.success();
+    } else {
+      callbackContext.error("Failed to stop discovery");
     }
   }
 
