@@ -35,7 +35,7 @@ public class ChromeSystemStorage extends CordovaPlugin {
     private static final String FILE_SCHEME = "file://";
 
     private static ChromeSystemStorage pluginInstance;
-    private static List<EventInfo> pendingEvents = new ArrayList<>();
+    private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
     private CallbackContext messageChannel;
     private String builtinStorageId = null;
     private HashMap<String, String> externalStorageIds = null;
@@ -101,46 +101,34 @@ public class ChromeSystemStorage extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        switch (action) {
-            case "getInfo":
-                getInfo(args, callbackContext);
-                return true;
-            case "ejectDevice":
-                ejectDevice(args, callbackContext);
-                return true;
-            case "getAvailableCapacity":
-                getAvailableCapacity(args, callbackContext);
-                return true;
-            case "messageChannel":
-                messageChannel = callbackContext;
-                for (EventInfo event : pendingEvents) {
-                    sendStorageMessage(event.action, event.storagePath);
-                }
-                pendingEvents.clear();
-                return true;
+        if ("getInfo".equals(action)) {
+            getInfo(args, callbackContext);
+        } else if ("ejectDevice".equals(action)) {
+            ejectDevice(args, callbackContext);
+        } else if ("getAvailableCapacity".equals(action)) {
+            getAvailableCapacity(args, callbackContext);
+        } else if ("messageChannel".equals(action)) {
+            messageChannel = callbackContext;
+            for (EventInfo event : pendingEvents) {
+                sendStorageMessage(event.action, event.storagePath);
+            }
+            pendingEvents.clear();
+        } else {
+            return false;
         }
-        return false;
+        return true;
     }
 
     private void sendStorageMessage(String action, String storagePath) {
-
         boolean attached = false;
-
-        switch (action)
-        {
-            case Intent.ACTION_MEDIA_MOUNTED:
-                attached = true;
-                break;
-
-            case Intent.ACTION_MEDIA_BAD_REMOVAL:
-            case Intent.ACTION_MEDIA_REMOVED:
-            case Intent.ACTION_MEDIA_SHARED:
-            case Intent.ACTION_MEDIA_UNMOUNTED:
-                break;
-
-            default:
-                // Ignore any other actions
-                return;
+        if (Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
+            attached = true;
+        } else if (!(Intent.ACTION_MEDIA_BAD_REMOVAL.equals(action) ||
+                     Intent.ACTION_MEDIA_REMOVED.equals(action) ||
+                     Intent.ACTION_MEDIA_SHARED.equals(action) ||
+                     Intent.ACTION_MEDIA_UNMOUNTED.equals(action))) {
+            // Ignore any other actions
+            return;
         }
 
         // Sanitize the path provided with the event
@@ -266,7 +254,7 @@ public class ChromeSystemStorage extends CordovaPlugin {
         // the mapping can simply be stored in a map associated with the plugin instance.
 
         if (externalStorageIds == null) {
-            externalStorageIds = new HashMap<>();
+            externalStorageIds = new HashMap<String, String>();
         }
 
         File[] directories = getExternalStorageDirectories();
