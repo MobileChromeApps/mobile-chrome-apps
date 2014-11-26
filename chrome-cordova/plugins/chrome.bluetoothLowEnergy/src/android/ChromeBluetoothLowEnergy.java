@@ -6,7 +6,9 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.Build;
@@ -36,7 +38,17 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
   private static final String LOG_TAG = "ChromeBluetoothLowEnergy";
   private Map<String, ChromeBluetoothLowEnergyPeripheral> knownPeripheral = new HashMap<>();
+
+  // Ensure connectGatt() is called in serial
+  private Semaphore connectGattSemaphore = new Semaphore(1, true);
+
+  private BluetoothManager bluetoothManager;
   private CallbackContext bluetoothLowEnergyEventsCallback;
+
+  @Override
+  protected void pluginInitialize() {
+    bluetoothManager = (BluetoothManager) webView.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
+  }
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -246,21 +258,32 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     return peripheral;
   }
 
-  private void connect(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+  private void connect(CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
 
     String deviceAddress = args.getString(0);
 
-    ChromeBluetoothLowEnergyPeripheral peripheral = getPeripheralByDeviceAddress(deviceAddress);
+    final ChromeBluetoothLowEnergyPeripheral peripheral = getPeripheralByDeviceAddress(deviceAddress);
 
     if (peripheral == null) {
       callbackContext.error("Invalid Argument");
       return;
     }
 
-    peripheral.connect(callbackContext);
+    cordova.getThreadPool().execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            connectGattSemaphore.acquire();
+            peripheral.connect(callbackContext);
+            connectGattSemaphore.release();
+          } catch (InterruptedException e) {
+          }
+        }
+      });
   }
 
-  private void disconnect(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+  private void disconnect(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
     String deviceAddress = args.getString(0);
 
     ChromeBluetoothLowEnergyPeripheral peripheral = getPeripheralByDeviceAddress(deviceAddress);
@@ -273,7 +296,8 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     peripheral.disconnect(callbackContext);
   }
 
-  private void getService(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+  private void getService(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
     String serviceId = args.getString(0);
     String deviceAddress = getDeviceAddressFromInstanceId(serviceId);
 
@@ -295,7 +319,8 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
         Status.OK, buildServiceInfo(deviceAddress, service)));
   }
 
-  private void getServices(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+  private void getServices(CordovaArgs args, final CallbackContext callbackContext)
+      throws JSONException {
     String deviceAddress = args.getString(0);
 
     ChromeBluetoothLowEnergyPeripheral peripheral = getPeripheralByDeviceAddress(deviceAddress);
@@ -315,7 +340,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     callbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
   }
 
-  private void getCharacteristic(CordovaArgs args, CallbackContext callbackContext)
+  private void getCharacteristic(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
 
     String characteristicId = args.getString(0);
@@ -341,7 +366,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     callbackContext.sendPluginResult(new PluginResult(Status.OK, multipartMessage));
   }
 
-  private void getCharacteristics(CordovaArgs args, CallbackContext callbackContext)
+  private void getCharacteristics(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
 
     String serviceId = args.getString(0);
@@ -365,7 +390,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     callbackContext.sendPluginResult(new PluginResult(Status.OK, characteristicsInfo));
   }
 
-  private void getIncludedServices(CordovaArgs args, CallbackContext callbackContext)
+  private void getIncludedServices(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
     String serviceId = args.getString(0);
     String deviceAddress = getDeviceAddressFromInstanceId(serviceId);
@@ -387,7 +412,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     callbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
   }
 
-  private void getDescriptor(CordovaArgs args, CallbackContext callbackContext)
+  private void getDescriptor(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
 
     String descriptorId = args.getString(0);
@@ -411,7 +436,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
         Status.OK, buildDescriptorMultipartInfo(deviceAddress, descriptor)));
   }
 
-  private void getDescriptors(CordovaArgs args, CallbackContext callbackContext)
+  private void getDescriptors(CordovaArgs args, final CallbackContext callbackContext)
       throws JSONException {
 
     String characteristicId = args.getString(0);
@@ -556,7 +581,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       });
   }
 
-  private void registerBluetoothLowEnergyEvents(CallbackContext callbackContext)
+  private void registerBluetoothLowEnergyEvents(final CallbackContext callbackContext)
       throws JSONException {
 
     bluetoothLowEnergyEventsCallback = callbackContext;
@@ -636,6 +661,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
     private final static String CLIENT_CHARACTERISTIC_CONFIG =
         "00002902-0000-1000-8000-00805f9b34fb";
+    private final static int CONNECTION_TIMEOUT = 2000;
 
     private final ScanResult bleScanResult;
 
@@ -663,15 +689,59 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       this.bleScanResult = bleScanResult;
     }
 
-    void connect(CallbackContext callbackContext) {
+    private synchronized void connectSuccess() {
+      if (connectCallback != null) {
+        connectCallback.success();
+        connectCallback = null;
+        gatt.discoverServices();
+      }
+    }
+
+    private synchronized void connectTimeout() {
+      if (connectCallback != null) {
+        connectCallback.error("Connection timeout");
+        connectCallback = null;
+        close();
+      }
+    }
+
+    private void close() {
+      if (gatt != null) {
+        gatt.close();
+      }
+
+      knownServices.clear();
+      knownDescriptors.clear();
+      knownCharacteristics.clear();
+    }
+
+    private boolean isConnected() {
+      boolean isGattConnected = bluetoothManager
+          .getConnectedDevices(BluetoothProfile.GATT).contains(bleScanResult.getDevice());
+      boolean isGattServerConnected = bluetoothManager
+          .getConnectedDevices(BluetoothProfile.GATT_SERVER).contains(bleScanResult.getDevice());
+      return isGattConnected || isGattServerConnected;
+    }
+
+    void connect(CallbackContext callbackContext) throws InterruptedException {
+
       connectCallback = callbackContext;
+
       gatt = bleScanResult.getDevice().connectGatt(
           webView.getContext(), false, connectionCallback);
+
+      if (isConnected()) {
+        connectSuccess();
+      } else {
+        Thread.sleep(CONNECTION_TIMEOUT);
+        connectTimeout();
+      }
     }
 
     void disconnect(CallbackContext callbackContext) {
-      if (gatt == null) {
+      if (!isConnected()) {
         callbackContext.success();
+        close();
       } else {
         disconnectCallback = callbackContext;
         gatt.disconnect();
@@ -973,12 +1043,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
           switch (newState) {
             case BluetoothProfile.STATE_CONNECTED:
-              if (connectCallback != null) {
-                connectCallback.success();
-                connectCallback = null;
-                gatt.discoverServices();
-              }
-
+              connectSuccess();
               break;
             case BluetoothProfile.STATE_DISCONNECTED:
               if (disconnectCallback != null) {
@@ -990,11 +1055,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
                 sendServiceRemovedEvent(bleScanResult.getDevice().getAddress(), service);
               }
 
-              gatt.close();
-              gatt = null;
-
-              knownServices.clear();
-              knownPeripheral.remove(bleScanResult.getDevice().getAddress());
+              close();
               break;
           }
 
@@ -1105,7 +1166,6 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
               knownServices.put(serviceId, discoveredService);
             }
           }
-
         }
       };
   }
