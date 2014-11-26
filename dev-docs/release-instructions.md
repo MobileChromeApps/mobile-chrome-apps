@@ -170,6 +170,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
 
     # Things are good?
     git status
+    ls npm-shrinkwrap.json # Still exists from rc, right?
 
     # remove -rc# from "version"
     vim package.json
