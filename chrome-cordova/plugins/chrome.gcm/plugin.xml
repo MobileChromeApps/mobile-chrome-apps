@@ -14,7 +14,7 @@
   <keywords>chrome,gcm,messaging</keywords>
   <repo>https://github.com/MobileChromeApps/mobile-chrome-apps.git</repo>
   <issue>https://github.com/MobileChromeApps/mobile-chrome-apps/issues</issue>
-  
+
   <dependency id="org.chromium.common" />
   <dependency id="org.chromium.storage" />
   <dependency id="com.google.playservices" />
@@ -27,6 +27,8 @@
   <name>Chrome Apps GCM API</name>
 
   <platform name="android">
+    <dependency id="org.chromium.backgroundapp" />
+
     <source-file src="src/android/ChromeGcm.java" target-dir="src/org/chromium" />
     <source-file src="src/android/GcmReceiver.java" target-dir="src/org/chromium" />
     <source-file src="src/android/GcmIntentService.java" target-dir="src/org/chromium" />

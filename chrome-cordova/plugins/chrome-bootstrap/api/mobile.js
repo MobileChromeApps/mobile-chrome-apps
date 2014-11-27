@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var channel = require('cordova/channel')
+var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
 var app_runtime = require('org.chromium.runtime.app.runtime');
 var storage = require('org.chromium.storage.Storage');
@@ -40,6 +40,8 @@ exports.boot = function() {
     // We do this delay so that plugins have a chance to initialize using the bridge before we load the chrome app background scripts/event page
     var channelsToWaitFor = channel.deviceReadyChannelsArray.filter(function(c) { return c.type !== 'onDOMContentLoaded'; });
     channel.join(function() {
+      backgroundapp.onSwitchToForeground.addListener(fireOnLaunched);
+
       // Assigning innerHTML here has the side-effect of removing the
       // chrome-content-loaded script tag. Removing it is required so that the
       // page re-writting logic does not try and re-evaluate it.
@@ -119,25 +121,29 @@ function fireLifecycleEvents(manifestJson) {
         runtime.onInstalled.fire(installDetails);
       }
       // If launching for UI, fire onLaunched event
-      var exec = require("cordova/exec");
-      exec(function(data) {
-        // lifeCycleEventFuncs would determine if app is started from an alarm, notification, etc.
-        if (data && !exports.lifeCycleEventFuncs.length) {
-          app_runtime.onLaunched.fire();
-          // Log a warning if no window is created after a bit of a grace period.
-          setTimeout(function() {
-            var app_window = require('org.chromium.bootstrap.app.window');
-            if (!app_window.current()) {
-              console.warn('No page loaded because chrome.app.window.create() was never called.');
-            }
-          }, 500);
-        }
-        for (var i = 0; i < exports.lifeCycleEventFuncs.length; ++i) {
-          exports.lifeCycleEventFuncs[i]();
-        }
-        exports.lifeCycleEventFuncs = null;
-      }, null, "ChromeBootstrap", "doesNeedLaunch", []);
+      fireOnLaunched();
     });
   });
 }
 
+function fireOnLaunched() {
+  var exec = require("cordova/exec");
+  exec(function(data) {
+    // lifeCycleEventFuncs would determine if app is started from an alarm, notification, etc.
+    if (data && !exports.lifeCycleEventFuncs.length) {
+      app_runtime.onLaunched.fire();
+      // Log a warning if no window is created after a bit of a grace period.
+      setTimeout(function() {
+        var app_window = require('org.chromium.bootstrap.app.window');
+        if (!app_window.current()) {
+          console.warn('No page loaded because chrome.app.window.create() was never called.');
+        }
+      }, 500);
+    }
+    for (var i = 0; i < exports.lifeCycleEventFuncs.length; ++i) {
+      exports.lifeCycleEventFuncs[i]();
+    }
+    // Reset to an empty array, so functions can be re-added
+    exports.lifeCycleEventFuncs = [];
+  }, null, "ChromeBootstrap", "doesNeedLaunch", []);
+}
