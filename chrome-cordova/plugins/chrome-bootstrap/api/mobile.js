@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/* global backgroundapp */
+
 var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
 var app_runtime = require('org.chromium.runtime.app.runtime');
@@ -40,7 +42,12 @@ exports.boot = function() {
     // We do this delay so that plugins have a chance to initialize using the bridge before we load the chrome app background scripts/event page
     var channelsToWaitFor = channel.deviceReadyChannelsArray.filter(function(c) { return c.type !== 'onDOMContentLoaded'; });
     channel.join(function() {
-      backgroundapp.onSwitchToForeground.addListener(fireOnLaunched);
+      // If background app plugin is included, handle event to switch from
+      // background execution
+      var backgroundAvailable = typeof backgroundapp !== 'undefined';
+      if (backgroundAvailable) {
+        backgroundapp.onSwitchToForeground.addListener(fireOnLaunched);
+      }
 
       // Assigning innerHTML here has the side-effect of removing the
       // chrome-content-loaded script tag. Removing it is required so that the
