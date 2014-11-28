@@ -135,26 +135,19 @@ public class ChromeGcm extends CordovaPlugin {
         try {
             obj.put("action", action);
 
-            switch (action)
-            {
-                case EVENT_ACTION_DELETED:
-                    // No additional data required
-                    break;
-
-                case EVENT_ACTION_MESSAGE:
-                    JSONObject message = new JSONObject();
-                    message.put("data", new JSONObject(payloadContent));
-                    //message.put("collapseKey", ???);
-                    obj.put("message", message);
-                    break;
-
-                case EVENT_ACTION_SEND_ERROR:
-                    JSONObject error = new JSONObject();
-                    error.put("messageId", "1"); // TODO: Should not hard-code message id?
-                    error.put("errorMessage", payloadContent);
-                    //error.put("details", ???);
-                    obj.put("error", error);
-                    break;
+            if (EVENT_ACTION_DELETED.equals(action)) {
+                // No additional data required
+            } else if (EVENT_ACTION_MESSAGE.equals(action)) {
+                JSONObject message = new JSONObject();
+                message.put("data", new JSONObject(payloadContent));
+                //message.put("collapseKey", ???);
+                obj.put("message", message);
+            } else if (EVENT_ACTION_SEND_ERROR.equals(action)) {
+                JSONObject error = new JSONObject();
+                error.put("messageId", "1"); // TODO: Should not hard-code message id?
+                error.put("errorMessage", payloadContent);
+                //error.put("details", ???);
+                obj.put("error", error);
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Failed to create gcm event", e);
