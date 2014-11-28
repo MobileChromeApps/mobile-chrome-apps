@@ -48,6 +48,7 @@
 
   <platform name="ios">
     <framework src="CoreBluetooth.framework" />
+    <source-file src="src/ios/ChromeBluetooth.h" />
     <source-file src="src/ios/ChromeBluetooth.m" />
 
     <config-file target="config.xml" parent="/widget">

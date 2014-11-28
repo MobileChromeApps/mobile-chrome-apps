@@ -10,6 +10,7 @@
 
 #import <Cordova/CDVPlugin.h>
 #import <CoreBluetooth/CoreBluetooth.h>
+#import "ChromeBluetooth.h"
 
 #ifndef CHROME_BLUETOOTH_VERBOSE_LOGGING
 #define CHROME_BLUETOOTH_VERBOSE_LOGGING 0
@@ -66,7 +67,7 @@
 @end
 #pragma mark ChromeBluetooth interface
 
-@interface ChromeBluetooth : CDVPlugin <CBCentralManagerDelegate> {
+@interface ChromeBluetooth() <CBCentralManagerDelegate> {
     CBCentralManager* _centralManager;
     NSMutableDictionary* _peripherals;
     NSMutableSet* _activePeripherals;
@@ -85,27 +86,6 @@
 - (void)startDiscovery:(CDVInvokedUrlCommand*)command;
 - (void)stopDiscovery:(CDVInvokedUrlCommand*)command;
 - (void)registerBluetoothEvents:(CDVInvokedUrlCommand*)command;
-
-#pragma mark chrome.bluetoothLowEnergy interface
-// chrome.bluetooth and chrome.bluetoothLowEnergy uses same file because connect, and disconnect
-// a deivce requires the same instance of CBCentralManager that found the device.
-
-- (void)connect:(CDVInvokedUrlCommand*)command;
-- (void)disconnect:(CDVInvokedUrlCommand*)command;
-- (void)getService:(CDVInvokedUrlCommand*)command;
-- (void)getServices:(CDVInvokedUrlCommand*)command;
-- (void)getCharacteristic:(CDVInvokedUrlCommand*)command;
-- (void)getCharacteristics:(CDVInvokedUrlCommand*)command;
-- (void)getIncludedServices:(CDVInvokedUrlCommand*)command;
-- (void)getDescriptor:(CDVInvokedUrlCommand*)command;
-- (void)getDescriptors:(CDVInvokedUrlCommand*)command;
-- (void)readCharacteristicValue:(CDVInvokedUrlCommand*)command;
-- (void)writeCharacteristicValue:(CDVInvokedUrlCommand*)command;
-- (void)startCharacteristicNotifications:(CDVInvokedUrlCommand*)command;
-- (void)stopCharacteristicNotifications:(CDVInvokedUrlCommand*)command;
-- (void)readDescriptorValue:(CDVInvokedUrlCommand*)command;
-- (void)writeDescriptorValue:(CDVInvokedUrlCommand*)command;
-- (void)registerBluetoothLowEnergyEvents:(CDVInvokedUrlCommand*)command;
 
 - (void)sendDeviceChangedEvent:(NSDictionary*)deviceInfo;
 - (void)sendServiceAddedEvent:(NSDictionary*)serviceInfo;

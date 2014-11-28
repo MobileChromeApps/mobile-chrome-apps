@@ -28,4 +28,13 @@
       </feature>
     </config-file>
   </platform>
+
+  <platform name="ios">
+    <source-file src="src/ios/ChromeBluetoothLowEnergy.m"/>
+    <config-file target="config.xml" parent="/widget">
+      <feature name="ChromeBluetoothLowEnergy">
+        <param name="ios-package" value="ChromeBluetoothLowEnergy"/>
+      </feature>
+    </config-file>
+  </platform>
 </plugin>
