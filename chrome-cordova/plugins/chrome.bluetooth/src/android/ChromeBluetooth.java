@@ -46,6 +46,9 @@ import android.util.Log;
 public class ChromeBluetooth extends CordovaPlugin {
 
   private static final String LOG_TAG = "ChromeBluetooth";
+  private static final int[] SUPPORTED_PROFILE = {
+    BluetoothProfile.GATT, BluetoothProfile.GATT_SERVER
+  };
 
   private Map<String, ScanResult> knownLeScanResults = new HashMap<>();
 
@@ -80,13 +83,13 @@ public class ChromeBluetooth extends CordovaPlugin {
   @Override
   public void onReset() {
     super.onReset();
-    webView.getContext().unregisterReceiver(adapterStateReceiver);
+    unregisterAdapterStateReceiver();
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    webView.getContext().unregisterReceiver(adapterStateReceiver);
+    unregisterAdapterStateReceiver();
   }
 
   @Override
@@ -124,16 +127,21 @@ public class ChromeBluetooth extends CordovaPlugin {
     callbackContext.success(getAdapterStateInfo());
   }
 
+  public boolean isConnected(BluetoothDevice device) {
+    for (int profile : SUPPORTED_PROFILE) {
+      if (bluetoothManager.getConnectedDevices(profile).contains(device))
+        return true;
+    }
+    return false;
+  }
+
   private JSONObject getBasicDeviceInfo(BluetoothDevice device) throws JSONException {
     JSONObject deviceInfo = new JSONObject();
     deviceInfo.put("address", device.getAddress());
     deviceInfo.put("name", device.getName());
     deviceInfo.put("deviceClass", device.getBluetoothClass().getDeviceClass());
     deviceInfo.put("paired", device.getBondState() == BluetoothDevice.BOND_BONDED);
-    deviceInfo.put(
-        "connected",
-        bluetoothManager.getConnectedDevices(BluetoothProfile.GATT).contains(device)
-        || bluetoothManager.getConnectedDevices(BluetoothProfile.GATT_SERVER).contains(device));
+    deviceInfo.put("connected", isConnected(device));
     return deviceInfo;
   }
 
@@ -191,18 +199,14 @@ public class ChromeBluetooth extends CordovaPlugin {
   }
 
   private void startDiscovery(CallbackContext callbackContext) {
-    if (isLeScanning)
-      return;
-
-    int scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
 
     ScanSettings settings = new ScanSettings.Builder()
         .setCallbackType(
             ScanSettings.CALLBACK_TYPE_FIRST_MATCH | ScanSettings.CALLBACK_TYPE_MATCH_LOST)
-        .setScanMode(scanMode)
+        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build();
 
-    if(leScanner.startScan(null, settings, leScanCallback)) {
+    if (!isLeScanning && leScanner.startScan(null, settings, leScanCallback)) {
       setIsLeScanning(true);
       callbackContext.success();
     } else {
@@ -259,11 +263,14 @@ public class ChromeBluetooth extends CordovaPlugin {
 
   private void sendDeviceRemovedEvent(ScanResult scanResult) {
     try {
-      List<PluginResult> multipartMessage = new ArrayList<>();
       bluetoothEventsCallback.sendPluginResult(
           getMultipartEventsResult("onDeviceRemoved", getDeviceInfo(scanResult)));
     } catch (JSONException e) {
     }
+  }
+
+  private void unregisterAdapterStateReceiver() {
+    webView.getContext().unregisterReceiver(adapterStateReceiver);
   }
 
   private void registerAdapterStateReceiver() {
@@ -283,13 +290,11 @@ public class ChromeBluetooth extends CordovaPlugin {
   private final ScanCallback leScanCallback = new ScanCallback() {
       @Override
       public void onScanResult(int callbackType, ScanResult result) {
-        Log.e(LOG_TAG, "onScanResult():");
         switch (callbackType) {
           case ScanSettings.CALLBACK_TYPE_FIRST_MATCH:
-            if (!knownLeScanResults.containsKey(result.getDevice().getAddress())) {
-              knownLeScanResults.put(result.getDevice().getAddress(), result);
-              sendDeviceAddedEvent(result);
-            }
+            assert (!knownLeScanResults.containsKey(result.getDevice().getAddress()));
+            knownLeScanResults.put(result.getDevice().getAddress(), result);
+            sendDeviceAddedEvent(result);
             break;
           case ScanSettings.CALLBACK_TYPE_MATCH_LOST:
             sendDeviceRemovedEvent(result);

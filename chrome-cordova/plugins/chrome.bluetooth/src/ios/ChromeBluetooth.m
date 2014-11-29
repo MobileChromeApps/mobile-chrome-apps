@@ -57,7 +57,8 @@
         outputString = [self UUIDStringFromData];
     }
     
-    if ([outputString length] == 4) { // 16bit UUIDString
+    if ([outputString length] == 4) {
+        // Convert 16 bits UUID to 128 bits UUID. Reference: http://en.wikipedia.org/wiki/Bluetooth_low_energy#Identifiers
         outputString = [NSString stringWithFormat:@"0000%@-0000-1000-8000-00805F9B34FB", outputString];
     }
     
@@ -817,7 +818,7 @@
     if (!chromePeripheral)
         return;
     
-    VERBOSE_LOG(@"Device %@ connected", [chromePeripheral getPeripheralAddress]);
+    VERBOSE_LOG(@"Device %@ connected", [chromePeripheral peripheralAddress]);
     
     [self sendDeviceChangedEvent:[chromePeripheral getDeviceInfo]];
     
@@ -841,7 +842,7 @@
     if (!chromePeripheral)
         return;
 
-    VERBOSE_LOG(@"Device %@ disconnected", [chromePeripheral getPeripheralAddress]);
+    VERBOSE_LOG(@"Device %@ disconnected", [chromePeripheral peripheralAddress]);
    
     [self sendDeviceChangedEvent:[chromePeripheral getDeviceInfo]];
 

@@ -38,17 +38,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
   private static final String LOG_TAG = "ChromeBluetoothLowEnergy";
   private Map<String, ChromeBluetoothLowEnergyPeripheral> knownPeripheral = new HashMap<>();
-
-  // Ensure connectGatt() is called in serial
-  private Semaphore connectGattSemaphore = new Semaphore(1, true);
-
-  private BluetoothManager bluetoothManager;
   private CallbackContext bluetoothLowEnergyEventsCallback;
-
-  @Override
-  protected void pluginInitialize() {
-    bluetoothManager = (BluetoothManager) webView.getContext().getSystemService(Context.BLUETOOTH_SERVICE);
-  }
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -95,6 +85,21 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     return instanceId.split("/")[0];
   }
 
+  // Generate a unique identifier for the BluetoothGattService object, the
+  // format of the string is based on the dbus's object path in Linux system.
+  private static String buildServiceId(String deviceAddress, BluetoothGattService service) {
+    return new StringBuilder()
+        .append(deviceAddress)
+        .append("/")
+        .append(service.getUuid().toString())
+        .append("_")
+        .append(service.getInstanceId())
+        .toString();
+  }
+
+  // Generate a unique identifier for the BluetoothGattCharacteristic object,
+  // the format of the string is based on the dbus's object path in Linux
+  // system.
   private static String buildCharacteristicId(
       String deviceAddress, BluetoothGattCharacteristic characteristic) {
     return new StringBuilder()
@@ -108,16 +113,8 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
         .toString();
   }
 
-  private static String buildServiceId(String deviceAddress, BluetoothGattService service) {
-    return new StringBuilder()
-        .append(deviceAddress)
-        .append("/")
-        .append(service.getUuid().toString())
-        .append("_")
-        .append(service.getInstanceId())
-        .toString();
-  }
-
+  // Generate a unique identifier for the BluetoothGattDescriptor object, the
+  // format of the string is based on the dbus's object path in Linux system.
   private static String buildDescriptorId(
       String deviceAddress, BluetoothGattDescriptor descriptor) {
     return new StringBuilder()
@@ -141,45 +138,49 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     return info;
   }
 
-  private static Collection<String> getPropertyStrings(int properties) {
+  private static JSONArray getPropertyStrings(int properties) throws JSONException {
 
-    List<String> propertyStrings = new ArrayList<>();
+    JSONArray propertyStrings = new JSONArray();
 
     if ((BluetoothGattCharacteristic.PROPERTY_BROADCAST & properties) != 0) {
-      propertyStrings.add("broadcast");
+      propertyStrings.put("broadcast");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS & properties) != 0) {
-      propertyStrings.add("extendedProperties");
+      propertyStrings.put("extendedProperties");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_INDICATE & properties) != 0) {
-      propertyStrings.add("indicate");
+      propertyStrings.put("indicate");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_NOTIFY & properties) != 0) {
-      propertyStrings.add("notify");
+      propertyStrings.put("notify");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_READ & properties) != 0) {
-      propertyStrings.add("read");
+      propertyStrings.put("read");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE & properties) != 0) {
-      propertyStrings.add("authenticatedSignedWrites");
+      propertyStrings.put("authenticatedSignedWrites");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_WRITE & properties) != 0) {
-      propertyStrings.add("write");
+      propertyStrings.put("write");
     }
 
     if ((BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE & properties) != 0) {
-      propertyStrings.add("writeWithoutResponse");
+      propertyStrings.put("writeWithoutResponse");
     }
 
     return propertyStrings;
   }
 
+  // Note: The returned object need to be sent in an array or an object as the
+  // response of getCharacteristics()/getDescriptor()/getDescriptors(). The
+  // "value" field is excluded due to the bridge lacking support for binary
+  // data.
   private static JSONObject buildCharacteristicInfo(
       String deviceAddress, BluetoothGattCharacteristic characteristic) throws JSONException {
     JSONObject info = new JSONObject();
@@ -198,7 +199,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     multipartInfo.add(new PluginResult(
         Status.OK, buildServiceInfo(deviceAddress, characteristic.getService())));
     multipartInfo.add(new PluginResult(
-        Status.OK, new JSONArray(getPropertyStrings(characteristic.getProperties()))));
+        Status.OK, getPropertyStrings(characteristic.getProperties())));
     multipartInfo.add(new PluginResult(
         Status.OK, buildCharacteristicId(deviceAddress, characteristic)));
 
@@ -209,6 +210,9 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     return multipartInfo;
   }
 
+  // Note: The result object need to be sent in an array as the response of
+  // getDescriptors(). The "value" field is excluded due to the bridge lacking
+  // support for binary data.
   private static JSONObject buildDescriptorInfo(
       String deviceAddress, BluetoothGattDescriptor descriptor) throws JSONException {
     JSONObject info = new JSONObject();
@@ -272,11 +276,12 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     cordova.getThreadPool().execute(new Runnable() {
         @Override
         public void run() {
-          try {
-            connectGattSemaphore.acquire();
-            peripheral.connect(callbackContext);
-            connectGattSemaphore.release();
-          } catch (InterruptedException e) {
+          // Ensure connectGatt() is called in serial
+          synchronized (ChromeBluetoothLowEnergy.this) {
+            try {
+              peripheral.connect(callbackContext);
+            } catch (InterruptedException e) {
+            }
           }
         }
       });
@@ -659,6 +664,9 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
   private class ChromeBluetoothLowEnergyPeripheral {
 
+    // The UUID of remote notification config descriptor. We need to set the
+    // value of this descriptor when startNotification() or stopNotification()
+    // on characteristics.
     private final static String CLIENT_CHARACTERISTIC_CONFIG =
         "00002902-0000-1000-8000-00805f9b34fb";
     private final static int CONNECTION_TIMEOUT = 2000;
@@ -716,11 +724,9 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     }
 
     private boolean isConnected() {
-      boolean isGattConnected = bluetoothManager
-          .getConnectedDevices(BluetoothProfile.GATT).contains(bleScanResult.getDevice());
-      boolean isGattServerConnected = bluetoothManager
-          .getConnectedDevices(BluetoothProfile.GATT_SERVER).contains(bleScanResult.getDevice());
-      return isGattConnected || isGattServerConnected;
+      ChromeBluetooth bluetoothPlugin =
+          (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
+      return bluetoothPlugin.isConnected(bleScanResult.getDevice());
     }
 
     void connect(CallbackContext callbackContext) throws InterruptedException {
