@@ -38,9 +38,9 @@ public class ChromeNotifications extends CordovaPlugin {
     private static final String DATA_BUTTON_INDEX = "ButtonIndex";
 
     private NotificationManager notificationManager;
-    private static BackgroundEventHandler eventHandler;
+    private static BackgroundEventHandler<ChromeNotifications> eventHandler;
 
-    public static BackgroundEventHandler getEventHandler() {
+    public static BackgroundEventHandler<ChromeNotifications> getEventHandler() {
         // TODO: Need to worry about concurrency?
         if (eventHandler == null) {
             eventHandler = createEventHandler();
@@ -48,9 +48,9 @@ public class ChromeNotifications extends CordovaPlugin {
         return eventHandler;
     }
 
-    private static BackgroundEventHandler createEventHandler() {
+    private static BackgroundEventHandler<ChromeNotifications> createEventHandler() {
 
-        return new BackgroundEventHandler() {
+        return new BackgroundEventHandler<ChromeNotifications>() {
 
             @Override
             public BackgroundEventInfo mapBroadcast(Context context, Intent intent) {

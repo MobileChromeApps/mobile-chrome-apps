@@ -24,6 +24,8 @@
   </js-module>
 
   <platform name="android">
+    <dependency id="org.chromium.backgroundapp" />
+
     <source-file src="src/android/ChromeSystemStorage.java" target-dir="src/org/chromium" />
     <source-file src="src/android/ChromeSystemStorageReceiver.java" target-dir="src/org/chromium" />
 

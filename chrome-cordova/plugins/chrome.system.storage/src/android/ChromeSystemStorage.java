@@ -6,23 +6,18 @@ package org.chromium;
 
 import java.io.File;
 import java.lang.String;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -30,25 +25,12 @@ import android.util.Log;
 public class ChromeSystemStorage extends CordovaPlugin {
 
     private static final String LOG_TAG = "ChromeSystemStorage";
-    private static final String INTENT_PREFIX = "ChromeSystemStorage.";
-    private static final String MAIN_ACTIVITY_LABEL = INTENT_PREFIX + "MainActivity";
-    private static final String FILE_SCHEME = "file://";
+    private static final String DATA_STORAGE_PATH = "StoragePath";
 
-    private static ChromeSystemStorage pluginInstance;
-    private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
-    private CallbackContext messageChannel;
+    private static BackgroundEventHandler<ChromeSystemStorage> eventHandler;
+
     private String builtinStorageId = null;
     private HashMap<String, String> externalStorageIds = null;
-
-    private static class EventInfo {
-        public String action;
-        public String storagePath;
-
-        public EventInfo(String action, String storagePath) {
-            this.action = action;
-            this.storagePath = storagePath;
-        }
-    }
 
     private class StorageFile {
         public File path;
@@ -60,43 +42,92 @@ public class ChromeSystemStorage extends CordovaPlugin {
         }
     }
 
-    public static void handleMediaChangeAction(Context context, Intent intent) {
+    public static BackgroundEventHandler<ChromeSystemStorage> getEventHandler() {
+        // TODO: Need to worry about concurrency?
+        if (eventHandler == null) {
+            eventHandler = createEventHandler();
+        }
+        return eventHandler;
+    }
 
-        if (pluginInstance != null && pluginInstance.messageChannel != null) {
-            Log.w(LOG_TAG, "Firing event to already running webview");
-            pluginInstance.sendStorageMessage(intent.getAction(), intent.getDataString());
-        } else {
-            pendingEvents.add(new EventInfo(intent.getAction(), intent.getDataString()));
-            if (pluginInstance == null) {
-                try {
-                    String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
-                    Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
-                    activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
-                    activityIntent.putExtra(MAIN_ACTIVITY_LABEL, MAIN_ACTIVITY_LABEL);
-                    context.startActivity(activityIntent);
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "Failed to make startActivity intent", e);
+    private static BackgroundEventHandler<ChromeSystemStorage> createEventHandler() {
+
+        return new BackgroundEventHandler<ChromeSystemStorage>() {
+
+            @Override
+            public BackgroundEventInfo mapBroadcast(Context context, Intent intent) {
+
+                String action = intent.getAction();
+                if (!(
+                        Intent.ACTION_MEDIA_MOUNTED.equals(action) ||
+                        Intent.ACTION_MEDIA_BAD_REMOVAL.equals(action) ||
+                        Intent.ACTION_MEDIA_REMOVED.equals(action) ||
+                        Intent.ACTION_MEDIA_SHARED.equals(action) ||
+                        Intent.ACTION_MEDIA_UNMOUNTED.equals(action)
+                    )) {
+                    // Ignore any other actions
+                    return null;
+                }
+
+                BackgroundEventInfo event = new BackgroundEventInfo(action);
+                event.getData().putString(DATA_STORAGE_PATH, intent.getDataString());
+
+                return event;
+            }
+
+            @Override
+            public void mapEventToMessage(BackgroundEventInfo event, JSONObject message) throws JSONException {
+                boolean attached = Intent.ACTION_MEDIA_MOUNTED.equals(event.action);
+
+                // Sanitize the path provided with the event
+                String storagePath = getBaseStoragePath(Uri.parse(event.getData().getString(DATA_STORAGE_PATH)).getPath());
+
+                ChromeSystemStorage plugin = getCurrentPlugin();
+
+                // The attached/detached events may fire before the client has a chance to call getInfo().
+                // Thus, must initialize the external storage here (if not already done), to ensure that
+                // unit ids are consistent across calls to getInfo, and subsequent attach/detach events.
+                StorageFile[] directories = plugin.initializeExternalStorageDirectories();
+
+                String unitId = plugin.getExternalStorageId(storagePath);
+                StorageFile attachedStorage = null;
+                if (attached) {
+                    attachedStorage = plugin.getExternalStorageDirectoryByPath(storagePath, directories);
+                } else {
+                    // If the detached event causes initialization, the unit id may not be found
+                    // as it won't be reported in the list of directories.  We can safely generate
+                    // a random id, as the client won't have called getInfo yet.
+                    if (unitId == null) {
+                        unitId = UUID.randomUUID().toString();
+                    }
+                }
+
+                message.put("action", attached ? "attached" : "detached");
+                message.put("id", unitId);
+                if (attached) {
+                    JSONObject storageUnit = plugin.buildExternalStorageUnitInfo(attachedStorage);
+
+                    message.put("info", storageUnit);
                 }
             }
-        }
+        };
     }
 
     @Override
     public void pluginInitialize() {
-        if (pluginInstance == null && cordova.getActivity().getIntent().hasExtra(MAIN_ACTIVITY_LABEL)) {
-            cordova.getActivity().moveTaskToBack(true);
-        }
-        pluginInstance = this;
+        getEventHandler().pluginInitialize(this);
     }
 
     @Override
     public void onReset() {
-        messageChannel = null;
+        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
+        //messageChannel = null;
     }
 
     @Override
     public void onDestroy() {
-        messageChannel = null;
+        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
+        //messageChannel = null;
     }
 
     @Override
@@ -107,67 +138,17 @@ public class ChromeSystemStorage extends CordovaPlugin {
             ejectDevice(args, callbackContext);
         } else if ("getAvailableCapacity".equals(action)) {
             getAvailableCapacity(args, callbackContext);
-        } else if ("messageChannel".equals(action)) {
-            messageChannel = callbackContext;
-            for (EventInfo event : pendingEvents) {
-                sendStorageMessage(event.action, event.storagePath);
-            }
-            pendingEvents.clear();
-        } else {
-            return false;
         }
+
+        if (getEventHandler().pluginExecute(this, action, args, callbackContext)) {
+            return true;
+        }
+
         return true;
     }
 
-    private void sendStorageMessage(String action, String storagePath) {
-        boolean attached = false;
-        if (Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
-            attached = true;
-        } else if (!(Intent.ACTION_MEDIA_BAD_REMOVAL.equals(action) ||
-                     Intent.ACTION_MEDIA_REMOVED.equals(action) ||
-                     Intent.ACTION_MEDIA_SHARED.equals(action) ||
-                     Intent.ACTION_MEDIA_UNMOUNTED.equals(action))) {
-            // Ignore any other actions
-            return;
-        }
-
-        // Sanitize the path provided with the event
-        storagePath = getBaseStoragePath(Uri.parse(storagePath).getPath());
-
-        // The attached/detached events may fire before the client has a chance to call getInfo().
-        // Thus, must initialize the external storage here (if not already done), to ensure that
-        // unit ids are consistent across calls to getInfo, and subsequent attach/detach events.
-        StorageFile[] directories = initializeExternalStorageDirectories();
-
-        String unitId = externalStorageIds.get(storagePath);
-        StorageFile attachedStorage = null;
-        if (attached) {
-            attachedStorage = getExternalStorageDirectoryByPath(storagePath, directories);
-        } else {
-            // If the detached event causes initialization, the unit id may not be found
-            // as it won't be reported in the list of directories.  We can safely generate
-            // a random id, as the client won't have called getInfo yet.
-            if (unitId == null) {
-                unitId = UUID.randomUUID().toString();
-            }
-        }
-
-        JSONObject message = new JSONObject();
-        try {
-            message.put("action", attached ? "attached" : "detached");
-            message.put("id", unitId);
-            if (attached) {
-                JSONObject storageUnit = buildExternalStorageUnitInfo(attachedStorage);
-
-                message.put("info", storageUnit);
-            }
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Failed to create storage message", e);
-        }
-
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, message);
-        pluginResult.setKeepCallback(true);
-        messageChannel.sendPluginResult(pluginResult);
+    private String getExternalStorageId(String storagePath) {
+        return externalStorageIds.get(storagePath);
     }
 
     private String getBuiltInStorageId() {
@@ -314,16 +295,16 @@ public class ChromeSystemStorage extends CordovaPlugin {
         String shortPath = getBaseStoragePath(directory.path);
 
         // Get the id based on the path for the directory
-        String id = externalStorageIds.get(shortPath);
+        String id = getExternalStorageId(shortPath);
 
         return buildStorageUnitInfo(id, directory.path, directory.type, shortPath);
     }
 
-    private String getBaseStoragePath(File directory) {
+    private static String getBaseStoragePath(File directory) {
         return getBaseStoragePath(directory.getAbsolutePath());
     }
 
-    private String getBaseStoragePath(String fullPath) {
+    private static String getBaseStoragePath(String fullPath) {
         // The generated storage paths will typically be an app-specific directory to store files
         // We want to use a shorter, more generic path
         int pos = fullPath.indexOf("/Android/data");

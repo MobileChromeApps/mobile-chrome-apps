@@ -13,6 +13,6 @@ public class ChromeSystemStorageReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(LOG_TAG, "Received broadcast: " + intent.toUri(0));
-        ChromeSystemStorage.handleMediaChangeAction(context, intent);
+        ChromeSystemStorage.getEventHandler().handleBroadcast(context, intent);
     }
 }
