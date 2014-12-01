@@ -128,12 +128,18 @@ function rewritePage(pageContent, filePath, callback) {
     fgHead.removeChild(fgHead.lastChild);
   }
 
-  // Replace HTML Imports with a placeholder tag. This will be removed
-  // in execScripts(), above.
+  // In order to ensure that HTML imports load in the correct order, replace
+  // <link> imports with a placeholder tag and re-add them explicitly in evalScripts().
   // RegExp may match more than needed (in odd cases), but doing so is harmless.
   // It also strips off any </link> or <link /> (which are also odd).
-  var importFinder = /<link(\s[^>]*\brel\s*=[\s'"]*import[\s\S]*?)(?:\/?>)(?:\s*<\/link>)?/ig;
-  pageContent = pageContent.replace(importFinder, '<' + linkReplacementTag + '$1></' + linkReplacementTag + '>');
+  //
+  // Do *not* apply this transformation for the HTMLImports polyfill, since the
+  // polyfill does not run until DOMContentLoaded (and we block DOMContentLoaded until
+  // links are loaded).
+  if ('import' in document.createElement('link')) {
+      var importFinder = /<link(\s[^>]*\brel\s*=[\s'"]*import[\s\S]*?)(?:\/?>)(?:\s*<\/link>)?/ig;
+      pageContent = pageContent.replace(importFinder, '<' + linkReplacementTag + '$1></' + linkReplacementTag + '>');
+  }
 
   var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
   if (startIndex != -1) {

@@ -12,6 +12,10 @@ The API reference is [here](https://developer.chrome.com/apps/sockets_tcp).
 
 # Release Notes
 
+## 1.3.0 (Nov 26, 2014)
+* Added mobile-only `chrome.sockets.tcp.pipeToFile` API
+* android sockets.tcp: send an error when receive EOF
+
 ## 1.2.0 (November 17, 2014)
 * Remove unnecessary headers for chrome.sockets.* - ios
 * Fix possible blocks leak memory

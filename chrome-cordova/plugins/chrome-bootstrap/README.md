@@ -26,6 +26,9 @@ The API references are:
 
 # Release Notes
 
+## 1.1.1 (Nov 26, 2014)
+* Fix HTMLImports not working with imports polyfill (#450)
+
 ## 1.1.0 (November 17, 2014)
 * chrome.alarms: Make it more robust and prevent onLaunched when onAlarm is the cause of the Activity starting up
 * Have window.create() call window.show().

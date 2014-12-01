@@ -52,6 +52,9 @@ The API reference is [here](https://developer.chrome.com/apps/system_storage).
 
 # Release Notes
 
+## 1.1.2 (Nov 26, 2014)
+* Make Java 1.6 compatible
+
 ## 1.1.1 (November 17, 2014)
 - Add Android support for ejectDevice, getAvailableCapacity, onAttached/onDetached
 - Add iOS support for all methods/events

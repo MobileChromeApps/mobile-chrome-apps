@@ -64,6 +64,26 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
             return result;
           }
         };
+      },
+      toBeArrayBuffer: function(util, customEqualityTesters) {
+        return {
+          compare: function(actual, expected) {
+            if (Object.prototype.toString.call(expected).slice(8, -1) !== "ArrayBuffer")
+              throw new Error("toBeArrayBuffer expects an ArrayBuffer");
+            var result = {pass: true};
+            if (!actual) result.pass = false;
+            if (Object.prototype.toString.call(actual).slice(8, -1) !== "ArrayBuffer") result.pass = false;
+
+            var sent = new Uint8Array(expected);
+            var recv = new Uint8Array(actual);
+            if (recv.length !== sent.length) result.pass = false;
+
+            for (var i = 0; i < recv.length; i++) {
+              if (recv[i] !== sent[i]) result.pass = false;
+            }
+            return result;
+          }
+        };
       }
     };
 
@@ -329,44 +349,106 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
     }, 5000);
 
     describeExcludeChrome('fail on desktop', function() {
-      it('TCP file redirect', function(done) {
-        var hostname = 'httpbin.org';
-        var port = 80;
-        var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
-        var request = new ArrayBuffer(requestString.length);
-        var reqView = new Uint8Array(request);
-        for (var i = 0, strLen = requestString.length; i < strLen; i++) {
-          reqView[i] = requestString.charCodeAt(i);
-        }
-        var properties = {
-          destUri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFile.txt',
-          append: false
+
+      it('TCP file redirect partial data', function(done) {
+        var acceptListener = function(info) {
+          expect(info.socketId).toEqual(serverSockets[0].socketId);
+          expect(info.clientSocketId).toBeTruthy();
+          chrome.sockets.tcp.send(info.clientSocketId, data, function(result) {
+            expect(result.resultCode).toEqual(0);
+            expect(result.bytesSent).toEqual(256);
+            chrome.sockets.tcpServer.onAccept.removeListener(acceptListener);
+          });
         };
 
+        chrome.sockets.tcpServer.onAccept.addListener(acceptListener);
+
+        var pipeOptions = {
+          uri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFilePartial.txt',
+          append: false,
+          numBytes: 128
+        };
+
+        var callCounter = 0;
         var recvListener = function(info) {
-          expect(info.socketId).toEqual(clientSockets[0].socketId);
-          expect(info.destUri).toBeDefined();
-          window.resolveLocalFileSystemURL(info.destUri, function(fe) {
-            fe.file(function(file) {
-              var reader = new FileReader();
-              reader.onloadend = function(fileEntry) {
-                expect(this.result.byteLength).toEqual(info.bytesRead);
-                chrome.sockets.tcp.onReceive.removeListener(recvListener);
-                done();
-              };
-              reader.readAsArrayBuffer(file);
-            });
-          }, null);
+          callCounter++;
+          if (callCounter === 1) {
+            expect(info.socketId).toEqual(clientSockets[0].socketId);
+            expect(info.uri).toBeDefined();
+            expect(info.bytesRead).toEqual(pipeOptions.numBytes);
+          } else {
+            window.resolveLocalFileSystemURL(pipeOptions.uri, function(fe) {
+              fe.file(function(file) {
+                var reader = new FileReader();
+                reader.onloadend = function(fileEntry) {
+                  var allData = new Uint8Array(info.data.byteLength + pipeOptions.numBytes);
+                  allData.set(new Uint8Array(this.result), 0);
+                  allData.set(new Uint8Array(info.data), pipeOptions.numBytes);
+                  expect(allData.buffer).toBeArrayBuffer(data);
+                  chrome.sockets.tcp.onReceive.removeListener(recvListener);
+                  done();
+                };
+                reader.readAsArrayBuffer(file);
+              });
+            }, null);
+          }
         };
         chrome.sockets.tcp.onReceive.addListener(recvListener);
 
-        chrome.sockets.tcp.update(clientSockets[0].socketId, properties, function() {
-          chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
+        chrome.sockets.tcpServer.listen(serverSockets[0].socketId, bindAddr, serverPort, function(listenResult) {
+          expect(listenResult).toEqual(0);
+          chrome.sockets.tcp.pipeToFile(clientSockets[0].socketId, pipeOptions, function() {});
+          chrome.sockets.tcp.connect(clientSockets[0].socketId, connectAddr, serverPort, function(connectResult) {
             expect(connectResult).toEqual(0);
-            chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
-              expect(sendResult.resultCode).toEqual(0);
-              expect(sendResult.bytesSent).toEqual(requestString.length);
-            });
+          });
+        });
+      });
+
+
+      it('TCP file redirect all data', function(done) {
+        var acceptListener = function(info) {
+          expect(info.socketId).toEqual(serverSockets[0].socketId);
+          expect(info.clientSocketId).toBeTruthy();
+          chrome.sockets.tcp.send(info.clientSocketId, data, function(result) {
+            expect(result.resultCode).toEqual(0);
+            expect(result.bytesSent).toEqual(256);
+            chrome.sockets.tcpServer.onAccept.removeListener(acceptListener);
+          });
+        };
+
+        chrome.sockets.tcpServer.onAccept.addListener(acceptListener);
+
+        var recvListener = function(info) {
+          expect(info.socketId).toEqual(clientSockets[0].socketId);
+          expect(info.uri).toBeDefined();
+          chrome.sockets.tcp.onReceive.removeListener(recvListener);
+        };
+        chrome.sockets.tcp.onReceive.addListener(recvListener);
+
+        chrome.sockets.tcpServer.listen(serverSockets[0].socketId, bindAddr, serverPort, function(listenResult) {
+          expect(listenResult).toEqual(0);
+
+          var pipeOptions = {
+            uri: cordova.file.applicationStorageDirectory + 'Documents/redirectToFileAll.txt',
+            append: false,
+            numBytes: 256
+          };
+
+          chrome.sockets.tcp.pipeToFile(clientSockets[0].socketId, pipeOptions, function() {
+            window.resolveLocalFileSystemURL(pipeOptions.uri, function(fe) {
+              fe.file(function(file) {
+                var reader = new FileReader();
+                reader.onloadend = function(fileEntry) {
+                  expect(this.result).toBeArrayBuffer(data);
+                  done();
+                };
+                reader.readAsArrayBuffer(file);
+              });
+            }, null);
+          });
+
+          chrome.sockets.tcp.connect(clientSockets[0].socketId, connectAddr, serverPort, function(connectResult) {
+            expect(connectResult).toEqual(0);
           });
         });
       });
