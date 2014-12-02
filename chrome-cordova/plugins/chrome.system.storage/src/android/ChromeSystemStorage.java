@@ -43,7 +43,6 @@ public class ChromeSystemStorage extends CordovaPlugin {
     }
 
     public static BackgroundEventHandler<ChromeSystemStorage> getEventHandler() {
-        // TODO: Need to worry about concurrency?
         if (eventHandler == null) {
             eventHandler = createEventHandler();
         }
@@ -116,18 +115,6 @@ public class ChromeSystemStorage extends CordovaPlugin {
     @Override
     public void pluginInitialize() {
         getEventHandler().pluginInitialize(this);
-    }
-
-    @Override
-    public void onReset() {
-        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
-        //messageChannel = null;
-    }
-
-    @Override
-    public void onDestroy() {
-        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
-        //messageChannel = null;
     }
 
     @Override

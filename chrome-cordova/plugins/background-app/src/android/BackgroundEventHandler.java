@@ -15,17 +15,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
 public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
     private static final String LOG_TAG = "BackgroundEventHandler";
+    private static List< WeakReference<BackgroundEventHandler> > handlers = new ArrayList< WeakReference<BackgroundEventHandler> >();
 
     // TODO: we should make these maps of viewId -> pluginInstance in order to support
     // multiple webviews.
     private TPlugin pluginInstance;
     private CallbackContext messageChannel;
     private List<BackgroundEventInfo> pendingEvents = new ArrayList<BackgroundEventInfo>();
+
+    protected BackgroundEventHandler() {
+        handlerCreated(this);
+    }
 
     public void handleBroadcast(Context context, Intent intent) {
         BackgroundEventInfo event = mapBroadcast(context, intent);
@@ -36,7 +43,7 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
         }
 
         if (pluginInstance != null && messageChannel != null) {
-            Log.d(LOG_TAG, "Firing notification to already running webview");
+            Log.d(LOG_TAG, "Firing notification to already running web view");
             sendEventMessage(event);
         } else {
             pendingEvents.add(event);
@@ -62,20 +69,6 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
         }
         return false;
     }
-
-    //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
-
-    /*
-    @Override
-    public void onReset() {
-        messageChannel = null;
-    }
-
-    @Override
-    public void onDestroy() {
-        messageChannel = null;
-    }
-*/
 
     protected BackgroundEventInfo mapBroadcast(Context context, Intent intent) {
         return new BackgroundEventInfo(intent.getAction());
@@ -110,4 +103,26 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
         messageChannel.sendPluginResult(pluginResult);
     }
 
+    private void releaseMessageChannel() {
+        messageChannel = null;
+    }
+
+    private static void handlerCreated(BackgroundEventHandler handler) {
+        handlers.add(new WeakReference<BackgroundEventHandler>(handler));
+    }
+
+    static void releaseMessageChannels() {
+
+        for (Iterator<WeakReference<BackgroundEventHandler>> iterator = handlers.iterator(); iterator.hasNext();) {
+            BackgroundEventHandler handler = iterator.next().get();
+
+            if (handler == null) {
+                // Remove reference as the handler has been garbage collected
+                iterator.remove();
+                continue;
+            }
+
+            handler.releaseMessageChannel();
+        }
+    }
 }

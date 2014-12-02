@@ -41,7 +41,6 @@ public class ChromeNotifications extends CordovaPlugin {
     private static BackgroundEventHandler<ChromeNotifications> eventHandler;
 
     public static BackgroundEventHandler<ChromeNotifications> getEventHandler() {
-        // TODO: Need to worry about concurrency?
         if (eventHandler == null) {
             eventHandler = createEventHandler();
         }
@@ -79,18 +78,6 @@ public class ChromeNotifications extends CordovaPlugin {
     public void pluginInitialize() {
         getEventHandler().pluginInitialize(this);
         notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-    }
-
-    @Override
-    public void onReset() {
-        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
-        //messageChannel = null;
-    }
-
-    @Override
-    public void onDestroy() {
-        //TODO: Can we handle in BackgroundPlugin, and cleanup per plugin there?
-        //messageChannel = null;
     }
 
     @Override

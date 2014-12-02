@@ -21,17 +21,8 @@ public class BackgroundPlugin extends CordovaPlugin {
     private static final String ACTION_SWITCH_TO_FOREGROUND = "switchforeground";
 
     private static BackgroundPlugin pluginInstance;
-    private static List<EventInfo> pendingEvents = new ArrayList<EventInfo>();
 
     private CallbackContext messageChannel;
-
-    private static class EventInfo {
-        public String action;
-
-        public EventInfo(String action) {
-            this.action = action;
-        }
-    }
 
     public static void handleSwitchToForeground() {
         if (pluginInstance != null && pluginInstance.messageChannel != null) {
@@ -49,18 +40,19 @@ public class BackgroundPlugin extends CordovaPlugin {
     @Override
     public void onReset() {
         messageChannel = null;
+        releasePluginMessageChannels();
     }
 
     @Override
     public void onDestroy() {
         messageChannel = null;
+        releasePluginMessageChannels();
     }
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if ("messageChannel".equals(action)) {
             messageChannel = callbackContext;
-            fireQueuedEvents(args, callbackContext);
             return true;
         }
         return false;
@@ -78,11 +70,13 @@ public class BackgroundPlugin extends CordovaPlugin {
         messageChannel.sendPluginResult(pluginResult);
     }
 
-    private void fireQueuedEvents(final CordovaArgs args, final CallbackContext callbackContext) {
-        for (EventInfo event : pendingEvents) {
-            sendEventMessage(event.action);
-        }
-        pendingEvents.clear();
+    private void releasePluginMessageChannels() {
+        // Release the message channel for all plugins using our background event handler
+        //  - The Cordova Plugin framework does not provide a direct way to handle the life cycle
+        //    events for plugins (e.g. onReset, onDestroy)
+        //  - To avoid extra boilerplate in any plugin using the event handler, will cleanup all
+        //    the message channels for plugins here
+        BackgroundEventHandler.releaseMessageChannels();
     }
 
 }
