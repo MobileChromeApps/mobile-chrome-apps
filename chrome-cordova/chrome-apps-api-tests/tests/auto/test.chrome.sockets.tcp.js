@@ -276,78 +276,6 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
       });
     });
 
-    it('TCP secure get https website', function(done) {
-      var hostname = 'httpbin.org';
-      var port = 443;
-      var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
-      var request = new ArrayBuffer(requestString.length);
-      var reqView = new Uint8Array(request);
-      for (var i = 0, strLen = requestString.length; i < strLen; i++) {
-        reqView[i] = requestString.charCodeAt(i);
-      }
-
-      var recvListener = function(info) {
-        expect(info.socketId).toEqual(clientSockets[0].socketId);
-        expect(info.data.byteLength).toBeGreaterThan(0);
-        chrome.sockets.tcp.onReceive.removeListener(recvListener);
-        done();
-      };
-      chrome.sockets.tcp.onReceive.addListener(recvListener);
-
-      chrome.sockets.tcp.setPaused(clientSockets[0].socketId, true, function() {
-        chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
-          expect(connectResult).toEqual(0);
-          chrome.sockets.tcp.secure(clientSockets[0].socketId, function(secureResult) {
-            expect(secureResult).toEqual(0);
-            chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
-              expect(sendResult.resultCode).toEqual(0);
-              expect(sendResult.bytesSent).toEqual(requestString.length);
-              chrome.sockets.tcp.setPaused(clientSockets[0].socketId, false);
-            });
-          });
-        });
-      });
-    });
-
-    it('TCP secure get https website three times', function(done) {
-      var hostname = 'httpbin.org';
-      var port = 443;
-      var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
-      var request = new ArrayBuffer(requestString.length);
-      var reqView = new Uint8Array(request);
-      var recvCounter = 0;
-      for (var i = 0, strLen = requestString.length; i < strLen; i++) {
-        reqView[i] = requestString.charCodeAt(i);
-      }
-
-      var recvListener = function(info) {
-        recvCounter++;
-        expect(info.socketId).toEqual(clientSockets[0].socketId);
-        expect(info.data.byteLength).toBeGreaterThan(0);
-        if (recvCounter == 3) {
-          chrome.sockets.tcp.onReceive.removeListener(recvListener);
-          done();
-        }
-      };
-      chrome.sockets.tcp.onReceive.addListener(recvListener);
-
-      chrome.sockets.tcp.setPaused(clientSockets[0].socketId, true, function() {
-        chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
-          expect(connectResult).toEqual(0);
-          chrome.sockets.tcp.secure(clientSockets[0].socketId, function(secureResult) {
-            expect(secureResult).toEqual(0);
-            for (var i = 0; i < 3; i++) {
-              chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
-                expect(sendResult.resultCode).toEqual(0);
-                expect(sendResult.bytesSent).toEqual(requestString.length);
-                chrome.sockets.tcp.setPaused(clientSockets[0].socketId, false);
-              });
-            }
-          });
-        });
-      });
-    }, 5000);
-
     describeExcludeChrome('fail on desktop', function() {
 
       it('TCP file redirect partial data', function(done) {
@@ -453,5 +381,77 @@ registerAutoTests('chrome.sockets.tcp and chrome.sockets.tcpServer', function() 
         });
       });
     });
+
+    it('TCP secure get https website', function(done) {
+      var hostname = 'httpbin.org';
+      var port = 443;
+      var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+      var request = new ArrayBuffer(requestString.length);
+      var reqView = new Uint8Array(request);
+      for (var i = 0, strLen = requestString.length; i < strLen; i++) {
+        reqView[i] = requestString.charCodeAt(i);
+      }
+
+      var recvListener = function(info) {
+        expect(info.socketId).toEqual(clientSockets[0].socketId);
+        expect(info.data.byteLength).toBeGreaterThan(0);
+        chrome.sockets.tcp.onReceive.removeListener(recvListener);
+        done();
+      };
+      chrome.sockets.tcp.onReceive.addListener(recvListener);
+
+      chrome.sockets.tcp.setPaused(clientSockets[0].socketId, true, function() {
+        chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
+          expect(connectResult).toEqual(0);
+          chrome.sockets.tcp.secure(clientSockets[0].socketId, function(secureResult) {
+            expect(secureResult).toEqual(0);
+            chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
+              expect(sendResult.resultCode).toEqual(0);
+              expect(sendResult.bytesSent).toEqual(requestString.length);
+              chrome.sockets.tcp.setPaused(clientSockets[0].socketId, false);
+            });
+          });
+        });
+      });
+    });
+
+    it('TCP secure get https website three times', function(done) {
+      var hostname = 'httpbin.org';
+      var port = 443;
+      var requestString = 'GET /get HTTP/1.1\r\nHOST: ' + hostname + '\r\n\r\n';
+      var request = new ArrayBuffer(requestString.length);
+      var reqView = new Uint8Array(request);
+      var recvCounter = 0;
+      for (var i = 0, strLen = requestString.length; i < strLen; i++) {
+        reqView[i] = requestString.charCodeAt(i);
+      }
+
+      var recvListener = function(info) {
+        recvCounter++;
+        expect(info.socketId).toEqual(clientSockets[0].socketId);
+        expect(info.data.byteLength).toBeGreaterThan(0);
+        if (recvCounter == 3) {
+          chrome.sockets.tcp.onReceive.removeListener(recvListener);
+          done();
+        }
+      };
+      chrome.sockets.tcp.onReceive.addListener(recvListener);
+
+      chrome.sockets.tcp.setPaused(clientSockets[0].socketId, true, function() {
+        chrome.sockets.tcp.connect(clientSockets[0].socketId, hostname, port, function(connectResult) {
+          expect(connectResult).toEqual(0);
+          chrome.sockets.tcp.secure(clientSockets[0].socketId, function(secureResult) {
+            expect(secureResult).toEqual(0);
+            for (var i = 0; i < 3; i++) {
+              chrome.sockets.tcp.send(clientSockets[0].socketId, request, function(sendResult) {
+                expect(sendResult.resultCode).toEqual(0);
+                expect(sendResult.bytesSent).toEqual(requestString.length);
+                chrome.sockets.tcp.setPaused(clientSockets[0].socketId, false);
+              });
+            }
+          });
+        });
+      });
+    }, 5000);
   });
 });

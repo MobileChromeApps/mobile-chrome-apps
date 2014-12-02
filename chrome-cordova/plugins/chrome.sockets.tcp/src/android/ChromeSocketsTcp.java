@@ -772,7 +772,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       boolean connected = channel.connect(new InetSocketAddress(address, port));
       if (connected) {
         connectCallback.success();
-        connectCallback = null;
+        this.connectCallback = null;
       }
       return connected;
     }
