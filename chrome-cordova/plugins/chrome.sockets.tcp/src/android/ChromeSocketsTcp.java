@@ -589,6 +589,9 @@ public class ChromeSocketsTcp extends CordovaPlugin {
   }
 
   private class TcpSocket {
+
+    private final static long PIPE_TO_FILE_PROGRESS_INTERVAL = 100000000; // nano seconds
+
     private final int socketId;
 
     private SocketChannel channel;
@@ -617,6 +620,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     private boolean append;
     private int numBytes;
     private CallbackContext pipeToFileCallback;
+    private long bytesReadNotSend;
+    private long lastProgressTimestamp;
 
     private CallbackContext connectCallback;
     private CallbackContext secureCallback;
@@ -661,6 +666,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       pipeToFileCallback = null;
       append = false;
       numBytes = 0;
+      bytesReadNotSend = 0;
     }
 
     void setDefaultProperties() throws IOException {
@@ -734,6 +740,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       } else {
         return false;
       }
+      lastProgressTimestamp = System.nanoTime();
       return true;
     }
 
@@ -765,7 +772,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       boolean connected = channel.connect(new InetSocketAddress(address, port));
       if (connected) {
         connectCallback.success();
-        connectCallback = null;
+        this.connectCallback = null;
       }
       return connected;
     }
@@ -1082,13 +1089,21 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
         uriOutputStream.write(pipeBytes);
         uriOutputStream.flush();
-        JSONObject info = new JSONObject();
-        info.put("socketId", socketId);
-        info.put("uri", uri.toString());
-        info.put("bytesRead", pipeBytes.length);
-        sendReceiveEvent(new PluginResult(Status.OK, info));
 
         numBytes -= pipeBytes.length;
+
+        long timestamp = System.nanoTime();
+
+        bytesReadNotSend += pipeBytes.length;
+        if (numBytes == 0 || timestamp - lastProgressTimestamp > PIPE_TO_FILE_PROGRESS_INTERVAL) {
+          JSONObject info = new JSONObject();
+          info.put("socketId", socketId);
+          info.put("uri", uri.toString());
+          info.put("bytesRead", bytesReadNotSend);
+          sendReceiveEvent(new PluginResult(Status.OK, info));
+          lastProgressTimestamp = timestamp;
+          bytesReadNotSend = 0;
+        }
 
         if (numBytes == 0) {
           pipeToFileCallback.success();
