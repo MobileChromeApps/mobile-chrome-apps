@@ -64,11 +64,11 @@ public class ChromeNotifications extends CordovaPlugin {
             }
 
             @Override
-            public void mapEventToMessage(BackgroundEventInfo event, JSONObject obj) throws JSONException {
-                obj.put("action", event.action.substring(INTENT_PREFIX.length()));
-                obj.put("id", event.getData().getString(DATA_NOTIFICATION_ID));
+            public void mapEventToMessage(BackgroundEventInfo event, JSONObject message) throws JSONException {
+                message.put("action", event.action.substring(INTENT_PREFIX.length()));
+                message.put("id", event.getData().getString(DATA_NOTIFICATION_ID));
                 if (NOTIFICATION_BUTTON_CLICKED_ACTION.equals(event.action)) {
-                    obj.put("buttonIndex", event.getData().getInt(DATA_BUTTON_INDEX));
+                    message.put("buttonIndex", event.getData().getInt(DATA_BUTTON_INDEX));
                 }
             }
         };

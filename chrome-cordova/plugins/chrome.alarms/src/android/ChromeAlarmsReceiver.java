@@ -12,6 +12,6 @@ public class ChromeAlarmsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        ChromeAlarms.triggerAlarm(context, intent);
+        ChromeAlarms.getEventHandler().handleBroadcast(context, intent);
     }
 }

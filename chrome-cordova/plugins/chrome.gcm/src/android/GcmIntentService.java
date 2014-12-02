@@ -4,13 +4,8 @@
 
 package org.chromium;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-import org.json.JSONObject;
 
 public class GcmIntentService extends IntentService {
     String LOG_TAG ="GcmIntentService";
@@ -20,43 +15,7 @@ public class GcmIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        JSONObject payload = new JSONObject();
-        try {
-            for (String key : intent.getExtras().keySet()) {
-            	if(!(
-                  key.startsWith("google") ||
-                  key.equals("android.support.content.wakelockid") ||
-                  key.equals("collapse_key") ||
-                  key.equals("from"))){
-                     payload.put(key, intent.getStringExtra(key));
-                }
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Error parsing GCM payload: " + e);
-            return;
-        }
-        String payloadString = payload.toString();
-
-        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
-        String messageType = gcm.getMessageType(intent);
-
-        //ChromeGcm.startApp(this);
-        String action = null;
-        if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-            action = ChromeGcm.EVENT_ACTION_SEND_ERROR;
-            //ChromeGcm.handleSendError( payloadString);
-        } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
-            action = ChromeGcm.EVENT_ACTION_DELETED;
-            //ChromeGcm.handleDeletedMessages( payloadString);
-        } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-            action = ChromeGcm.EVENT_ACTION_MESSAGE;
-            //ChromeGcm.handleRxMessage( payloadString);
-        } else {
-//        	Log.w(LOG_TAG, "got msgtype: "+messageType);
-        }
-        if (action != null) {
-            ChromeGcm.handleGcmAction(getBaseContext(), intent, action, payloadString);
-        }
+        ChromeGcm.getEventHandler().handleBroadcast(getBaseContext(), intent);
         GcmReceiver.completeWakefulIntent(intent);
     }
 }

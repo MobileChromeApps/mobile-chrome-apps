@@ -11,6 +11,7 @@ import org.apache.cordova.CordovaPlugin;
 import org.chromium.BackgroundActivity;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -24,42 +25,41 @@ import java.util.ArrayList;
 public class ChromeAlarms extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeAlarms";
     private static final String MAIN_ACTIVITY_LABEL = "ChromeAlarms.MainActivity";
-    // TODO: we should make these maps of viewId -> pluginInstance in order to support
-    // multiple webviews.
-    private static ChromeAlarms pluginInstance;
-    private static ArrayList<String> alarmsToFire = new ArrayList<String>();
+
+    private static BackgroundEventHandler<ChromeAlarms> eventHandler;
+
     private AlarmManager alarmManager;
-    private CallbackContext messageChannel;
 
-    public static void triggerAlarm(Context context, Intent intent) {
-        int idIdx = intent.getAction().indexOf(".ALARM.");
-        String alarmId = intent.getAction().substring(idIdx + 7);
-
-        if (pluginInstance != null && pluginInstance.messageChannel != null) {
-            Log.w(LOG_TAG, "Firing alarm to already running webview");
-            pluginInstance.sendFireAlarmMessage(alarmId);
-        } else {
-            alarmsToFire.add(alarmId);
-            if (pluginInstance == null) {
-                BackgroundActivity.launchBackground(context);
-            }
+    public static BackgroundEventHandler<ChromeAlarms> getEventHandler() {
+        if (eventHandler == null) {
+            eventHandler = createEventHandler();
         }
+        return eventHandler;
+    }
+
+    private static BackgroundEventHandler<ChromeAlarms> createEventHandler() {
+
+        return new BackgroundEventHandler<ChromeAlarms>() {
+
+            @Override
+            public BackgroundEventInfo mapBroadcast(Context context, Intent intent) {
+                int idIdx = intent.getAction().indexOf(".ALARM.");
+                String alarmId = intent.getAction().substring(idIdx + 7);
+
+                return new BackgroundEventInfo(alarmId);
+            }
+
+            @Override
+            public void mapEventToMessage(BackgroundEventInfo event, JSONObject message) throws JSONException {
+                message.put("id", event.action);
+            }
+        };
     }
 
     @Override
     public void pluginInitialize() {
-        pluginInstance = this;
+        getEventHandler().pluginInitialize(this);
         alarmManager = (AlarmManager) cordova.getActivity().getSystemService(Context.ALARM_SERVICE);
-    }
-
-    @Override
-    public void onReset() {
-        messageChannel = null;
-    }
-
-    @Override
-    public void onDestroy() {
-        messageChannel = null;
     }
 
     @Override
@@ -70,22 +70,13 @@ public class ChromeAlarms extends CordovaPlugin {
         } else if ("clear".equals(action)) {
             clear(args, callbackContext);
             return true;
-        } else if ("messageChannel".equals(action)) {
-            messageChannel = callbackContext;
-            for (String alarmId : alarmsToFire) {
-                sendFireAlarmMessage(alarmId);
-            }
-            alarmsToFire.clear();
+        }
+
+        if (getEventHandler().pluginExecute(this, action, args, callbackContext)) {
             return true;
         }
 
         return false;
-    }
-
-    private void sendFireAlarmMessage(String alarmId) {
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "f" + alarmId);
-        pluginResult.setKeepCallback(true);
-        messageChannel.sendPluginResult(pluginResult);
     }
 
     private PendingIntent makePendingIntentForAlarm(final String name, int flags) {

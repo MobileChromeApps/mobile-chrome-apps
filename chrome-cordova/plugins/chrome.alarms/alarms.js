@@ -30,7 +30,7 @@ function triggerAlarm(name) {
     if (alarm.periodInMinutes) {
         alarm.scheduledTime += alarm.periodInMinutes*60000;
         if (!useNativeAlarms) {
-            alarm.timeoutId = setTimeout(function() { triggerAlarm(name) }, alarm.scheduledTime - Date.now());
+            alarm.timeoutId = setTimeout(function() { triggerAlarm(name); }, alarm.scheduledTime - Date.now());
         }
     } else {
         delete alarms[name];
@@ -80,11 +80,11 @@ exports.create = function(name, alarmInfo) {
         if (name in alarms) {
             clearTimeout(alarms[name].timeoutId);
         }
-        var timeoutId = setTimeout(function() { triggerAlarm(name) }, when - Date.now());
+        var timeoutId = setTimeout(function() { triggerAlarm(name); }, when - Date.now());
         alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes, timeoutId);
     }
     storage.internal.set({'alarms':alarms});
-}
+};
 
 exports.get = function(name, callback) {
     if (typeof callback == 'undefined') {
@@ -97,9 +97,9 @@ exports.get = function(name, callback) {
         return;
     }
     setTimeout(function() {
-        callback(alarms[name])
+        callback(alarms[name]);
     }, 0);
-}
+};
 
 exports.getAll = function(callback) {
     var ret = [];
@@ -109,7 +109,7 @@ exports.getAll = function(callback) {
     setTimeout(function() {
        callback(ret);
     }, 0);
-}
+};
 
 exports.clear = function clear(name) {
     if (typeof name == 'undefined') {
@@ -127,7 +127,7 @@ exports.clear = function clear(name) {
     }
     delete alarms[name];
     storage.internal.set({'alarms':alarms});
-}
+};
 
 exports.clearAll = function() {
     var names = Object.keys(alarms);
@@ -140,7 +140,7 @@ exports.clearAll = function() {
         });
     }
     storage.internal.set({'alarms':alarms});
-}
+};
 
 exports.onAlarm = new Event('onAlarm');
 
@@ -181,8 +181,8 @@ function firePendingAlarms() {
 }
 
 function onMessageFromNative(msg) {
-    if (msg.charAt(0) === 'f') {
-        var alarmId = msg.slice(1);
+    if (msg.id) {
+        var alarmId = msg.id;
         if (alarmsToFireOnStartUp) {
             alarmsToFireOnStartUp.push(alarmId);
         } else {
