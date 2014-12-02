@@ -101,7 +101,7 @@ static NSString* stringFromData(NSData* data) {
 
 @implementation ChromeSocketsTcpSocket
 
-NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 1;
+NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
 
 - (ChromeSocketsTcpSocket*)initWithId:(NSUInteger)theSocketId plugin:(ChromeSocketsTcp*)thePlugin properties:(NSDictionary*)theProperties
 {

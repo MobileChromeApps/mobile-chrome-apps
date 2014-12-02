@@ -590,7 +590,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
   private class TcpSocket {
 
-    private final static long PIPE_TO_FILE_PROGRESS_INTERVAL = 1000000000; // nano seconds
+    private final static long PIPE_TO_FILE_PROGRESS_INTERVAL = 100000000; // nano seconds
 
     private final int socketId;
 
