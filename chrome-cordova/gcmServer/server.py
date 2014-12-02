@@ -79,7 +79,7 @@ def handleMessageInApplicationSpecificManner(msg):
     t = threading.Timer(
             delay,
             sendMessage,
-            [msg['from'], { 'type': 'pong', 'message': payload['message'] }])
+            [msg['from'], { 'type': 'pongdelay', 'message': payload['message'] }])
     t.start()
 
   def handlePingMessage(msg, payload):
