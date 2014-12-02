@@ -621,7 +621,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     private int numBytes;
     private CallbackContext pipeToFileCallback;
     private long bytesReadNotSend;
-    private long lastProgressTimeStamp;
+    private long lastProgressTimestamp;
 
     private CallbackContext connectCallback;
     private CallbackContext secureCallback;
@@ -740,7 +740,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       } else {
         return false;
       }
-      lastProgressTimeStamp = System.nanoTime();
+      lastProgressTimestamp = System.nanoTime();
       return true;
     }
 
@@ -1094,16 +1094,15 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
         long timestamp = System.nanoTime();
 
-        if (numBytes == 0 || timestamp - lastProgressTimeStamp > PIPE_TO_FILE_PROGRESS_INTERVAL) {
+        bytesReadNotSend += pipeBytes.length;
+        if (numBytes == 0 || timestamp - lastProgressTimestamp > PIPE_TO_FILE_PROGRESS_INTERVAL) {
           JSONObject info = new JSONObject();
           info.put("socketId", socketId);
           info.put("uri", uri.toString());
-          info.put("bytesRead", bytesReadNotSend + pipeBytes.length);
+          info.put("bytesRead", bytesReadNotSend);
           sendReceiveEvent(new PluginResult(Status.OK, info));
-          lastProgressTimeStamp = timestamp;
+          lastProgressTimestamp = timestamp;
           bytesReadNotSend = 0;
-        } else {
-          bytesReadNotSend += pipeBytes.length;
         }
 
         if (numBytes == 0) {

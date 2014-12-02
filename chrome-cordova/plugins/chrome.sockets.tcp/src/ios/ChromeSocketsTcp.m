@@ -47,7 +47,9 @@ static NSString* stringFromData(NSData* data) {
     NSFileHandle* _uriFileHandle;
     NSInteger _numBytes;
     id _pipeToFileCompleteCallback;
-
+    long _bytesReadNotSend;
+    NSTimeInterval _lastProgressTimestamp;
+    
     NSUInteger _readTag;
     NSUInteger _receivedTag;
     
@@ -98,6 +100,8 @@ static NSString* stringFromData(NSData* data) {
 @end
 
 @implementation ChromeSocketsTcpSocket
+
+NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 1;
 
 - (ChromeSocketsTcpSocket*)initWithId:(NSUInteger)theSocketId plugin:(ChromeSocketsTcp*)thePlugin properties:(NSDictionary*)theProperties
 {
@@ -150,6 +154,7 @@ static NSString* stringFromData(NSData* data) {
     _append = nil;
     _pipeToFileCompleteCallback = nil;
     _numBytes = 0;
+    _bytesReadNotSend = 0;
 }
 
 - (NSDictionary*)getInfo
@@ -252,6 +257,8 @@ static NSString* stringFromData(NSData* data) {
     } else {
         return NO;
     }
+    
+    _lastProgressTimestamp = [[NSDate date] timeIntervalSince1970];
     return YES;
 }
 
@@ -297,13 +304,20 @@ static NSString* stringFromData(NSData* data) {
         
         _numBytes -= bytesRead;
         
-        NSDictionary *info = @{
-            @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
-            @"uri": _uri,
-            @"bytesRead": [NSNumber numberWithUnsignedInteger:bytesRead],
-        };
+        NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
         
-        [_plugin fireReceiveEventsWithInfo:info waitReadyToRead:NO];
+        _bytesReadNotSend += bytesRead;
+        if (_numBytes == 0 || timestamp - _lastProgressTimestamp > PIPE_TO_FILE_PROGRESS_INTERVAL) {
+            NSDictionary *info = @{
+                @"socketId": [NSNumber numberWithUnsignedInteger:_socketId],
+                @"uri": _uri,
+                @"bytesRead": [NSNumber numberWithUnsignedInteger:_bytesReadNotSend],
+            };
+        
+            [_plugin fireReceiveEventsWithInfo:info waitReadyToRead:NO];
+            _bytesReadNotSend = 0;
+            _lastProgressTimestamp = timestamp;
+        }
         
         if (_numBytes == 0) {
             void (^callback)() = _pipeToFileCompleteCallback;
