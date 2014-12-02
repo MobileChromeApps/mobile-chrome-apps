@@ -24,6 +24,7 @@
     <source-file src="src/android/BackgroundActivity.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundAppMainActivity.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundEventHandler.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/BackgroundEventInfo.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundPlugin.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
