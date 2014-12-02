@@ -70,7 +70,7 @@ function upgradeProjectIfStale() {
     var versionFile = path.join('platforms', 'created-with-cca-version');
     var createdWith;
     if (fs.existsSync(versionFile)) {
-      createdWith = fs.readFileSync(versionFile, 'utf-8');
+      createdWith = fs.readFileSync(versionFile, 'utf-8').trim();
     }
     if (createdWith == packageVersion) {
       return Q();
