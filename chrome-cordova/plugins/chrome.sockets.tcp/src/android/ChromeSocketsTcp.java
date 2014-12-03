@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
@@ -763,17 +764,25 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     boolean connect(String address, int port, CallbackContext connectCallback) throws IOException {
-      this.connectCallback = connectCallback;
       if (!channel.isOpen()) {
         channel = SocketChannel.open();
         channel.configureBlocking(false);
         setBufferSize();
       }
-      boolean connected = channel.connect(new InetSocketAddress(address, port));
+
+      boolean connected = false;
+      try {
+        connected = channel.connect(new InetSocketAddress(address, port));
+      } catch (UnresolvedAddressException e) {
+        connectCallback.error(e.getMessage());
+      }
+
       if (connected) {
         connectCallback.success();
-        this.connectCallback = null;
+      } else {
+        this.connectCallback = connectCallback;
       }
+
       return connected;
     }
 
@@ -871,10 +880,8 @@ public class ChromeSocketsTcp extends CordovaPlugin {
           return true;
         case BUFFER_UNDERFLOW:
           increaseReceiveDataBuffer();
-          return false;
+          // Need another read to get enough data to unwrap.
         case OK:
-          return res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_UNWRAP &&
-              res.bytesProduced() == 0;
         default:
           return false;
       }
@@ -933,6 +940,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         sslNetBuffer = ByteBuffer.allocate(sslEngine.getSession().getPacketBufferSize());
         sslPeerAppBuffer = ByteBuffer.allocate(sslEngine.getSession().getApplicationBufferSize());
 
+        // TODO: TLS1.1 and TLS1.2 is supported and enabled by default for API 20+.
         if (sslMinVersion.startsWith("tls")) {
           sslEngine.setEnabledProtocols(new String[] {"TLSv1"});
         }
