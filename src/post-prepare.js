@@ -206,34 +206,29 @@ function postPrepareInternal(platform) {
       }
     }
   })
-
-  // Update Android Theme to Translucent
-  .then(function() {
-    if (platform === 'android') {
-      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-      androidManifest.find('./application/activity').attrib["android:theme"] = "@android:style/Theme.Translucent";
-      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
-    }
-  })
   // Merge the manifests.
   .then(function() {
-    return require('./get-manifest')('www', platform);
-  }).then(function(manifest) {
-    return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest));
-  })
-  // Write manifest.short_name as launcher_name in Android strings.xml
-  .then(function() {
-    return require('./get-manifest')('www', platform);
-  }).then(function(manifest) {
-    // Android
-    if (platform === 'android' && manifest) {
-      if (manifest.short_name) {
-        var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
-        var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
-        strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
-        fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
-      }
-    }
+    return require('./get-manifest')('www', platform)
+      .then(function(manifest) {
+        return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest))
+          .then(function() {
+            if (platform === 'android' && manifest) {
+              // Write manifest.short_name as launcher_name in Android strings.xml
+              if (manifest.short_name) {
+                var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
+                var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
+                strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
+                fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
+              }
+
+              // Update Android Theme to Translucent
+              var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+              var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+              var theme = manifest.androidTheme || "@android:style/Theme.Translucent";
+              androidManifest.find('./application/activity').attrib["android:theme"] = theme;
+              fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+            }
+          });
+      });
   });
 }
