@@ -50,7 +50,7 @@ public class ChromeBluetooth extends CordovaPlugin {
     BluetoothProfile.GATT, BluetoothProfile.GATT_SERVER
   };
 
-  private Map<String, ScanResult> knownLeScanResults = new HashMap<>();
+  private Map<String, ScanResult> knownLeScanResults = new HashMap<String, ScanResult>();
 
   private BluetoothManager bluetoothManager;
   private BluetoothAdapter bluetoothAdapter;
@@ -146,7 +146,7 @@ public class ChromeBluetooth extends CordovaPlugin {
   }
 
   private Collection<String> getUuidStringsFromDevice(BluetoothDevice device) {
-    Set<String> uuidStrings = new HashSet<>();
+    Set<String> uuidStrings = new HashSet<String>();
     ParcelUuid[] uuids = device.getUuids();
     if (uuids != null) {
       for(ParcelUuid uuid : uuids) {
@@ -157,7 +157,7 @@ public class ChromeBluetooth extends CordovaPlugin {
   }
 
   private Collection<String> getUuidStringsFromLeScanRecord(ScanRecord scanRecord) {
-    Set<String> uuidStrings = new HashSet<>();
+    Set<String> uuidStrings = new HashSet<String>();
     List<ParcelUuid> uuids = scanRecord.getServiceUuids();
     if (uuids != null) {
       for(ParcelUuid uuid : uuids) {
@@ -229,7 +229,7 @@ public class ChromeBluetooth extends CordovaPlugin {
   }
 
   private static PluginResult getMultipartEventsResult(String eventType, JSONObject info) {
-    List<PluginResult> multipartMessage = new ArrayList<>();
+    List<PluginResult> multipartMessage = new ArrayList<PluginResult>();
     multipartMessage.add(new PluginResult(Status.OK, eventType));
     multipartMessage.add(new PluginResult(Status.OK, info));
     PluginResult result = new PluginResult(Status.OK, multipartMessage);

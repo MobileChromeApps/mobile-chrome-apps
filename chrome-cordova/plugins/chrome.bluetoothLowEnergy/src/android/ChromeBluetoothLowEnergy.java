@@ -6,9 +6,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.Build;
@@ -37,7 +35,8 @@ import static org.apache.cordova.PluginResult.Status;
 public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
   private static final String LOG_TAG = "ChromeBluetoothLowEnergy";
-  private Map<String, ChromeBluetoothLowEnergyPeripheral> knownPeripheral = new HashMap<>();
+  private Map<String, ChromeBluetoothLowEnergyPeripheral> knownPeripheral =
+      new HashMap<String, ChromeBluetoothLowEnergyPeripheral>();
   private CallbackContext bluetoothLowEnergyEventsCallback;
 
   @Override
@@ -194,7 +193,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private static List<PluginResult> buildCharacteristicMultipartInfo(
       String deviceAddress, BluetoothGattCharacteristic characteristic) throws JSONException {
 
-    List<PluginResult> multipartInfo = new ArrayList<>();
+    List<PluginResult> multipartInfo = new ArrayList<PluginResult>();
     multipartInfo.add(new PluginResult(Status.OK, characteristic.getUuid().toString()));
     multipartInfo.add(new PluginResult(
         Status.OK, buildServiceInfo(deviceAddress, characteristic.getService())));
@@ -227,7 +226,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private static List<PluginResult> buildDescriptorMultipartInfo(
       String deviceAddress, BluetoothGattDescriptor descriptor) throws JSONException {
 
-    List<PluginResult> multipartInfo = new ArrayList<>();
+    List<PluginResult> multipartInfo = new ArrayList<PluginResult>();
 
     multipartInfo.add(new PluginResult(Status.OK, descriptor.getUuid().toString()));
     multipartInfo.add(new PluginResult(Status.OK, buildCharacteristicInfo(
@@ -596,7 +595,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private static PluginResult getMultipartServiceEventsResult(
       String eventType, String deviceAddress, BluetoothGattService service) throws JSONException {
 
-    List<PluginResult> multipartMessage = new ArrayList<>();
+    List<PluginResult> multipartMessage = new ArrayList<PluginResult>();
     multipartMessage.add(new PluginResult(Status.OK, eventType));
     multipartMessage.add(new PluginResult(Status.OK, buildServiceInfo(deviceAddress, service)));
     PluginResult result = new PluginResult(Status.OK, multipartMessage);
@@ -634,7 +633,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private void sendCharacteristicValueChangedEvent(
       String deviceAddress, BluetoothGattCharacteristic characteristic) {
 
-    List<PluginResult> multipartMessage = new ArrayList<>();
+    List<PluginResult> multipartMessage = new ArrayList<PluginResult>();
     multipartMessage.add(new PluginResult(Status.OK, "onCharacteristicValueChanged"));
 
     try {
@@ -651,7 +650,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private void sendDescriptorValueChangedEvent(
       String deviceAddress, BluetoothGattDescriptor descriptor) {
 
-    List<PluginResult> multipartMessage = new ArrayList<>();
+    List<PluginResult> multipartMessage = new ArrayList<PluginResult>();
     multipartMessage.add(new PluginResult(Status.OK, "onDescriptorValueChanged"));
     try {
       multipartMessage.addAll(buildDescriptorMultipartInfo(deviceAddress, descriptor));
@@ -675,9 +674,12 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
     private BluetoothGatt gatt;
 
-    private Map<String, BluetoothGattService> knownServices = new HashMap<>();
-    private Map<String, BluetoothGattCharacteristic> knownCharacteristics = new HashMap<>();
-    private Map<String, BluetoothGattDescriptor> knownDescriptors = new HashMap<>();
+    private Map<String, BluetoothGattService> knownServices =
+        new HashMap<String, BluetoothGattService>();
+    private Map<String, BluetoothGattCharacteristic> knownCharacteristics =
+        new HashMap<String, BluetoothGattCharacteristic>();
+    private Map<String, BluetoothGattDescriptor> knownDescriptors =
+        new HashMap<String, BluetoothGattDescriptor>();
 
     private CallbackContext connectCallback;
     private CallbackContext disconnectCallback;
