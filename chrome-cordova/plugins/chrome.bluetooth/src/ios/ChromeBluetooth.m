@@ -21,7 +21,7 @@
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
 
-#define REMOVED_DEVICE_CHECKING_INTERVAL 5 //second
+#define REMOVED_DEVICE_CHECKING_INTERVAL 15 //second
 
 @implementation CBUUID (UUIDString)
 
@@ -69,7 +69,6 @@
 @interface ChromeBluetooth : CDVPlugin <CBCentralManagerDelegate> {
     CBCentralManager* _centralManager;
     NSMutableDictionary* _peripherals;
-    NSMutableDictionary* _addressUUIDMap;
     NSMutableSet* _activePeripherals;
     
     NSString* _bluetoothCallbackId;
@@ -177,13 +176,18 @@
     return self;
 }
 
-- (NSString*)peripheralAddress
++ (NSString*)peripheralAddressFromUUID:(NSUUID*)identifier
 {
     // TODO: find a way function to hash an UUIDString to a bluetooth address.
     // Device address should be a MAC address in format of "xx:xx:xx:xx:xx:xx",
     // and we can not get this information from iOS. We want to fake this by map
     // each UUID to a unique fake MAC address.
-    return _peripheral.identifier.UUIDString;
+    return identifier.UUIDString;
+}
+
+- (NSString*)peripheralAddress
+{
+    return [ChromeBluetoothPeripheral peripheralAddressFromUUID:_peripheral.identifier];
 }
 
 - (NSString*)serviceIdFromService:(CBService*)service
@@ -193,12 +197,12 @@
 
 - (NSString*)characteristicIdFromCharacteristic:(CBCharacteristic*)characteristic
 {
-    return [NSString stringWithFormat:@"%@/%@%@", [self peripheralAddress], [characteristic.service.UUID fullUUIDString], [characteristic.UUID fullUUIDString]];
+    return [NSString stringWithFormat:@"%@/%@/%@", [self peripheralAddress], [characteristic.service.UUID fullUUIDString], [characteristic.UUID fullUUIDString]];
 }
 
 - (NSString*)descriptorIdFromDescriptor:(CBDescriptor*)descriptor
 {
-    return [NSString stringWithFormat:@"%@/%@%@%@", [self peripheralAddress], [descriptor.characteristic.service.UUID fullUUIDString], [descriptor.characteristic.UUID fullUUIDString], [descriptor.UUID fullUUIDString]];
+    return [NSString stringWithFormat:@"%@/%@/%@/%@", [self peripheralAddress], [descriptor.characteristic.service.UUID fullUUIDString], [descriptor.characteristic.UUID fullUUIDString], [descriptor.UUID fullUUIDString]];
 }
 
 - (BOOL)isConnected
@@ -637,7 +641,6 @@
     if (self) {
         _centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil options:nil];
         _peripherals = [NSMutableDictionary dictionary];
-        _addressUUIDMap = [NSMutableDictionary dictionary];
         _activePeripherals = [NSMutableSet set];
         _isScanning = NO;
     }
@@ -645,15 +648,6 @@
 }
 
 #pragma mark chrome.bluetooth implementations
-- (ChromeBluetoothPeripheral*)getPeripheralByAddress:(NSString*)address
-{
-    NSUUID* uuid = _addressUUIDMap[address];
-    if (uuid) {
-        return _peripherals[uuid];
-    }
-    return nil;
-}
-
 - (NSDictionary*)getAdapterStateInfo
 {
     BOOL isPoweredOn = NO;
@@ -682,7 +676,7 @@
 {
     NSString* deviceAddress = [command argumentAtIndex:0];
  
-    ChromeBluetoothPeripheral* chromePeripheral =[self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
         
     if (chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[chromePeripheral getDeviceInfo]] callbackId:command.callbackId];
@@ -706,7 +700,7 @@
 - (void)startDiscovery:(CDVInvokedUrlCommand *)command
 {
     if (!_isScanning) {
-        [_centralManager scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
+        [_centralManager scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @NO}];
         [_removedDeviceTimer invalidate];
         _removedDeviceTimer = [NSTimer scheduledTimerWithTimeInterval:REMOVED_DEVICE_CHECKING_INTERVAL target:self selector:@selector(checkRemovedDevice:) userInfo:nil repeats:YES];
         _isScanning = YES;
@@ -728,6 +722,14 @@
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth adapter is not scanning"] callbackId:command.callbackId];
+    }
+}
+
+- (void)restartScanner
+{
+    if (_isScanning) {
+        [_centralManager stopScan];
+        [_centralManager scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @NO}];
     }
 }
 
@@ -783,9 +785,9 @@
         ChromeBluetoothPeripheral* peripheral = _peripherals[deviceAddr];
         [self sendDeviceRemovedEvent:[peripheral getDeviceInfo]];
         [peripheral cleanup];
-        [_addressUUIDMap removeObjectForKey:[peripheral->_peripheral identifier]];
         [_peripherals removeObjectForKey:deviceAddr];
     }
+    [self restartScanner];
 }
 
 - (void)callAndClear:(__strong id*)block withError:(NSError*)error
@@ -804,8 +806,8 @@
     [self sendAdapterStateChangedEvent:[self getAdapterStateInfo]];
     
     if (_centralManager.state != CBCentralManagerStatePoweredOn) {
-        for (NSUUID* uuid in _peripherals) {
-            [_peripherals[uuid] cleanup];
+        for (NSString* address in _peripherals) {
+            [_peripherals[address] cleanup];
         }
         [_peripherals removeAllObjects];       
     }
@@ -813,10 +815,10 @@
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
-    NSUUID* uuid = peripheral.identifier;
-    [_activePeripherals addObject:uuid];
+    NSString* address = [ChromeBluetoothPeripheral peripheralAddressFromUUID:peripheral.identifier];
+    [_activePeripherals addObject:address];
     
-    ChromeBluetoothPeripheral* foundPeripheral = _peripherals[uuid];
+    ChromeBluetoothPeripheral* foundPeripheral = _peripherals[address];
     if (foundPeripheral) {
         foundPeripheral->_adData = advertisementData;
         return;
@@ -824,15 +826,14 @@
    
     ChromeBluetoothPeripheral* chromePeripheral = [[ChromeBluetoothPeripheral alloc] initWithPeripheral:peripheral adData:advertisementData plugin:self];
     
-    _addressUUIDMap[[chromePeripheral peripheralAddress]] = peripheral.identifier;
-    _peripherals[uuid] = chromePeripheral;
+    _peripherals[address] = chromePeripheral;
     
     [self sendDeviceAddedEvent:[chromePeripheral getDeviceInfo]];
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
-    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[peripheral.identifier];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[[ChromeBluetoothPeripheral peripheralAddressFromUUID:peripheral.identifier]];
     if (!chromePeripheral)
         return;
     
@@ -847,7 +848,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[peripheral.identifier];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[[ChromeBluetoothPeripheral peripheralAddressFromUUID:peripheral.identifier]];
     if (!chromePeripheral)
         return;
  
@@ -856,7 +857,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[peripheral.identifier];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[[ChromeBluetoothPeripheral peripheralAddressFromUUID:peripheral.identifier]];
     if (!chromePeripheral)
         return;
 
@@ -865,7 +866,6 @@
     [self sendDeviceChangedEvent:[chromePeripheral getDeviceInfo]];
 
     [self callAndClear:&(chromePeripheral->_disconnectCallback) withError:error];
-    [_peripherals removeObjectForKey:peripheral.identifier];
 }
 
 #pragma mark chrome.bluetoothLowEnergy implementations
@@ -874,7 +874,7 @@
 {
     NSString* deviceAddress = [command argumentAtIndex:0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
         return;
@@ -901,7 +901,7 @@
 {
     NSString* deviceAddress = [command argumentAtIndex:0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
         return;
@@ -925,7 +925,7 @@
     NSString* serviceId = [command argumentAtIndex:0];
     NSString* deviceAddress = [serviceId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral.isConnected) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Bluetooth is not connected"] callbackId:command.callbackId];
@@ -945,7 +945,7 @@
 {
     NSString* deviceAddress = [command argumentAtIndex:0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
         return;
@@ -959,7 +959,7 @@
     NSString* characteristicId = [command argumentAtIndex:0];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -993,7 +993,7 @@
     NSString* serviceId = [command argumentAtIndex:0];
     NSString* deviceAddress = [serviceId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1020,7 +1020,7 @@
     NSString* serviceId = [command argumentAtIndex:0];
     NSString* deviceAddress = [serviceId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1048,7 +1048,7 @@
     NSString* descriptorId = [command argumentAtIndex:0];
     NSString* deviceAddress = [descriptorId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1081,7 +1081,7 @@
     NSString* characteristicId = [command argumentAtIndex:0];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1108,7 +1108,7 @@
     NSString* characteristicId = [command argumentAtIndex:0];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1136,7 +1136,7 @@
     NSData* value = [command argumentAtIndex:1];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1163,7 +1163,7 @@
     NSString* characteristicId = [command argumentAtIndex:0];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1190,7 +1190,7 @@
     NSString* characteristicId = [command argumentAtIndex:0];
     NSString* deviceAddress = [characteristicId componentsSeparatedByString:@"/"][0];
 
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1217,7 +1217,7 @@
     NSString* descriptorId = [command argumentAtIndex:0];
     NSString* deviceAddress = [descriptorId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
@@ -1245,7 +1245,7 @@
     NSData* value = [command argumentAtIndex:1];
     NSString* deviceAddress = [descriptorId componentsSeparatedByString:@"/"][0];
     
-    ChromeBluetoothPeripheral* chromePeripheral = [self getPeripheralByAddress:deviceAddress];
+    ChromeBluetoothPeripheral* chromePeripheral = _peripherals[deviceAddress];
     
     if (!chromePeripheral) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
