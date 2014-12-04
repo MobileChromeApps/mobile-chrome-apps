@@ -11,14 +11,17 @@ var runtime = require('org.chromium.runtime.runtime');
 // if (fail_condition)
 //   return callbackWithError('You should blah blah', fail, optional_args_to_fail...)
 function callbackWithError(msg, callback) {
-  console.error(msg);
-
-  if (typeof callback !== 'function')
+  if (typeof callback !== 'function') {
+    console.error(msg);
     return;
+  }
 
   try {
-    if (typeof runtime !== 'undefined')
+    if (typeof runtime !== 'undefined') {
       runtime.lastError = { 'message' : msg };
+    } else {
+      console.error(msg);
+    }
 
     callback.apply(null, Array.prototype.slice.call(arguments, 2));
   } finally {
