@@ -334,14 +334,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    Collection<BluetoothGattService> services = peripheral.getServices();
-
-    JSONArray servicesInfo = new JSONArray();
-    for (BluetoothGattService service : services) {
-      servicesInfo.put(buildServiceInfo(deviceAddress, service));
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
+    peripheral.getServices(callbackContext);
   }
 
   private void getCharacteristic(CordovaArgs args, final CallbackContext callbackContext)
@@ -684,6 +677,8 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     private CallbackContext connectCallback;
     private CallbackContext disconnectCallback;
 
+    private CallbackContext getServicesCallbackContext;
+
     private CallbackContext gattCommandCallbackContext;
 
     // BluetoothGatt only allows one async command at a time; otherwise, it will
@@ -700,7 +695,6 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       if (connectCallback != null) {
         connectCallback.success();
         connectCallback = null;
-        gatt.discoverServices();
       }
     }
 
@@ -762,11 +756,11 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return knownServices.get(serviceId);
     }
 
-    Collection<BluetoothGattService> getServices() {
-      if (gatt != null) {
-        return gatt.getServices();
-      } else {
-        return Collections.emptyList();
+    void getServices(CallbackContext callbackContext) {
+      getServicesCallbackContext = callbackContext;
+      if (gatt != null && !gatt.discoverServices()) {
+        getServicesCallbackContext.error("Failed to discover services");
+        getServicesCallbackContext = null;
       }
     }
 
@@ -1153,17 +1147,34 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
           if (status == BluetoothGatt.GATT_SUCCESS) {
-            List<BluetoothGattService> discoveredServices = gatt.getServices();
+
+            Collection<BluetoothGattService> discoveredServices = gatt.getServices();
+            JSONArray servicesInfo = new JSONArray();
+
             for (BluetoothGattService discoveredService : discoveredServices) {
               String serviceId = buildServiceId(
                   bleScanResult.getDevice().getAddress(),
                   discoveredService);
+
               if (knownServices.containsKey(serviceId)) {
                 sendServiceChangedEvent(bleScanResult.getDevice().getAddress(), discoveredService);
               } else {
                 sendServiceAddedEvent(bleScanResult.getDevice().getAddress(), discoveredService);
               }
+
               knownServices.put(serviceId, discoveredService);
+
+              try {
+                servicesInfo.put(buildServiceInfo(
+                    bleScanResult.getDevice().getAddress(),
+                    discoveredService));
+              } catch (JSONException e) {
+              }
+            }
+
+            if (getServicesCallbackContext != null) {
+              getServicesCallbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
+              getServicesCallbackContext = null;
             }
           }
         }
