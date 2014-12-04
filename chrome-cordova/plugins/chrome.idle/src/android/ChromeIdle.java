@@ -45,8 +45,10 @@ public class ChromeIdle extends CordovaPlugin {
     
     private void cleanUp() {
         // Unregister the broadcast receiver.
-        webView.getContext().unregisterReceiver(this.lockReceiver);
-        this.lockReceiver = null;
+        if (this.lockReceiver != null) {
+            webView.getContext().unregisterReceiver(this.lockReceiver);
+            this.lockReceiver = null;
+        }
         
         // Null out the callback context.
         this.lockCallbackContext = null;
