@@ -124,26 +124,49 @@ registerAutoTests("chrome.notifications", function() {
   describe('parameter validation', function() {
 
     function createNotificationWithMissingOption(done) {
-      createNotification(true, true, done);
+      createNotification('lasterror', done);
     }
 
     function createNotificationWithInvalidOptionValue(done) {
-      createNotification(false, false, done);
+      createNotification('exception', done);
     }
 
-    function createNotification(notificationCallbackShouldExecute, lastErrorShouldBeSet, done) {
+    function createNotification(expectedBehaviour, done) {
+      var notificationCallbackShouldExecute = false;
+      var lastErrorShouldBeSet = false;
+      var exceptionShouldBeThrown = false;
+
+      switch (expectedBehaviour) {
+        case 'callback':
+          notificationCallbackShouldExecute = true;
+          break;
+        case 'lasterror':
+          notificationCallbackShouldExecute = true;
+          lastErrorShouldBeSet = true;
+          break;
+        case 'exception':
+          exceptionShouldBeThrown = true;
+          break;
+      }
+
       var callbackExecuted = false;
       var lastErrorSet = false;
+      var thrownException = null;
 
-      chrome.notifications.create(ids[0], options, function(id0) {
-        callbackExecuted = true;
-        lastErrorSet = (chrome.runtime.lastError !== null);
-      });
+      try {
+        chrome.notifications.create(ids[0], options, function(id0) {
+          callbackExecuted = true;
+          lastErrorSet = (chrome.runtime.lastError !== null);
+        });
+      } catch (e) {
+        thrownException = e;
+      }
 
       // Wait briefly to give the callback time to be executed
       setTimeout(function() {
-        expect(callbackExecuted).toBe(notificationCallbackShouldExecute);
-        expect(lastErrorSet).toBe(lastErrorShouldBeSet);
+        expect(callbackExecuted).toBeWithName(notificationCallbackShouldExecute, 'callback executed');
+        expect(lastErrorSet).toBeWithName(lastErrorShouldBeSet, 'last error');
+        expect(thrownException !== null).toBeWithName(exceptionShouldBeThrown, 'exception thrown');
 
         // Verify that the notification was *not* created
         checkNotificationsEmpty(done);
@@ -160,37 +183,68 @@ registerAutoTests("chrome.notifications", function() {
     }
 
     function updateNotificationWithMissingOption(applyChangesToBeUpdated, done) {
-      updateNotification(true, false, applyChangesToBeUpdated, done);
+      updateNotification('callback', applyChangesToBeUpdated, done);
     }
 
     function updateNotificationWithInvalidOptionValue(applyChangesToBeUpdated, done) {
-      updateNotification(false, false, applyChangesToBeUpdated, done);
+      updateNotification('exception', applyChangesToBeUpdated, done);
     }
 
-    function updateNotification(notificationCallbackShouldExecute, lastErrorShouldBeSet, applyChangesToBeUpdated, done) {
+    function updateNotification(expectedBehaviour, applyChangesToBeUpdated, done) {
+      var waitForCallback = 250;
+      var notificationCallbackShouldExecute = false;
+      var lastErrorShouldBeSet = false;
+      var exceptionShouldBeThrown = false;
+
+      switch (expectedBehaviour) {
+        case 'callback':
+          notificationCallbackShouldExecute = true;
+          // Successful callbacks take longer than failures
+          waitForCallback = 500;
+          break;
+        case 'lasterror':
+          notificationCallbackShouldExecute = true;
+          lastErrorShouldBeSet = true;
+          break;
+        case 'exception':
+          exceptionShouldBeThrown = true;
+          break;
+      }
+
       var callbackExecuted = false;
       var lastErrorSet = false;
+      var thrownException = null;
       var notificationId = ids[0];
 
       chrome.notifications.create(notificationId, options, function(id) {
         // Make changes to the options to be passed to the update
         applyChangesToBeUpdated();
 
-        chrome.notifications.update(notificationId, options, function(wasUpdated) {
-          callbackExecuted = true;
-          lastErrorSet = (chrome.runtime.lastError !== null);
-          // Should have been updated if expecting callback + no error
-          expect(wasUpdated).toBe(notificationCallbackShouldExecute && !lastErrorShouldBeSet);
-        });
+        try {
+          chrome.notifications.update(notificationId, options, function(wasUpdated) {
+            console.log('update callback WAS called');
+            callbackExecuted = true;
+            lastErrorSet = (chrome.runtime.lastError !== null);
+            // Should have been updated if expecting callback + no error
+            expect(wasUpdated).toBeWithName(notificationCallbackShouldExecute && !lastErrorShouldBeSet, 'wasUpdated');
+          });
+        } catch (e) {
+          console.log('caught an exception');
+          thrownException = e;
+          if (!exceptionShouldBeThrown) {
+            console.log('Unexpected exception: ' + e);
+          }
+        }
       });
 
       // Wait briefly to give the callback time to be executed
       setTimeout(function() {
-        expect(callbackExecuted).toBe(notificationCallbackShouldExecute);
-        expect(lastErrorSet).toBe(lastErrorShouldBeSet);
+        expect(callbackExecuted).toBeWithName(notificationCallbackShouldExecute, 'callback executed');
+        expect(lastErrorSet).toBeWithName(lastErrorShouldBeSet, 'last error');
+        expect(thrownException !== null).toBeWithName(exceptionShouldBeThrown, 'exception thrown');
 
         done();
-      }, 250);
+      }, waitForCallback);
     }
 
     function removeOption(paramToOmit)
@@ -210,13 +264,23 @@ registerAutoTests("chrome.notifications", function() {
             return result;
           }
         };
+      },
+      toBeWithName : function(util,customEqualityTesters){
+        return {
+          compare : function(actual, expected, label){
+            var result = {};
+            result.pass = (actual === expected);
+            result.message = 'Expected ' + actual + ' (' + label + ') to be ' + expected;
+            return result;
+          }
+        };
       }
     };
 
     beforeEach(function(done) {
       ids = [ 'id0', 'id1' ];
       options = {'type':'basic', 'iconUrl':'assets/icon-128x128.png', 'title':'Notification Title','message':'Notification Message' };
-      addMatchers(customMatchers);
+      jasmine.addMatchers(customMatchers);
       done();
     });
 
