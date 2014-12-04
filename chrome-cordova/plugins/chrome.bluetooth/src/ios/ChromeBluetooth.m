@@ -879,6 +879,12 @@
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid Argument"] callbackId:command.callbackId];
         return;
     }
+  
+    NSNumber* isConnectable = chromePeripheral->_adData[CBAdvertisementDataIsConnectable];
+    if (isConnectable && ![isConnectable boolValue]) {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Device is not connectable"] callbackId:command.callbackId];
+        return;
+    }
     
     id<CDVCommandDelegate> commandDelegate = self.commandDelegate;
     chromePeripheral->_connectCallback = [^(NSError* error) {
