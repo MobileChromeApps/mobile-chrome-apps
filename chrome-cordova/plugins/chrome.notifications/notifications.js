@@ -12,28 +12,44 @@ var eventsToFireOnStartUp = [];
 var notifications = null;
 
 function resolveUri(uri) {
-    if (uri.indexOf('chrome-extension') == 0) {
+    if (uri.indexOf('chrome-extension') === 0) {
         return uri;
     } else {
         return runtime.getURL(uri);
     }
 }
 
-function checkNotificationOptions(options) {
-    var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
-    var permittedTypes = [ 'basic', 'image', 'list', 'progress' ];
-    for (var i = 0; i < requiredOptions.length; i++) {
-        if (!(requiredOptions[i] in options)) {
-            console.error('Error: Invalid notification options. Property \'' + requiredOptions[i] + '\' is required.');
-            return false;
-        }
+function checkNotificationOptions(options, isCreate) {
+    // For create, there are some required properties, all others are optional
+    // For update, all properties are optional
+    // Required properties must exist, and must be valid.  Optional properties
+    // can be omitted, but must be valid if present.
+    // For consistency with the desktop API, varying validation behaviour is
+    // required:
+    // - Required options that are missing should still invoke the callback,
+    //   but chrome.runtime.lastError needs to be set
+    // - Options provided with invalid values (i.e. type), should raise an error
+    if (isCreate) {
+      var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
+      for (var i = 0; i < requiredOptions.length; i++) {
+          if (!(requiredOptions[i] in options)) {
+              console.error('Some of the required properties are missing: type, iconUrl, title and message.');
+              return false;
+          }
+      }
     }
-    if (permittedTypes.indexOf(options.type) == -1) {
-        console.error('Error: Invalid notification options. Property \'type\' must be one of ' +
-                      JSON.stringify(permittedTypes) + '.');
-        return false;
+    if (isCreate || 'type' in options) {
+      var permittedTypes = [ 'basic', 'image', 'list', 'progress' ];
+      if (permittedTypes.indexOf(options.type) == -1) {
+          var invalidType = 'Property \'type\': Value must be one of: ' +
+                        JSON.stringify(permittedTypes) + '.';
+          console.error('Error: Invalid notification options.' + invalidType);
+          throw new Error(invalidType);
+      }
     }
-    options.iconUrl = resolveUri(options.iconUrl);
+    if (isCreate || 'iconUrl' in options) {
+      options.iconUrl = resolveUri(options.iconUrl);
+    }
     if ('buttons' in options) {
         for (var i = 0; i < options.buttons.length; i++) {
             if (!('title' in options.buttons[i])) {
@@ -77,44 +93,60 @@ function checkNotificationOptions(options) {
 }
 
 exports.create = function(notificationId, options, callback) {
-    if (!checkNotificationOptions(options)) {
-        return;
+    if (!checkNotificationOptions(options, true)) {
+      // For consistency with desktop, invoke the callback even if the options
+      // are invalid
+      // - The validation will raise/log errors as appropriate
+      setTimeout(function() {
+          callback(notificationId);
+      }, 0);
+      return;
     }
-    if (notificationId == '') {
+    if (notificationId === '') {
         notificationId = Math.floor(Math.random()*10000000000).toString();
     }
     notifications[notificationId] = true;
     storage.internal.set({'notifications':notifications});
     var win = function() {
         callback(notificationId);
-    }
+    };
     exec(win, undefined, 'ChromeNotifications', 'create', [notificationId, options]);
-}
+};
 
 exports.update = function(notificationId, options, callback) {
-    if (!checkNotificationOptions(options)) {
+    if (!checkNotificationOptions(options, false)) {
+        // For consistency with desktop, invoke the callback even if the options
+        // are invalid
+        // - The validation will raise/log errors as appropriate
+        setTimeout(function() {
+            callback(false);
+        }, 0);
         return;
     }
     var win = function(wasUpdated) {
         callback(!!wasUpdated);
-    }
-    exec(win, undefined, 'ChromeNotifications', 'update', [notificationId, options]);
-}
+    };
+    var fail = function() {
+      // How to set last error?
+        callback(false);
+    };
+    exec(win, fail, 'ChromeNotifications', 'update', [notificationId, options]);
+};
 
 exports.clear = function(notificationId, callback) {
     delete notifications[notificationId];
     storage.internal.set({'notifications':notifications});
     var win = function(wasCleared) {
         callback(!!wasCleared);
-    }
+    };
     exec(win, undefined, 'ChromeNotifications', 'clear', [notificationId]);
-}
+};
 
 exports.getAll = function(callback) {
     setTimeout(function() {
         callback(notifications);
     }, 0);
-}
+};
 
 exports.onClosed = new Event('onClosed');
 exports.onClicked = new Event('onClicked');
