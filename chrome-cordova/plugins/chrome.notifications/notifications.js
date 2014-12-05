@@ -37,6 +37,11 @@ function storeNotifications() {
     storage.internal.set({'notifications':notifications, 'notificationOptions':notificationOptions});
 }
 
+function setLastError(message) {
+    console.error(message);
+    runtime.lastError = {'message':message};
+}
+
 function checkNotificationOptions(options, isCreate) {
     // For create, there are some required properties, all others are optional
     // For update, all properties are optional
@@ -48,14 +53,13 @@ function checkNotificationOptions(options, isCreate) {
     //   but chrome.runtime.lastError needs to be set
     // - Options provided with invalid values (i.e. type), should raise an error
     runtime.lastError = null;
+    var hasType = false;
 
     if (isCreate) {
       var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
       for (var i = 0; i < requiredOptions.length; i++) {
           if (!(requiredOptions[i] in options)) {
-              var missingRequired = 'Some of the required properties are missing: type, iconUrl, title and message.';
-              console.error(missingRequired);
-              runtime.lastError = {'message':missingRequired};
+              setLastError('Some of the required properties are missing: type, iconUrl, title and message.');
               return false;
           }
       }
@@ -68,6 +72,7 @@ function checkNotificationOptions(options, isCreate) {
           console.error('Error: Invalid notification options.' + invalidType);
           throw new Error(invalidType);
       }
+      hasType = true;
     }
     if (isCreate || 'iconUrl' in options) {
       options.iconUrl = resolveUri(options.iconUrl);
@@ -89,9 +94,8 @@ function checkNotificationOptions(options, isCreate) {
     } else if ('imageUrl' in options) {
         options.imageUrl = resolveUri(options.imageUrl);
     }
-    if ('items' in options && options.type != 'list') {
-        console.error('Error: Invalid notification options. ' +
-                      'Property \'items\' may only be in notifications of type \'list\'.');
+    if ('items' in options && hasType && options.type != 'list') {
+        setLastError('List items provided for notification type != list');
         return false;
     }
     if ('items' in options) {
@@ -106,9 +110,8 @@ function checkNotificationOptions(options, isCreate) {
             }
         }
     }
-    if ('progress' in options && options.type != 'progress') {
-        console.error('Error: Invalid notification options. ' +
-                      'Property \'progress\' may only be in notifications of type \'progress\'.');
+    if ('progress' in options && hasType && options.type != 'progress') {
+        setLastError('The progress value should not be specified for non-progress notification');
         return false;
     }
     return true;
