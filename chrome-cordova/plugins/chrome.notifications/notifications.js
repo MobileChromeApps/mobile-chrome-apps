@@ -10,6 +10,7 @@ var runtime = require('org.chromium.runtime.runtime');
 var helpers = require('org.chromium.common.helpers');
 var eventsToFireOnStartUp = [];
 var notifications = null;
+var notificationOptions = null;
 
 function resolveUri(uri) {
     if (uri.indexOf('chrome-extension') === 0) {
@@ -17,6 +18,23 @@ function resolveUri(uri) {
     } else {
         return runtime.getURL(uri);
     }
+}
+
+function removeNotification(notificationId) {
+    delete notifications[notificationId];
+    delete notificationOptions[notificationId];
+    storeNotifications();
+}
+
+function setNotification(notificationId, options) {
+    notifications[notificationId] = true;
+    // Store a copy of the options used to create/update the notification
+    notificationOptions[notificationId] = JSON.parse(JSON.stringify(options));
+    storeNotifications();
+}
+
+function storeNotifications() {
+    storage.internal.set({'notifications':notifications, 'notificationOptions':notificationOptions});
 }
 
 function checkNotificationOptions(options, isCreate) {
@@ -29,11 +47,15 @@ function checkNotificationOptions(options, isCreate) {
     // - Required options that are missing should still invoke the callback,
     //   but chrome.runtime.lastError needs to be set
     // - Options provided with invalid values (i.e. type), should raise an error
+    runtime.lastError = null;
+
     if (isCreate) {
       var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
       for (var i = 0; i < requiredOptions.length; i++) {
           if (!(requiredOptions[i] in options)) {
-              console.error('Some of the required properties are missing: type, iconUrl, title and message.');
+              var missingRequired = 'Some of the required properties are missing: type, iconUrl, title and message.';
+              console.error(missingRequired);
+              runtime.lastError = {'message':missingRequired};
               return false;
           }
       }
@@ -105,8 +127,7 @@ exports.create = function(notificationId, options, callback) {
     if (notificationId === '') {
         notificationId = Math.floor(Math.random()*10000000000).toString();
     }
-    notifications[notificationId] = true;
-    storage.internal.set({'notifications':notifications});
+    setNotification(notificationId, options);
     var win = function() {
         callback(notificationId);
     };
@@ -130,12 +151,17 @@ exports.update = function(notificationId, options, callback) {
       // How to set last error?
         callback(false);
     };
-    exec(win, fail, 'ChromeNotifications', 'update', [notificationId, options]);
+    // Pass the current options, as well as the original options used to create
+    //  - The native implementation may not have the ability to retrieve an
+    //    existing notification to change options (i.e. Android)
+    //  - Providing the original options allows for updates to be handled as
+    //    "cancel previous" + "create from scratch"
+    //  - The native side is responsible for combining the option as needed
+    exec(win, fail, 'ChromeNotifications', 'update', [notificationId, options, notificationOptions[notificationId]]);
 };
 
 exports.clear = function(notificationId, callback) {
-    delete notifications[notificationId];
-    storage.internal.set({'notifications':notifications});
+    removeNotification(notificationId);
     var win = function(wasCleared) {
         callback(!!wasCleared);
     };
@@ -175,8 +201,7 @@ function processMessage(msg) {
     if (action == 'Click') {
         exports.onClicked.fire(notificationId);
     } else if (action == 'Close') {
-        delete notifications[notificationId];
-        storage.internal.set({'notifications':notifications});
+        removeNotification(notificationId);
         exports.onClosed.fire(notificationId, true);
     } else if (action == 'ButtonClick') {
         exports.onButtonClicked.fire(notificationId, buttonIndex);
@@ -188,9 +213,11 @@ function processMessage(msg) {
 channel.createSticky('onChromeNotificationsReady');
 channel.waitForInitialization('onChromeNotificationsReady');
 channel.onCordovaReady.subscribe(function() {
-    storage.internal.get('notifications', function(values) {
+    storage.internal.get(['notifications','notificationOptions'], function(values) {
         notifications = values.notifications || {};
         notifications.__proto__ = null;
+        notificationOptions = values.notificationOptions || {};
+        notificationOptions.__proto__ = null;
         exec(onMessageFromNative, undefined, 'ChromeNotifications', 'messageChannel', []);
         helpers.runAtStartUp(function() {
             if (eventsToFireOnStartUp.length) {

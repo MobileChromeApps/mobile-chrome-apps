@@ -29,6 +29,7 @@ import android.text.Html;
 import android.util.Log;
 
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -50,7 +51,7 @@ public class ChromeNotifications extends CordovaPlugin {
         public String action;
         public String notificationId;
         public int buttonIndex;
-        
+
         public EventInfo(String action, String notificationId, int buttonIndex) {
             this.action = action;
             this.notificationId = notificationId;
@@ -132,8 +133,8 @@ public class ChromeNotifications extends CordovaPlugin {
         messageChannel.sendPluginResult(pluginResult);
     }
 
-    private boolean doesNotificationExist(String notificationId) {
-        return makePendingIntent(NOTIFICATION_CLICKED_ACTION, notificationId, -1, PendingIntent.FLAG_NO_CREATE) != null; 
+    private PendingIntent getExistingNotification(String notificationId) {
+        return makePendingIntent(NOTIFICATION_CLICKED_ACTION, notificationId, -1, PendingIntent.FLAG_NO_CREATE);
     }
 
     private Bitmap makeBitmap(String imageUrl, int scaledWidth, int scaledHeight) {
@@ -159,7 +160,7 @@ public class ChromeNotifications extends CordovaPlugin {
             return unscaledBitmap;
         }
     }
-    
+
     public PendingIntent makePendingIntent(String action, String notificationId, int buttonIndex, int flags) {
         Intent intent = new Intent(cordova.getActivity(), ChromeNotificationsReceiver.class);
         String fullAction = action + "|" + notificationId;
@@ -171,9 +172,7 @@ public class ChromeNotifications extends CordovaPlugin {
         return PendingIntent.getBroadcast(cordova.getActivity(), 0, intent, flags);
     }
 
-    private void makeNotification(final CordovaArgs args) throws JSONException {
-        String notificationId = args.getString(0);
-        JSONObject options = args.getJSONObject(1);
+    private void makeNotification(String notificationId, JSONObject options) throws JSONException {
         Resources resources = cordova.getActivity().getResources();
         Bitmap largeIcon = makeBitmap(options.getString("iconUrl"),
                                       resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
@@ -234,12 +233,30 @@ public class ChromeNotifications extends CordovaPlugin {
         notificationManager.notify(notificationId.hashCode(), notification);
     }
 
+    private void updateNotification(String notificationId, JSONObject updateOptions, JSONObject originalOptions) throws JSONException {
+        JSONObject mergedOptions;
+
+        if (originalOptions == null) {
+            mergedOptions = updateOptions;
+        } else {
+            // Merge the update options with those previously used to create the notification
+            mergedOptions = originalOptions;
+            Iterator iterator = updateOptions.keys();
+            while (iterator.hasNext()) {
+                String key = (String) iterator.next();
+                mergedOptions.put(key, updateOptions.get(key));
+            }
+        }
+
+        makeNotification(notificationId, mergedOptions);
+    }
+
     private void create(final CordovaArgs args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    makeNotification(args);
+                    makeNotification(args.getString(0), args.getJSONObject(1));
                     callbackContext.success();
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Could not create notification", e);
@@ -254,8 +271,11 @@ public class ChromeNotifications extends CordovaPlugin {
             @Override
             public void run() {
                 try {
-                    if (doesNotificationExist(args.getString(0))) {
-                        makeNotification(args);
+                    String notificationId = args.getString(0);
+                    PendingIntent existingNotification = getExistingNotification(notificationId);
+
+                    if (existingNotification != null) {
+                        updateNotification(notificationId, args.getJSONObject(1), args.optJSONObject(2));
                         callbackContext.success(1);
                     } else {
                         callbackContext.success(0);
@@ -271,7 +291,7 @@ public class ChromeNotifications extends CordovaPlugin {
     private void clear(final CordovaArgs args, final CallbackContext callbackContext) {
         try {
             String notificationId = args.getString(0);
-            PendingIntent pendingIntent = makePendingIntent(NOTIFICATION_CLICKED_ACTION, notificationId, -1, PendingIntent.FLAG_NO_CREATE);
+            PendingIntent pendingIntent = getExistingNotification(notificationId);
 
             if (pendingIntent != null) {
                 Log.w(LOG_TAG, "Cancel notification: " + notificationId);
