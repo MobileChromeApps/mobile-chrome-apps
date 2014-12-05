@@ -131,6 +131,10 @@ registerAutoTests("chrome.notifications", function() {
       createNotification('exception', done);
     }
 
+    function createNotificationWithInvalidCombinationOfOptions(done) {
+      createNotification('lasterror', done);
+    }
+
     function createNotification(expectedBehaviour, done) {
       var notificationCallbackShouldExecute = false;
       var lastErrorShouldBeSet = false;
@@ -222,7 +226,6 @@ registerAutoTests("chrome.notifications", function() {
 
         try {
           chrome.notifications.update(notificationId, options, function(wasUpdated) {
-            console.log('update callback WAS called');
             callbackExecuted = true;
             lastErrorSet = (chrome.runtime.lastError !== null);
             // Should have been updated if expecting callback + no error
@@ -315,6 +318,28 @@ registerAutoTests("chrome.notifications", function() {
       createNotificationWithInvalidOptionValue(done);
     });
 
+    it('create should only allow imageUrl for type = image', function(done) {
+      options.type = 'basic';
+      options.imageUrl = options.iconUrl;
+      createNotificationWithInvalidCombinationOfOptions(done);
+    });
+
+    it('create should only allow list items for type = list', function(done) {
+      options.type = 'basic';
+      options.items =
+        [
+          {'title':'Item 1','message':'This is a list item'},
+          {'title':'Second Item','message':'Another list item'}
+        ];
+      createNotificationWithInvalidCombinationOfOptions(done);
+    });
+
+    it('create should only allow progress value for type = progress', function(done) {
+      options.type = 'basic';
+      options.progress = 42;
+      createNotificationWithInvalidCombinationOfOptions(done);
+    });
+
     it('update should not require: type', function(done) {
       updateNotificationWithMissingOption(function() {
         removeOption('type');
@@ -342,6 +367,13 @@ registerAutoTests("chrome.notifications", function() {
     it('update should enforce valid value for: type', function(done) {
       updateNotificationWithInvalidOptionValue(function() {
         options.type = 'invalid';
+      }, done);
+    });
+
+    it('update should allow only imageUrl to be specified', function(done) {
+      options.type = 'image';
+      updateNotificationWithMissingOption(function() {
+        options = {'imageUrl' : options.iconUrl};
       }, done);
     });
 

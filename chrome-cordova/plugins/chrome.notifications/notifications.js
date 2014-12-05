@@ -87,9 +87,8 @@ function checkNotificationOptions(options, isCreate) {
             }
         }
     }
-    if ('imageUrl' in options && options.type != 'image') {
-        console.error('Error: Invalid notification options. ' +
-                      'Property \'imageUrl\' may only be in notifications of type \'image\'.');
+    if ('imageUrl' in options && hasType && options.type != 'image') {
+        setLastError('Image resource provided for notification type != image');
         return false;
     } else if ('imageUrl' in options) {
         options.imageUrl = resolveUri(options.imageUrl);
