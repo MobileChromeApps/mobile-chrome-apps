@@ -12,24 +12,43 @@ var fail = function(callback) {
     };
 };
 
+var validateServiceId = function(serviceId) {
+    var parts = serviceId.split('/');
+    return parts.length === 2;
+};
+
+var validateCharacteristicId = function(characteristicId) {
+    var parts = characteristicId.split('/');
+    return parts.length === 3;
+};
+
+var validateDescriptorId = function(descriptorId) {
+    var parts = descriptorId.split('/');
+    return parts.length === 4;
+};
+
 exports.connect = function(deviceAddress, properties, callback) {
     if (typeof properties == 'function') {
         callback = properties;
         properties = {};
     }
-    exec(callback, fail(callback), 'ChromeBluetooth', 'connect', [deviceAddress, properties]);
+    exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'connect', [deviceAddress, properties]);
 };
 
 exports.disconnect = function(deviceAddress, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'disconnect', [deviceAddress]);
+    exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'disconnect', [deviceAddress]);
 };
 
 exports.getService = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getService', [serviceId]);
+    if (validateServiceId(serviceId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getService', [serviceId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.getServices = function(deviceAddress, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getServices', [deviceAddress]);
+    exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getServices', [deviceAddress]);
 };
 
 exports.getCharacteristic = function(characteristicId, callback) {
@@ -43,15 +62,28 @@ exports.getCharacteristic = function(characteristicId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'getCharacteristic', [characteristicId]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'getCharacteristic', [characteristicId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.getCharacteristics = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getCharacteristics', [serviceId]);
+    if (validateServiceId(serviceId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getCharacteristics', [serviceId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.getIncludedServices = function(serviceId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getIncludedServices', [serviceId]);
+    if (validateServiceId(serviceId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getIncludedServices', [serviceId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.getDescriptor = function(descriptorId, callback) {
@@ -64,11 +96,20 @@ exports.getDescriptor = function(descriptorId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'getDescriptor', [descriptorId]);
+    if (validateDescriptorId(descriptorId)) {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'getDescriptor', [descriptorId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.getDescriptors = function(characteristicId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getDescriptors', [characteristicId]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'getDescriptors', [characteristicId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.readCharacteristicValue = function(characteristicId, callback) {
@@ -82,11 +123,23 @@ exports.readCharacteristicValue = function(characteristicId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'readCharacteristicValue', [characteristicId]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'readCharacteristicValue', [characteristicId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.writeCharacteristicValue = function(characteristicId, value, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'writeCharacteristicValue', [characteristicId, value]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'writeCharacteristicValue', [characteristicId, value]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
+
+
 };
 
 exports.startCharacteristicNotifications = function(characteristicId, properties, callback) {
@@ -94,11 +147,21 @@ exports.startCharacteristicNotifications = function(characteristicId, properties
         callback = properties;
         properties = {};
     }
-    exec(callback, fail(callback), 'ChromeBluetooth', 'startCharacteristicNotifications', [characteristicId, properties]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'startCharacteristicNotifications', [characteristicId, properties]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.stopCharacteristicNotifications = function(characteristicId, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'stopCharacteristicNotifications', [characteristicId]);
+
+    if (validateCharacteristicId(characteristicId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'stopCharacteristicNotifications', [characteristicId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.readDescriptorValue = function(descriptorId, callback) {
@@ -111,11 +174,21 @@ exports.readDescriptorValue = function(descriptorId, callback) {
         };
         callback(info);
     };
-    exec(win, fail(callback), 'ChromeBluetooth', 'readDescriptorValue', [descriptorId]);
+
+    if (validateDescriptorId(descriptorId)) {
+        exec(win, fail(callback), 'ChromeBluetoothLowEnergy', 'readDescriptorValue', [descriptorId]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.writeDescriptorValue = function(descriptorId, value, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'writeDescriptorValue', [descriptorId, value]);
+
+    if (validateDescriptorId(descriptorId)) {
+        exec(callback, fail(callback), 'ChromeBluetoothLowEnergy', 'writeDescriptorValue', [descriptorId, value]);
+    } else {
+        callbackWithError('Invalid instanceId', callback);
+    }
 };
 
 exports.onServiceAdded = new Event('onServiceAdded');
@@ -157,7 +230,8 @@ function registerEvents() {
             break;
         }
     };
-    exec(onEventsCallback, null, 'ChromeBluetooth', 'registerBluetoothLowEnergyEvents', []);
+
+    exec(onEventsCallback, null, 'ChromeBluetoothLowEnergy', 'registerBluetoothLowEnergyEvents', []);
 }
 
 require('org.chromium.common.helpers').runAtStartUp(registerEvents);
