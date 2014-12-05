@@ -312,15 +312,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    BluetoothGattService service = peripheral.getService(serviceId);
-
-    if (service == null) {
-      callbackContext.error("Invalid Argument");
-      return;
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(
-        Status.OK, buildServiceInfo(deviceAddress, service)));
+    peripheral.getService(serviceId, callbackContext);
   }
 
   private void getServices(CordovaArgs args, final CallbackContext callbackContext)
@@ -350,17 +342,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    BluetoothGattCharacteristic characteristic = peripheral.getCharacteristic(characteristicId);
-
-    if (characteristic == null) {
-      callbackContext.error("Invalid Argument");
-      return;
-    }
-
-    List<PluginResult> multipartMessage =
-        buildCharacteristicMultipartInfo(deviceAddress, characteristic);
-
-    callbackContext.sendPluginResult(new PluginResult(Status.OK, multipartMessage));
+    peripheral.getCharacteristic(characteristicId, callbackContext);
   }
 
   private void getCharacteristics(CordovaArgs args, final CallbackContext callbackContext)
@@ -376,15 +358,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    Collection<BluetoothGattCharacteristic> characteristics =
-        peripheral.getCharacteristics(serviceId);
-
-    JSONArray characteristicsInfo = new JSONArray();
-    for (BluetoothGattCharacteristic characteristic : characteristics) {
-      characteristicsInfo.put(buildCharacteristicInfo(deviceAddress, characteristic));
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(Status.OK, characteristicsInfo));
+    peripheral.getCharacteristics(serviceId, callbackContext);
   }
 
   private void getIncludedServices(CordovaArgs args, final CallbackContext callbackContext)
@@ -399,14 +373,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    Collection<BluetoothGattService> includedServices = peripheral.getIncludedServices(serviceId);
-
-    JSONArray servicesInfo = new JSONArray();
-    for (BluetoothGattService service : includedServices) {
-      servicesInfo.put(buildServiceInfo(deviceAddress, service));
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
+    peripheral.getIncludedServices(serviceId, callbackContext);
   }
 
   private void getDescriptor(CordovaArgs args, final CallbackContext callbackContext)
@@ -422,15 +389,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    BluetoothGattDescriptor descriptor = peripheral.getDescriptor(descriptorId);
-
-    if (descriptor == null) {
-      callbackContext.error("Invalid Argument");
-      return;
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(
-        Status.OK, buildDescriptorMultipartInfo(deviceAddress, descriptor)));
+    peripheral.getDescriptor(descriptorId, callbackContext);
   }
 
   private void getDescriptors(CordovaArgs args, final CallbackContext callbackContext)
@@ -446,15 +405,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return;
     }
 
-    Collection<BluetoothGattDescriptor> descriptors = peripheral.getDescriptors(characteristicId);
-
-    JSONArray descriptorsInfo = new JSONArray();
-
-    for (BluetoothGattDescriptor descriptor : descriptors) {
-      descriptorsInfo.put(buildDescriptorInfo(deviceAddress, descriptor));
-    }
-
-    callbackContext.sendPluginResult(new PluginResult(Status.OK, descriptorsInfo));
+    peripheral.getDescriptors(characteristicId, callbackContext);
   }
 
   private void readCharacteristicValue(CordovaArgs args, final CallbackContext callbackContext)
@@ -691,15 +642,15 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       this.bleScanResult = bleScanResult;
     }
 
-    private synchronized void connectSuccess() {
-      if (connectCallback != null) {
+    private synchronized void successIfNotTimeout() {
+      if (isConnected() && connectCallback != null) {
         connectCallback.success();
         connectCallback = null;
       }
     }
 
-    private synchronized void connectTimeout() {
-      if (connectCallback != null) {
+    private synchronized void timeoutIfNotConnect() {
+      if (!isConnected() && connectCallback != null) {
         connectCallback.error("Connection timeout");
         connectCallback = null;
         close();
@@ -717,6 +668,10 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     }
 
     private boolean isConnected() {
+
+      if (gatt == null)
+        return false;
+
       ChromeBluetooth bluetoothPlugin =
           (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
       return bluetoothPlugin.isConnected(bleScanResult.getDevice());
@@ -724,21 +679,22 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
     void connect(CallbackContext callbackContext) throws InterruptedException {
 
+      if (isConnected()) {
+        callbackContext.error("Device is already connected");
+        return;
+      }
+
       connectCallback = callbackContext;
 
       gatt = bleScanResult.getDevice().connectGatt(
-          webView.getContext(), false, connectionCallback);
+          webView.getContext(), false, gattEventsCallback);
 
       // Reset semaphore here because some read, write's callbacks may not be
       // called when a connection lost. This abort all pending gatt commands.
       gattAsyncCommandSemaphore = new Semaphore(1, true);
 
-      if (isConnected()) {
-        connectSuccess();
-      } else {
-        Thread.sleep(CONNECTION_TIMEOUT);
-        connectTimeout();
-      }
+      Thread.sleep(CONNECTION_TIMEOUT);
+      timeoutIfNotConnect();
     }
 
     void disconnect(CallbackContext callbackContext) {
@@ -751,30 +707,72 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       }
     }
 
-    @Nullable
-    BluetoothGattService getService(String serviceId) {
-      return knownServices.get(serviceId);
+    void getService(String serviceId, CallbackContext callbackContext) throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
+      BluetoothGattService service = knownServices.get(serviceId);
+
+      if (service == null) {
+        callbackContext.error("Invalid Argument");
+        return;
+      }
+
+      callbackContext.sendPluginResult(new PluginResult(
+          Status.OK, buildServiceInfo(bleScanResult.getDevice().getAddress(), service)));
     }
 
     void getServices(CallbackContext callbackContext) {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       getServicesCallbackContext = callbackContext;
-      if (gatt != null && !gatt.discoverServices()) {
+
+      if (!gatt.discoverServices()) {
         getServicesCallbackContext.error("Failed to discover services");
         getServicesCallbackContext = null;
       }
     }
 
-    @Nullable
-    BluetoothGattCharacteristic getCharacteristic(String characteristicId) {
-      return knownCharacteristics.get(characteristicId);
+    void getCharacteristic(String characteristicId, CallbackContext callbackContext)
+        throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
+      BluetoothGattCharacteristic characteristic = knownCharacteristics.get(characteristicId);
+
+      if (characteristic == null) {
+        callbackContext.error("Invalid Argument");
+        return;
+      }
+
+      List<PluginResult> multipartMessage =
+          buildCharacteristicMultipartInfo(bleScanResult.getDevice().getAddress(), characteristic);
+
+      callbackContext.sendPluginResult(new PluginResult(Status.OK, multipartMessage));
     }
 
-    Collection<BluetoothGattCharacteristic> getCharacteristics(String serviceId) {
+    void getCharacteristics(String serviceId, CallbackContext callbackContext) throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
 
       BluetoothGattService service = knownServices.get(serviceId);
 
       if (service == null) {
-        return Collections.emptyList();
+        callbackContext.error("Invalid Argument");
+        return;
       }
 
       Collection<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
@@ -785,61 +783,105 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
             characteristic);
       }
 
-      return characteristics;
+      JSONArray characteristicsInfo = new JSONArray();
+      for (BluetoothGattCharacteristic characteristic : characteristics) {
+        characteristicsInfo.put(buildCharacteristicInfo(
+            bleScanResult.getDevice().getAddress(), characteristic));
+      }
+
+      callbackContext.sendPluginResult(new PluginResult(Status.OK, characteristicsInfo));
     }
 
-    Collection<BluetoothGattService> getIncludedServices(String serviceId) {
+    void getIncludedServices(String serviceId, CallbackContext callbackContext)
+        throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
 
       BluetoothGattService service = knownServices.get(serviceId);
 
       if (service == null) {
-        return Collections.emptyList();
+        callbackContext.error("Invalid Argument");
+        return;
       }
 
       Collection<BluetoothGattService> includedServices = service.getIncludedServices();
+      JSONArray servicesInfo = new JSONArray();
 
       for (BluetoothGattService includedService : includedServices) {
         String includedServiceId = buildServiceId(
             bleScanResult.getDevice().getAddress(),
             includedService);
-        if (!knownServices.containsKey(serviceId)) {
+        if (!knownServices.containsKey(includedServiceId)) {
           sendServiceAddedEvent(bleScanResult.getDevice().getAddress(), includedService);
         }
         knownServices.put(includedServiceId, includedService);
+        servicesInfo.put(buildServiceInfo(
+            bleScanResult.getDevice().getAddress(), includedService));
       }
 
-      return includedServices;
+      callbackContext.sendPluginResult(new PluginResult(Status.OK, servicesInfo));
     }
 
-    @Nullable
-    BluetoothGattDescriptor getDescriptor(String descriptorId) {
-      return knownDescriptors.get(descriptorId);
+    void getDescriptor(String descriptorId, CallbackContext callbackContext) throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
+      BluetoothGattDescriptor descriptor = knownDescriptors.get(descriptorId);
+
+      if (descriptor == null) {
+        callbackContext.error("Invalid Argument");
+        return;
+      }
+
+      callbackContext.sendPluginResult(new PluginResult(
+          Status.OK, buildDescriptorMultipartInfo(
+              bleScanResult.getDevice().getAddress(), descriptor)));
     }
 
-    Collection<BluetoothGattDescriptor> getDescriptors(String characteristicId) {
+    void getDescriptors(String characteristicId, CallbackContext callbackContext)
+        throws JSONException {
+
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
 
       BluetoothGattCharacteristic characteristic = knownCharacteristics.get(characteristicId);
 
       if (characteristic == null) {
-        return Collections.emptyList();
+        callbackContext.error("Invalid Argument");
+        return;
       }
 
       Collection<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
+      JSONArray descriptorsInfo = new JSONArray();
 
       for (BluetoothGattDescriptor descriptor : descriptors) {
         knownDescriptors.put(
             buildDescriptorId(bleScanResult.getDevice().getAddress(), descriptor),
             descriptor);
+        descriptorsInfo.put(buildDescriptorInfo(bleScanResult.getDevice().getAddress(), descriptor));
       }
 
-      return descriptors;
+      callbackContext.sendPluginResult(new PluginResult(Status.OK, descriptorsInfo));
     }
 
     void readCharacteristicValue(String characteristicId, CallbackContext callbackContext) {
 
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       BluetoothGattCharacteristic characteristic = knownCharacteristics.get(characteristicId);
 
-      if (characteristic == null || gatt == null) {
+      if (characteristic == null) {
         callbackContext.error("Invalid Argument");
         return;
       }
@@ -859,9 +901,14 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     void writeCharacteristicValue(
         String characteristicId, byte[] value, CallbackContext callbackContext) {
 
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       BluetoothGattCharacteristic characteristic = knownCharacteristics.get(characteristicId);
 
-      if (characteristic == null || gatt == null) {
+      if (characteristic == null) {
         callbackContext.error("Invalid Argument");
         return;
       }
@@ -881,9 +928,14 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     void setCharacteristicNotification(
         String characteristicId, boolean enable, CallbackContext callbackContext) {
 
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       BluetoothGattCharacteristic characteristic = knownCharacteristics.get(characteristicId);
 
-      if (characteristic == null || gatt == null) {
+      if (characteristic == null) {
         callbackContext.error("Invalid Argument");
         return;
       }
@@ -923,9 +975,14 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
     void readDescriptorValue(String descriptorId, CallbackContext callbackContext) {
 
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       BluetoothGattDescriptor descriptor = knownDescriptors.get(descriptorId);
 
-      if (descriptor == null || gatt == null) {
+      if (descriptor == null) {
         callbackContext.error("Invalid Argument");
         return;
       }
@@ -944,9 +1001,14 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
     void writeDescriptorValue(String descriptorId, byte[] value, CallbackContext callbackContext) {
 
+      if (!isConnected()) {
+        callbackContext.error("Device is not connected");
+        return;
+      }
+
       BluetoothGattDescriptor descriptor = knownDescriptors.get(descriptorId);
 
-      if (descriptor == null || gatt == null) {
+      if (descriptor == null) {
         callbackContext.error("Invalid Argument");
         return;
       }
@@ -963,7 +1025,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       }
     }
 
-    private BluetoothGattCallback connectionCallback = new BluetoothGattCallback() {
+    private BluetoothGattCallback gattEventsCallback = new BluetoothGattCallback() {
         @Override
         public void onCharacteristicChanged(
             BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
@@ -993,6 +1055,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
                         bleScanResult.getDevice().getAddress(),
                         characteristic)));
               } catch (JSONException e) {
+                readCallbackContext.error(e.getMessage());
               }
               break;
             case BluetoothGatt.GATT_READ_NOT_PERMITTED:
@@ -1025,6 +1088,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
                         bleScanResult.getDevice().getAddress(),
                         characteristic)));
               } catch (JSONException e) {
+                writeCallbackContext.error(e.getMessage());
               }
               break;
             case BluetoothGatt.GATT_WRITE_NOT_PERMITTED:
@@ -1042,7 +1106,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
           switch (newState) {
             case BluetoothProfile.STATE_CONNECTED:
-              connectSuccess();
+              successIfNotTimeout();
               break;
             case BluetoothProfile.STATE_DISCONNECTED:
               if (disconnectCallback != null) {
@@ -1085,6 +1149,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
                         bleScanResult.getDevice().getAddress(),
                         descriptor)));
               } catch (JSONException e) {
+                readCallbackContext.error(e.getMessage());
               }
               sendDescriptorValueChangedEvent(bleScanResult.getDevice().getAddress(), descriptor);
               break;
@@ -1107,25 +1172,21 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
           if (descriptor.getUuid().toString().equals(CLIENT_CHARACTERISTIC_CONFIG)) {
             // Set remote notification by writing into config descriptor
-            String characteristicId = buildCharacteristicId(
-                bleScanResult.getDevice().getAddress(),
-                descriptor.getCharacteristic());
             result = new PluginResult(Status.OK);
 
           } else {
             // Normal descriptor write
-            String descriptorId = buildDescriptorId(
-                bleScanResult.getDevice().getAddress(), descriptor);
-
             try {
               result = new PluginResult(Status.OK, buildDescriptorMultipartInfo(
                   bleScanResult.getDevice().getAddress(),
                   descriptor));
             } catch (JSONException e) {
+              callbackContext.error(e.getMessage());
+              return;
             }
           }
 
-          if (callbackContext == null || result == null)
+          if (callbackContext == null)
             return;
 
           switch (status) {
