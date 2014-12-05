@@ -61,9 +61,6 @@ module.exports = exports = function prePrepareCommand(context) {
   .then(function(manifestData) {
     pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat();
     pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat();
-    pluginsToBeNotInstalled = pluginsToBeNotInstalled.filter(function(plugin) {
-      return pluginsToBeInstalled.indexOf(plugin) == -1;
-    });
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
 

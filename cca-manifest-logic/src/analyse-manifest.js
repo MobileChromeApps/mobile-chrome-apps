@@ -110,6 +110,22 @@ module.exports = function analyseManifest(manifest, options) {
     ]);
   ret.pluginsNotRecognized = pluginsForPermissions.unknown.concat(pluginsForSockets.unknown);
 
+  // This next filter seems needless, but it happens when we still want plugins installed for which there are missing permissions, e.g. chrome.storage
+  ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.filter(function(plugin) {
+    return ret.pluginsToBeInstalled.indexOf(plugin) == -1;
+  });
+
+  // Take only unique values
+  ret.pluginsToBeInstalled = ret.pluginsToBeInstalled.sort().filter(function(value, index, self) {
+    return self.indexOf(value) === index;
+  });
+  ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.sort().filter(function(value, index, self) {
+    return self.indexOf(value) === index;
+  });
+  ret.pluginsNotRecognized = ret.pluginsNotRecognized.sort().filter(function(value, index, self) {
+    return self.indexOf(value) === index;
+  });
+
   // This should happen rarely
   pluginsForEngines.unknown.forEach(function(unknownEngine) {
     console.warn('Engine not supported by cca: ' + unknownEngine + ' (skipping)');

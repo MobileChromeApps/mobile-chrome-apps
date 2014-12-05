@@ -173,15 +173,17 @@ function main() {
       require('optimist').showHelp(console.log);
       return Q.when();
     },
+    'plugin': printVersionThenPrePrePrepareThenForwardCommandToCordova,
+    'plugins': function() {
+      return commandActions.plugin.apply(this, arguments);
+    },
     'platform': function() {
       printCcaVersionPrefix();
       // Do not run auto-upgrade step if doing a platforms command
       return forwardCurrentCommandToCordova();
     },
     'platforms': function() {
-      printCcaVersionPrefix();
-      // Do not run auto-upgrade step if doing a platforms command
-      return forwardCurrentCommandToCordova();
+      return commandActions.platform.apply(this, arguments);
     },
     'analytics': function() {
       // Do nothing.  This is handled as a special-case below.
@@ -190,8 +192,6 @@ function main() {
     'build': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'compile': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'emulate': printVersionThenPrePrePrepareThenForwardCommandToCordova,
-    'plugin': printVersionThenPrePrePrepareThenForwardCommandToCordova,
-    'plugins': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'prepare': printVersionThenPrePrePrepareThenForwardCommandToCordova,
     'serve': printVersionThenPrePrePrepareThenForwardCommandToCordova,
   };
