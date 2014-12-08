@@ -29,6 +29,7 @@ function removeNotification(notificationId) {
 function setNotification(notificationId, options) {
     notifications[notificationId] = true;
     // Store a copy of the options used to create/update the notification
+    //  - Must be a separate copy, in case the caller later mutates the object
     notificationOptions[notificationId] = JSON.parse(JSON.stringify(options));
     storeNotifications();
 }
@@ -42,41 +43,51 @@ function setLastError(message) {
     runtime.lastError = {'message':message};
 }
 
-function checkNotificationOptions(options, isCreate) {
+function mergeOptions(previousOptions, newOptions) {
+    var mergedOptions = previousOptions ? JSON.parse(JSON.stringify(previousOptions)) : {};
+
+    // Clone the new options, so any contained objects cannot be modified
+    // after the merge
+    var newClone = JSON.parse(JSON.stringify(newOptions));
+
+    for (var propName in newClone) {
+        mergedOptions[propName] = newClone[propName];
+    }
+
+    return mergedOptions;
+}
+
+function checkNotificationOptions(options) {
     // For create, there are some required properties, all others are optional
     // For update, all properties are optional
-    // Required properties must exist, and must be valid.  Optional properties
-    // can be omitted, but must be valid if present.
+    // However, only some combinations are valid, even when updating.  Thus,
+    // the caller must merge the original create options with updates for
+    // validation
     // For consistency with the desktop API, varying validation behaviour is
     // required:
     // - Required options that are missing should still invoke the callback,
     //   but chrome.runtime.lastError needs to be set
     // - Options provided with invalid values (i.e. type), should raise an error
     runtime.lastError = null;
-    var hasType = false;
 
-    if (isCreate) {
-      var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
-      for (var i = 0; i < requiredOptions.length; i++) {
-          if (!(requiredOptions[i] in options)) {
-              setLastError('Some of the required properties are missing: type, iconUrl, title and message.');
-              return false;
-          }
-      }
+    var requiredOptions = [ 'type', 'iconUrl', 'title', 'message' ];
+    for (var i = 0; i < requiredOptions.length; i++) {
+        if (!(requiredOptions[i] in options)) {
+            setLastError('Some of the required properties are missing: type, iconUrl, title and message.');
+            return false;
+        }
     }
-    if (isCreate || 'type' in options) {
-      var permittedTypes = [ 'basic', 'image', 'list', 'progress' ];
-      if (permittedTypes.indexOf(options.type) == -1) {
-          var invalidType = 'Property \'type\': Value must be one of: ' +
-                        JSON.stringify(permittedTypes) + '.';
-          console.error('Error: Invalid notification options.' + invalidType);
-          throw new Error(invalidType);
-      }
-      hasType = true;
+
+    var permittedTypes = [ 'basic', 'image', 'list', 'progress' ];
+    if (permittedTypes.indexOf(options.type) == -1) {
+        var invalidType = 'Property \'type\': Value must be one of: ' +
+                      JSON.stringify(permittedTypes) + '.';
+        console.error('Error: Invalid notification options.' + invalidType);
+        throw new Error(invalidType);
     }
-    if (isCreate || 'iconUrl' in options) {
-      options.iconUrl = resolveUri(options.iconUrl);
-    }
+
+    options.iconUrl = resolveUri(options.iconUrl);
+
     if ('buttons' in options) {
         for (var i = 0; i < options.buttons.length; i++) {
             if (!('title' in options.buttons[i])) {
@@ -87,17 +98,18 @@ function checkNotificationOptions(options, isCreate) {
             }
         }
     }
-    if ('imageUrl' in options && hasType && options.type != 'image') {
-        setLastError('Image resource provided for notification type != image');
-        return false;
-    } else if ('imageUrl' in options) {
+    if ('imageUrl' in options) {
+        if (options.type != 'image') {
+            setLastError('Image resource provided for notification type != image');
+            return false;
+        }
         options.imageUrl = resolveUri(options.imageUrl);
     }
-    if ('items' in options && hasType && options.type != 'list') {
-        setLastError('List items provided for notification type != list');
-        return false;
-    }
     if ('items' in options) {
+        if (options.type != 'list') {
+            setLastError('List items provided for notification type != list');
+            return false;
+        }
         for (var i = 0; i < options.items.length; i++) {
             var item = options.items[i];
             if (!('title' in item)) {
@@ -109,7 +121,7 @@ function checkNotificationOptions(options, isCreate) {
             }
         }
     }
-    if ('progress' in options && hasType && options.type != 'progress') {
+    if ('progress' in options && options.type != 'progress') {
         setLastError('The progress value should not be specified for non-progress notification');
         return false;
     }
@@ -117,7 +129,7 @@ function checkNotificationOptions(options, isCreate) {
 }
 
 exports.create = function(notificationId, options, callback) {
-    if (!checkNotificationOptions(options, true)) {
+    if (!checkNotificationOptions(options)) {
       // For consistency with desktop, invoke the callback even if the options
       // are invalid
       // - The validation will raise/log errors as appropriate
@@ -137,7 +149,12 @@ exports.create = function(notificationId, options, callback) {
 };
 
 exports.update = function(notificationId, options, callback) {
-    if (!checkNotificationOptions(options, false)) {
+    // Merge the update options with the original options used to create
+    //  - All properties are optional on update, but must be validated for
+    //    invalid combinations (even if not specified)
+    var previousOptions = notificationOptions[notificationId];
+    var mergedOptions = mergeOptions(previousOptions, options);
+    if (!checkNotificationOptions(mergedOptions)) {
         // For consistency with desktop, invoke the callback even if the options
         // are invalid
         // - The validation will raise/log errors as appropriate
@@ -147,7 +164,13 @@ exports.update = function(notificationId, options, callback) {
         return;
     }
     var win = function(wasUpdated) {
-        callback(!!wasUpdated);
+        wasUpdated = !!wasUpdated;
+        if (wasUpdated) {
+            // Store the merged options as the original (necessary to support
+            // multiple updates to same notification)
+            setNotification(notificationId, mergedOptions);
+        }
+        callback(wasUpdated);
     };
     var fail = function() {
       // How to set last error?
@@ -159,7 +182,7 @@ exports.update = function(notificationId, options, callback) {
     //  - Providing the original options allows for updates to be handled as
     //    "cancel previous" + "create from scratch"
     //  - The native side is responsible for combining the option as needed
-    exec(win, fail, 'ChromeNotifications', 'update', [notificationId, options, notificationOptions[notificationId]]);
+    exec(win, fail, 'ChromeNotifications', 'update', [notificationId, options, previousOptions]);
 };
 
 exports.clear = function(notificationId, callback) {

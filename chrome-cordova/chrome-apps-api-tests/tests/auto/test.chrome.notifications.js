@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/* global afterEach */
+/* global beforeEach */
+/* global describe */
+/* global jasmine */
 registerAutoTests("chrome.notifications", function() {
   'use strict';
   var testTimeout = 2000;
@@ -187,14 +191,34 @@ registerAutoTests("chrome.notifications", function() {
     }
 
     function updateNotificationWithMissingOption(applyChangesToBeUpdated, done) {
-      updateNotification('callback', applyChangesToBeUpdated, done);
+      updateNotification('callback', null, applyChangesToBeUpdated, done);
+    }
+
+    function updateNotificationWithInvalidCombinationOfOptions(applyChangesToBeUpdated, done) {
+      updateNotification('lasterror', null, applyChangesToBeUpdated, done);
+    }
+
+    function updateNotificationMultipleWithMissingOption(applyChangesForFirstUpdate, applyChangesForSecondUpdate, done) {
+      var setup = function(notificationId, callback) {
+        chrome.notifications.create(notificationId, options, function(id) {
+          // Make the changes to the options for the first update
+          applyChangesForFirstUpdate();
+
+          chrome.notifications.update(notificationId, options, function(wasUpdated) {
+            callback(id);
+          });
+        });
+      };
+
+      // Call the standard function to do the second update and check results
+      updateNotification('callback', setup, applyChangesForSecondUpdate, done);
     }
 
     function updateNotificationWithInvalidOptionValue(applyChangesToBeUpdated, done) {
-      updateNotification('exception', applyChangesToBeUpdated, done);
+      updateNotification('exception', null, applyChangesToBeUpdated, done);
     }
 
-    function updateNotification(expectedBehaviour, applyChangesToBeUpdated, done) {
+    function updateNotification(expectedBehaviour, setupNotification, applyChangesToBeUpdated, done) {
       var waitForCallback = 250;
       var notificationCallbackShouldExecute = false;
       var lastErrorShouldBeSet = false;
@@ -220,7 +244,13 @@ registerAutoTests("chrome.notifications", function() {
       var thrownException = null;
       var notificationId = ids[0];
 
-      chrome.notifications.create(notificationId, options, function(id) {
+      if (!setupNotification)
+      {
+          setupNotification = function(id, callback) {
+              chrome.notifications.create(id, options, callback);
+          };
+      }
+      setupNotification(notificationId, function(id) {
         // Make changes to the options to be passed to the update
         applyChangesToBeUpdated();
 
@@ -232,7 +262,6 @@ registerAutoTests("chrome.notifications", function() {
             expect(wasUpdated).toBeWithName(notificationCallbackShouldExecute && !lastErrorShouldBeSet, 'wasUpdated');
           });
         } catch (e) {
-          console.log('caught an exception');
           thrownException = e;
           if (!exceptionShouldBeThrown) {
             console.log('Unexpected exception: ' + e);
@@ -257,6 +286,7 @@ registerAutoTests("chrome.notifications", function() {
 
     var ids;
     var options;
+    var IMAGE_URL = 'icon-128x128.png';
     var customMatchers = {
       toBeString : function(util,customEqualityTesters){
         return {
@@ -373,7 +403,7 @@ registerAutoTests("chrome.notifications", function() {
     it('update should allow only imageUrl to be specified', function(done) {
       options.type = 'image';
       updateNotificationWithMissingOption(function() {
-        options = {'imageUrl' : options.iconUrl};
+        options = {'imageUrl' : IMAGE_URL};
       }, done);
     });
 
@@ -393,6 +423,89 @@ registerAutoTests("chrome.notifications", function() {
             {'title':'Second Item','message':'Another list item'}
           ]};
       }, done);
+    });
+
+    it('update should only allow imageUrl for type = image', function(done) {
+      options.type = 'basic';
+      updateNotificationWithInvalidCombinationOfOptions(function() {
+        options = {'imageUrl' : IMAGE_URL};
+      }, done);
+    });
+
+    it('update should only allow list items for type = list', function(done) {
+      options.type = 'basic';
+      updateNotificationWithInvalidCombinationOfOptions(function() {
+        options = { 'items':
+          [
+            {'title':'Item 1','message':'This is a list item'},
+            {'title':'Second Item','message':'Another list item'}
+          ]};
+      }, done);
+    });
+
+    it('update should only allow progress value for type = progress', function(done) {
+      options.type = 'basic';
+      updateNotificationWithInvalidCombinationOfOptions(function() {
+        options = {'progress' : 42};
+      }, done);
+    });
+
+    it('multiple updates should allow only imageUrl to be specified', function(done) {
+        // Order of changes
+        //  - Create a notification of type 'basic'
+        //  - Change it to be of type 'image'
+        //  - Finally, update only the imageUrl property
+        // Knowing that some platforms (i.e. android), always re-create the
+        // notification, this test will verify that a series of incremental
+        // updates will succeed
+      updateNotificationMultipleWithMissingOption(
+        function() {
+          options = {'type' : 'image'};
+        },
+        function() {
+          options = {'imageUrl' : IMAGE_URL};
+        },
+        done);
+    });
+
+    it('multiple updates should allow only list items to be specified', function(done) {
+        // Order of changes
+        //  - Create a notification of type 'basic'
+        //  - Change it to be of type 'list'
+        //  - Finally, update only the items property
+        // Knowing that some platforms (i.e. android), always re-create the
+        // notification, this test will verify that a series of incremental
+        // updates will succeed
+      updateNotificationMultipleWithMissingOption(
+          function() {
+              options = {'type' : 'list'};
+          },
+          function() {
+            options = { 'items':
+              [
+                {'title':'Item 1','message':'This is a list item'},
+                {'title':'Second Item','message':'Another list item'}
+              ]};
+          },
+          done);
+    });
+
+    it('multiple updates should allow only progress to be specified', function(done) {
+        // Order of changes
+        //  - Create a notification of type 'basic'
+        //  - Change it to be of type 'progress'
+        //  - Finally, update only the progress property
+        // Knowing that some platforms (i.e. android), always re-create the
+        // notification, this test will verify that a series of incremental
+        // updates will succeed
+      updateNotificationMultipleWithMissingOption(
+          function() {
+              options = {'type' : 'progress'};
+          },
+          function() {
+              options = {'progress' : 42};
+          },
+          done);
     });
 
   }); // describe 'parameter validation'

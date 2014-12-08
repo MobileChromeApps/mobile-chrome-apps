@@ -98,6 +98,35 @@ registerManualTests('chrome.notifications', function(rootEl, addButton) {
     });
   });
 
+  addButton('Basic -> Progress Notification', function() {
+    var options = {
+      type:'basic',
+      title:'Basic -> Progress Notification',
+    };
+    createNotification(options, function(notificationId) {
+
+      // Change to a progress notification
+      options = {
+        title:'Progress (was Basic) Notification',
+        type:'progress',
+        progress: 0,
+      };
+
+      chrome.notifications.update(notificationId, options, function() {
+        // Now periodically update the progress
+        delete options['type'];
+        var intervalId = setInterval(function() {
+          if (options.progress <= 100) {
+            options.progress = options.progress + 1;
+            chrome.notifications.update(notificationId, options, function() {});
+          } else {
+            clearInterval(intervalId);
+          }
+        }, 60);
+      });
+    });
+  });
+
   addButton('List Notification', function() {
     createNotification({
       type:'list',
