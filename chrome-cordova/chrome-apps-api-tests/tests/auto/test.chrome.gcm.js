@@ -23,7 +23,7 @@ registerAutoTests("chrome.gcm", function() {
       chrome.gcm.register([senderid], function(regid) {
         expect(regid).toBeDefined();
         expect(regid.length).toBeGreaterThan(1);
-        expect(chrome.runtime.lastError).not.toBeDefined();
+        expect(chrome.runtime.lastError).toBeFalsy();
         chrome.gcm.unregister(function() {
           expect(chrome.runtime.lastError).not.toBeDefined();
           done();
@@ -122,8 +122,8 @@ registerAutoTests("chrome.gcm", function() {
       chrome.gcm.onMessage.addListener(function listener(msg) {
         expect(msg).toBeDefined();
         expect(msg.data).toBeDefined();
-        expect(msg.data.type).toEqual('pong')
-        expect(msg.data.message).toEqual('test')
+        expect(msg.data.type).toEqual('pong');
+        expect(msg.data.message).toEqual('test');
 
         chrome.gcm.onMessage.removeListener(listener);
         done();
@@ -162,8 +162,8 @@ registerAutoTests("chrome.gcm", function() {
       chrome.gcm.onMessage.addListener(function listener(msg) {
         expect(msg).toBeDefined();
         expect(msg.data).toBeDefined();
-        expect(msg.data.type).toEqual('pong')
-        expect(msg.data.message).toEqual(message.data.message)
+        expect(msg.data.type).toEqual('pong');
+        expect(msg.data.message).toEqual(message.data.message);
 
         chrome.gcm.onMessage.removeListener(listener);
         done();
