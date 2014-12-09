@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -51,11 +52,15 @@ public class ChromeBluetooth extends CordovaPlugin {
   };
 
   private Map<String, ScanResult> knownLeScanResults = new HashMap<String, ScanResult>();
+  private Map<String, BluetoothDevice> knownBluetoothDevices =
+      new ConcurrentHashMap<String, BluetoothDevice>();
+  private Set<String> activeDevices = new HashSet<String>();
 
   private BluetoothManager bluetoothManager;
   private BluetoothAdapter bluetoothAdapter;
   private BluetoothLeScannerCompat leScanner;
   private boolean isLeScanning;
+  private boolean isDiscovering = false;
 
   private CallbackContext bluetoothEventsCallback;
 
@@ -106,11 +111,9 @@ public class ChromeBluetooth extends CordovaPlugin {
     return knownLeScanResults.get(deviceAddress);
   }
 
-  private void setIsLeScanning(boolean isLeScanning) {
-    if (this.isLeScanning != isLeScanning) {
-      this.isLeScanning = isLeScanning;
-      sendAdapterStateChangedEvent();
-    }
+  @Nullable
+  BluetoothDevice getKnownBluetoothDevice(String deviceAddress) {
+    return knownBluetoothDevices.get(deviceAddress);
   }
 
   private JSONObject getAdapterStateInfo() throws JSONException {
@@ -142,6 +145,7 @@ public class ChromeBluetooth extends CordovaPlugin {
     deviceInfo.put("deviceClass", device.getBluetoothClass().getDeviceClass());
     deviceInfo.put("paired", device.getBondState() == BluetoothDevice.BOND_BONDED);
     deviceInfo.put("connected", isConnected(device));
+    deviceInfo.put("uuids", new JSONArray(getUuidStringsFromDevice(device)));
     return deviceInfo;
   }
 
@@ -167,34 +171,50 @@ public class ChromeBluetooth extends CordovaPlugin {
     return uuidStrings;
   }
 
-  private JSONObject getDeviceInfo(ScanResult leScanResult) throws JSONException {
+  private JSONObject getLeDeviceInfo(ScanResult leScanResult) throws JSONException {
     JSONObject deviceInfo = getBasicDeviceInfo(leScanResult.getDevice());
-    Collection<String> uuidStrings = getUuidStringsFromDevice(leScanResult.getDevice());
-    Collection<String> adUuidStrings = getUuidStringsFromLeScanRecord(leScanResult.getScanRecord());
-    uuidStrings.addAll(adUuidStrings);
+    Set<String> uuidStrings = new HashSet<String>();
+    uuidStrings.addAll(getUuidStringsFromDevice(leScanResult.getDevice()));
+    uuidStrings.addAll(getUuidStringsFromLeScanRecord(leScanResult.getScanRecord()));
+
+    JSONArray uuids = new JSONArray(uuidStrings);
 
     if (!uuidStrings.isEmpty()) {
-      deviceInfo.put("uuids", uuidStrings);
+      deviceInfo.put("uuids", uuids);
     }
 
     return deviceInfo;
   }
 
+  // Note: If the device both discovered by LeScanner and regular scanner, LeDevice
+  // info will be returned since it contains more information.
   private void getDevice(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
     String deviceAddress = args.getString(0);
-    ScanResult result = knownLeScanResults.get(deviceAddress);
-    if (result == null) {
+    ScanResult leResult = knownLeScanResults.get(deviceAddress);
+    BluetoothDevice device = knownBluetoothDevices.get(deviceAddress);
+
+    if (leResult == null && device == null) {
       callbackContext.error("Invalid Argument");
+    } else if (leResult != null) {
+      callbackContext.success(getLeDeviceInfo(leResult));
     } else {
-      callbackContext.success(getDeviceInfo(result));
+      callbackContext.success(getBasicDeviceInfo(device));
     }
   }
 
+  // Note: If the device both discovered by LeScanner and regular scanner, LeDevice
+  // info will be returned since it contains more information.
   private void getDevices(CallbackContext callbackContext) throws JSONException {
     JSONArray results = new JSONArray();
-    for (ScanResult result: knownLeScanResults.values()) {
-      results.put(getDeviceInfo(result));
+
+    for (BluetoothDevice device: knownBluetoothDevices.values()) {
+      results.put(getBasicDeviceInfo(device));
     }
+
+    for (ScanResult result: knownLeScanResults.values()) {
+      results.put(getLeDeviceInfo(result));
+    }
+
     callbackContext.success(results);
   }
 
@@ -206,22 +226,50 @@ public class ChromeBluetooth extends CordovaPlugin {
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build();
 
-    if (!isLeScanning && leScanner.startScan(null, settings, leScanCallback)) {
-      setIsLeScanning(true);
-      callbackContext.success();
-    } else {
+    if (isLeScanning && bluetoothAdapter.isDiscovering()) {
+      // both regular and low energy are already in scanning mode. return the
+      // same error message as desktop.
       callbackContext.error("Starting discovery failed");
+      return;
     }
+
+    // Reset low energy scanner or regular scanner if they are in scanning mode.
+    if (isLeScanning) {
+      leScanner.stopScan(leScanCallback);
+    }
+
+    if (bluetoothAdapter.isDiscovering()) {
+      bluetoothAdapter.cancelDiscovery();
+    }
+
+    isLeScanning = true;
+    leScanner.startScan(null, settings, leScanCallback);
+
+    isDiscovering = true;
+    bluetoothAdapter.startDiscovery();
+    callbackContext.success();
+    sendAdapterStateChangedEvent();
   }
 
   private void stopDiscovery(CallbackContext callbackContext) {
-    if (isLeScanning) {
-      leScanner.stopScan(leScanCallback);
-      setIsLeScanning(false);
-      callbackContext.success();
-    } else {
+
+    if (!isLeScanning && !bluetoothAdapter.isDiscovering()) {
       callbackContext.error("Failed to stop discovery");
+      return;
     }
+
+    if (isLeScanning) {
+      isLeScanning = false;
+      leScanner.stopScan(leScanCallback);
+    }
+
+    if (bluetoothAdapter.isDiscovering()) {
+      isDiscovering = false;
+      bluetoothAdapter.cancelDiscovery();
+    }
+
+    callbackContext.success();
+    sendAdapterStateChangedEvent();
   }
 
   private void registerBluetoothEvents(CallbackContext callbackContext) {
@@ -248,7 +296,15 @@ public class ChromeBluetooth extends CordovaPlugin {
   private void sendDeviceAddedEvent(ScanResult scanResult) {
     try {
       bluetoothEventsCallback.sendPluginResult(
-          getMultipartEventsResult("onDeviceAdded", getDeviceInfo(scanResult)));
+          getMultipartEventsResult("onDeviceAdded", getLeDeviceInfo(scanResult)));
+    } catch (JSONException e) {
+    }
+  }
+
+  private void sendDeviceAddedEvent(BluetoothDevice device) {
+    try {
+      bluetoothEventsCallback.sendPluginResult(
+          getMultipartEventsResult("onDeviceAdded", getBasicDeviceInfo(device)));
     } catch (JSONException e) {
     }
   }
@@ -256,7 +312,7 @@ public class ChromeBluetooth extends CordovaPlugin {
   void sendDeviceChangedEvent(ScanResult scanResult) {
     try {
       bluetoothEventsCallback.sendPluginResult(
-          getMultipartEventsResult("onDeviceChanged", getDeviceInfo(scanResult)));
+          getMultipartEventsResult("onDeviceChanged", getLeDeviceInfo(scanResult)));
     } catch (JSONException e) {
     }
   }
@@ -264,7 +320,15 @@ public class ChromeBluetooth extends CordovaPlugin {
   private void sendDeviceRemovedEvent(ScanResult scanResult) {
     try {
       bluetoothEventsCallback.sendPluginResult(
-          getMultipartEventsResult("onDeviceRemoved", getDeviceInfo(scanResult)));
+          getMultipartEventsResult("onDeviceRemoved", getLeDeviceInfo(scanResult)));
+    } catch (JSONException e) {
+    }
+  }
+
+  private void sendDeviceRemovedEvent(BluetoothDevice device) {
+    try {
+      bluetoothEventsCallback.sendPluginResult(
+          getMultipartEventsResult("onDeviceRemoved", getBasicDeviceInfo(device)));
     } catch (JSONException e) {
     }
   }
@@ -275,14 +339,39 @@ public class ChromeBluetooth extends CordovaPlugin {
 
   private void registerAdapterStateReceiver() {
     IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+    filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+    filter.addAction(BluetoothDevice.ACTION_FOUND);
     webView.getContext().registerReceiver(adapterStateReceiver, filter);
   }
 
   private final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
+
         if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
           sendAdapterStateChangedEvent();
+        } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(intent.getAction())) {
+
+          if (!isDiscovering) {
+            return;
+          }
+
+          Set<String> knownAddresses = new HashSet<String>(knownBluetoothDevices.keySet());
+          knownAddresses.removeAll(activeDevices);
+          for (String address: knownAddresses) {
+            sendDeviceRemovedEvent(knownBluetoothDevices.get(address));
+            knownBluetoothDevices.remove(address);
+          }
+          activeDevices.clear();
+          bluetoothAdapter.startDiscovery();
+
+        } else if (BluetoothDevice.ACTION_FOUND.equals(intent.getAction())) {
+          BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+          activeDevices.add(device.getAddress());
+          if (!knownBluetoothDevices.containsKey(device.getAddress())) {
+            knownBluetoothDevices.put(device.getAddress(), device);
+            sendDeviceAddedEvent(device);
+          }
         }
       }
     };
@@ -306,7 +395,7 @@ public class ChromeBluetooth extends CordovaPlugin {
       @Override
       public void onScanFailed(int errorCode) {
         Log.e(LOG_TAG, "onScanFailed():");
-        setIsLeScanning(false);
+        isLeScanning = false;
       }
     };
 }
