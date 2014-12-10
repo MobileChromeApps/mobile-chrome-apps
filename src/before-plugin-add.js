@@ -37,15 +37,15 @@ module.exports = exports = function beforePluginAdd(context) {
         return pluginsBeingInstalledRightNow.indexOf(plugin) != -1;
       });
 
-      if (pluginsToBeNotInstalled.length == 0) return;
+      if (pluginsToBeNotInstalled.length === 0) return;
 
       console.error("Error: The following plugin(s) cannot be explicitly installed:");
       pluginsToBeNotInstalled.forEach(function(plugin) {
-        console.warn("*", plugin)
+        console.warn("*", plugin);
       });
       console.error("Instead, add the proper manifest.json permissions.");
       console.error("See: https://developer.chrome.com/apps/manifest");
 
       return Q.reject("Abort plugin add");
     });
-}
+};

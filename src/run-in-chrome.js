@@ -5,7 +5,7 @@ var child_process = require('child_process');
 
 // Returns a promise.
 module.exports = exports = function runInChrome(platform) {
-  chromeAppRunRoot = null;
+  var chromeAppRunRoot = null;
   if (fs.existsSync('www/manifest.json')) {
     chromeAppRunRoot = 'www';
   } else if (fs.existsSync('manifest.json')) {
@@ -20,12 +20,13 @@ module.exports = exports = function runInChrome(platform) {
   }
 
   return Q.fcall(function() {
+    var chromeExe = null;
     if (process.platform === 'win32') {
-      var chrome = 'Chrome' + (platform === 'canary' ? ' Canary' : '');
-      child_process.spawn('cmd', ['/s', '/c', 'start', chrome].concat(chromeArgs));
+      chromeExe = 'Chrome' + (platform === 'canary' ? ' Canary' : '');
+      child_process.spawn('cmd', ['/s', '/c', 'start', chromeExe].concat(chromeArgs));
     } else if (process.platform === 'darwin') {
-      var chrome = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
-      child_process.spawn('open', ['-n', '-a', chrome, '--args'].concat(chromeArgs));
+      chromeExe = 'Google Chrome' + (platform === 'canary' ? ' Canary' : '');
+      child_process.spawn('open', ['-n', '-a', chromeExe, '--args'].concat(chromeArgs));
     }
   });
 };
