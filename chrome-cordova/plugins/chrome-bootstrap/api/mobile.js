@@ -130,7 +130,7 @@ function fireLifecycleEvents(manifestJson) {
             if (!app_window.current()) {
               console.warn('No page loaded because chrome.app.window.create() was never called.');
             }
-          }, 500);
+          }, 1500);
         }
         for (var i = 0; i < exports.lifeCycleEventFuncs.length; ++i) {
           exports.lifeCycleEventFuncs[i]();
