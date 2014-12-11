@@ -7,7 +7,7 @@
 //    event.
 // 2. Only Init ChromeBluetooth when user calls bluetooth API, or add listener to any
 //    events.
-
+#import <Cordova/CDV.h>
 #import <Cordova/CDVPlugin.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 #import "ChromeBluetooth.h"
@@ -105,6 +105,7 @@
     __weak ChromeBluetooth* _plugin;
     CBPeripheral* _peripheral;
     NSDictionary* _adData;
+    NSNumber* _RSSI;
     
     // <InstanceId, CBService>
     NSMutableDictionary* _knownServices;
@@ -131,7 +132,7 @@
 
 @implementation ChromeBluetoothPeripheral
 
-- (ChromeBluetoothPeripheral*)initWithPeripheral:(CBPeripheral*)thePeripheral adData:(NSDictionary*)theAdData plugin:(ChromeBluetooth*)thePlugin
+- (ChromeBluetoothPeripheral*)initWithPeripheral:(CBPeripheral*)thePeripheral adData:(NSDictionary*)theAdData RSSI:(NSNumber*)RSSI plugin:(ChromeBluetooth*)thePlugin
 {
     self = [super init];
     if (self) {
@@ -139,6 +140,7 @@
         [_peripheral setDelegate:self];
         _plugin = thePlugin;
         _adData = theAdData;
+        _RSSI = RSSI;
         
         _knownServices = [NSMutableDictionary dictionary];
         _knownCharacteristics = [NSMutableDictionary dictionary];
@@ -220,6 +222,20 @@
     }
     
     deviceInfo[@"uuids"] = [serviceUuids allObjects];
+    deviceInfo[@"rssi"] = _RSSI;
+
+    if (_adData[CBAdvertisementDataTxPowerLevelKey]) {
+        deviceInfo[@"tx_power"] = _adData[CBAdvertisementDataTxPowerLevelKey];
+    }
+    
+    NSDictionary* serviceDataInfo = _adData[CBAdvertisementDataServiceDataKey];
+    if (serviceDataInfo) {
+        for (CBUUID* serviceDataUuid in serviceDataInfo) {
+            deviceInfo[@"serviceDataUuid"] = [serviceDataUuid fullUUIDString];
+            deviceInfo[@"serviceData"] = [serviceDataInfo[serviceDataUuid] base64EncodedString];
+        }
+    }
+    
     return deviceInfo;
 }
 
@@ -802,10 +818,11 @@
     ChromeBluetoothPeripheral* foundPeripheral = _peripherals[address];
     if (foundPeripheral) {
         foundPeripheral->_adData = advertisementData;
+        foundPeripheral->_RSSI = RSSI;
         return;
     }
    
-    ChromeBluetoothPeripheral* chromePeripheral = [[ChromeBluetoothPeripheral alloc] initWithPeripheral:peripheral adData:advertisementData plugin:self];
+    ChromeBluetoothPeripheral* chromePeripheral = [[ChromeBluetoothPeripheral alloc] initWithPeripheral:peripheral adData:advertisementData RSSI:RSSI plugin:self];
     
     _peripherals[address] = chromePeripheral;
     
