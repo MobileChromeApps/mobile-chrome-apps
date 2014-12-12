@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright (c) 2014 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    id="org.chromium.bluetoothsocket"
+    version="1.0.0-dev">
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
+
+  <name>Chrome Apps Bluetooth Socket API</name>
+
+  <dependency id="org.chromium.bluetooth" />
+
+  <js-module src="bluetoothSocket.js" name="bluetoothSocket">
+    <clobbers target="chrome.bluetoothSocket" />
+  </js-module>
+
+  <platform name="android">
+    <source-file src="src/android/ChromeBluetoothSocket.java" target-dir="src/org/chromium" />
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="ChromeBluetoothSocket">
+        <param name="android-package" value="org.chromium.ChromeBluetoothSocket" />
+      </feature>
+    </config-file>
+  </platform>
+</plugin>
