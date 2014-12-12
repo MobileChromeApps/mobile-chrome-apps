@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -359,6 +360,56 @@ public class ChromeBluetoothSocket extends CordovaPlugin {
       return false;
     }
 
+    private void resumeClientSocket() {
+
+      if (type != SocketType.SO_TYPE_CLIENT) {
+        Log.e(LOG_TAG, "calling resumeClientSocket on an non-client socket");
+        return;
+      }
+
+      if (pausedBuffer != null) {
+        sendReceiveEvent(socketId, pausedBuffer);
+        pausedBuffer = null;
+      }
+
+      if (clientThread == null) {
+        clientThread = new ClientThread(socketId, clientSocket);
+        clientThread.start();
+      }
+    }
+
+    private void resumeServerSocket() {
+
+      if (type != SocketType.SO_TYPE_SERVER) {
+        Log.e(LOG_TAG, "calling resumeServerSocket on an non-server socket");
+        return;
+      }
+
+      while(acceptedSocketsQueue.peek() != null) {
+        try {
+          int acceptedSocketId = acceptedSocketsQueue.take();
+          sendAcceptEvent(socketId, acceptedSocketId);
+        } catch (InterruptedException e) {
+          sendAcceptErrorEvent(socketId, e.getMessage());
+        }
+      }
+
+      if (serverThread == null) {
+        serverThread = new ServerThread(socketId, serverSocket);
+        serverThread.start();
+      }
+    }
+
+    private void resume() {
+      if (type == SocketType.SO_TYPE_CLIENT) {
+        resumeClientSocket();
+      }
+
+      if (type == SocketType.SO_TYPE_SERVER) {
+        resumeServerSocket();
+      }
+    }
+
     int getSocketId() {
       return socketId;
     }
@@ -370,27 +421,7 @@ public class ChromeBluetoothSocket extends CordovaPlugin {
     void setPaused(boolean paused) {
       this.paused = paused;
       if (this.paused == false) {
-        if (type == SocketType.SO_TYPE_CLIENT) {
-          if (pausedBuffer != null) {
-            sendReceiveEvent(socketId, pausedBuffer);
-            pausedBuffer = null;
-          }
-          clientThread = new ClientThread(socketId, clientSocket);
-          clientThread.start();
-        }
-
-        if (type == SocketType.SO_TYPE_SERVER) {
-          while(acceptedSocketsQueue.peek() != null) {
-            try {
-              int acceptedSocketId = acceptedSocketsQueue.take();
-              sendAcceptEvent(socketId, acceptedSocketId);
-            } catch (InterruptedException e) {
-              sendAcceptErrorEvent(socketId, e.getMessage());
-            }
-          }
-          serverThread = new ServerThread(socketId, serverSocket);
-          serverThread.start();
-        }
+        resume();
       }
     }
 

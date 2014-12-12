@@ -46,9 +46,9 @@
     "socket": true,
     "low_energy": true,
     "uuids": [
-      "C9D3",
-      "180D",
-      "00001101-0000-1000-8000-00805f9b34fb"
+      "C9D3", // UUID for the ble-test app
+      "180D", // UUID for heart rate simulator
+      "00001101-0000-1000-8000-00805f9b34fb" // UUID for the Jade robot
     ]
   },
   "sockets": {
