@@ -43,13 +43,7 @@ public class ChromeAppWindow extends CordovaPlugin {
             callbackContext.success();
             return;
         }
-        Intent activityIntent = new Intent(activity, activity.getClass());
-        activityIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        // Use the application context to start this activity
-        //  - Using activity.startActivity() doesn't work (error seen in logcat)
-        //  - A semi-random activity will be shown instead
-        activity.getApplicationContext().startActivity(activityIntent);
+        BackgroundActivity.launchForeground(activity);
 
         callbackContext.success();
     }
