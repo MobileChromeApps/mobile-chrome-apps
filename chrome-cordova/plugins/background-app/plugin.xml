@@ -29,7 +29,8 @@
 
     <config-file target="res/xml/config.xml" parent="/widget">
       <feature name="BackgroundPlugin">
-        <param name="android-package" value="org.chromium.BackgroundPlugin"/>
+        <param name="android-package" value="org.chromium.BackgroundPlugin" />
+        <param name="onload" value="true" />
       </feature>
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
