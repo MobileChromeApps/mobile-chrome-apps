@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -112,7 +113,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     JSONObject properties = args.getJSONObject(0);
 
     try {
-      UdpSocket socket = new UdpSocket(nextSocket++, recvContext, properties);
+      UdpSocket socket = new UdpSocket(nextSocket++, properties);
       sockets.put(Integer.valueOf(socket.getSocketId()), socket);
       callbackContext.success(socket.getSocketId());
     } catch (IOException e) {
@@ -335,7 +336,7 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     try {
       socket.setMulticastLoopbackMode(enabled);
       callbackContext.success();
-    } catch (SocketException e) {
+    } catch (IOException e) {
       callbackContext.error(buildErrorInfo(-2, e.getMessage()));
     }
   }
@@ -357,6 +358,43 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   private void registerReceiveEvents(CordovaArgs args, final CallbackContext callbackContext) {
     recvContext = callbackContext;
     startSelectorThread();
+  }
+
+  private void sendReceiveErrorEvent(int code, String message) {
+    JSONObject error = new JSONObject();
+
+    try {
+      error.put("message", message);
+      error.put("resultCode", code);
+      PluginResult errorResult = new PluginResult(Status.ERROR, error);
+      errorResult.setKeepCallback(true);
+      recvContext.sendPluginResult(errorResult);
+    } catch (JSONException e) {
+    }
+  }
+
+  // This is a synchronized method because regular read and multicast read on
+  // different threads, and we need to send data and metadata in serial in order
+  // to decode the receive event correctly. Alternatively, we can send Multipart
+  // messages.
+  private synchronized void sendReceiveEvent(byte[] data, int socketId, String address, int port) {
+
+    PluginResult dataResult = new PluginResult(Status.OK, data);
+    dataResult.setKeepCallback(true);
+    recvContext.sendPluginResult(dataResult);
+
+    JSONObject metadata = new JSONObject();
+    try {
+      metadata.put("socketId", socketId);
+      metadata.put("remoteAddress", address);
+      metadata.put("remotePort", port);
+
+      PluginResult metadataResult = new PluginResult(Status.OK, metadata);
+      metadataResult.setKeepCallback(true);
+
+      recvContext.sendPluginResult(metadataResult);
+    } catch (JSONException e) {
+    }
   }
 
   private void startSelectorThread() {
@@ -513,14 +551,15 @@ public class ChromeSocketsUdp extends CordovaPlugin {
   private class UdpSocket {
     private final int socketId;
     private final DatagramChannel channel;
-    private final MulticastSocket multicastSocket;
-    private final CallbackContext recvContext;
+
+    private MulticastSocket multicastSocket;
 
     private BlockingQueue<UdpSendPacket> sendPackets = new LinkedBlockingQueue<UdpSendPacket>();
-    private HashSet<String> multicastGroups = new HashSet<String>();
+    private Set<String> multicastGroups = new HashSet<String>();
     private SelectionKey key;
 
     private boolean paused;
+    private DatagramPacket pausedMulticastPacket;
 
     private boolean persistent;
     private String name;
@@ -528,15 +567,14 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
     private MulticastReadThread multicastReadThread;
 
-    UdpSocket(int socketId, CallbackContext recvContext, JSONObject properties)
+    UdpSocket(int socketId, JSONObject properties)
         throws JSONException, IOException {
 
       this.socketId = socketId;
-      this.recvContext = recvContext;
 
       channel = DatagramChannel.open();
       channel.configureBlocking(false);
-      multicastSocket = new MulticastSocket(null);
+      multicastSocket = null;
 
       // set socket default options
       paused = false;
@@ -593,8 +631,57 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       channel.socket().setReceiveBufferSize(bufferSize);
     }
 
+    private void sendMulticastPacket(DatagramPacket packet) {
+      byte[] out = packet.getData();
+
+      // Truncate the buffer if the message was shorter than it.
+      if (packet.getLength() != out.length) {
+        byte[] temp = new byte[packet.getLength()];
+        for(int i = 0; i < packet.getLength(); i++) {
+          temp[i] = out[i];
+        }
+        out = temp;
+      }
+
+      sendReceiveEvent(out, socketId, packet.getAddress().getHostAddress(), packet.getPort());
+    }
+
+    private void bindMulticastSocket() throws SocketException {
+      multicastSocket.bind(new InetSocketAddress(channel.socket().getLocalPort()));
+      if (!paused) {
+        multicastReadThread = new MulticastReadThread(multicastSocket);
+        multicastReadThread.start();
+      }
+    }
+
+    // Upgrade the normal datagram socket to multicast socket. All incoming
+    // packet will be received on the multicast read thread. There is no way to
+    // downgrade the same socket back to a normal datagram socket.
+    private void upgradeToMulticastSocket() throws IOException {
+      multicastSocket = new MulticastSocket(null);
+      multicastSocket.setReuseAddress(true);
+      if (channel.socket().isBound()) {
+        bindMulticastSocket();
+      }
+    }
+
+    private void resumeMulticastSocket() {
+      if (pausedMulticastPacket != null) {
+        sendMulticastPacket(pausedMulticastPacket);
+        pausedMulticastPacket = null;
+      }
+
+      if (multicastSocket != null && multicastReadThread == null) {
+        multicastReadThread = new MulticastReadThread(multicastSocket);
+        multicastReadThread.start();
+      }
+    }
+
     void setPaused(boolean paused) {
       this.paused = paused;
+      if (!this.paused) {
+        resumeMulticastSocket();
+      }
     }
 
     void addSendPacket(String address, int port, byte[] data, CallbackContext callbackContext) {
@@ -608,6 +695,10 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     void bind(String address, int port) throws SocketException {
       channel.socket().setReuseAddress(true);
       channel.socket().bind(new InetSocketAddress(port));
+
+      if (multicastSocket != null) {
+        bindMulticastSocket();
+      }
     }
 
     // This method can be only called by selector thread.
@@ -634,10 +725,15 @@ public class ChromeSocketsUdp extends CordovaPlugin {
         key.cancel();
 
       channel.close();
-      multicastSocket.close();
+
+      if (multicastSocket != null) {
+        multicastSocket.close();
+        multicastSocket = null;
+      }
 
       if (multicastReadThread != null) {
         multicastReadThread.cancel();
+        multicastReadThread = null;
       }
     }
 
@@ -659,8 +755,11 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       return info;
     }
 
-    void joinGroup(String address) throws UnknownHostException, IOException {
+    void joinGroup(String address) throws IOException {
 
+      if (multicastSocket == null) {
+        upgradeToMulticastSocket();
+      }
       if (multicastGroups.contains(address)) {
         Log.e(LOG_TAG, "Attempted to join an already joined multicast group.");
         return;
@@ -668,13 +767,6 @@ public class ChromeSocketsUdp extends CordovaPlugin {
 
       multicastGroups.add(address);
       multicastSocket.joinGroup(InetAddress.getByName(address));
-
-      if (multicastReadThread == null) {
-        multicastSocket.setReuseAddress(true);
-        multicastSocket.bind(new InetSocketAddress(channel.socket().getLocalPort()));
-        multicastReadThread = new MulticastReadThread(socketId, multicastSocket, recvContext);
-        multicastReadThread.start();
-      }
     }
 
     void leaveGroup(String address) throws UnknownHostException, IOException {
@@ -685,10 +777,18 @@ public class ChromeSocketsUdp extends CordovaPlugin {
     }
 
     void setMulticastTimeToLive(int ttl) throws IOException {
+      if (multicastSocket == null) {
+        upgradeToMulticastSocket();
+      }
+
       multicastSocket.setTimeToLive(ttl);
     }
 
-    void setMulticastLoopbackMode(boolean enabled) throws SocketException {
+    void setMulticastLoopbackMode(boolean enabled) throws IOException {
+      if (multicastSocket == null) {
+        upgradeToMulticastSocket();
+      }
+
       multicastSocket.setLoopbackMode(!enabled);
     }
 
@@ -709,78 +809,49 @@ public class ChromeSocketsUdp extends CordovaPlugin {
       recvBuffer.clear();
 
       try {
-        SocketAddress address = channel.receive(recvBuffer);
+        InetSocketAddress address = (InetSocketAddress) channel.receive(recvBuffer);
         recvBuffer.flip();
         byte[] recvBytes = new byte[recvBuffer.limit()];
         recvBuffer.get(recvBytes);
 
-        PluginResult dataResult = new PluginResult(Status.OK, recvBytes);
-        dataResult.setKeepCallback(true);
-
-        recvContext.sendPluginResult(dataResult);
-
-        JSONObject metadata = new JSONObject();
-
-        metadata.put("socketId", socketId);
-        if (address instanceof InetSocketAddress) {
-          InetSocketAddress remoteInfo = (InetSocketAddress) address;
-          metadata.put("remoteAddress", remoteInfo.getAddress().getHostAddress());
-          metadata.put("remotePort", remoteInfo.getPort());
-        }
-
-        PluginResult metadataResult = new PluginResult(Status.OK, metadata);
-        metadataResult.setKeepCallback(true);
-
-        recvContext.sendPluginResult(metadataResult);
+        sendReceiveEvent(
+            recvBytes, socketId, address.getAddress().getHostAddress(), address.getPort());
 
       } catch (IOException e) {
-      } catch (JSONException e) {
+        sendReceiveErrorEvent(-2, e.getMessage());
       }
     }
 
     private class MulticastReadThread extends Thread {
-      private final int socketId;
-      private final MulticastSocket socket;
-      private final CallbackContext recvContext;
 
-      MulticastReadThread(int socketId, MulticastSocket socket, CallbackContext recvContext) {
-        this.socketId = socketId;
+      private final MulticastSocket socket;
+
+      MulticastReadThread(MulticastSocket socket) {
         this.socket = socket;
-        this.recvContext = recvContext;
       }
 
       public void run() {
         while(!Thread.currentThread().isInterrupted()) {
+
+          if (paused) {
+            // Terminate the thread if the socket is paused
+            multicastReadThread = null;
+            return;
+          }
+
           try {
             byte[] out = new byte[socket.getReceiveBufferSize()];
             DatagramPacket packet = new DatagramPacket(out, out.length);
             socket.receive(packet);
 
-            // Truncate the buffer if the message was shorter than it.
-            if (packet.getLength() != out.length) {
-              byte[] temp = new byte[packet.getLength()];
-              for(int i = 0; i < packet.getLength(); i++) {
-                temp[i] = out[i];
-              }
-              out = temp;
+            if (paused) {
+              pausedMulticastPacket = packet;
+            } else {
+              sendMulticastPacket(packet);
             }
 
-            PluginResult dataResult = new PluginResult(Status.OK, out);
-            dataResult.setKeepCallback(true);
-
-            recvContext.sendPluginResult(dataResult);
-
-            JSONObject metadata = new JSONObject();
-
-            metadata.put("socketId", socketId);
-            metadata.put("remoteAddress", packet.getAddress().getHostAddress());
-            metadata.put("remotePort", packet.getPort());
-
-            PluginResult metadataResult = new PluginResult(Status.OK, metadata);
-            metadataResult.setKeepCallback(true);
-            recvContext.sendPluginResult(metadataResult);
           } catch (IOException e) {
-          } catch (JSONException e) {
+            sendReceiveErrorEvent(-2, e.getMessage());
           }
         }
       }
