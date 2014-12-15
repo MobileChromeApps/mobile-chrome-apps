@@ -4,6 +4,7 @@
 
 var Event = require('org.chromium.common.events');
 var platform = cordova.require('cordova/platform');
+var base64 = require('cordova/base64');
 var exec = require('cordova/exec');
 var callbackWithError = require('org.chromium.common.errors').callbackWithError;
 
@@ -13,16 +14,29 @@ var fail = function(callback) {
     };
 };
 
+var convertServiceDataToArrayBuffer = function(deviceInfo) {
+    if (deviceInfo.serviceData) {
+        deviceInfo.serviceData = base64.toArrayBuffer(deviceInfo.serviceData);
+    }
+    return deviceInfo;
+};
+
 exports.getAdapterState = function(callback) {
     exec(callback, fail(callback), 'ChromeBluetooth', 'getAdapterState', []);
 };
 
 exports.getDevice = function(deviceAddress, callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getDevice', [deviceAddress]);
+    var win = callback && function(device) {
+        callback(convertServiceDataToArrayBuffer(device));
+    };
+    exec(win, fail(callback), 'ChromeBluetooth', 'getDevice', [deviceAddress]);
 };
 
 exports.getDevices = function(callback) {
-    exec(callback, fail(callback), 'ChromeBluetooth', 'getDevices', []);
+    var win  = callback && function(devices) {
+        callback(devices.map(convertServiceDataToArrayBuffer));
+    };
+    exec(win, fail(callback), 'ChromeBluetooth', 'getDevices', []);
 };
 
 exports.startDiscovery = function(callback) {
@@ -45,13 +59,13 @@ function registerEvents() {
             exports.onAdapterStateChanged.fire(info);
             break;
         case 'onDeviceAdded':
-            exports.onDeviceAdded.fire(info);
+            exports.onDeviceAdded.fire(convertServiceDataToArrayBuffer(info));
             break;
         case 'onDeviceChanged':
-            exports.onDeviceChanged.fire(info);
+            exports.onDeviceChanged.fire(convertServiceDataToArrayBuffer(info));
             break;
         case 'onDeviceRemoved':
-            exports.onDeviceRemoved.fire(info);
+            exports.onDeviceRemoved.fire(convertServiceDataToArrayBuffer(info));
             break;
         }
     };

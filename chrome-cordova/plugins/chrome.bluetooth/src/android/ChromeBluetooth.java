@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 import android.util.Log;
 
 
@@ -181,6 +183,18 @@ public class ChromeBluetooth extends CordovaPlugin {
 
     if (!uuidStrings.isEmpty()) {
       deviceInfo.put("uuids", uuids);
+    }
+
+    deviceInfo.put("rssi", leScanResult.getRssi());
+    deviceInfo.put("tx_power", leScanResult.getScanRecord().getTxPowerLevel());
+
+    Iterator serviceDataIt = leScanResult.getScanRecord().getServiceData().entrySet().iterator();
+    if (serviceDataIt.hasNext()) {
+      Map.Entry<ParcelUuid, byte[]> serviceDataPair =
+          (Map.Entry<ParcelUuid, byte[]>) serviceDataIt.next();
+      deviceInfo.put("serviceDataUuid", serviceDataPair.getKey().toString());
+      deviceInfo.put(
+          "serviceData", Base64.encodeToString(serviceDataPair.getValue(), Base64.NO_WRAP));
     }
 
     return deviceInfo;
