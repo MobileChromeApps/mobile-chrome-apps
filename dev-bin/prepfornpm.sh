@@ -30,7 +30,7 @@ if [[ -e npm_deleted_git_ignores ]]; then
 fi
 
 set -e
-GIT_IGNORES=$(echo $(find . -name ".gitignore"))
+GIT_IGNORES=$(echo $(find . -name ".gitignore" | grep -v "node_modules"))
 echo $GIT_IGNORES > npm_deleted_git_ignores
 rm $GIT_IGNORES
 echo Prepped for npm pack / npm publish. Deleted:
