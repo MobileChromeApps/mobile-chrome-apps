@@ -4,6 +4,21 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### 0.5.1 (Dec 16, 2014)
+* Fix #412 #448 Warn when adding plugins explicitly when you need a manifest permission
+* Fix #455 Support setting androidTheme in manifest.mobile
+* Fix HTMLImports not working with imports polyfill (#450)
+* Android: Look for Android SDK in Android Studio 1.0's default location
+* Android: CB-7881 Android tooling shouldn't lock application directory
+* Android: CB-3679 Move splashscreen logic into splashscreen plugin
+* Android: CB-8143 Use the correct Android Gradle plugin for the installed Gradle version
+* Android: Revert Gradle distributionUrlRegex cleanup.
+* Android: CB-8119 Restart adb when we detect it's hung
+* Android: CB-8112 Turn off mediaPlaybackRequiresUserGesture
+* Android: CB-6153 Add a preference for controlling hardware button audio stream (DefaultVolumeStream)
+* Android: CB-8081 Allow gradle builds to use Java 6 instead of requiring 7
+* Android: CB-8031 Fix race condition that shows as ConcurrentModificationException
+
 ### v0.5.0 (Nov 18, 2014)
 * Bumping cordova-ios version to 3.7.0
 * Update cordova-android and cordova-crosswalk-engine submodules
