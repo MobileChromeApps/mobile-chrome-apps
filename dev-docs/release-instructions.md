@@ -118,12 +118,6 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
 
     # Update shrinkwrap dependancies
     npm shrinkwrap
-    # If you get errors about invalid semver of a browserify dependency:
-        vim node_modules/cordova-lib/node_modules/cordova-js/package.json # Delete browserify dependency
-        rm -r node_modules/cordova-lib/node_modules/cordova-js/node_modules/browserify
-        npm shrinkwrap
-    # If you didn't get such an error, remove these instructions!
-
     git add npm-shrinkwrap.json
 
     # Commit so that no-one re-uses this version of the rc
