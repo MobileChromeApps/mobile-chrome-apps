@@ -17,7 +17,7 @@ The Chrome Apps for Mobile toolchain can target iOS 6+ and Android 4.x+.
 
 When developing an application for Android, you will also need to install:
 
-* [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) 7 (or higher)
+* [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) 6 (or higher)
 * [Android SDK](https://developer.android.com/sdk/index.html)
   * We recommend using the "_Get the SDK for an existing IDE_" or "_Android Studio_" methods.
   * **Linux**: The Android SDK requires 32 bit support libraries. On Ubuntu, get these via: `apt-get install ia32-libs`.
