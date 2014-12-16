@@ -14,104 +14,25 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.apache.cordova.AndroidWebView;
-import org.apache.cordova.CordovaActivity;
-import org.apache.cordova.CordovaInterface;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
+import org.chromium.apps.ChromeAppsApiTests.MainActivity;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ExecutorService;
 
-public class BackgroundActivity extends CordovaActivity
+public class BackgroundActivity extends Activity
 {
     private static final String LOG_TAG = "BackgroundActivity";
-    private static BackgroundActivity activityInstance;
     private static Intent activityIntent;
-
-    DelegatingCordovaInterface delegatingCordovaInterface;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        moveTaskToBack(true);
-        delegatingCordovaInterface = new DelegatingCordovaInterface(this);
-        activityInstance = this;
-        activityIntent = null;
+        // This is called only when launchBackground() is first called, and this is the activity
+        // at the top of the MainActivity sandwich.
         super.onCreate(savedInstanceState);
-        loadUrl(launchUrl);
+        Log.i(LOG_TAG, "onCreate called (finishing)");
+        moveTaskToBack(true);
+        activityIntent = null;
+        finish();
     }
 
-    @Override
-    protected void createViews() {
-        // No-op so as to not call setContentView().
-    }
-
-    // Method is same as super class except we use the delegatingCordovaInterface and getApplicationContext().
-    @Override
-    protected CordovaWebView makeWebView() {
-        String r = preferences.getString("webView", null);
-        CordovaWebView ret = null;
-        Context webViewContext = this.getApplicationContext();
-        if (r != null) {
-            try {
-                Class<?> webViewClass = Class.forName(r);
-
-                // Look for a constructor that takes separate Context and Activity parameters
-                //  - Allows for use of application context, which is definitely not an Activity,
-                //    as expected by some web view implementations (i.e. Crosswalk)
-                Constructor<?> constructor;
-                Object[] constructArgs;
-                try {
-                    constructor = webViewClass.getConstructor(Context.class, Activity.class);
-                    constructArgs = new Object[] { webViewContext, this };
-                } catch (NoSuchMethodException e) {
-                    // No constructor with two separate parameters, so use the usual constructor
-                    // that takes only the Context
-                    constructor = webViewClass.getConstructor(Context.class);
-                    constructArgs = new Object[] { webViewContext };
-                }
-                ret = (CordovaWebView) constructor.newInstance(constructArgs);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (ret == null) {
-            // If all else fails, return a default WebView
-            ret = new AndroidWebView(webViewContext);
-        }
-        ret.init(delegatingCordovaInterface, pluginEntries, internalWhitelist, externalWhitelist, preferences);
-        return ret;
-    }
-
-    // Allow apps to define their own Background Activity if they want.
-    private static ComponentName getBackgroundActivityComponent(Context context) {
-        PackageManager pm = context.getPackageManager();
-        PackageInfo packageInfo = null;
-        try {
-            packageInfo = pm.getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES);
-        } catch (PackageManager.NameNotFoundException e) {
-            throw new RuntimeException("No package info for " + context.getPackageName(), e);
-        }
-
-        for (ActivityInfo activityInfo : packageInfo.activities) {
-            if (activityInfo.name.contains("Background")) {
-                return new ComponentName(packageInfo.packageName, activityInfo.name);
-            }
-        }
-        return new ComponentName(BackgroundActivity.class.getPackage().toString(), BackgroundActivity.class.getName());
-    }
 
     private static ComponentName findMainActivityComponentName(Context context) {
         PackageManager pm = context.getPackageManager();
@@ -127,89 +48,66 @@ public class BackgroundActivity extends CordovaActivity
                 return new ComponentName(packageInfo.packageName, activityInfo.name);
             }
         }
-        return new ComponentName(BackgroundActivity.class.getPackage().toString(), BackgroundActivity.class.getName());
-    }
-
-    // Same as Intent.makeMainActivity(), but we avoid this for Gingerbread compatibility.
-    private static Intent makeMainActivityIntent(ComponentName componentName) {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setComponent(componentName);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        return intent;
+        throw new RuntimeException("Could not find main activity");
     }
 
     public static void launchBackground(Context context) {
         if (activityIntent != null) {
+            Log.w(LOG_TAG, "launchBackground when intent in-progress");
             return; // Activity is already scheduled to start.
         }
-        ComponentName backgroundActivityComponent = getBackgroundActivityComponent(context);
-        activityIntent = makeMainActivityIntent(backgroundActivityComponent);
-        activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
-        context.startActivity(activityIntent);
+        // In order to launch the activity without the user noticing, we send 3 intents:
+        // 1 - Create a new task stack with BackgroundActivity at the root.
+        //     - It uses a separate affinity, excludeFromRecents, and a NO_UI theme.
+        // 2 - Launch the MainActivity ontop of that in the stack. The stack's recents / theme are
+        //     taken from the root activity.
+        // 3 - Create a second BackgroundActivity instance ontop of that, which calls moveTaskToBack()
+        //     and finish()es itself during onCreate.
+        //     - This part is implemented as an activity only to avoid needing to add a moveTaskToBack()
+        //       call to MainActivity.
+        //
+        // Note that the activity from #1 never actually gets created. It just gets an entry in the
+        // task stack.
+        //
+        // To verify the state of the task stacks, use:
+        //     adb shell dumpsys activity activities
+        activityIntent = new Intent(context, BackgroundActivity.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_FROM_BACKGROUND | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+
+        ComponentName foregroundActivityComponent = findMainActivityComponentName(context);
+        Intent intent2 = new Intent(context, MainActivity.class);
+        intent2.setAction(Intent.ACTION_MAIN);
+        intent2.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent2.setFlags(Intent.FLAG_FROM_BACKGROUND);
+        Log.w(LOG_TAG, "Starting background activity.");
+
+        Intent intent3 = new Intent(context, BackgroundActivity.class);
+
+        context.startActivities(new Intent[]{activityIntent, intent2, intent3});
     }
 
     public static void launchForeground(Context context) {
-        ComponentName foregroundActivityComponent = findMainActivityComponentName(context);
-        Intent launchIntent = makeMainActivityIntent(foregroundActivityComponent);
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        // Use the application context to start this activity
-        //  - Using activity.startActivity() doesn't work (error seen in logcat)
-        //  - A semi-random activity will be shown instead
-        context.getApplicationContext().startActivity(launchIntent);
-    }
-
-    public static CordovaWebView stealWebView(CordovaActivity newCordovaActivity) {
-        if (activityInstance == null) {
-            return null;
+        // Prevent onLaunched from being fired when the app is resumed in this manner.
+        if (BackgroundPlugin.pluginInstance != null) {
+            BackgroundPlugin.pluginInstance.appResumedFromPlugin = true;
         }
+        // We could use an arguably more efficient way of launching the main activity when we know
+        // that the BackgroundActivity is running. However, since the user can start the activity
+        // from the launcher when it's running in the background, it's better to simulate a launcher
+        // intent here in order to keep both flows working in the same way.
 
-        activityInstance.delegatingCordovaInterface.underlying = newCordovaActivity;
-        activityInstance.delegatingCordovaInterface.allowStartActivityForResult = true;
-        CordovaWebView ret = activityInstance.appView;
-        activityInstance.appView = null;
-        activityInstance.finish();
-        activityInstance = null;
-        return ret;
-    }
+        // The RESET_TASK_IF_NEEDED flag causes the MainActivity to be re-parented to this new task
+        // if it is already running within the BackgroundActivity task stack. This flag is also present
+        // when the launcher launches the app. If the BackgroundActivity task stack does exist,
+        // BackgroundAppMainActivity doesn't end up at the top of the stack, and so it never actually
+        // gets instantiated.
 
-    private class DelegatingCordovaInterface implements CordovaInterface {
-        CordovaInterface underlying;
-        boolean allowStartActivityForResult;
+        Intent intent = new Intent(context, BackgroundAppMainActivity.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
-        DelegatingCordovaInterface(CordovaInterface underlying) {
-            this.underlying = underlying;
-        }
-        @Override
-        public void startActivityForResult(CordovaPlugin command, Intent intent, int requestCode) {
-            if (!allowStartActivityForResult) {
-                // Reason for this is that the hosting activity might change during the intent.
-                // Might look at enabling this if there's a real need, but work-around is to just
-                // start the real activity first.
-                Log.e(LOG_TAG, "Attempt to startActivityForResult while app is in background");
-                throw new IllegalStateException("Cannot fire intents while app is backgrounded.");
-            }
-            underlying.startActivityForResult(command, intent, requestCode);
-        }
-
-        @Override
-        public void setActivityResultCallback(CordovaPlugin plugin) {
-            underlying.setActivityResultCallback(plugin);
-        }
-
-        @Override
-        public Activity getActivity() {
-            return underlying.getActivity();
-        }
-
-        @Override
-        public Object onMessage(String id, Object data) {
-            return underlying.onMessage(id, data);
-        }
-
-        @Override
-        public ExecutorService getThreadPool() {
-            return underlying.getThreadPool();
-        }
+        Log.i(LOG_TAG, "Starting foreground activity.");
+        context.startActivity(intent);
     }
 }

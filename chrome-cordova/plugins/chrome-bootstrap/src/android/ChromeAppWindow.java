@@ -10,6 +10,7 @@ import org.apache.cordova.CordovaPlugin;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 
 import org.json.JSONException;
 
@@ -43,8 +44,8 @@ public class ChromeAppWindow extends CordovaPlugin {
             callbackContext.success();
             return;
         }
+        Log.w("Background App Window", "launchForeground()");
         BackgroundActivity.launchForeground(activity);
-
         callbackContext.success();
     }
 }
