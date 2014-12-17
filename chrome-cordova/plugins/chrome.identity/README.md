@@ -65,7 +65,11 @@ On the left sidebar, navigate to "APIs & auth" > "Credentials".  Click the red `
 
 Register your app as an "Android" app (under "Installed application" type).  This requires a package name and a SHA1 fingerprint.  To obtain the fingerprint, enter the following the command in a console window:
 
-    keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore -list -v
+    keytool -list -v -keystore ~/.android/debug.keystore
+    # Or for .p12 files:
+    keytool -list -v -keystore KEYSTORE.p12 -storetype PKCS12
+
+If the commands are not found, try running via `cca exec keytool ...`
 
 (On Windows, replace `~` with `%USERPROFILE%`.)
 
