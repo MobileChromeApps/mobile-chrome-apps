@@ -106,6 +106,15 @@ public class ChromeBluetooth extends CordovaPlugin {
     bluetoothAdapter = bluetoothManager.getAdapter();
     leScanner = BluetoothLeScannerCompatProvider.getBluetoothLeScannerCompat(webView.getContext());
     isLeScanning = false;
+    enableBluetooth();
+  }
+
+  private void enableBluetooth() {
+    if (bluetoothAdapter == null) {
+      Log.e(LOG_TAG, "Bluetooth is not supported");
+    } else if (!bluetoothAdapter.isEnabled()) {
+      bluetoothAdapter.enable();
+    }
   }
 
   @Nullable
