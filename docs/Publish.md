@@ -19,7 +19,7 @@ To publish your Android application to the Play Store:
 
 2. Generate a keystore and key pair (as explained [in the Android developer docs](http://developer.android.com/tools/publishing/app-signing.html#signing-manually)).
    ```
-   cca exec keytool -genkey -v -keystore FILENAME.keystore -alias YOUR_PETS_NAME -keyalg RSA -keysize 2048 -validity 10000
+   cca exec keytool -genkey -v -keystore keys.p12 -alias ReleaseKey -keyalg RSA -keysize 2048 -validity 10000 -storetype PKCS12
    ```
   * Create a password when prompted
   * Note: the "cca exec" prefix is required only if keytool is not already available on your PATH
@@ -28,9 +28,9 @@ To publish your Android application to the Play Store:
 3. Put the following settings into a file called `android-release-keys.properties` at the root of your project (as a sibling to `www/`):
 
     ```
-    storeFile=FILENAME.keystore
+    storeFile=keys.p12
     storePassword=YOUR_STORE_PASSWORD
-    keyAlias=YOUR_PETS_NAME
+    keyAlias=ReleaseKey
     keyPassword=YOUR_KEY_PASSWORD
     ```
     * Note: `storePassword` and `keyPassword` are optional. If omitted, you will be prompted for them when building.
