@@ -235,6 +235,19 @@ function processMessage(msg) {
     }
 }
 
+if (cordova.platformId != 'android') {
+    for (var k in exports) {
+        if (typeof exports[k] == 'function') {
+            exports[k] = (function(k) {
+                return function() {
+                    console.warn('chrome.notifications.' + k + ' is not supported on ' + cordova.platformId);
+                }
+            })(k);
+        }
+    }
+    return;
+}
+
 channel.createSticky('onChromeNotificationsReady');
 channel.waitForInitialization('onChromeNotificationsReady');
 channel.onCordovaReady.subscribe(function() {
