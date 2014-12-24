@@ -36,17 +36,6 @@ var cordova = require('cordova');
 var cordovaLib = cordova.cordova_lib;
 var hooks = require('./hooks');
 
-/******************************************************************************/
-
-function fixEnv() {
-  // Add flags for building with Gradle
-  if (typeof process.env.ANDROID_BUILD == 'undefined') {
-    process.env.ANDROID_BUILD = 'gradle';
-  }
-}
-
-/******************************************************************************/
-
 function main() {
   var commandLineFlags = require('./parse-command-line')();
   utils.exit.pause_on_exit = commandLineFlags.pause_on_exit;
@@ -56,9 +45,6 @@ function main() {
 
   // Colorize after parseCommandLine to avoid --help being printed in red.
   utils.colorizeConsole();
-
-  // TODO: Add env detection to Cordova.
-  fixEnv();
 
   hooks.registerHooks();
 
