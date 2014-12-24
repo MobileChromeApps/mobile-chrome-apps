@@ -49,6 +49,9 @@ module.exports = exports = function prePrepareCommand(context) {
   return require('./get-manifest')('www')
   .then(function(m) {
     manifest = m;
+    if (argv.webview) {
+        manifest.webview = argv.webview;
+    }
 
     // Android: If using system webview, don't build multiple APKs
     if (manifest.webview != 'system') {
@@ -56,7 +59,7 @@ module.exports = exports = function prePrepareCommand(context) {
         process.env.BUILD_MULTIPLE_APKS = '1';
       }
     }
-    return ccaManifestLogic.analyseManifest(manifest, { webview: argv.webview });
+    return ccaManifestLogic.analyseManifest(manifest);
   })
   .then(function(manifestData) {
     pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat();
