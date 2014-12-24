@@ -56,9 +56,12 @@ module.exports = exports = function parseCommandLine() {
              '                                            Note: you will be automatically prompted to upgrade, but you can\n' +
              '                                            skip the auto upgrade by passing --skip-upgrade to any command.\n' +
              '\n' +
-             'build [PLATFORM...] ....................... shortcut for prepare, then compile\n' +
+             'build [--debug|--release]\n' +
+             '      [--webview=system|--webview=crosswalk]\n' +
+             '      [--android-minSdkVersion=#]\n' +
+             '      [android|ios]........................ builds for the given platform(s)\n' +
              '\n' +
-             'run [--debug|--release]\n' +
+             'run [build flags]\n' +
              '    [--device|--emulator|--target=FOO]\n' +
              '    [android|ios|chrome] .................. deploys app on specified platform devices / emulators\n' +
              '\n' +
@@ -74,6 +77,7 @@ module.exports = exports = function parseCommandLine() {
              '    cca prepare\n' +
              '    cca run android --device\n' +
              '    cca run ios --emulator\n' +
+             '    cca build android --release --webview=system --android-minSdkVersion=20\n' +
              '    cca plugin ls')
       .options('h', {
           type: 'boolean',
@@ -105,6 +109,12 @@ module.exports = exports = function parseCommandLine() {
       .options('copy-from', { type: 'string' })
       .options('link-to', { type: 'string' })
       .options('target', { type: 'string' })
+      .options('webview', { type: 'string' })
+      .options('android-minSdkVersion', { type: 'number' })
       .options('watch', { type: 'boolean' })
+      .options('release', { type: 'boolean' })
+      .options('debug', { type: 'boolean' })
+      .options('emulator', { type: 'boolean' })
+      .options('device', { type: 'boolean' })
       .argv;
 };

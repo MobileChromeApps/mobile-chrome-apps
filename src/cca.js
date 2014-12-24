@@ -218,6 +218,10 @@ function main() {
     analyticsLoader.analyticsCommand(commandLineFlags._[1]);
   }
 
+  if (commandLineFlags['android-minSdkVersion']) {
+    process.env['ANDROID_MIN_SDK_VERSION'] = commandLineFlags['android-minSdkVersion'];
+  }
+
   analyticsLoader.getAnalyticsModule()
   .then(function(analytics) {
     analytics.sendEvent('cca', command);
