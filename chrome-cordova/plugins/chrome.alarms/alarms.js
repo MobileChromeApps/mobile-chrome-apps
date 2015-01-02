@@ -35,8 +35,15 @@ function triggerAlarm(name) {
     } else {
         delete alarms[name];
     }
-    storage.internal.set({'alarms':alarms});
-    exports.onAlarm.fire(alarm);
+    saveAlarms(function() {
+        exports.onAlarm.fire(alarm);
+    });
+}
+
+function saveAlarms(callback) {
+    storage.internal.set({'alarms':alarms}, callback && function() {
+        callback();
+    });
 }
 
 exports.create = function(name, alarmInfo) {
@@ -83,7 +90,7 @@ exports.create = function(name, alarmInfo) {
         var timeoutId = setTimeout(function() { triggerAlarm(name) }, when - Date.now());
         alarms[name] = makeAlarm(name, when, alarmInfo.periodInMinutes, timeoutId);
     }
-    storage.internal.set({'alarms':alarms});
+    saveAlarms();
 }
 
 exports.get = function(name, callback) {
@@ -111,7 +118,7 @@ exports.getAll = function(callback) {
     }, 0);
 }
 
-exports.clear = function clear(name) {
+exports.clear = function clear(name, callback) {
     if (typeof name == 'undefined') {
         name = '';
     }
@@ -120,27 +127,31 @@ exports.clear = function clear(name) {
         return;
     }
 
+    delete alarms[name];
     if (useNativeAlarms) {
-        exec(undefined, undefined, 'ChromeAlarms', 'clear', [[name]]);
+        exec(function() {
+            saveAlarms(callback)
+        }, undefined, 'ChromeAlarms', 'clear', [[name]]);
     } else {
         clearTimeout(alarms[name].timeoutId);
+        saveAlarms(callback);
     }
-    delete alarms[name];
-    storage.internal.set({'alarms':alarms});
-}
+};
 
-exports.clearAll = function() {
+exports.clearAll = function(callback) {
     var names = Object.keys(alarms);
     if (useNativeAlarms) {
         alarms = Object.create(null);
-        exec(undefined, undefined, 'ChromeAlarms', 'clear', [names]);
+        exec(function() {
+            saveAlarms(callback);
+        }, undefined, 'ChromeAlarms', 'clear', [names]);
     } else {
         names.forEach(function(name) {
             exports.clear(name);
         });
+        saveAlarms(callback);
     }
-    storage.internal.set({'alarms':alarms});
-}
+};
 
 exports.onAlarm = new Event('onAlarm');
 

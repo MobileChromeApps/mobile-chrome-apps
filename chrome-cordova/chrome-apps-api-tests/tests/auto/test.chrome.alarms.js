@@ -11,7 +11,6 @@ registerAutoTests("chrome.alarms", function() {
   var scheduledEarlyTolerance = sliceLowerLimit;
   var scheduledLateTolerance = 5000;
   var testTimeout = sliceLowerLimit*1.5;
-  var testInnerTimeout = sliceLowerLimit*1.5;
   var minTestTime=sliceLowerLimit;
 //  jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 //testTimeout;
 
@@ -52,6 +51,15 @@ registerAutoTests("chrome.alarms", function() {
     expect(chrome.alarms.onAlarm).toBeDefined();
   });
 
+  function clearAndVerify(callback) {
+    chrome.alarms.clearAll(function() {
+      chrome.alarms.getAll(function(alarms) {
+        expect(alarms.length).toBe(0);
+        callback();
+      });
+    });
+  }
+
 // this next bit is to figure out if we are on real production Chrome. If it is, then
 // alarms will have a minimum granularity of one minute. This makes the tests take
 // about 25 minutes to run if you adjust for that, so we just skip them. It hurts less.
@@ -60,25 +68,12 @@ registerAutoTests("chrome.alarms", function() {
     prodCallback(0);
   }
 
-  function forceClear(callback){
-    //this is to guarantee that the allars are empty before moving on
-    chrome.alarms.clearAll();
-    var ticker = setInterval(function(){
-      chrome.alarms.getAll(function(alarms){
-        if(!(alarms && alarms.length > 1)){
-          clearInterval(ticker);
-          callback();
-        }
-      });
-    },250);
-  }
-  
   var runOnce=false;
   var prodCallback = function(result){
     if(!runOnce){
       runOnce=true;
       chrome.alarms.onAlarm.removeListener(probeAlarmHandler);
-      forceClear(function(){
+      clearAndVerify(function(){
         console.log('got alarm',result, Date.now());
         if (result == 0){ // tests are running with short minimums (debug mode)
           runtests();
@@ -105,14 +100,11 @@ registerAutoTests("chrome.alarms", function() {
     });
 
     describe('testing create', function() {
-      beforeEach(function() {
-        chrome.alarms.clearAll();
-        chrome.alarms.getAll(function(alarms) {
-          expect(alarms.length).toBe(0);
-        });
+      beforeEach(function(done) {
+        clearAndVerify(done);
       });
-      afterEach(function() {
-        chrome.alarms.clearAll();
+      afterEach(function(done) {
+        clearAndVerify(done);
       });
 
       it('when set only', function(done) {
@@ -217,21 +209,20 @@ registerAutoTests("chrome.alarms", function() {
       var future = Date.now() + 100000;
       var inputAlarmInfo = { alarm1:{ when:future }, alarm2:{ delayInMinutes:2 }, alarm3:{ periodInMinutes:3 } };
       var expectedAlarms;
-      beforeEach(function() {
-        chrome.alarms.clearAll();
-        chrome.alarms.getAll(function(alarms) {
-          expect(alarms.length).toBe(0);
+      beforeEach(function(done) {
+        clearAndVerify(function() {
+          expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:future },
+                             alarm2:{ name:'alarm2', scheduledTime:Date.now() + 120000 },
+                             alarm3:{ name:'alarm3', scheduledTime:Date.now() + 180000,
+                                      periodInMinutes:3 } };
+          for (var name in inputAlarmInfo) {
+            chrome.alarms.create(name, inputAlarmInfo[name]);
+          }
+          done();
         });
-        expectedAlarms = { alarm1:{ name:'alarm1', scheduledTime:future },
-                           alarm2:{ name:'alarm2', scheduledTime:Date.now() + 120000 },
-                           alarm3:{ name:'alarm3', scheduledTime:Date.now() + 180000,
-                                    periodInMinutes:3 } };
-        for (var name in inputAlarmInfo) {
-          chrome.alarms.create(name, inputAlarmInfo[name]);
-        }
       });
-      afterEach(function() {
-        chrome.alarms.clearAll();
+      afterEach(function(done) {
+        clearAndVerify(done);
       });
 
       it('get one', function(done) {
@@ -263,59 +254,55 @@ registerAutoTests("chrome.alarms", function() {
       var alarmHandler;
       var nameSpy =jasmine.createSpy('nameSpy');
 
-      beforeEach(function() {
+      beforeEach(function(done) {
         var inputAlarmInfo = { alarm1:{ when:Date.now() + minTestTime }, alarm2:{ delayInMinutes:minTestTime/60000 },
                                alarm3:{ periodInMinutes:minTestTime/60000 } };
-        chrome.alarms.clearAll();
-        chrome.alarms.getAll(function(alarms) {
-          expect(alarms.length).toBe(0);
-        });
-        nameSpy =jasmine.createSpy('nameSpy');
-        chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
-          nameSpy(alarm.name);
-        });
-        createAlarms = function() {
-          for (var name in inputAlarmInfo) {
-            chrome.alarms.create(name, inputAlarmInfo[name]);
+        clearAndVerify(function() {
+          nameSpy =jasmine.createSpy('nameSpy');
+          chrome.alarms.onAlarm.addListener(function alarmHandler(alarm) {
+            nameSpy(alarm.name);
+          });
+          createAlarms = function() {
+            for (var name in inputAlarmInfo) {
+              chrome.alarms.create(name, inputAlarmInfo[name]);
+            }
           }
-        }
+          done();
+        });
       });
-      afterEach(function() {
+      afterEach(function(done) {
         chrome.alarms.onAlarm.removeListener(alarmHandler);
-        chrome.alarms.clearAll();
+        clearAndVerify(done);
       });
 
       it('clear one', function(done) {
         // Create alarms here rather than in beforeEach to be extra sure that no alarm fires
         // before clearing it within the actual test.
         createAlarms();
-        chrome.alarms.clear('alarm3');
-        setTimeout(function() {
+        chrome.alarms.clear('alarm3', function() {
           expect(nameSpy).toHaveBeenCalledWith('alarm1');
           expect(nameSpy).toHaveBeenCalledWith('alarm2');
           expect(nameSpy).not.toHaveBeenCalledWith('alarm3');
           done();
-        }, testInnerTimeout);
+        });
       });
 
       it('clear all', function(done) {
         createAlarms();
-        chrome.alarms.clearAll();
-        setTimeout(function() {
+        chrome.alarms.clearAll(function() {
           expect(nameSpy).not.toHaveBeenCalled();
           done();
-        }, testInnerTimeout );
+        });
       });
       
       it('clear unknown name', function(done) {
         createAlarms();
-        chrome.alarms.clear('unknownName');
-        setTimeout(function() {
+        chrome.alarms.clear('unknownName', function() {
           expect(nameSpy).toHaveBeenCalledWith('alarm1');
           expect(nameSpy).toHaveBeenCalledWith('alarm2');
           expect(nameSpy).toHaveBeenCalledWith('alarm3');
           done();
-        }, testInnerTimeout);
+        });
       });
     });
   });
