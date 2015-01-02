@@ -43,6 +43,11 @@
       <uses-permission android:name="android.permission.GET_ACCOUNTS" android:maxSdkVersion="15" />
       <uses-permission android:name="android.permission.WAKE_LOCK" />
     </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <permission android:name=".permission.C2D_MESSAGE"
+                  android:protectionLevel="signature" />
+      <uses-permission android:name=".permission.C2D_MESSAGE" />
+    </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
       <receiver android:name="org.chromium.GcmReceiver" android:permission="com.google.android.c2dm.permission.SEND">
         <intent-filter>
