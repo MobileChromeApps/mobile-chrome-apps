@@ -30,8 +30,6 @@ registerAutoTests('pageload', function() {
       it('should maintain text in script nodes.', function() {
         var n = document.querySelector('script[type=foo]');
         expect(n.innerHTML).toBe('Some data', 'Some data');
-        n = document.getElementById('dont-execute');
-        expect(n.innerHTML).toBe('shouldNotExecute=1', 'shouldNotExecute=1');
       });
       it('should have executed inline scripts', function() {
         expect(window.shouldExecuteInline).toBe(1);
@@ -44,10 +42,11 @@ registerAutoTests('pageload', function() {
         expect(scriptExec5).toBe(5);
         expect(scriptExec6).toBe(6);
         expect(scriptExec7).toBe(7);
-        expect(scriptExec8).toBe(8);
+        expect(inlineScriptExecOrder).toBe(8);
+        expect(scriptExec8).toBe(9);
       });
       it('should properly resolve root-relative script URL', function() {
-        expect(scriptExec9).toBe(9);
+        expect(scriptExec9).toBe(10);
       });
       it('should have platform CSS applied', function() {
         expect(window.getComputedStyle(document.body)['WebkitUserSelect']).toBe('none');

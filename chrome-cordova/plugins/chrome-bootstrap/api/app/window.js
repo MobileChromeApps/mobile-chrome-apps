@@ -77,35 +77,29 @@ function applyAttributes(attrText, destNode) {
   copyAttributes(dummyNode.firstChild, destNode);
 }
 
-// Evals the scripts in order.
-function evalScripts(rootNode, afterFunc) {
-  var nodes = rootNode.querySelectorAll('script,' + linkReplacementTag);
-  var doc = rootNode.ownerDocument;
-  var numRemaining = nodes.length;
+// Recreates an array of link / script nodes so that they get executed.
+// batch must have at least one node in it.
+function evalScriptBatch(batch, afterFunc) {
+  var doc = batch[0].ownerDocument;
+  var numRemaining = batch.length;
   function onLoadCallback(a) {
-    if (!numRemaining--) {
-      afterFunc && afterFunc();
+    if (!--numRemaining) {
+      afterFunc();
     }
   }
-  for (var i = 0, node; node = nodes[i]; ++i) {
-    if (node.nodeName === "SCRIPT") {
-      if (node.type && !(/text\/javascript/i.exec(node.type) ||
-                           /application\/javascript/i.exec(node.type) ||
-                           /application\/dart/i.exec(node.type))) {
-        onLoadCallback();
+  for (var i = 0, node; node = batch[i]; ++i) {
+    if (node.nodeName === 'SCRIPT') {
+      var replacement = doc.createElement('script');
+      copyAttributes(node, replacement);
+      replacement.textContent = node.textContent;
+      if (node.src) {
+        replacement.onload = onLoadCallback;
+        replacement.onerror = onLoadCallback;
+        replacement.async = false;
+        node.parentNode.replaceChild(replacement, node);
       } else {
-        var replacement = doc.createElement('script');
-        copyAttributes(node, replacement);
-        replacement.textContent = node.textContent;
-        if (node.src) {
-          replacement.onload = onLoadCallback;
-          replacement.onerror = onLoadCallback;
-          replacement.async = false;
-          node.parentNode.replaceChild(replacement, node);
-        } else {
-          node.parentNode.replaceChild(replacement, node);
-          onLoadCallback();
-        }
+        node.parentNode.replaceChild(replacement, node);
+        onLoadCallback();
       }
     } else {
       var replacement = document.createElement('link');
@@ -115,8 +109,43 @@ function evalScripts(rootNode, afterFunc) {
       node.parentNode.replaceChild(replacement, node);
     }
   }
-  // Handle the no scripts case.
-  onLoadCallback();
+}
+
+// Evals the scripts in order.
+function evalScripts(rootNode, afterFunc) {
+  var nodes = Array.prototype.slice.call(rootNode.querySelectorAll('script,' + linkReplacementTag));
+  var scriptBatches = [[]];
+
+  for (var i = 0, node; node = nodes[i]; ++i) {
+    if (node.nodeName === 'SCRIPT') {
+      if (node.type && !(/text\/javascript/i.exec(node.type) ||
+                           /application\/javascript/i.exec(node.type) ||
+                           /application\/dart/i.exec(node.type))) {
+        // Ignore these.
+      } else {
+        if (node.src) {
+          scriptBatches[scriptBatches.length-1].push(node);
+        } else {
+          // Make sure inline scripts execute *after* previous non-inline ones are finished.
+          scriptBatches.push([node], []);
+        }
+      }
+    } else {
+      scriptBatches[scriptBatches.length-1].push(node);
+    }
+  }
+
+  function processBatch() {
+    var curBatch = scriptBatches.shift();
+    if (!curBatch) {
+      afterFunc();
+    } else if (curBatch.length === 0) {
+      processBatch();
+    } else {
+      evalScriptBatch(curBatch, processBatch);
+    }
+  }
+  processBatch();
 }
 
 function rewritePage(pageContent, filePath, callback) {

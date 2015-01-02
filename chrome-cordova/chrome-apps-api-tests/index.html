@@ -55,6 +55,10 @@
     <script src="tests/pageload_helpers/script_order_test5.js"></script>
     <script src="tests/pageload_helpers/script_order_test6.js"></script>
     <script src="tests/pageload_helpers/script_order_test7.js"></script>
+    <script>
+       // Test that this doesn't get executed before the previous ones.
+       inlineScriptExecOrder = (window.scriptOrderCounter = ((window.scriptOrderCounter || 0) + 1))
+   </script>
 <!-- -------------------------------------------- -->
 
   </head>
