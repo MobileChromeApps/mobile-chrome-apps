@@ -129,7 +129,11 @@ module.exports = exports = function prePrepareCommand(context) {
         console.warn('Permission not recognized by cca: ' + unknownPermission + ' (ignoring)');
       });
       var cmds = missingPlugins.map(function(plugin) {
-        return ['plugin', 'add', plugin];
+        var ret = ['plugin', 'add', plugin];
+        if (argv.link) {
+          ret.push({link:true});
+        }
+        return ret;
       }).concat(excessPlugins.map(function(plugin) {
         return ['plugin', 'rm', plugin];
       }));
