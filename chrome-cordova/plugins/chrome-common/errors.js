@@ -11,16 +11,23 @@ var runtime = require('org.chromium.runtime.runtime');
 // if (fail_condition)
 //   return callbackWithError('You should blah blah', fail, optional_args_to_fail...)
 function callbackWithError(msg, callback) {
+  var err;
+  if (typeof msg == 'string') {
+    err = { 'message' : msg };
+  } else {
+    err = msg;
+  }
+
   if (typeof callback !== 'function') {
-    console.error(msg);
+    console.error(err.message);
     return;
   }
 
   try {
     if (typeof runtime !== 'undefined') {
-      runtime.lastError = { 'message' : msg };
+      runtime.lastError = err;
     } else {
-      console.error(msg);
+      console.error(err.message);
     }
 
     callback.apply(null, Array.prototype.slice.call(arguments, 2));
