@@ -26,9 +26,17 @@
 
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-permission android:name="android.permission.WAKE_LOCK" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-permission android:name="android.permission.BLUETOOTH" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
       <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21" />
     </config-file>
 

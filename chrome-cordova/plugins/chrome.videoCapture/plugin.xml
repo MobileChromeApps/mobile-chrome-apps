@@ -19,7 +19,11 @@
   <platform name="android">
     <config-file target="AndroidManifest.xml" parent="/*">
       <uses-feature android:name="android.hardware.camera" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/*">
       <uses-feature android:name="android.hardware.camera.autofocus" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/*">
       <uses-permission android:name="android.permission.CAMERA" />
     </config-file>
   </platform>
