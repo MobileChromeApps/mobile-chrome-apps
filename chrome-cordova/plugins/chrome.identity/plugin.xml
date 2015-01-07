@@ -47,7 +47,6 @@
 
   <platform name="ios">
      <source-file src="src/ios/ChromeIdentity.m" />
-     <header-file src="src/ios/ChromeIdentity.h" />
 
      <config-file target="config.xml" parent="/widget">
        <feature name="ChromeIdentity">

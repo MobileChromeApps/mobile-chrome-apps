@@ -18,7 +18,9 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.auth.GoogleAuthException;
@@ -34,41 +36,81 @@ public class ChromeIdentity extends CordovaPlugin {
     private static final String LOG_TAG = "ChromeIdentity";
 
     // These are just unique request codes. They can be anything as long as they don't clash.
-    private static final int AUTH_REQUEST_CODE = 5;
-    private static final int ACCOUNT_CHOOSER_INTENT = 6;
-    private static final int OAUTH_PERMISSIONS_GRANT_INTENT = 7;
-    private static final int UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE = 8;
+    private static final int AUTH_REQUEST_CODE = 1;
+    private static final int ACCOUNT_CHOOSER_REQUEST_CODE = 2;
+    private static final int USER_RECOVERABLE_REQUEST_CODE = 3;
+    private static final int UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE = 4;
 
     // Error codes.
-    private static final int GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+    private static final int ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+    private static final int ERROR_REQUIRES_USER_INTERACTION = -2;
+    private static final int ERROR_NETWORK_UNAVAILABLE = -3;
+    private static final int ERROR_USER_CANCELLED = -4;
+    private static final int ERROR_CONCURRENT_REQUEST = -5;
 
-    private String accountName = "";
-    private CordovaArgs savedCordovaArgs;
-    private CallbackContext savedCallbackContext;
-    private boolean savedContent = false;
+    private String cachedAccountName;
+    private CallDetails pendingCallDetails;
 
-    private class TokenDetails {
-        private boolean interactive;
+    private class CallDetails {
+        String action;
+        CallbackContext callbackContext;
+        String scopesString;
+        boolean interactive = true;
+        String accountHint;
+        String token;
+
+        CallDetails(String action, CallbackContext callbackContext) {
+            this.action = action;
+            this.callbackContext = callbackContext;
+        }
+
+        void performAction(boolean performAsync) {
+            if (pendingCallDetails != null) {
+                callbackContext.error(ERROR_CONCURRENT_REQUEST);
+                return;
+            }
+
+            pendingCallDetails = this;
+            Runnable runnable = new Runnable() {
+                public void run() {
+                    if ("getAuthToken".equals(action)) {
+                        getAuthToken(interactive, scopesString, accountHint, callbackContext);
+                    } else if ("removeCachedAuthToken".equals(action)) {
+                        removeCachedAuthToken(token, callbackContext);
+                    } else if ("getAccounts".equals(action)) {
+                        getAccounts(callbackContext);
+                    }
+                }
+            };
+            if (performAsync) {
+                cordova.getThreadPool().execute(runnable);
+            } else {
+                runnable.run();
+            }
+        }
     }
 
     @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        if ("getAuthToken".equals(action)) {
-            getAuthToken(args, callbackContext);
-            return true;
-        } else if ("removeCachedAuthToken".equals(action)) {
-            removeCachedAuthToken(args, callbackContext);
-            return true;
-        } else if ("getAccounts".equals(action)) {
-            getAccounts(args, callbackContext);
-            return true;
-        }
+        CallDetails callDetails = new CallDetails(action, callbackContext);
 
-        return false;
+        if ("getAuthToken".equals(action)) {
+            callDetails.interactive = args.getBoolean(0);
+            // 1 is clientId
+            callDetails.scopesString = createScopesString(args.getJSONArray(2));
+            callDetails.accountHint = args.isNull(3) ? null : args.getString(3);
+        } else if ("removeCachedAuthToken".equals(action)) {
+            callDetails.token = args.getString(0);
+        } else if ("getAccounts".equals(action)) {
+            // No args.
+        } else {
+            return false;
+        }
+        callDetails.performAction(true);
+        return true;
     }
 
-    private String getScopesString(CordovaArgs args) throws IOException, JSONException {
-        JSONArray scopes = args.getJSONObject(1).getJSONArray("scopes");
+    private static String createScopesString(JSONArray scopes) throws JSONException {
         StringBuilder ret = new StringBuilder("oauth2:");
 
         for (int i = 0; i < scopes.length(); i++) {
@@ -80,219 +122,180 @@ public class ChromeIdentity extends CordovaPlugin {
         return ret.toString();
     }
 
-    private TokenDetails getTokenDetailsFromArgs(CordovaArgs args) throws JSONException {
-        TokenDetails tokenDetails = new TokenDetails();
-        tokenDetails.interactive = args.getBoolean(0);
-        return tokenDetails;
-    }
-
-    private boolean haveAccount() {
-        return !(accountName.isEmpty());
-    }
-
-    private void launchAccountChooserAndCallback(CordovaArgs cordovaArgsToSave, CallbackContext callbackContextToSave) {
+    private void launchAccountChooserAndCallback(boolean interactive, String scopesString, CallbackContext callbackContext) {
         // Check if Google Play Services is available.
-        int availabilityCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this.cordova.getActivity());
-        if (availabilityCode == ConnectionResult.SUCCESS) {
-            this.savedCordovaArgs = cordovaArgsToSave;
-            this.savedCallbackContext = callbackContextToSave;
-            this.savedContent = true;
-
-            // The "google.com" filter accepts both Google and Gmail accounts.
-            Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
-            this.cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_INTENT);
-        } else if (availabilityCode == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
-            // Save our data.
-            this.savedCordovaArgs = cordovaArgsToSave;
-            this.savedCallbackContext = callbackContextToSave;
-            this.savedContent = true;
-
-            // Prompt the user to update Google Play Services.
-            GooglePlayServicesUtil.getErrorDialog(availabilityCode, this.cordova.getActivity(), UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE).show();
-        } else {
-            // Fall back to the web auth flow.
-            callbackContextToSave.error(GOOGLE_PLAY_SERVICES_UNAVAILABLE);
+        int availabilityCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(cordova.getActivity());
+        if (availabilityCode != ConnectionResult.SUCCESS) {
+            handlePlayServicesError(availabilityCode, interactive, callbackContext);
+            return;
         }
-    }
-
-    private void launchPermissionsGrantPageAndCallback(Intent permissionsIntent, CordovaArgs cordovaArgsToSave, CallbackContext callbackContextToSave) {
-        this.savedCallbackContext = callbackContextToSave;
-        this.savedCordovaArgs = cordovaArgsToSave;
-        this.savedContent  = true;
-        this.cordova.startActivityForResult(this, permissionsIntent, OAUTH_PERMISSIONS_GRANT_INTENT);
+        // The "google.com" filter accepts both Google and Gmail accounts.
+        Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, false, null, null, null, null);
+        cordova.startActivityForResult(this, intent, ACCOUNT_CHOOSER_REQUEST_CODE);
     }
 
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         // Enter only if we have requests waiting
-        if (savedContent) {
-            if (requestCode == ACCOUNT_CHOOSER_INTENT) {
-                if (resultCode == Activity.RESULT_OK && intent.hasExtra(AccountManager.KEY_ACCOUNT_NAME)) {
-                    accountName = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                    getAuthToken(this.savedCordovaArgs, this.savedCallbackContext);
-                } else {
-                    this.savedCallbackContext.error("User declined to provide an account");
-                }
-                this.savedContent = false;
-                this.savedCallbackContext = null;
-                this.savedCordovaArgs = null;
-            } else if (requestCode == OAUTH_PERMISSIONS_GRANT_INTENT) {
-                cordova.getThreadPool().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (resultCode == Activity.RESULT_OK) {
-                            String token = null;
-                            if (intent.hasExtra("authtoken")) {
-                                token = intent.getStringExtra("authtoken");
-                            } else {
-                                try {
-                                    token = GoogleAuthUtil.getToken(cordova.getActivity(), intent.getExtras().getString("authAccount"), intent.getExtras().getString("service"));
-                                } catch (UserRecoverableAuthException e) {
-                                    e.printStackTrace();
-                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
-                                    return;
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
-                                    return;
-                                } catch (GoogleAuthException e) {
-                                    e.printStackTrace();
-                                    savedCallbackContext.error("Auth Error: " + e.getMessage());
-                                    return;
-                                }
-                            }
-                            if (token == null) {
-                                savedCallbackContext.error("Unknown auth error.");
-                            } else {
-                                getAuthTokenCallback(token, savedCallbackContext);
-                            }
-                        } else {
-                            savedCallbackContext.error("User did not approve oAuth permissions request");
-                        }
-                        savedContent = false;
-                        savedCallbackContext = null;
-                        savedCordovaArgs = null;
-                    }
-                });
-            } else if (requestCode == UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE) {
+        if (pendingCallDetails != null) {
+            CallDetails callDetails = pendingCallDetails;
+            pendingCallDetails = null;
+            if (requestCode == ACCOUNT_CHOOSER_REQUEST_CODE) {
+                // They chose an account.
                 if (resultCode == Activity.RESULT_OK) {
-                    // The user has updated Google Play Services.  Try again!
-                    launchAccountChooserAndCallback(savedCordovaArgs, savedCallbackContext);
+                    callDetails.accountHint = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                    callDetails.performAction(true);
                 } else {
-                    // Google Play Services was not updated.
-                    savedCallbackContext.error("Google Play Services is out of date.");
-
-                    savedContent = false;
-                    savedCallbackContext = null;
-                    savedCordovaArgs = null;
+                    callDetails.callbackContext.error(ERROR_USER_CANCELLED);
                 }
-            }
-        }
-    }
-
-    private void getAuthToken(final CordovaArgs args, final CallbackContext callbackContext) {
-        this.cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                if(!haveAccount()) {
-                    String accountHint = null;
-                    try {
-                        accountHint = args.getString(2);
-                    } catch (JSONException e) { }
-                    if (accountHint != null) {
-                        accountName = accountHint;
-                        getAuthTokenWithAccount(accountName, args, callbackContext);
-                    } else {
-                        launchAccountChooserAndCallback(args, callbackContext);
-                    }
+            } else if (requestCode == USER_RECOVERABLE_REQUEST_CODE) {
+                if (resultCode == Activity.RESULT_OK) {
+                    // They approved consent screen. Retry auth.
+                    callDetails.performAction(true);
                 } else {
-                    getAuthTokenWithAccount(accountName, args, callbackContext);
+                    callDetails.callbackContext.error(ERROR_USER_CANCELLED);
                 }
-            }
-        });
-    }
-
-    private void getAuthTokenWithAccount(String account, CordovaArgs args, CallbackContext callbackContext) {
-        String token = "";
-        String scope = "";
-        Context context = null;
-        boolean done = true;
-        TokenDetails tokenDetails = null;
-
-        try {
-            tokenDetails = getTokenDetailsFromArgs(args);
-            scope = getScopesString(args);
-            context = this.cordova.getActivity();
-            token = GoogleAuthUtil.getToken(context, account, scope);
-        } catch (GooglePlayServicesAvailabilityException playEx) {
-            // Play is not available
-            if (tokenDetails.interactive) {
-                Activity myActivity = this.cordova.getActivity();
-                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(playEx.getConnectionStatusCode(), myActivity , AUTH_REQUEST_CODE);
-                dialog.show();
+            } else if (requestCode == UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE) {
+                // resultCode is RESULT_CANCELED even when an update occurs!
+                if (ConnectionResult.SUCCESS == GooglePlayServicesUtil.isGooglePlayServicesAvailable(cordova.getActivity())) {
+                    callDetails.performAction(true);
+                } else {
+                    callDetails.callbackContext.error(ERROR_USER_CANCELLED);
+                }
             } else {
-                Log.e(LOG_TAG, "Google Play Services is not available", playEx);
+                Log.e(LOG_TAG, "Unexpected requestCode", new RuntimeException());
             }
-        } catch (UserRecoverableAuthException recoverableException) {
-            // OAuth Permissions for the app during first run
-            if(tokenDetails.interactive) {
-                Intent permissionsIntent = recoverableException.getIntent();
-                launchPermissionsGrantPageAndCallback(permissionsIntent, args, callbackContext);
-                // If the user allows it then we need ask for the token again and pass the token to the success callback
-                done = false;
-            } else {
-                Log.e(LOG_TAG, "Recoverable Error occured while getting token. No action was taken as interactive is set to false", recoverableException);
-            }
-        } catch(Exception e) {
-            Log.e(LOG_TAG, "Error occured while getting token", e);
-        }
-
-        if(done) {
-            getAuthTokenCallback(token, callbackContext);
-        }
-    }
-
-    private void getAuthTokenCallback(String token, CallbackContext callbackContext) {
-        if(token.trim().equals("")) {
-            callbackContext.error("Could not get auth token");
         } else {
-            try {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("account", accountName);
-                jsonObject.put("token", token);
-                callbackContext.success(jsonObject);
-            } catch (JSONException e) { }
+            Log.w(LOG_TAG, "Got stale activityResult! requestCode=" + requestCode);
         }
     }
 
-    private void removeCachedAuthToken(final CordovaArgs args, final CallbackContext callbackContext) {
-        this.cordova.getThreadPool().execute(new Runnable() {
+    private void getAuthToken(boolean interactive, String scopesString, String accountHint, CallbackContext callbackContext) {
+        if (cachedAccountName == null) {
+            if (accountHint != null) {
+                cachedAccountName = accountHint;
+                getAuthTokenWithAccount(interactive, cachedAccountName, scopesString, callbackContext);
+            } else {
+                launchAccountChooserAndCallback(interactive, scopesString, callbackContext);
+            }
+        } else {
+            getAuthTokenWithAccount(interactive, cachedAccountName, scopesString, callbackContext);
+        }
+    }
+
+    private void handlePlayServicesError(final int errorCode, final boolean interactive, final CallbackContext callbackContext) {
+        Log.d(LOG_TAG, "Got PlayServices error: " + errorCode);
+        final boolean userRecoverable = GooglePlayServicesUtil.isUserRecoverableError(errorCode);
+        if (!interactive) {
+            pendingCallDetails = null;
+            callbackContext.error(userRecoverable ? ERROR_REQUIRES_USER_INTERACTION : ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE);
+            return;
+        }
+        if (errorCode == ConnectionResult.SERVICE_MISSING) {
+            // This happens in the emulator where Play Services doesn't exist, or on non-Google Android devices.
+            pendingCallDetails = null;
+            callbackContext.error(ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE);
+            return;
+        }
+
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
             public void run() {
-                invalidateToken(args, callbackContext);
+                if (userRecoverable) {
+                    final CallDetails callDetails = pendingCallDetails;
+                    // Need to set the callback manually since the dialog is the one fires the intent.
+                    cordova.setActivityResultCallback(ChromeIdentity.this);
+                    Dialog dialog = GooglePlayServicesUtil.getErrorDialog(errorCode, cordova.getActivity(), UPDATE_GOOGLE_PLAY_SERVICES_REQUEST_CODE, new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialogInterface) {
+                            Log.i(LOG_TAG, "User cancelled the update request");
+                            cordova.setActivityResultCallback(null);
+                            pendingCallDetails = null;
+                            if (!callDetails.callbackContext.isFinished()) {
+                                callDetails.callbackContext.error(ERROR_USER_CANCELLED);
+                            }
+                        }
+                    });
+                    dialog.show();
+                } else {
+                    Dialog dialog = GooglePlayServicesUtil.getErrorDialog(errorCode, cordova.getActivity(), AUTH_REQUEST_CODE);
+                    dialog.show();
+                    callbackContext.error(ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE);
+                    pendingCallDetails = null;
+                }
             }
         });
     }
 
-    private void invalidateToken(CordovaArgs args, CallbackContext callbackContext) {
+    private void handleGoogleAuthException(GoogleAuthException ex, boolean interactive, CallbackContext callbackContext) {
+        if (ex instanceof GooglePlayServicesAvailabilityException) {
+            handlePlayServicesError(((GooglePlayServicesAvailabilityException)ex).getConnectionStatusCode(), interactive, callbackContext);
+        } else if (ex instanceof UserRecoverableAuthException){
+            // OAuth Permissions for the app during first run
+            if (interactive) {
+                Intent permissionsIntent = ((UserRecoverableAuthException)ex).getIntent();
+                cordova.startActivityForResult(this, permissionsIntent, USER_RECOVERABLE_REQUEST_CODE);
+            } else {
+                Log.e(LOG_TAG, "Recoverable Error occurred while getting token. No action was taken as interactive is set to false", ex);
+                callbackContext.error(ERROR_REQUIRES_USER_INTERACTION);
+                pendingCallDetails = null;
+            }
+        } else {
+            // This is likely unrecoverable.
+            Log.e(LOG_TAG, "Unrecoverable authentication exception.", ex);
+            callbackContext.error(ERROR_GOOGLE_PLAY_SERVICES_UNAVAILABLE);
+            pendingCallDetails = null;
+        }
+    }
+
+    private void getAuthTokenWithAccount(boolean interactive, String accountName, String scopesString, CallbackContext callbackContext) {
         try {
-            String token = args.getString(0);
-            Context context = this.cordova.getActivity();
+            Bundle optionsBundle = new Bundle();
+            // Don't show native spinner since we don't show this on desktop either.
+            optionsBundle.putBoolean(GoogleAuthUtil.KEY_SUPPRESS_PROGRESS_SCREEN, true);
+            String token = GoogleAuthUtil.getToken(webView.getContext(), accountName, scopesString, optionsBundle);
+            callbackContext.success(createTokenJsonObject(accountName, token));
+            pendingCallDetails = null;
+        } catch (GoogleAuthException authEx) {
+            handleGoogleAuthException(authEx, interactive, callbackContext);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error occurred while getting token", e);
+            callbackContext.error(ERROR_NETWORK_UNAVAILABLE);
+            pendingCallDetails = null;
+        }
+    }
+
+    private static JSONObject createTokenJsonObject(String accountName, String token) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("account", accountName);
+            jsonObject.put("token", token);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
+    }
+
+    private void removeCachedAuthToken(String token, CallbackContext callbackContext) {
+        try {
+            Context context = cordova.getActivity();
             GoogleAuthUtil.clearToken(context, token);
             callbackContext.success();
+            pendingCallDetails = null;
         } catch (SecurityException e) {
             // This happens when trying to clear a token that doesn't exist.
             callbackContext.success();
-        } catch (JSONException e) {
-            callbackContext.error("Could not invalidate token due to JSONException.");
-        } catch (GooglePlayServicesAvailabilityException e) {
-            callbackContext.error("Could not invalidate token due to GooglePlayServicesAvailabilityException.");
-        } catch (GoogleAuthException e) {
-            callbackContext.error("Could not invalidate token due to GoogleAuthException.");
+            pendingCallDetails = null;
+        } catch (GoogleAuthException authEx) {
+            handleGoogleAuthException(authEx, true, callbackContext);
         } catch (IOException e) {
-            callbackContext.error("Could not invalidate token due to IOException.");
+            Log.e(LOG_TAG, "Error occurred while getting token", e);
+            callbackContext.error(ERROR_NETWORK_UNAVAILABLE);
+            pendingCallDetails = null;
         }
     }
 
-    private void getAccounts(CordovaArgs args, CallbackContext callbackContext) {
+    private void getAccounts(CallbackContext callbackContext) {
         // First, get the account manager.
         Context context = this.cordova.getActivity();
         AccountManager accountManager = AccountManager.get(context);
@@ -312,6 +315,7 @@ public class ChromeIdentity extends CordovaPlugin {
 
         // Pass the accounts to the callback.
         callbackContext.success(resultAccounts);
+        pendingCallDetails = null;
     }
 }
 

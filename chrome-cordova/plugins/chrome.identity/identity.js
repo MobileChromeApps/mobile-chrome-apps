@@ -10,12 +10,18 @@ try {
 } catch(e) {}
 
 // TODO(maxw): Automatically handle expiration.
-var cachedToken;
-var cachedAccount;
-var cachedTokenExpiryTime;
+var cachedWebToken;
+var cachedWebTokenExpiryTime;
+var cachedWebTokenScopes;
 
-// This constant is used as an error message when Google Play Services is unavailable during an attempt to get an auth token natively.
 var GOOGLE_PLAY_SERVICES_UNAVAILABLE = -1;
+var ERROR_MESSAGES = {
+    '-1': 'Google Play Services is unavailable on this device.',
+    '-2': 'The request requires options.interactive=true.',
+    '-3': 'The network error has occurred.',
+    '-4': 'The user canceled the request.',
+    '-5': 'There is already an outstanding identity request.'
+};
 
 // We use this constant to note when we don't know which account the token belongs to.  This happens when using the web auth flow.
 var UNKNOWN_ACCOUNT = "Unknown account";
@@ -32,107 +38,97 @@ exports.getAuthToken = function(details, callback) {
         return callbackWithError('TokenDetails object required', callback);
     }
 
-    // If we have a cached token, send it along.
-    if (cachedToken) {
-        var currentTime = new Date().getTime();
-        if (currentTime < cachedTokenExpiryTime) {
-            // Our cached auth token hasn't expired yet, so use it.
-            callback(cachedToken, cachedAccount);
-            return;
-        } else {
-            // The cached auth token has expired, so remove it from the cache and try again.
-            var removeCachedAuthTokenCallback = function() {
-                // Try getting an auth token again.
-                exports.getAuthToken(details, callback);
-            };
-            exports.removeCachedAuthToken({ token: cachedToken }, removeCachedAuthTokenCallback);
-            return;
-        }
-    }
-
     // Fetch the OAuth details from either the passed-in `details` object or the manifest.
     var oAuthDetails = details.oauth2 || runtime && runtime.getManifest().oauth2;
+    var scopes = details.scopes || oAuthDetails.scopes;
 
-    // Augment the callback so that it caches a received token.
-    var augmentedCallback = function(tokenData) {
-        if (tokenData.token) {
-            cachedToken = tokenData.token;
-        }
-        if (tokenData.account) {
-            cachedAccount = tokenData.account;
-        }
-        cachedTokenExpiryTime = new Date().getTime() + (60 * 60 * 1000);
+    function win(tokenData) {
         callback(tokenData.token, tokenData.account);
     };
 
-    // This function extracts a token from a given URL and returns it.
-    var extractToken = function(url) {
+    // If we failed because Google Play Services is unavailable, revert to the web auth flow.
+    // On iOS, the Google+ Auth library takes care of web-flow fallback, so our In-App-Browser
+    // fallback doens't apply for iOS.
+    function fail(errorCode) {
+        if (errorCode === GOOGLE_PLAY_SERVICES_UNAVAILABLE) {
+            console.warn('Google Play Services is unavailable; falling back to web authentication flow.');
+            getAuthTokenViaWeb(details, callback, oAuthDetails, scopes);
+        } else {
+            // toString for compatibility with older callbackWithError.
+            var errObj = {message:ERROR_MESSAGES[errorCode], code: errorCode, toString:function() {return this.message}};
+            callbackWithError(errObj, callback);
+        }
+    };
+
+    // Use the native implementation for logging into Google accounts.
+    exec(win, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oAuthDetails.client_id, scopes, details.accountHint]);
+};
+
+function getAuthTokenViaWeb(details, callback, oAuthDetails, scopes) {
+    // If we have a cached token, send it along.
+    if (cachedWebToken) {
+        var currentTime = Date.now();
+        // TODO: We should allow a subset of scopes to be fine.
+        var scopesAreSame = scopes.concat().sort().join() == cachedWebTokenScopes.join();
+        if (scopesAreSame && currentTime < cachedWebTokenExpiryTime) {
+            // Our cached auth token hasn't expired yet, so use it.
+            callback(cachedWebToken);
+            return;
+        } else {
+            cachedWebToken = null;
+        }
+    }
+
+    // Verify that oAuthDetails contains a client_id and scopes.
+    // Since we're using the web auth flow as a fallback, we need the web client id.
+    var manifest = runtime.getManifest();
+    var webClientId = (details.oauth2 && details.oauth2.client_id) || manifest && ((manifest.web && manifest.web.oauth2 && manifest.web.oauth2.client_id) || (oAuthDetails.client_id));
+    if (!webClientId) {
+        callbackWithError('web.oauth2.client_id missing from mobile manifest.', callback);
+        return;
+    }
+    if (!scopes) {
+        callbackWithError('Scopes missing from manifest and not passed via details object.', callback);
+        return;
+    }
+
+    // Add the appropriate URL to the `details` object.
+    var scopesEncoded = encodeURIComponent(scopes.join(' '));
+    // TODO: We should be asking for a refresh token instead so that we do not
+    // need to re-prompt once the token expires.
+    details.url = 'https://accounts.google.com/o/oauth2/auth?client_id=' + webClientId + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=' + scopesEncoded;
+
+    function extractToken(url) {
         // This function is only used when using web authentication as a fallback from native Google authentication.
         // As a result, it's okay to search for "access_token", since that's what Google puts in the resulting URL.
         // The regular expression looks for "access_token=", followed by a lazy capturing of some string (the token).
         // This lazy capturing ends when either an ampersand (followed by more stuff) is reached or the end of the string is reached.
         var match = /\baccess_token=(.+?)(?:&.*)?$/.exec(url);
         return match && match[1];
-    };
-
-    // If we failed because Google Play Services is unavailable, revert to the web auth flow.
-    // Otherwise, just fail.
-    var fail = function(msg) {
-        if (msg === GOOGLE_PLAY_SERVICES_UNAVAILABLE) {
-            console.warn('Google Play Services is unavailable; falling back to web authentication flow.');
-
-            // Verify that oAuthDetails contains a client_id and scopes.
-            // Since we're using the web auth flow as a fallback, we need the web client id.
-            var manifest = runtime.getManifest();
-            var webClientId = manifest && manifest.web && manifest.web.oauth2 && manifest.web.oauth2.client_id;
-            if (!webClientId) {
-                callbackWithError('Web client id missing from mobile manifest.', callback);
-                return;
-            }
-            if (!oAuthDetails.scopes) {
-                callbackWithError('Scopes missing from manifest.', callback);
-                return;
-            }
-
-            // Add the appropriate URL to the `details` object.
-            var scopes = encodeURIComponent(oAuthDetails.scopes.join(' '));
-            details.url = 'https://accounts.google.com/o/oauth2/auth?client_id=' + webClientId + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=' + scopes;
-
-            // The callback needs to extract the access token from the returned URL and pass that on to the original callback.
-            var launchWebAuthFlowCallback = function(responseUrl) {
-                var token = extractToken(responseUrl);
-
-                // If we weren't able to extract a token, error out.
-                if (!token) {
-                    callbackWithError('URL did not contain a token.', callback);
-                    return;
-                }
-
-                // Our augmented callback expects a token data object containing the token and the account.
-                // We don't know the account, so we say so.
-                var tokenData = { token: token, account: UNKNOWN_ACCOUNT };
-                augmentedCallback(tokenData);
-            };
-
-            // Launch the web auth flow!
-            exports.launchWebAuthFlow(details, launchWebAuthFlowCallback);
-        } else {
-            callbackWithError(msg, callback);
-        }
-    };
-
-    // Use the native implementation for logging into Google accounts.
-    var args = [!!details.interactive, oAuthDetails];
-    if (details.accountHint) {
-        args.push(details.accountHint);
     }
-    exec(augmentedCallback, fail, 'ChromeIdentity', 'getAuthToken', args);
-};
+    function launchWebAuthFlowCallback(responseUrl) {
+        // This function extracts a token from a given URL and returns it.
+        var token = extractToken(responseUrl);
+
+        // If we weren't able to extract a token, error out.
+        if (!token) {
+            callbackWithError('URL did not contain a token.', callback);
+            return;
+        }
+        cachedWebToken = token;
+        cachedWebTokenScopes = scopes.concat().sort();
+        cachedWebTokenExpiryTime = Date.now() + (60 * 60 * 1000);
+        callback(token);
+    }
+
+    // Launch the web auth flow!
+    exports.launchWebAuthFlow(details, launchWebAuthFlowCallback);
+}
 
 exports.removeCachedAuthToken = function(details, callback) {
     // Remove the cached token locally.
-    if (details && details.token === cachedToken) {
-        cachedToken = null;
+    if (details && details.token === cachedWebToken) {
+        cachedWebToken = null;
     }
 
     // Invalidate the token natively.
@@ -150,11 +146,13 @@ exports.revokeAuthToken = function(details, callback) {
             if (xhr.readyState == 4) {
                 if (xhr.status < 200 || xhr.status > 300) {
                     console.log('Could not revoke token; status ' + xhr.status + '.');
+                    callbackWithError('Failed to revoke token. Got HTTP response ' + xhr.status, callback);
                 } else {
                     exports.removeCachedAuthToken({ token: details.token }, callback);
                 }
             }
-        }
+        };
+        // TODO: Add a timeout.
         xhr.send(null);
     } else {
         return callbackWithError('No token to revoke.', callback);
@@ -181,13 +179,8 @@ exports.getProfileUserInfo = function(callback) {
         return callbackWithError('Callback function required');
     }
 
-    if (!cachedAccount) {
-        callback(/* email */ '', /* id */ '');
-        return;
-    }
-
-    // TODO(maxw): Return an id.
-    callback(cachedAccount, /* id */ '');
+    // TODO: Implement.
+    callback(/* email */ '', /* id */ '');
 }
 
 exports.getAccounts = function(callback) {

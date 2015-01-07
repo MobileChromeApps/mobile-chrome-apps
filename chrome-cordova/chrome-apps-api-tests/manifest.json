@@ -97,7 +97,6 @@
   "oauth2": {
     "client_id": "420833503950-i1soq7l5m5kilfcooanqbsukg08jcrkp.apps.googleusercontent.com",
     "scopes": [
-      "https://www.googleapis.com/auth/calendar.readonly",
       "https://www.googleapis.com/auth/drive",
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/youtube.readonly",

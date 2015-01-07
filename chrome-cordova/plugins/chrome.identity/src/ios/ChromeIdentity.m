@@ -2,16 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#import <Cordova/CDVPlugin.h>
+#import <Foundation/Foundation.h>
 #import <GoogleOpenSource/GoogleOpenSource.h>
 #import <GooglePlus/GooglePlus.h>
 #import "AppDelegate.h"
-#import "ChromeIdentity.h"
 
 #if CHROME_IDENTITY_VERBOSE_LOGGING
 #define VERBOSE_LOG NSLog
 #else
 #define VERBOSE_LOG(args...) do {} while (false)
 #endif
+
+@interface ChromeIdentity : CDVPlugin <GPPSignInDelegate>
+@property (nonatomic, copy) NSString* callbackId;
+- (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
+@end
 
 static void swizzleMethod(Class class, SEL destinationSelector, SEL sourceSelector);
 
@@ -53,12 +59,13 @@ static void swizzleMethod(Class class, SEL destinationSelector, SEL sourceSelect
 {
     // Save the callback id for later.
     [self setCallbackId:[command callbackId]];
+    NSString* clientId = [command argumentAtIndex:1];
+    NSArray* scopes = [command argumentAtIndex:2];
 
     // Extract the OAuth2 data.
     GPPSignIn *signIn = [GPPSignIn sharedInstance];
-    NSDictionary *oauthData = [command argumentAtIndex:1];
-    [signIn setClientID:[oauthData objectForKey:@"client_id"]];
-    [signIn setScopes:[oauthData objectForKey:@"scopes"]];
+    [signIn setClientID:clientId];
+    [signIn setScopes:scopes];
 
     // Authenticate!
     [signIn authenticate];

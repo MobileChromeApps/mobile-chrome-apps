@@ -2,9 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+var CALENDAR_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+
 registerManualTests('chrome.identity', function(rootEl, addButton) {
-  function hitEndpoint(endpoint, callback) {
-    var onGetAuthTokenSuccess = function(token) {
+  function hitEndpoint(endpoint, callback, /* optional */ scopes) {
+    var onGetAuthToken = function(token) {
+      if (!token) {
+        console.log('Failed to get auth token: ' + JSON.stringify(chrome.runtime.lastError));
+        return;
+      }
+      console.log('Using token: ' + token);
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
@@ -20,7 +27,7 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
       xhr.send(null);
     };
 
-    chrome.identity.getAuthToken({ interactive: true }, onGetAuthTokenSuccess);
+    chrome.identity.getAuthToken({ interactive: true, scopes: scopes }, onGetAuthToken);
   }
 
   addButton('Get accounts', function() {
@@ -38,7 +45,7 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     chrome.identity.getAccounts(callback);
   });
 
-  addButton('Get auth token', function() {
+  addButton('Get auth token (interactive)', function() {
     var callback = function(token, account) {
       if (!token) {
         logger('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
@@ -49,6 +56,19 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     };
 
     chrome.identity.getAuthToken({ interactive: true }, callback);
+  });
+
+  addButton('Get auth token (non-interactive)', function() {
+    var callback = function(token, account) {
+      if (!token) {
+        logger('Failed to get a token. lastError = ' + JSON.stringify(chrome.runtime.lastError));
+      } else {
+        logger('Token: ' + token);
+        logger('Account: ' + account);
+      }
+    };
+
+    chrome.identity.getAuthToken(callback);
   });
 
   addButton('Get auth token with account hint', function() {
@@ -89,6 +109,22 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
   });
 
+  addButton('Remove cached auth token (calendar)', function() {
+    var onRemoveCachedAuthTokenSuccess = function() {
+      logger('Token removed from cache.');
+    };
+
+    var onInitialGetAuthTokenSuccess = function(token) {
+      logger('Removing token ' + token + ' from cache.');
+
+      // Remove the token!
+      chrome.identity.removeCachedAuthToken({ token: token }, onRemoveCachedAuthTokenSuccess);
+    };
+
+    // First, we need to get the existing auth token.
+    chrome.identity.getAuthToken({ interactive: true, scopes: CALENDAR_SCOPES }, onInitialGetAuthTokenSuccess);
+  });
+
   addButton('Revoke auth token', function() {
     var onRevokeAuthTokenSuccess = function() {
       logger('Token revoked.');
@@ -103,6 +139,22 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
 
     // First, we need to get the existing auth token.
     chrome.identity.getAuthToken({ interactive: true }, onInitialGetAuthTokenSuccess);
+  });
+
+  addButton('Revoke auth token (calendar)', function() {
+    var onRevokeAuthTokenSuccess = function() {
+      logger('Token revoked.');
+    };
+
+    var onInitialGetAuthTokenSuccess = function(token) {
+      logger('Revoking token ' + token + '.');
+
+      // Revoke the token!
+      chrome.identity.revokeAuthToken({ token: token }, onRevokeAuthTokenSuccess);
+    };
+
+    // First, we need to get the existing auth token.
+    chrome.identity.getAuthToken({ interactive: true, scopes: CALENDAR_SCOPES }, onInitialGetAuthTokenSuccess);
   });
 
   addButton('Get name via Google\'s User Info API', function() {
@@ -128,7 +180,7 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     });
   });
 
-  addButton('Get calendars via Google\'s Calendar API', function() {
+  addButton('Get calendars (passing custom scope)', function() {
     hitEndpoint('https://www.googleapis.com/calendar/v3/users/me/calendarList', function(response) {
       var calendarCount = response.items.length;
       var cappedCount = (calendarCount <= 3) ? calendarCount : 3;
@@ -136,7 +188,7 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
       for (var i = 0; i < cappedCount; i++) {
         logger('  ' + response.items[i].summary);
       }
-    });
+    }, CALENDAR_SCOPES);
   });
 
   addButton('Get playlists via Google\'s YouTube API', function() {

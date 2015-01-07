@@ -79,11 +79,13 @@ This process will yield a client id, but no action is required with it (unlike f
 
 #### Identity Without Google Play Services
 
-If Google Play Services is unavailable (for instance, using an emulator), this plugin uses a web authentication flow, which requires a web client id.
+If Google Play Services is unavailable (for instance, on some emulators), you can enable a web-based fallback authentication flow. To do this:
 
 In the project created in the Google Cloud Console, create a new client ID.  The "Web application" type should be selected by default.  Empty the "Authorized JavaScript origins" text box, and in the "Authorized redirect URI" text box, remove the default and enter `https://YOUR_CHROME_APP_ID.chromiumapp.org/`.
 
-Put the yielded client ID in your mobile manifest as described in the "Updating Your Manifest" section.
+Put the yielded client ID in your `manifest.mobile.json` under `"web": { "oauth2": { "client_id": "..."}}`, as described in the "Updating Your Manifest" section.
+
+Note that this requires pasting your Chrome app's `key` value into `manifest.json`, as described [here](https://developer.chrome.com/apps/app_identity#google).
 
 ### iOS
 
@@ -139,6 +141,11 @@ When using this plugin outside the context of a Chrome App, this information mus
         scopes: [ 'SCOPE_1', 'SCOPE_2', 'SCOPE_3' ]
       }
     });
+
+You can also pass scopes at call-time via the `options` object:
+
+    chrome.identity.getAuthToken({scopes:['A', 'B']}, callback);
+
 
 ## Playing With Google APIs
 
