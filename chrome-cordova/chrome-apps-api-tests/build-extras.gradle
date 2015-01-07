@@ -1,0 +1,4 @@
+
+// This makes the same signing key be used when building from Android Studio
+ext.cdvDebugSigningPropertiesFile = '../../android-debug-keys.properties'
+

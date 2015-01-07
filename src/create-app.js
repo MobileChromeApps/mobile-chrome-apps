@@ -33,17 +33,7 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
         sourceArg = path.dirname(sourceArg);
       }
       // Always check the sourceArg as a relative path first, even if its a special value (like 'spec')
-      // TODO: shouldn't we support import from cca/cordova style apps with www/?
       var dirsToTry = [ path.resolve(origDir, resolveTilde(sourceArg)) ];
-
-      // Special values for sourceArg we resolve to predefined locations
-      if (sourceArg === 'spec') {
-        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'chrome-apps-api-tests'));
-      } else if (sourceArg === 'oldspec') {
-        dirsToTry.push(path.join(ccaRoot, 'chrome-cordova', 'spec', 'www'));
-      } else if (sourceArg === 'default') {
-        dirsToTry.push(path.join(ccaRoot, 'templates', 'default-app'));
-      }
 
       // Find the first valid path in our list (valid paths contain a manifest.json file)
       var foundManifest = false;
