@@ -36,10 +36,9 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-
-import com.squareup.okhttp.internal.Base64;
 
 public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.RequestModifyInterface {
 
@@ -101,7 +100,8 @@ public class ChromeI18n extends CordovaPlugin implements ChromeExtensionURLs.Req
                 OpenForReadResult readResult = webView.getResourceApi().openForRead(fileUri, true);
                 try {
                     byte[] newData = replaceI18nPlaceholders(readResult.inputStream);
-                    return Uri.parse("data:text/css;charset=utf-8;base64," + Base64.encode(newData));
+                    String encoded = Base64.encodeToString(newData, Base64.NO_WRAP);
+                    return Uri.parse("data:text/css;charset=utf-8;base64," + encoded);
                 } finally {
                     if (readResult != null) {
                         readResult.inputStream.close();
