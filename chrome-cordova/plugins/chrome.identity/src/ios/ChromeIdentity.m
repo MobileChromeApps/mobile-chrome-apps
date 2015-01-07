@@ -90,17 +90,23 @@ static void swizzleMethod(Class class, SEL destinationSelector, SEL sourceSelect
 
 - (void)finishedWithAuth:(GTMOAuth2Authentication *)auth error:(NSError *) error
 {
-    // Compile the results.
-    NSDictionary *resultDictionary = [[NSMutableDictionary alloc] init];
-    [resultDictionary setValue:[auth userEmail] forKey:@"account"];
-    [resultDictionary setValue:[auth accessToken] forKey:@"token"];
+    NSString* callbackId = self.callbackId;
+    self.callbackId = nil;
+    if (auth == nil) {
+        // Assume user cancelled. error object just has -1 - Unknown Error in this case.
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsInt:-4];
+        [[self commandDelegate] sendPluginResult:pluginResult callbackId:callbackId];
+    } else {
+        // Compile the results.
+        NSDictionary *resultDictionary = [[NSMutableDictionary alloc] init];
+        [resultDictionary setValue:[auth userEmail] forKey:@"account"];
+        [resultDictionary setValue:[auth accessToken] forKey:@"token"];
 
-    // Pass the results to the callback.
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDictionary];
-    [[self commandDelegate] sendPluginResult:pluginResult callbackId:[self callbackId]];
+        // Pass the results to the callback.
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDictionary];
+        [[self commandDelegate] sendPluginResult:pluginResult callbackId:callbackId];
+    }
 
-    // Clear the callback id.
-    [self setCallbackId:nil];
 }
 
 #pragma mark Swizzling
