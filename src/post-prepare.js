@@ -210,7 +210,7 @@ function postPrepareInternal(platform) {
   .then(function() {
     return require('./get-manifest')('www', platform)
       .then(function(manifest) {
-        return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest))
+        return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4))
           .then(function() {
             if (platform === 'android' && manifest) {
               // Write manifest.short_name as launcher_name in Android strings.xml
