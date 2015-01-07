@@ -85,7 +85,7 @@ In the project created in the Google Cloud Console, create a new client ID.  The
 
 Put the yielded client ID in your `manifest.mobile.json` under `"web": { "oauth2": { "client_id": "..."}}`, as described in the "Updating Your Manifest" section.
 
-Note that this requires pasting your Chrome app's `key` value into `manifest.json`, as described [here](https://developer.chrome.com/apps/app_identity#google).
+Note that this requires pasting your Chrome app's `key` value into `manifest.json`, as described [here](https://developer.chrome.com/apps/app_identity#copy_key).
 
 ### iOS
 
