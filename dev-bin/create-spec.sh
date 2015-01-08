@@ -8,7 +8,7 @@ echo Creating spec at: $DIR_NAME
 set -e
 set -x
 rm -rf $DIR_NAME
-$CCA_PATH create $DIR_NAME --link-to=${SPEC_PATH}
+$CCA_PATH create $DIR_NAME --link-to=${SPEC_PATH}/www
 cp $SPEC_PATH/debug-key.p12 $DIR_NAME
 cp $SPEC_PATH/android-debug-keys.properties $DIR_NAME
 cd $DIR_NAME

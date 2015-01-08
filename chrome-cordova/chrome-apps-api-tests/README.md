@@ -12,5 +12,5 @@ This is a collection of automatic and manual tests that exercise various `chrome
 ## As a mobile Chrome App
 
 * Make sure you have `cca` properly installed (Follow the [Installation Guide](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Installation.md))
-* `cca create CrTests --link-to=spec`
+* Use the `dev-bin/create-spec.sh` script at the root of this repository.
 
