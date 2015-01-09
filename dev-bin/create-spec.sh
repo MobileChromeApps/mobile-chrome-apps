@@ -1,9 +1,13 @@
 #!/bin/bash
 
+if [[ "$0" = /* ]]; then
+  SCRIPT_PATH="$(dirname $0)"
+else
+  SCRIPT_PATH="$PWD/$(dirname $0)"
+fi
 DIR_NAME=${1-ChromeSpec}
-ORIG_DIR=$PWD
-CCA_PATH=$(dirname $0)/../src/cca.js
-SPEC_PATH=$(dirname $0)/../chrome-cordova/chrome-apps-api-tests
+CCA_PATH="$SCRIPT_PATH/../src/cca.js"
+SPEC_PATH="$SCRIPT_PATH/../chrome-cordova/chrome-apps-api-tests"
 echo Creating spec at: $DIR_NAME
 set -e
 set -x
