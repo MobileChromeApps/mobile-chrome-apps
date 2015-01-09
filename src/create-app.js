@@ -157,15 +157,6 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
     }
     writeHook(path.join('hooks', 'before_prepare', 'cca-check.js'));
     writeHook(path.join('hooks', 'before_platform_add', 'cca-check.js'));
-
-    // Create a convenience link to cca
-    if (isGitRepo || !shelljs.which('cca')) {
-      var ccaPath = path.relative('.', path.join(ccaRoot, 'src', 'cca.js'));
-      var comment = 'Feel free to rewrite this file to point at "cca" in a way that works for you.';
-      fs.writeFileSync('cca.cmd', 'REM ' + comment + '\r\nnode "' + ccaPath.replace(/\//g, '\\') + '" %*\r\n');
-      fs.writeFileSync('cca', '#!/bin/sh\n# ' + comment + '\nexec "$(dirname $0)/' + ccaPath.replace(/\\/g, '/') + '" "$@"\n');
-      fs.chmodSync('cca', '777');
-    }
   })
   .then(function() {
     // Create a convenience gitignore
