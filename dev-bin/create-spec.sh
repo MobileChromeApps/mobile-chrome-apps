@@ -2,8 +2,8 @@
 
 DIR_NAME=${1-ChromeSpec}
 ORIG_DIR=$PWD
-CCA_PATH=$ORIG_DIR/$(dirname $0)/../src/cca.js
-SPEC_PATH=$ORIG_DIR/$(dirname $0)/../chrome-cordova/chrome-apps-api-tests
+CCA_PATH=$(dirname $0)/../src/cca.js
+SPEC_PATH=$(dirname $0)/../chrome-cordova/chrome-apps-api-tests
 echo Creating spec at: $DIR_NAME
 set -e
 set -x
