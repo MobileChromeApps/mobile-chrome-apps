@@ -15,11 +15,11 @@
 
   <dependency id="org.chromium.bluetooth" />
 
-  <js-module src="bluetoothSocket.js" name="bluetoothSocket">
-    <clobbers target="chrome.bluetoothSocket" />
-  </js-module>
-
   <platform name="android">
+    <js-module src="bluetoothSocket.js" name="bluetoothSocket">
+      <clobbers target="chrome.bluetoothSocket" />
+    </js-module>
+
     <source-file src="src/android/ChromeBluetoothSocket.java" target-dir="src/org/chromium" />
 
     <config-file target="res/xml/config.xml" parent="/widget">
