@@ -43,6 +43,8 @@ module.exports = exports = function prePrepareCommand(context) {
   var argv = require('optimist')
       .options('webview', { type: 'string' })
       .options('release', { type: 'boolean' })
+      .options('link', { type: 'boolean' })
+      .options('verbose', { type: 'boolean', alias: 'd' })
       .argv;
 
   // Pre-prepare manifest check and project munger
@@ -128,14 +130,15 @@ module.exports = exports = function prePrepareCommand(context) {
       pluginsNotRecognized.forEach(function(unknownPermission) {
         console.warn('Permission not recognized by cca: ' + unknownPermission + ' (ignoring)');
       });
+      var opts = {
+        link: argv.link,
+        verbose: argv.verbose
+      };
       var cmds = missingPlugins.map(function(plugin) {
-        var ret = ['plugin', 'add', plugin];
-        if (argv.link) {
-          ret.push({link:true});
-        }
+        var ret = ['plugin', 'add', plugin, opts];
         return ret;
       }).concat(excessPlugins.map(function(plugin) {
-        return ['plugin', 'rm', plugin];
+        return ['plugin', 'rm', plugin, opts];
       }));
       return require('./cordova-commands').runAllCmds(cmds);
     }
