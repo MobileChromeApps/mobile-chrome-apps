@@ -4,6 +4,9 @@
 
 package org.chromium;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -13,6 +16,7 @@ import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
@@ -37,6 +41,20 @@ public class ChromeBluetoothSocket extends CordovaPlugin {
   private static final String LOG_TAG = "ChromeBluetoothSocket";
 
   private CallbackContext bluetoothSocketEventsCallback;
+
+  private PluginManager getPluginManager() {
+      PluginManager pm = null;
+      try {
+          Method gpm = webView.getClass().getMethod("getPluginManager");
+          pm = (PluginManager) gpm.invoke(webView);
+      } catch (Exception e) {
+          try {
+              Field pmf = webView.getClass().getField("pluginManager");
+              pm = (PluginManager)pmf.get(webView);
+          } catch (Exception e2) {}
+      }
+      return pm;
+  }
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -463,7 +481,7 @@ public class ChromeBluetoothSocket extends CordovaPlugin {
       uuid = UUID.fromString(uuidString);
 
       ChromeBluetooth bluetoothPlugin =
-          (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
+          (ChromeBluetooth) getPluginManager().getPlugin("ChromeBluetooth");
       BluetoothDevice device = bluetoothPlugin.getKnownBluetoothDevice(address);
 
       if (device == null) {

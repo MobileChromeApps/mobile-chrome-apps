@@ -1,5 +1,8 @@
 package org.chromium;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -16,6 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
@@ -35,6 +39,20 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
   private CallbackContext acceptContext;
   private Selector selector;
   private SelectorThread selectorThread;
+
+  private PluginManager getPluginManager() {
+      PluginManager pm = null;
+      try {
+          Method gpm = webView.getClass().getMethod("getPluginManager");
+          pm = (PluginManager) gpm.invoke(webView);
+      } catch (Exception e) {
+          try {
+              Field pmf = webView.getClass().getField("pluginManager");
+              pm = (PluginManager)pmf.get(webView);
+          } catch (Exception e2) {}
+      }
+      return pm;
+  }
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -494,7 +512,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
       try {
         SocketChannel acceptedSocket = channel.accept();
         ChromeSocketsTcp tcpPlugin =
-            (ChromeSocketsTcp) webView.getPluginManager().getPlugin("ChromeSocketsTcp");
+            (ChromeSocketsTcp) getPluginManager().getPlugin("ChromeSocketsTcp");
         int clientSocketId = tcpPlugin.registerAcceptedSocketChannel(acceptedSocket);
 
         JSONObject info = new JSONObject();

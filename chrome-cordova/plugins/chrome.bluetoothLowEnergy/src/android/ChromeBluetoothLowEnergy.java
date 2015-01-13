@@ -1,5 +1,8 @@
 package org.chromium;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -14,6 +17,7 @@ import android.os.Build;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +42,20 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
   private Map<String, ChromeBluetoothLowEnergyPeripheral> knownPeripheral =
       new HashMap<String, ChromeBluetoothLowEnergyPeripheral>();
   private CallbackContext bluetoothLowEnergyEventsCallback;
+
+  private PluginManager getPluginManager() {
+      PluginManager pm = null;
+      try {
+          Method gpm = webView.getClass().getMethod("getPluginManager");
+          pm = (PluginManager) gpm.invoke(webView);
+      } catch (Exception e) {
+          try {
+              Field pmf = webView.getClass().getField("pluginManager");
+              pm = (PluginManager)pmf.get(webView);
+          } catch (Exception e2) {}
+      }
+      return pm;
+  }
 
   @Override
   public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext)
@@ -248,7 +266,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
       return peripheral;
 
     ChromeBluetooth bluetoothPlugin =
-        (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
+        (ChromeBluetooth) getPluginManager().getPlugin("ChromeBluetooth");
 
     ScanResult bleScanResult = bluetoothPlugin.getKnownLeScanResults(deviceAddress);
 
@@ -673,7 +691,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
         return false;
 
       ChromeBluetooth bluetoothPlugin =
-          (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
+          (ChromeBluetooth) getPluginManager().getPlugin("ChromeBluetooth");
       return bluetoothPlugin.isConnected(bleScanResult.getDevice());
     }
 
@@ -1123,7 +1141,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
           }
 
           ChromeBluetooth bluetoothPlugin =
-              (ChromeBluetooth) webView.getPluginManager().getPlugin("ChromeBluetooth");
+              (ChromeBluetooth) getPluginManager().getPlugin("ChromeBluetooth");
           bluetoothPlugin.sendDeviceChangedEvent(bleScanResult);
         }
 
