@@ -382,7 +382,11 @@
 {
     CBCharacteristic* characteristic = _knownCharacteristics[characteristicId];
     if (characteristic) {
-        [_peripheral writeValue:value forCharacteristic:characteristic type:CBCharacteristicWriteWithResponse];
+        CBCharacteristicWriteType type = CBCharacteristicWriteWithResponse;
+        if (characteristic.properties & CBCharacteristicPropertyWriteWithoutResponse)
+            type = CBCharacteristicWriteWithoutResponse;
+
+        [_peripheral writeValue:value forCharacteristic:characteristic type:type];
         return YES;
     }
     return NO;
