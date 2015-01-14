@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.Semaphore;
 
 import static org.apache.cordova.PluginResult.Status;
@@ -643,6 +644,12 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     private Map<String, BluetoothGattDescriptor> knownDescriptors =
         new HashMap<String, BluetoothGattDescriptor>();
 
+    // Updated by the onConnectionStateChange callback of the
+    // gattEventsCallback.  Without this, we have to call into
+    // ChromeBluetooth.isConnected(), which in turn asks the
+    // bluetoothManager, who must do IPC to return a response.
+    private AtomicBoolean connected = new AtomicBoolean();
+
     private CallbackContext connectCallback;
     private CallbackContext disconnectCallback;
 
@@ -686,13 +693,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     }
 
     private boolean isConnected() {
-
-      if (gatt == null)
-        return false;
-
-      ChromeBluetooth bluetoothPlugin =
-          (ChromeBluetooth) getPluginManager().getPlugin("ChromeBluetooth");
-      return bluetoothPlugin.isConnected(bleScanResult.getDevice());
+      return connected.get();
     }
 
     void connect(CallbackContext callbackContext) throws InterruptedException {
@@ -1124,9 +1125,11 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
 
           switch (newState) {
             case BluetoothProfile.STATE_CONNECTED:
+              connected.set(true);
               successIfNotTimeout();
               break;
             case BluetoothProfile.STATE_DISCONNECTED:
+              connected.set(false);
               if (disconnectCallback != null) {
                 disconnectCallback.success();
                 disconnectCallback = null;
