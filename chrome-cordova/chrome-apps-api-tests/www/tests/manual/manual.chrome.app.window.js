@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 registerManualTests('chrome.app.window', function(rootEl, addButton) {
-  var $document = roolEl.ownerDocument;
+  var $document = rootEl.ownerDocument;
 
   $document.addEventListener("pause", function onPause() {
     console.log('Received the pause event');

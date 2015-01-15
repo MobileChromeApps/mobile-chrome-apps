@@ -12,7 +12,7 @@ registerManualTests('cordova.file.directoryFinder', function(rootEl, addButton) 
   var Persistence = cordova.file.Persistence;
 
   function addDropdown(text, id, values) {
-    var $document = roolEl.ownerDocument;
+    var $document = rootEl.ownerDocument;
     var container = $document.createElement('div');
     container.appendChild($document.createTextNode(text));
 

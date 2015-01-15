@@ -13,6 +13,9 @@ registerAutoTests("chrome.storage", function() {
       storage_local_items = items;
       chrome.storage.sync.get(null, function(items) {
         storage_sync_items = items;
+        // This spec is not an actual test case, but jasmine logs
+        // a warning if there is no expectation
+        expect(true).toBe(true);
         done();
       });
     });
@@ -45,6 +48,7 @@ registerAutoTests("chrome.storage", function() {
 
   it('onChanged() Event', function() {
     // TODO
+    pending();
   });
 
   function test_storagearea(type, storagearea) {
@@ -82,11 +86,11 @@ registerAutoTests("chrome.storage", function() {
     function createKey(index) {
       return 'key' + index;
     }
-    
+
     function createValue(index) {
       return 'value' + index;
     }
-    
+
     function getIndexFromKey(key) {
       return key.substring(3);
     }
@@ -96,13 +100,13 @@ registerAutoTests("chrome.storage", function() {
       input[createKey(index)] = createValue(index);
       return input;
     }
-    
+
     function clearAsPromise(storage) {
       return Q.Promise(function(resolve, reject, notify) {
         storage.clear(resolve);
       });
     }
-    
+
     function getAsPromise(storage, key) {
       return Q.Promise(function(resolve, reject, notify) {
         storage.get(key, function(result) {
@@ -118,13 +122,13 @@ registerAutoTests("chrome.storage", function() {
 	      });
       });
     }
-    
+
     function setAsPromise(storage, input) {
       return Q.Promise(function(resolve, reject, notify) {
         storage.set(input, resolve);
       });
     }
-    
+
     describe('chrome.storage.' + type, function() {
       describe('testing set', function() {
 
@@ -146,6 +150,7 @@ registerAutoTests("chrome.storage", function() {
           });
               });
               });*/
+       pending();
             });
           });
           outer_done();
@@ -165,7 +170,7 @@ registerAutoTests("chrome.storage", function() {
             });
     });
         });
-      
+
         it('set with concurrent writes', function(done) {
           storagearea.clear(function(){
             var maxCalls = 30;
@@ -174,17 +179,17 @@ registerAutoTests("chrome.storage", function() {
             for(var i = 0; i < maxCalls; i++){
               setCalls.push(setAsPromise(storagearea, createInput(i)));
             }
-            
+
             var getCalls = [];
             for(var i = 0; i < maxCalls; i++){
               getCalls.push(getAsPromise(storagearea, createKey(i)));
             }
-            
+
             Q.all(setCalls).then(function(results) {
               return Q.all(getCalls);
             }).then(function(results) {
               var foundCount = 0;
-              
+
               results.forEach(function(element) {
                 var key = element.key;
                 var result = element.result;
@@ -305,7 +310,7 @@ registerAutoTests("chrome.storage", function() {
       expect(Object.keys(items).length).toEqual(Object.keys(expected).length - 1);
                     done();
           });
-              })
+              });
       });
           });
         });
@@ -486,7 +491,7 @@ registerAutoTests("chrome.storage", function() {
             done();
           };
           storagearea.clear(function(){
-            storagearea.set(obj,function(){
+            storagearea.set(request,function(){
               chrome.storage.onChanged.addListener(callback);
               storagearea.clear();
             });
@@ -560,6 +565,9 @@ registerAutoTests("chrome.storage", function() {
     chrome.storage.sync.clear();
     chrome.storage.local.set(storage_local_items, function() {
       chrome.storage.sync.set(storage_sync_items, function() {
+        // This spec is not an actual test case, but jasmine logs
+        // a warning if there is no expectation
+        expect(true).toBe(true);
         done();
       });
     });

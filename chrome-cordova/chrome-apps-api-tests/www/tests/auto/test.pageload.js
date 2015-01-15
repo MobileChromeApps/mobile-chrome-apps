@@ -4,6 +4,12 @@
 
 registerAutoTests('pageload', function() {
   'use strict';
+
+  // Detect if CSP meta tag is present.  If so, assume that inline script
+  // is not allowed by CSP.
+  var meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  var inlineScriptAllowed = !meta;
+
   // TODO: implement runningInBackground
   var runningInBackground = false;
   if (!runningInBackground) {
@@ -31,9 +37,16 @@ registerAutoTests('pageload', function() {
         var n = document.querySelector('script[type=foo]');
         expect(n.innerHTML).toBe('Some data', 'Some data');
       });
-      it('should have executed inline scripts', function() {
-        expect(window.shouldExecuteInline).toBe(1);
-      });
+      if (inlineScriptAllowed) {
+        it('should have executed inline scripts', function() {
+          expect(window.shouldExecuteInline).toBe(1);
+        });
+      }
+      else {
+        it('should not have executed inline scripts', function() {
+          expect(window.shouldExecuteInline).toBeUndefined();
+        });
+      }
       it('should have executed scripts in order', function() {
         expect(scriptExec1).toBe(1);
         expect(scriptExec2).toBe(2);
@@ -42,11 +55,21 @@ registerAutoTests('pageload', function() {
         expect(scriptExec5).toBe(5);
         expect(scriptExec6).toBe(6);
         expect(scriptExec7).toBe(7);
-        expect(inlineScriptExecOrder).toBe(8);
-        expect(scriptExec8).toBe(9);
+        if (inlineScriptAllowed) {
+          expect(inlineScriptExecOrder).toBe(8);
+          expect(scriptExec8).toBe(9);
+        }
+        else {
+          expect(scriptExec8).toBe(8);
+        }
       });
       it('should properly resolve root-relative script URL', function() {
-        expect(scriptExec9).toBe(10);
+        if (inlineScriptAllowed) {
+          expect(scriptExec9).toBe(10);
+        }
+        else {
+          expect(scriptExec9).toBe(9);
+        }
       });
       it('should have platform CSS applied', function() {
         expect(window.getComputedStyle(document.body)['WebkitUserSelect']).toBe('none');
