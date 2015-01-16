@@ -110,7 +110,7 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
     JSONObject properties = args.getJSONObject(0);
 
     try {
-      TcpServerSocket socket = new TcpServerSocket(nextSocket++, acceptContext, properties);
+      TcpServerSocket socket = new TcpServerSocket(nextSocket++, properties);
       sockets.put(Integer.valueOf(socket.getSocketId()), socket);
       callbackContext.success(socket.getSocketId());
     } catch (IOException e) {
@@ -396,21 +396,15 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
   private class TcpServerSocket {
     private final int socketId;
-    private final CallbackContext acceptContext;
-
     private ServerSocketChannel channel;
-
     private SelectionKey key;
-
     private boolean paused;
-
     private boolean persistent;
     private String name;
 
-    TcpServerSocket(int socketId, CallbackContext acceptContext, JSONObject properties)
+    TcpServerSocket(int socketId, JSONObject properties)
         throws JSONException, IOException {
       this.socketId = socketId;
-      this.acceptContext = acceptContext;
 
       channel = ServerSocketChannel.open();
       channel.configureBlocking(false);
@@ -502,7 +496,6 @@ public class ChromeSocketsTcpServer extends CordovaPlugin {
 
     // This method can be only called by selector thread.
     void accept() throws JSONException {
-
       if (paused) {
         // Remove accept interests to avoid seletor wakeup when acceptable.
         removeInterestSet(SelectionKey.OP_ACCEPT);
