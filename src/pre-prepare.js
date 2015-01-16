@@ -81,7 +81,7 @@ module.exports = exports = function prePrepareCommand(context) {
   })
   .then(function() {
     if ( (context.cordova.platforms.indexOf('android') != -1) && argv['release']) {
-      if (!process.env.RELEASE_SIGNING_PROPERTIES_FILE) {
+      if (!process.env.ORG_GRADLE_PROJECT_cdvReleaseSigningPropertiesFile) {
         utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.');
       }
     }
