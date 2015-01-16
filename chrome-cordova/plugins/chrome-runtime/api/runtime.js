@@ -4,6 +4,7 @@
 
 var argscheck = cordova.require('cordova/argscheck');
 var Event = require('org.chromium.common.events');
+var helpers = require('org.chromium.common.helpers');
 var stubs = require('org.chromium.common.stubs');
 
 var manifestJson;
@@ -82,7 +83,20 @@ exports.getURL = function(subResource) {
   if (subResource.charAt(0) == '/') {
     subResource = subResource.slice(1);
   }
-  return 'chrome-extension://' + getAppId() + '/' + subResource;
+  if (helpers.isChromeApp) {
+    rootPrefix = 'chrome-extension://' + getAppId();
+  }
+  else {
+    // Running in Cordova, or similar non-Chrome App environment
+    // - Use the current URL, assuming a "www" path, and strip
+    //   off the rest of the path
+    rootPrefix = location.href.replace(/www(\/[^\/]*)*$/, 'www');
+  }
+  if (subResource.indexOf(rootPrefix) === 0) {
+    // URL is already specified with the root of the project
+    return subResource;
+  }
+  return rootPrefix + '/' + subResource;
 };
 
 var origLocation = location.href;

@@ -3,8 +3,12 @@
 // found in the LICENSE file.
 
 // Distinguish between having the plugin loaded vs. being run using chromeapp.html.
-var isChromeApp = /chromeapp.html$/.exec(location.href);
+var isChromeApp = /chromeapp.html$/.exec(location.href) ? true : false;
 var channel = require('cordova/channel');
+
+function getChromeAppFlag() {
+  return isChromeApp;
+}
 
 // TODO: Delete this method if favour of delayDeviceReadyUntil.
 exports.runAtStartUp = function(func) {
@@ -57,3 +61,5 @@ exports.queueLifeCycleEvent = function(func) {
     }
   }
 };
+
+exports.__defineGetter__("isChromeApp", getChromeAppFlag);

@@ -28,15 +28,32 @@ registerAutoTests("chrome.runtime", function() {
     });
     expect(bgPage).toBeNull();
   });
-  it('getURL() should throw when not args are invalid.', function() {
-    expect(function() {chrome.runtime.getURL();}).toThrow();
-    expect(function() {chrome.runtime.getURL(3);}).toThrow();
-  });
-  it('getURL() should work', function() {
-    var prefix = location.href.replace(/[^\/]*$/, '');
-    expect(chrome.runtime.getURL('')).toBe(prefix);
-    expect(chrome.runtime.getURL('b')).toBe(prefix + 'b');
-    expect(chrome.runtime.getURL('/b')).toBe(prefix + 'b');
+  describe('getURL()', function() {
+    var prefix;
+    beforeEach(function(done) {
+      prefix = location.href.replace(/[^\/]*$/, '');
+      done();
+    });
+
+    it('should throw when args are missing', function() {
+      expect(function() {chrome.runtime.getURL();}).toThrow();
+    });
+    it('should throw when args are invalid', function() {
+      expect(function() {chrome.runtime.getURL(3);}).toThrow();
+    });
+    it('should work for empty path', function() {
+      expect(chrome.runtime.getURL('')).toBe(prefix);
+    });
+    it('should work', function() {
+      expect(chrome.runtime.getURL('b')).toBe(prefix + 'b');
+    });
+    it('should work for root-relative path', function() {
+      expect(chrome.runtime.getURL('/b')).toBe(prefix + 'b');
+    });
+    it('should not change paths that already have the root prefix', function() {
+      var fullUrl = location.href;
+      expect(chrome.runtime.getURL(fullUrl)).toBe(fullUrl);
+    });
   });
   itShouldHaveAnEvent(chrome.runtime, 'onInstalled');
   itShouldHaveAnEvent(chrome.runtime, 'onStartup');
