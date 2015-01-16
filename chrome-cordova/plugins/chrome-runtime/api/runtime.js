@@ -50,7 +50,7 @@ exports.getManifest = function() {
     var path = /chromeapp\.html$/.exec(location.href) ? '../../manifest.json' : 'manifest.json';
     xhr.open('GET', path, false);
     xhr.send(null);
-    if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
+    if ((xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) && xhr.responseText && xhr.responseText.length > 0) {
       // Don't use JSON.parse, since it fails on comments.
       manifestJson = eval('(' + xhr.responseText + ')');
     } else {
@@ -64,7 +64,7 @@ exports.getManifest = function() {
 exports.setManifest = function(manifest) {
   manifestJson = manifest;
   cachedAppId = null;
-}
+};
 
 exports.getBackgroundPage = function(callback) {
   try {
@@ -117,7 +117,7 @@ function mapAppNameToAppId (name) {
 function mapAppKeyToAppId(key) {
   var CryptoJS = getCrypto();
   // See http://stackoverflow.com/questions/1882981/google-chrome-alphanumeric-hashes-to-identify-extensions/2050916#2050916
-  return mapAppNameToAppId(CryptoJS.enc.Base64.parse(key))
+  return mapAppNameToAppId(CryptoJS.enc.Base64.parse(key));
 }
 
 var cachedAppId = null;
