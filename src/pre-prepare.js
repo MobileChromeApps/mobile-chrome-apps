@@ -57,8 +57,8 @@ module.exports = exports = function prePrepareCommand(context) {
 
     // Android: If using system webview, don't build multiple APKs
     if (manifest.webview != 'system') {
-      if (typeof process.env.BUILD_MULTIPLE_APKS == 'undefined') {
-        process.env.BUILD_MULTIPLE_APKS = '1';
+      if (typeof process.env.ORG_GRADLE_PROJECT_cdvBuildMultipleApks == 'undefined') {
+        process.env.ORG_GRADLE_PROJECT_cdvBuildMultipleApks = '1';
       }
     }
     return ccaManifestLogic.analyseManifest(manifest);
