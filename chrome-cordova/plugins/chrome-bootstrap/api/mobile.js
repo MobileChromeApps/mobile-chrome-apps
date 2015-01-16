@@ -113,17 +113,17 @@ function fireLifecycleEvents(manifestJson) {
       // Add some additional startup events if the app was not shut down properly
       // last time, or if it has been upgraded, or if it has just been intstalled.
       if (restart) {
-        app_runtime.onRestarted.fire();
+        app_runtime.onRestarted._fireInternal();
       }
       if (installDetails) {
-        runtime.onInstalled.fire(installDetails);
+        runtime.onInstalled._fireInternal(installDetails);
       }
       // If launching for UI, fire onLaunched event
       var exec = require("cordova/exec");
       exec(function(data) {
         // lifeCycleEventFuncs would determine if app is started from an alarm, notification, etc.
         if (data && !exports.lifeCycleEventFuncs.length) {
-          app_runtime.onLaunched.fire();
+          app_runtime.onLaunched._fireInternal();
           // Log a warning if no window is created after a bit of a grace period.
           setTimeout(function() {
             var app_window = require('org.chromium.bootstrap.app.window');

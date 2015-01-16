@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+var helpers = require('org.chromium.common.helpers');
+
 var Event = function(opt_eventName) {
   this.name = opt_eventName || '';
   this.listeners = [];
@@ -39,6 +41,20 @@ Event.prototype.hasListeners = function() {
 };
 
 Event.prototype.fire = function() {
+  // For Chrome Apps: Never fire events before background page is loaded.
+  // For vanilla Cordova: fire events after deviceready.
+  var self = this;
+  var args = Array.prototype.slice.call(arguments);
+  helpers.queueLifeCycleEvent(function() {
+    self._fireInternal.apply(self, args);
+  });
+};
+
+// Same as fire(), but does not block onLaunched().
+// TODO: It would probably be better to fire onLaunched base on whether
+// we got a launcher intent on Android, or application:didFinishLaunchingWithOptions:
+// on iOS.
+Event.prototype._fireInternal = function() {
   for (var i = 0; i < this.listeners.length; i++) {
     this.listeners[i].apply(this, arguments);
   }
