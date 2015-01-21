@@ -170,36 +170,36 @@ function rewritePage(pageContent, filePath, callback) {
       pageContent = pageContent.replace(importFinder, '<' + linkReplacementTag + '$1></' + linkReplacementTag + '>');
   }
 
-  var startIndex = pageContent.search(/<html([\s\S]*?)>/i);
-  if (startIndex != -1) {
-    startIndex += RegExp.lastMatch.length;
+  var htmlPattern = /(?:<!--[\s\S]*?--[^>]*?>\s*)*<html\b([\s\S]*?)>/ig;
+  var htmlMatch = htmlPattern.exec(pageContent);
+  if (htmlMatch) {
     // Copy over the attributes of the <html> tag.
-    applyAttributes(RegExp.lastParen, fgBody.parentNode);
+    applyAttributes(htmlMatch[1], fgBody.parentNode);
+    pageContent = pageContent.slice(htmlPattern.lastIndex);
   } else {
-    startIndex = 0;
+    console.warn('Failed to find <html> tag.');
   }
 
   // Put everything before the body tag in the head.
   // Ignore <body> within <!-- comments -->, which vulcanize can insert.
-  var bodyPattern = /(?:<!--[\s\S]*?-->[\s\S]*)*<body([\s\S]*?)>/gi;
+  // But pick up everything before <body>, and consider that the <head>.
+  // This isn't quite correct, but it's good enough.
+  var bodyPattern = /(?:<!--[\s\S]*?--[^>]*?>\s*[\s\S]*?)*<body\b([\s\S]*?)>/gi;
   var bodyMatch = bodyPattern.exec(pageContent);
-  var endIndex = bodyPattern.lastIndex;
   if (!bodyMatch) {
-    mobile.eventIframe.insertAdjacentHTML('afterend', 'Load error: Page is missing body tag.');
-  } else {
-    applyAttributes(bodyMatch[1], fgBody);
-
-    // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
-    var headHtml = pageContent.slice(startIndex, endIndex);
-    pageContent = pageContent.slice(endIndex);
-
-    fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="' + runtime.getURL('plugins/org.chromium.bootstrap/chromeappstyles.css') + '">');
-    fgHead.insertAdjacentHTML('beforeend', headHtml);
-    evalScripts(fgHead, function() {
-      mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
-      evalScripts(fgBody, callback);
-    });
+    console.warn('Failed to find <body> tag.');
   }
+  var headHtml = pageContent.slice(0, bodyPattern.lastIndex); // lastIndex is 0 for no match.
+  // Don't bother removing the <body>, </body>, </html>. The browser's sanitizer removes them for us.
+  pageContent = pageContent.slice(bodyPattern.lastIndex);
+  applyAttributes((bodyMatch && bodyMatch[1]) || '', fgBody); // removes the style attr if no match.
+
+  fgHead.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="' + runtime.getURL('plugins/org.chromium.bootstrap/chromeappstyles.css') + '">');
+  fgHead.insertAdjacentHTML('beforeend', headHtml);
+  evalScripts(fgHead, function() {
+    mobile.eventIframe.insertAdjacentHTML('afterend', pageContent);
+    evalScripts(fgBody, callback);
+  });
 }
 
 function fixLocationObjects(wnd) {

@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html testattr=foo>
+<!-- Comments with <html> should not break things
+     (issue #402) -- >
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html testattr=foo> <!--<![endif]-->
 
 <!-- Do Not Remove, part of Chrome App Window test -->
   <script id="dont-forget1"></script>
@@ -65,6 +70,7 @@
 
   </head>
 
+<!-- <body> test comments before body -- >
 <!-- Do Not Remove, part of Chrome App Window test -->
   <script id="dont-forget2"></script>
 <!-- -------------------------------------------- -->
