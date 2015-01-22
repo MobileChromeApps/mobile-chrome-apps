@@ -110,6 +110,15 @@ module.exports = function analyseManifest(manifest, options) {
     ]);
   ret.pluginsNotRecognized = pluginsForPermissions.unknown.concat(pluginsForSockets.unknown);
 
+  // Special case for bluetooth, since it uses boolean flags and not just the existance of keys.
+  if (manifest.bluetooth && typeof manifest.bluetooth === 'object') {
+    ret.pluginsToBeInstalled.push('org.chromium.bluetooth');
+    (manifest.bluetooth.low_energy ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('org.chromium.bluetoothlowenergy');
+    (manifest.bluetooth.socket ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('org.chromium.bluetoothsocket');
+  } else {
+    ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.concat(['org.chromium.bluetoothlowenergy', 'org.chromium.bluetoothsocket', 'org.chromium.bluetooth']);
+  }
+
   // This next filter seems needless, but it happens when we still want plugins installed for which there are missing permissions, e.g. chrome.storage
   ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.filter(function(plugin) {
     return ret.pluginsToBeInstalled.indexOf(plugin) == -1;

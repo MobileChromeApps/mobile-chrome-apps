@@ -134,12 +134,13 @@ module.exports = exports = function prePrepareCommand(context) {
         link: argv.link,
         verbose: argv.verbose
       };
-      var cmds = missingPlugins.map(function(plugin) {
-        var ret = ['plugin', 'add', plugin, opts];
-        return ret;
-      }).concat(excessPlugins.map(function(plugin) {
-        return ['plugin', 'rm', plugin, opts];
-      }));
+      var cmds = [];
+      if (missingPlugins.length) {
+        cmds.push(['plugin', 'add', missingPlugins, opts]);
+      }
+      if (excessPlugins.length) {
+        cmds.push(['plugin', 'rm', excessPlugins, opts]);
+      }
       return require('./cordova-commands').runAllCmds(cmds);
     }
   })
