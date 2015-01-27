@@ -219,7 +219,7 @@ function main() {
   }
 
   if (commandLineFlags['android-minSdkVersion']) {
-    process.env['ANDROID_MIN_SDK_VERSION'] = commandLineFlags['android-minSdkVersion'];
+    process.env['ORG_GRADLE_PROJECT_cdvMinSdkVersion'] = commandLineFlags['android-minSdkVersion'];
   }
 
   analyticsLoader.getAnalyticsModule()
