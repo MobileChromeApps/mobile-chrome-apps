@@ -76,7 +76,15 @@ function _getMessageFromMessageJson(messageName, localeChain) {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', fileName, false /* sync */);
             xhr.send(null);
-            var contents = eval('(' + xhr.responseText + ')');
+            // Convert any \x escape sequences to \u two-byte sequences
+            var cleanedResponse = xhr.responseText.replace(/\\x([0-9a-f]{2})/g, '\\u00$1');
+            var contents;
+            try {
+              contents = JSON.parse(cleanedResponse);
+            }
+            catch(error) {
+              throw new Error('Unable to parse file "' + fileName + '", error: ' + error);
+            }
             // convert all fields to lower case to check case insensitively
             contents = _toLowerCaseMessageAndPlaceholders(contents);
             memoizedJsonContents[locale] = contents;
