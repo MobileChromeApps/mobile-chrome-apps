@@ -55,12 +55,6 @@ module.exports = exports = function prePrepareCommand(context) {
         manifest.webview = argv.webview;
     }
 
-    // Android: If using system webview, don't build multiple APKs
-    if (manifest.webview != 'system') {
-      if (typeof process.env.ORG_GRADLE_PROJECT_cdvBuildMultipleApks == 'undefined') {
-        process.env.ORG_GRADLE_PROJECT_cdvBuildMultipleApks = '1';
-      }
-    }
     return ccaManifestLogic.analyseManifest(manifest);
   })
   .then(function(manifestData) {
@@ -81,7 +75,7 @@ module.exports = exports = function prePrepareCommand(context) {
   })
   .then(function() {
     if ( (context.cordova.platforms.indexOf('android') != -1) && argv['release']) {
-      if (!process.env.ORG_GRADLE_PROJECT_cdvReleaseSigningPropertiesFile) {
+      if (!fs.existsSync('android-release-keys.properties')) {
         utils.fatal('Cannot build android in release mode: android-release-keys.properties not found in project root.');
       }
     }

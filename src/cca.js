@@ -189,13 +189,6 @@ function main() {
   if (projectRoot) {
     cordovaLib.cordova.config(projectRoot, require('./default-config')(ccaRoot));
     process.chdir(projectRoot);
-    // signing keys
-    if (!process.env.ORG_GRADLE_PROJECT_cdvDebugSigningPropertiesFile && fs.existsSync('android-debug-keys.properties')) {
-      process.env.ORG_GRADLE_PROJECT_cdvDebugSigningPropertiesFile = path.resolve('android-debug-keys.properties');
-    }
-    if (!process.env.ORG_GRADLE_PROJECT_cdvReleaseSigningPropertiesFile && fs.existsSync('android-release-keys.properties')) {
-      process.env.ORG_GRADLE_PROJECT_cdvReleaseSigningPropertiesFile = path.resolve('android-release-keys.properties');
-    }
   }
 
   if (!commandActions.hasOwnProperty(command)) {

@@ -35,6 +35,7 @@
   <asset src="www/chromeappstyles.css" target="plugins/org.chromium.bootstrap/chromeappstyles.css" />
 
   <platform name="android">
+    <framework src="cca.gradle" custom="true" type="gradleReference" />
     <source-file src="src/android/ChromeAppWindow.java" target-dir="src/org/chromium" />
     <source-file src="src/android/ChromeBootstrap.java" target-dir="src/org/chromium" />
     <!-- Convert 'chrome-extension://' urls -->
