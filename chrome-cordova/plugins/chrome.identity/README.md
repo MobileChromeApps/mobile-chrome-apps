@@ -152,6 +152,10 @@ You can also pass scopes at call-time via the `options` object:
 The [Google APIs Explorer](https://developers.google.com/apis-explorer/) is a useful tool for determining required scopes and testing various API use cases.
 
 # Release Notes
+## 1.4.0 (Jan 27, 2015)
+* Allow passing scopes via details object (fixes #491)
+* ios: Call failure callback when auth fails (fixes #498)
+* Add `GET_ACCOUNTS` permission (fixes #495)
 
 ## 1.3.1 (November 17, 2014)
 - Added an unsupported result for iOS getAccounts

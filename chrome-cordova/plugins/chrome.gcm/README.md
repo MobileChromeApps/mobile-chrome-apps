@@ -21,6 +21,12 @@ The API reference is [here](https://developer.chrome.com/apps/gcm), and a full d
 * You require the 'gcm' permission to use this API
 
 # Release Notes
+## 1.0.3 (Jan 27, 2015)
+* Split Android permissions within plugin.xml into separate tags (fixes #494)
+* Add custom permission so that other apps can't snoop our messages
+* Don't require `GET_ACCOUNTS` permission in newer Android versions
+* Don't include `INTERNET` permission in chrome.gcm plugin since it doesn't uninstall correctly (fixes #488)
+
 ## 1.0.2 (October 21, 2014)
 - Correct apparent copy/paste bug.
 - Documentation updates.

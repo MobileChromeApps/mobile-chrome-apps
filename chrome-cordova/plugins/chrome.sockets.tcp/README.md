@@ -12,6 +12,10 @@ The API reference is [here](https://developer.chrome.com/apps/sockets_tcp).
 
 # Release Notes
 
+## 1.3.1 (Jan 27, 2015)
+* Fix ssl handshake infinite loop & return error when address is unresolvable
+* `chrome.sockets.pipeToFile`: send receive events at most 10 times per sec
+
 ## 1.3.0 (Nov 26, 2014)
 * Added mobile-only `chrome.sockets.tcp.pipeToFile` API
 * android sockets.tcp: send an error when receive EOF

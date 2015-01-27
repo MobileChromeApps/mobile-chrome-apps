@@ -12,6 +12,10 @@ The API reference is [here](http://developer.chrome.com/apps/notifications.html)
 
 # Release Notes
 
+## 1.0.7 (Jan 27, 2015)
+* More fully stub out chrome.notifications on iOS (fixes #485)
+* Fix javascript validation when updating notifications (fixes #224)
+
 ## 1.0.6 (November 17, 2014)
 - Refactor notifications to follow same paradigm as Alarms on Android
 

@@ -26,6 +26,12 @@ The API references are:
 
 # Release Notes
 
+## 1.1.2 (Jan 27, 2015)
+* Move setting of gradle properties from js to chrome-bootstrap gradle
+* Ignore <!-- html --> when parsing main page (fixes #510)
+* Make all Event.fire()s equate to queueStartUpEvent calls.
+* Don't execute inline scripts before non-inline ones that proceed them (fixes #482)
+
 ## 1.1.1 (Nov 26, 2014)
 * Fix HTMLImports not working with imports polyfill (#450)
 

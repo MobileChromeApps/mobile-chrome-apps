@@ -17,6 +17,9 @@ The API reference is [here](http://developer.chrome.com/apps/idle.html).
 
 # Release Notes
 
+## 1.0.3 (Jan 27, 2015)
+* Fix NPE in ChromeIdle.java
+
 ## 1.0.2 (November 17, 2014)
 * Minor changes to chrome.idle's "locked" state
 * Added a platform check
