@@ -64,6 +64,9 @@ Vim helper command:
     git show # Sanity check
     git push origin master
 
+* Validate that plugins look good
+
+    dev-bin/check-published-plugin.js chrome-cordova/plugins/*
 
 ## Publish cca-manifest-logic Module (if changes exist)
 
