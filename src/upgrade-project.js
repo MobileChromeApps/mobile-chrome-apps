@@ -2,6 +2,7 @@ var fs = require('fs');
 var Q = require('q');
 var path = require('path');
 var shelljs = require('shelljs');
+var optimist = require('optimist');
 var __ = require('underscore');
 var utils = require('./utils');
 var cordova = require('cordova');
@@ -84,6 +85,10 @@ function upgradeProjectIfStale() {
 
 
 function upgradeProject(skipPrompt) {
+  var argv = require('optimist')
+      .options('link', { type: 'boolean' })
+      .options('verbose', { type: 'boolean', alias: 'd' })
+      .argv;
   var hadPlatforms = [];
 
   return Q()
@@ -134,7 +139,11 @@ function upgradeProject(skipPrompt) {
       if (hadPlatforms.length) {
         plats = __.intersection(plats, hadPlatforms);
       }
-      return require('./cordova-commands').runCmd(['platform', 'add', plats]);
+      var opts = {
+        link: argv.link,
+        verbose: argv.verbose
+      };
+      return require('./cordova-commands').runCmd(['platform', 'add', plats, opts]);
     }
   })
   .then(function() {
