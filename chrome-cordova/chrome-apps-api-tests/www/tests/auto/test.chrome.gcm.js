@@ -6,6 +6,11 @@ registerAutoTests("chrome.gcm", function() {
   'use strict';
   var senderid = '90031296475';
   var sender = senderid+ "@gcm.googleapis.com";
+  var messageCounter = 0;
+
+  function getMessageId() {
+    return (++messageCounter).toString();
+  }
 
   describeExcludeIos('registration', function() {
     it('should contain definitions', function(done) {
@@ -71,7 +76,7 @@ registerAutoTests("chrome.gcm", function() {
 
     it('should error for invalid data', function(done) {
       var message = {
-        'messageId' : '0',
+        'messageId' : getMessageId(),
         'destinationId' : sender,
         'timeToLive' : 0,
         'data' : { 'collapse_key': '1', 'test' : 'test' }
@@ -96,7 +101,7 @@ registerAutoTests("chrome.gcm", function() {
       }
       var message = {
         'destinationId' : sender,
-        'messageId' : '0',
+        'messageId' : getMessageId(),
         'timeToLive' : 10,
         'data' : msgdata
       };
@@ -115,7 +120,7 @@ registerAutoTests("chrome.gcm", function() {
     it('should send and receive one simple msg', function(done) {
       var message = {
         'destinationId' : sender,
-        'messageId' : '0',
+        'messageId' : getMessageId(),
         'timeToLive' : 10,
         'data' : { 'type': 'ping', 'message' : 'test' }
       };
@@ -142,7 +147,7 @@ registerAutoTests("chrome.gcm", function() {
     it('should send and receive one complex msg', function(done) {
       var message = {
         'destinationId' : sender,
-        'messageId' : '0',
+        'messageId' : getMessageId(),
         'timeToLive' : 10,
         'data' : {
           'type': 'ping',
