@@ -21,5 +21,3 @@ and
 https://www.googleapis.com/auth/gcm_for_chrome.readonly
 
 # Release Notes
-## 1.0.2 (October 21, 2014)
-- Documentation updates.
