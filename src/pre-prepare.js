@@ -58,7 +58,7 @@ module.exports = exports = function prePrepareCommand(context) {
     return ccaManifestLogic.analyseManifest(manifest);
   })
   .then(function(manifestData) {
-    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat();
+    pluginsToBeInstalled = manifestData.pluginsToBeInstalled.concat(['org.chromium.cca-hooks']);
     pluginsToBeNotInstalled = manifestData.pluginsToBeNotInstalled.concat();
     pluginsNotRecognized = manifestData.pluginsNotRecognized;
     whitelist = manifestData.whitelist;
