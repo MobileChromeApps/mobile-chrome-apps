@@ -50,7 +50,7 @@ var PLUGIN_MAP = {
 var STALE_PLUGINS = [];
 
 var ENGINE_MAP = {
-  'crosswalk': ['org.apache.cordova.engine.crosswalk'],
+  'crosswalk': ['org.crosswalk.engine'],
   'system': []
 };
 
