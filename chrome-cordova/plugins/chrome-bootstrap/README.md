@@ -26,6 +26,9 @@ The API references are:
 
 # Release Notes
 
+## 1.1.3 (Jan 28, 2015)
+* Undo: Move setting of gradle properties from js to chrome-bootstrap gradle, since it broke older cca versions
+
 ## 1.1.2 (Jan 27, 2015)
 * Move setting of gradle properties from js to chrome-bootstrap gradle
 * Ignore <!-- html --> when parsing main page (fixes #510)
