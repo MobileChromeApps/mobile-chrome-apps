@@ -5,7 +5,6 @@ module.exports = exports = function defaultConfig(ccaRoot) {
 
   var plugin_search_path = [
     path.join(ccaRoot, 'cordova'),
-    path.join(ccaRoot, 'cordova', 'cordova-plugins'),
   ];
 
   // For plugin development with local cca git checkout.
