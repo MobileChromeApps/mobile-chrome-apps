@@ -10,4 +10,7 @@
   <platform name="android">
       <framework src="cca.gradle" custom="true" type="gradleReference" />
   </platform>
+  <engines>
+      <engine name="cordova-plugman" version=">=4.2.1-dev" /><!-- needed for gradleReference support -->
+  </engines>
 </plugin>
