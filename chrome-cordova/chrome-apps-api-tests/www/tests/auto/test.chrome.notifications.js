@@ -125,7 +125,7 @@ registerAutoTests("chrome.notifications", function() {
     });
   });
 
-  describe('parameter validation', function() {
+  describeExcludeIos('parameter validation', function() {
 
     function createNotificationWithMissingOption(done) {
       createNotification('lasterror', done);
