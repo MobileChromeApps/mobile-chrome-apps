@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var channel = require('cordova/channel')
+var channel = require('cordova/channel');
 var runtime = require('org.chromium.runtime.runtime');
 var app_runtime = require('org.chromium.runtime.app.runtime');
 var storage = require('org.chromium.storage.Storage');
@@ -54,7 +54,7 @@ exports.bgInit = function(bgWnd) {
   exports.bgWindow = bgWnd;
 
   bgWnd.addEventListener('unload', function() {
-    throw new Error('Chrome background page has been unloaded! Likely caused by <iframe> being detatched from the <body>');
+    throw new Error('Chrome background page has been unloaded! Likely caused by <iframe> being detached from the <body>');
   });
 
   bgWnd.navigator = navigator;
