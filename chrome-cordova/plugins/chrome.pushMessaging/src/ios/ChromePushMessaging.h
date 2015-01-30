@@ -20,7 +20,7 @@
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView;
 - (void) getRegistrationId:(CDVInvokedUrlCommand *)command;
 
-- (void) fireStartupMessages:(CDVInvokedUrlCommand *)command;
+- (void)messageChannel:(CDVInvokedUrlCommand *)command;
 - (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 - (void)didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
 

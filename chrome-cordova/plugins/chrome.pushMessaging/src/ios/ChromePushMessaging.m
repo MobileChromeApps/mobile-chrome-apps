@@ -31,7 +31,7 @@ NSMutableDictionary *pendingMessages;
     [self.commandDelegate sendPluginResult:commandResult callbackId:self.callbackId];
 }
 
-- (void)fireStartupMessages:(CDVInvokedUrlCommand *)command; {
+- (void)messageChannel:(CDVInvokedUrlCommand *)command; {
     self.callbackId = command.callbackId;
 
     UIRemoteNotificationType notificationTypes = UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound | UIRemoteNotificationTypeAlert;

@@ -9,6 +9,7 @@ import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,16 +29,14 @@ public class ChromePushMessaging extends CordovaPlugin {
     private static final String LOG_TAG = "ChromePushMessaging";
     private static final String PAYLOAD_LABEL = "payload";
 
-    private static CordovaWebView webView;
-    private static boolean safeToFireMessages = false;
+    private static ChromePushMessaging pluginInstance;
     private static List<String> pendingMessages = new ArrayList<String>();
     private ExecutorService executorService;
+    private CallbackContext messageChannel;
 
     @Override
     public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
-        safeToFireMessages = false;
         super.initialize(cordova, webView);
-        ChromePushMessaging.webView = webView;
         executorService = cordova.getThreadPool();
         if (cordova.getActivity().getIntent().hasExtra(PAYLOAD_LABEL)) {
             cordova.getActivity().moveTaskToBack(true);
@@ -45,8 +44,24 @@ public class ChromePushMessaging extends CordovaPlugin {
     }
 
     @Override
+    public void pluginInitialize() {
+        pluginInstance = this;
+    }
+
+    @Override
+    public void onReset() {
+        messageChannel = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        messageChannel = null;
+    }
+
+    @Override
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
-        if ("fireStartupMessages".equals(action)) {
+        if ("messageChannel".equals(action)) {
+            messageChannel = callbackContext;
             fireStartupMessages(args, callbackContext);
             return true;
         } else if ("getRegistrationId".equals(action)) {
@@ -63,11 +78,19 @@ public class ChromePushMessaging extends CordovaPlugin {
                 payload.put(key, intent.getStringExtra(key));
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Error construction push message payload: " + e);
+            Log.e(LOG_TAG, "Error constructing push message payload: " + e);
             return;
         }
         String payloadString = payload.toString();
-        if (webView == null) {
+
+        if (pluginInstance != null && pluginInstance.messageChannel != null) {
+            Log.w(LOG_TAG, "Firing event to already running web view");
+            pluginInstance.fireOnMessage(payloadString);
+            return;
+        }
+
+        pendingMessages.add(payloadString);
+        if (pluginInstance == null) {
             try {
                 String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
                 Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
@@ -78,20 +101,23 @@ public class ChromePushMessaging extends CordovaPlugin {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to make startActivity intent: " + e);
             }
-            return;
-        } if (!safeToFireMessages) {
-            pendingMessages.add(payloadString);
-            return;
         }
-        fireOnMessage(payloadString);
     }
 
-    static private void fireOnMessage(String payload) {
-        webView.sendJavascript("chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'" + payload + "'})");
+    private void fireOnMessage(String payload) {
+        JSONObject message = new JSONObject();
+        try {
+            message.put("subchannelId", "0");
+            message.put("data", new JSONObject(payload));
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Failed to create push messaging event", e);
+        }
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, message);
+        pluginResult.setKeepCallback(true);
+        messageChannel.sendPluginResult(pluginResult);
     }
 
     private void fireStartupMessages(final CordovaArgs args, final CallbackContext callbackContext) {
-        safeToFireMessages = true;
         for (int i = 0; i < pendingMessages.size(); i++) {
             fireOnMessage(pendingMessages.get(i));
         }
