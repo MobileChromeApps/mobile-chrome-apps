@@ -47,7 +47,9 @@ var PLUGIN_MAP = {
   'videoCapture': ['org.chromium.videocapture'],
 };
 
-var STALE_PLUGINS = [];
+var STALE_PLUGINS = [
+  'org.apache.cordova.engine.crosswalk'
+];
 
 var ENGINE_MAP = {
   'crosswalk': ['org.crosswalk.engine'],
