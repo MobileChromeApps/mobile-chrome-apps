@@ -48,7 +48,7 @@
     "uuids": [
       "C9D3", // UUID for the ble-test app
       "180D", // UUID for heart rate simulator
-      "00001101-0000-1000-8000-00805f9b34fb" // UUID for the Jade robot
+      "00001101-0000-1000-8000-00805f9b34fb", // UUID for the Jade robot
 
       "F0000000-0451-4000-B000-000000000000", // TI SensorTag base
 
