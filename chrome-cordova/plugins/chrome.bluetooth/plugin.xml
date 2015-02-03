@@ -14,7 +14,6 @@
   <name>Chrome Apps Bluetooth API</name>
 
   <dependency id="org.chromium.common" />
-  <dependency id="android.support.v4" />
 
   <js-module src="bluetooth.js" name="bluetooth">
     <clobbers target="chrome.bluetooth" />

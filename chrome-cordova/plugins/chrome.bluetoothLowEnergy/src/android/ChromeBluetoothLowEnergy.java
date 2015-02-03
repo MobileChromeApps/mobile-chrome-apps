@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.os.Build;
 
@@ -259,7 +258,7 @@ public class ChromeBluetoothLowEnergy extends CordovaPlugin {
     return multipartInfo;
   }
 
-  @Nullable
+  // @Nullable
   private ChromeBluetoothLowEnergyPeripheral getPeripheralByDeviceAddress(String deviceAddress) {
     ChromeBluetoothLowEnergyPeripheral peripheral = knownPeripheral.get(deviceAddress);
 

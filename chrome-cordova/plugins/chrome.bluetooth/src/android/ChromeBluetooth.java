@@ -40,7 +40,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.ParcelUuid;
-import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
 
@@ -117,12 +116,12 @@ public class ChromeBluetooth extends CordovaPlugin {
     }
   }
 
-  @Nullable
+  // @Nullable
   ScanResult getKnownLeScanResults(String deviceAddress) {
     return knownLeScanResults.get(deviceAddress);
   }
 
-  @Nullable
+  // @Nullable
   BluetoothDevice getKnownBluetoothDevice(String deviceAddress) {
     return knownBluetoothDevices.get(deviceAddress);
   }
