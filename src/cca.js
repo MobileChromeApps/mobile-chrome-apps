@@ -66,14 +66,40 @@ function main() {
     command = 'help';
   }
 
+  function autoAddPlatforms() {
+    var plats = [];
+    if (process.argv.indexOf('android') != -1 && !fs.existsSync(path.join('platforms', 'android'))) {
+      plats.push('android');
+    }
+    if (process.argv.indexOf('ios') != -1 && !fs.existsSync(path.join('platforms', 'ios'))) {
+      plats.push('ios');
+    }
+    if (plats.length === 0) {
+      return Q();
+    }
+    var argv = require('optimist')
+        .options('link', { type: 'boolean' })
+        .options('verbose', { type: 'boolean', alias: 'd' })
+        .argv;
+    var opts = {
+      link: argv.link,
+      verbose: argv.verbose
+    };
+    return require('./cordova-commands').runCmd(['platform', 'add', plats, opts])
+    .then(require('./write-out-cca-version'));
+  }
+
   function beforeCordovaPrepare() {
-    if (commandLineFlags['skip-upgrade']) {
-      return Q.when();
-    }
-    if (!fs.existsSync(path.join('www', 'manifest.json'))) {
-      return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
-    }
-    return require('./upgrade-project').upgradeProjectIfStale();
+    return autoAddPlatforms()
+    .then(function() {
+      if (commandLineFlags['skip-upgrade']) {
+        return;
+      }
+      if (!fs.existsSync(path.join('www', 'manifest.json'))) {
+        return Q.reject('This is not a cca project (no www/manifest.json file). Perhaps you meant to use the cordova-cli?');
+      }
+      return require('./upgrade-project').upgradeProjectIfStale();
+    });
   }
 
   function forwardCurrentCommandToCordova() {
