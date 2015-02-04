@@ -87,12 +87,6 @@ public class ChromeBluetooth extends CordovaPlugin {
   }
 
   @Override
-  public void onReset() {
-    super.onReset();
-    unregisterAdapterStateReceiver();
-  }
-
-  @Override
   public void onDestroy() {
     super.onDestroy();
     unregisterAdapterStateReceiver();
