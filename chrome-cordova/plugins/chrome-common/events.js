@@ -50,10 +50,8 @@ Event.prototype.fire = function() {
   });
 };
 
-// Same as fire(), but does not block onLaunched().
-// TODO: It would probably be better to fire onLaunched base on whether
-// we got a launcher intent on Android, or application:didFinishLaunchingWithOptions:
-// on iOS.
+// Used by fire(), will trigger events immediately, rather than queuing to
+// happen after startup/initialization
 Event.prototype._fireInternal = function() {
   for (var i = 0; i < this.listeners.length; i++) {
     this.listeners[i].apply(this, arguments);

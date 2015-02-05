@@ -77,7 +77,7 @@ public class ChromeGcm extends CordovaPlugin {
             try {
                 String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
                 Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
-                activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
                 activityIntent.putExtra(PAYLOAD_LABEL, "dummy");
                 context.startActivity(activityIntent);
             } catch (Exception e) {

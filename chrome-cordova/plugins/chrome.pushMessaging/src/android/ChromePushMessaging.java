@@ -27,12 +27,12 @@ import java.util.concurrent.ExecutorService;
 public class ChromePushMessaging extends CordovaPlugin {
     private static final String LOG_TAG = "ChromePushMessaging";
     private static final String PAYLOAD_LABEL = "payload";
-    
+
     private static CordovaWebView webView;
     private static boolean safeToFireMessages = false;
     private static List<String> pendingMessages = new ArrayList<String>();
     private ExecutorService executorService;
-    
+
     @Override
     public void initialize(final CordovaInterface cordova, CordovaWebView webView) {
         safeToFireMessages = false;
@@ -55,7 +55,7 @@ public class ChromePushMessaging extends CordovaPlugin {
         }
         return false;
     }
-    
+
     static public void handlePushMessage(Context context, Intent intent) {
         JSONObject payload = new JSONObject();
         try {
@@ -71,7 +71,7 @@ public class ChromePushMessaging extends CordovaPlugin {
             try {
                 String activityClass = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).activities[0].name;
                 Intent activityIntent = Intent.makeMainActivity(new ComponentName(context, activityClass));
-                activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FROM_BACKGROUND);
                 activityIntent.putExtra(PAYLOAD_LABEL, payloadString);
                 pendingMessages.add(payloadString);
                 context.startActivity(activityIntent);
@@ -85,11 +85,11 @@ public class ChromePushMessaging extends CordovaPlugin {
         }
         fireOnMessage(payloadString);
     }
-    
+
     static private void fireOnMessage(String payload) {
         webView.sendJavascript("chrome.pushMessaging.onMessage.fire({subchannelId:0, payload:'" + payload + "'})");
     }
-    
+
     private void fireStartupMessages(final CordovaArgs args, final CallbackContext callbackContext) {
         safeToFireMessages = true;
         for (int i = 0; i < pendingMessages.size(); i++) {
@@ -97,7 +97,7 @@ public class ChromePushMessaging extends CordovaPlugin {
         }
         pendingMessages.clear();
     }
-    
+
     private void getRegistrationId(final CordovaArgs args, final CallbackContext callbackContext) {
         executorService.execute(new Runnable() {
             @Override

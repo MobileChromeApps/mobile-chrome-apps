@@ -121,8 +121,13 @@ function fireLifecycleEvents(manifestJson) {
       // If launching for UI, fire onLaunched event
       var exec = require("cordova/exec");
       exec(function(data) {
-        // lifeCycleEventFuncs would determine if app is started from an alarm, notification, etc.
-        if (data && !exports.lifeCycleEventFuncs.length) {
+        // Native side will return flag indicating if app was launched for UI,
+        // vs started by some background event (e.g. alarm, notification, .etc)
+        //  - This means that onLaunched could be fired *and* life cycle funcs
+        //    could be executed as well
+        //  - Better handles race conditions where native events from plugins
+        //    are sent before this initialization is complete
+        if (data) {
           app_runtime.onLaunched._fireInternal();
           // Log a warning if no window is created after a bit of a grace period.
           setTimeout(function() {
