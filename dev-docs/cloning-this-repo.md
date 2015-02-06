@@ -3,20 +3,27 @@
 ```
 git clone --recursive https://github.com/MobileChromeApps/mobile-chrome-apps
 cd mobile-chrome-apps
-npm install
-npm link  # optional step
+npm link cca-manifest-logic/
+npm link
 ```
-
-The optional `npm link` step will add your link your global `cca` install to this local checkout.
 
 ## Update source to pick up latest changes
 
+Preferrably, just run:
+
 ```
-cd mobile-chrome-apps
+./dev-bin/git-up.js
+```
+
+But if you cannot get that to work, you can just manually:
+
+```
 git pull
 git submodule update --init --recursive
 npm install
 ```
+
+Note: the `git-up.js` script takes care of a lot more.
 
 ## Resetting to the latest released `cca` version from npm
 
