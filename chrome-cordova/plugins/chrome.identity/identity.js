@@ -44,7 +44,7 @@ exports.getAuthToken = function(details, callback) {
 
     function win(tokenData) {
         callback(tokenData.token, tokenData.account);
-    };
+    }
 
     // If we failed because Google Play Services is unavailable, revert to the web auth flow.
     // On iOS, the Google+ Auth library takes care of web-flow fallback, so our In-App-Browser
@@ -55,10 +55,10 @@ exports.getAuthToken = function(details, callback) {
             getAuthTokenViaWeb(details, callback, oAuthDetails, scopes);
         } else {
             // toString for compatibility with older callbackWithError.
-            var errObj = {message:ERROR_MESSAGES[errorCode], code: errorCode, toString:function() {return this.message}};
+            var errObj = {message:ERROR_MESSAGES[errorCode], code: errorCode, toString:function() {return this.message;}};
             callbackWithError(errObj, callback);
         }
-    };
+    }
 
     // Use the native implementation for logging into Google accounts.
     exec(win, fail, 'ChromeIdentity', 'getAuthToken', [!!details.interactive, oAuthDetails.client_id, scopes, details.accountHint]);
@@ -133,7 +133,7 @@ exports.removeCachedAuthToken = function(details, callback) {
 
     // Invalidate the token natively.
     exec(callback, null, 'ChromeIdentity', 'removeCachedAuthToken', [details.token]);
-}
+};
 
 exports.revokeAuthToken = function(details, callback) {
     // If a token has been passed, revoke it and remove it from the cache.
@@ -157,7 +157,7 @@ exports.revokeAuthToken = function(details, callback) {
     } else {
         return callbackWithError('No token to revoke.', callback);
     }
-}
+};
 
 exports.launchWebAuthFlow = function(details, callback) {
     if (typeof callback !== 'function') {
@@ -181,11 +181,11 @@ exports.getProfileUserInfo = function(callback) {
 
     // TODO: Implement.
     callback(/* email */ '', /* id */ '');
-}
+};
 
 exports.getAccounts = function(callback) {
     exec(callback, null, 'ChromeIdentity', 'getAccounts', []);
-}
+};
 
 function getAllParametersFromUrl(url, startString, endString) {
     if (typeof url !== 'undefined' && typeof startString !== 'undefined')
@@ -215,7 +215,7 @@ function launchInAppBrowser(authURL, interactive, callback) {
         var newLoc = event.url;
 
         // When the location address starts with our redirect URL, we're done.
-        if (newLoc.indexOf(exports.getRedirectURL()) == 0) {
+        if (newLoc.indexOf(exports.getRedirectURL()) === 0) {
             success = true;
         }
 
