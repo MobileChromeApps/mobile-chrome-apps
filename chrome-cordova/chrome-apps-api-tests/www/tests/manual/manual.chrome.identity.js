@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/* global logger */
+
 var CALENDAR_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 
 registerManualTests('chrome.identity', function(rootEl, addButton) {
@@ -28,6 +30,12 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
     };
 
     chrome.identity.getAuthToken({ interactive: true, scopes: scopes }, onGetAuthToken);
+  }
+
+  function getWebClientId() {
+    var manifest = chrome.runtime.getManifest();
+    var webClientId = manifest && manifest.web && manifest.web.oauth2 && manifest.web.oauth2.client_id;
+    return webClientId;
   }
 
   addButton('Get accounts', function() {
@@ -207,7 +215,7 @@ registerManualTests('chrome.identity', function(rootEl, addButton) {
 
     var webAuthDetails = {
       interactive: true,
-      url: 'https://accounts.google.com/o/oauth2/auth?client_id=545713885199-pq7ffbv68ktqpv6qlg0nu62dh0f3n1f8.apps.googleusercontent.com&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com/auth/userinfo.profile'
+      url: 'https://accounts.google.com/o/oauth2/auth?client_id=' + getWebClientId() + '&redirect_uri=' + chrome.identity.getRedirectURL() + '&response_type=token&scope=https%3A%2F%2Fwww.googleapis.com/auth/userinfo.profile'
     };
 
     var onLaunchWebAuthFlowSuccess = function(url) {
