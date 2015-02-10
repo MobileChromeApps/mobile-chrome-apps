@@ -33,6 +33,20 @@ function createBgChrome() {
   };
 }
 
+function restoreWindowOpen(context) {
+  var inAppBrowser;
+  try {
+      inAppBrowser = require('org.apache.cordova.inappbrowser.inappbrowser');
+  } catch(e) {}
+
+  if (!inAppBrowser) {
+    // InAppBrowser plugin is not available, so no restore needed
+    return;
+  }
+
+  delete context.open;
+}
+
 exports.boot = function() {
   // Add a deviceready listener that initializes the Chrome wrapper.
   channel.onCordovaReady.subscribe(function() {
@@ -40,6 +54,10 @@ exports.boot = function() {
     // We do this delay so that plugins have a chance to initialize using the bridge before we load the chrome app background scripts/event page
     var channelsToWaitFor = channel.deviceReadyChannelsArray.filter(function(c) { return c.type !== 'onDOMContentLoaded'; });
     channel.join(function() {
+
+      // Undo the clobber of window.open by InAppBrowser
+      restoreWindowOpen(exports.fgWindow);
+
       // Assigning innerHTML here has the side-effect of removing the
       // chrome-content-loaded script tag. Removing it is required so that the
       // page re-writting logic does not try and re-evaluate it.
@@ -59,6 +77,9 @@ exports.bgInit = function(bgWnd) {
 
   bgWnd.navigator = navigator;
   require('cordova/modulemapper').mapModules(bgWnd.window);
+
+  // Undo the clobber of window.open by InAppBrowser
+  restoreWindowOpen(exports.bgWindow);
 
   // HACK: Make the bg page use the foreground windows possibly polyfill'ed XHR
   // This breaks relative URLs if fgWnd and bgWnd are at different paths.
