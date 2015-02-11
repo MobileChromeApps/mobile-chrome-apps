@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-sockets-tcp](MobileChromeApps/cordova-plugin-chrome-apps-sockets-tcp)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-sockets-tcp](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-sockets-tcp)

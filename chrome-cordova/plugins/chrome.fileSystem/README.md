@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-fileSystem](MobileChromeApps/cordova-plugin-chrome-apps-fileSystem)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-fileSystem](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-fileSystem)

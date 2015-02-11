@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-network](MobileChromeApps/cordova-plugin-chrome-apps-system-network)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-network](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-network)

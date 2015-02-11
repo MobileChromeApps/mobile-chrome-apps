@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-gcm](MobileChromeApps/cordova-plugin-chrome-apps-gcm)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-gcm](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-gcm)

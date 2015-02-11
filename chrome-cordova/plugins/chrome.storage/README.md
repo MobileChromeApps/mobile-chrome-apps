@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-storage](MobileChromeApps/cordova-plugin-chrome-apps-storage)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-storage](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-storage)

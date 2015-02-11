@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-idle](MobileChromeApps/cordova-plugin-chrome-apps-idle)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-idle](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-idle)

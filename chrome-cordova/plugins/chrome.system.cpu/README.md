@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-cpu](MobileChromeApps/cordova-plugin-chrome-apps-system-cpu)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-cpu](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-cpu)

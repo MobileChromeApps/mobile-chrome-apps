@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-display](MobileChromeApps/cordova-plugin-chrome-apps-system-display)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-display](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-display)

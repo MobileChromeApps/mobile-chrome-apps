@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-memory](MobileChromeApps/cordova-plugin-chrome-apps-system-memory)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-system-memory](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-memory)

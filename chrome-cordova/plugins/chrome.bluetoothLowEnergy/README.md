@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bluetoothLowEnergy](MobileChromeApps/cordova-plugin-chrome-apps-bluetoothLowEnergy)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bluetoothLowEnergy](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-bluetoothLowEnergy)

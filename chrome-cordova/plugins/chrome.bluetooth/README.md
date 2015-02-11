@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bluetooth](MobileChromeApps/cordova-plugin-chrome-apps-bluetooth)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bluetooth](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-bluetooth)

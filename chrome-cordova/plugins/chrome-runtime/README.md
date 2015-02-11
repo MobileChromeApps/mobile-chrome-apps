@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-runtime](MobileChromeApps/cordova-plugin-chrome-apps-runtime)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-runtime](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-runtime)

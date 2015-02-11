@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem](MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem)

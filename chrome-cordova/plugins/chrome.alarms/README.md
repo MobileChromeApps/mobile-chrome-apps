@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-alarms](MobileChromeApps/cordova-plugin-chrome-apps-alarms)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-alarms](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-alarms)

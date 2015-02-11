@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-pushMessaging](MobileChromeApps/cordova-plugin-chrome-apps-pushMessaging)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-pushMessaging](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-pushMessaging)

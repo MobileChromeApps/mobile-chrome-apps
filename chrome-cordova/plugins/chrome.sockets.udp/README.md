@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-sockets-udp](MobileChromeApps/cordova-plugin-chrome-apps-sockets-udp)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-sockets-udp](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-sockets-udp)

@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-i18n](MobileChromeApps/cordova-plugin-chrome-apps-i18n)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-i18n](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-i18n)

@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-navigation](MobileChromeApps/cordova-plugin-chrome-apps-navigation)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-navigation](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-navigation)

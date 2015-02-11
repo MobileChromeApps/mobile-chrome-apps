@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-common](MobileChromeApps/cordova-plugin-chrome-apps-common)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-common](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-common)

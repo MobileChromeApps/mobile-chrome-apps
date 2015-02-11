@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bootstrap](MobileChromeApps/cordova-plugin-chrome-apps-bootstrap)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-bootstrap](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-bootstrap)

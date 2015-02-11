@@ -1,1 +1,1 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-notifications](MobileChromeApps/cordova-plugin-chrome-apps-notifications)
+Moved to [MobileChromeApps/cordova-plugin-chrome-apps-notifications](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-notifications)
