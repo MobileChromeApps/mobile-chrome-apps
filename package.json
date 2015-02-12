@@ -39,6 +39,7 @@
     "semver": "^4.1.0",
     "shelljs": "^0.3.0",
     "underscore": "^1.7.0",
+    "update-notifier": "^0.3.0",
     "xmldom": "^0.1.19"
   },
   "files": [

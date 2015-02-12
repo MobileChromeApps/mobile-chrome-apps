@@ -24,6 +24,7 @@ var path = require('path');
 
 // Third-party modules.
 var Q = require('q');
+var updateNotifier = require('update-notifier');
 
 // Local modules.
 var utils = require('./utils');
@@ -39,6 +40,13 @@ var hooks = require('./hooks');
 function main() {
   var commandLineFlags = require('./parse-command-line')();
   utils.exit.pause_on_exit = commandLineFlags.pause_on_exit;
+
+  // TODO: Should we support an opt out `--no-update-notifier`?
+  var pkg = require('../package.json');
+  var notifier = updateNotifier({
+    pkg: pkg,
+    updateCheckInterval: 1000 * 60 * 60 * 24, // Daily
+  }).notify();
 
   var command = commandLineFlags._[0];
   var packageVersion = require('../package').version;
