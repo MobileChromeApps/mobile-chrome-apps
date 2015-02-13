@@ -86,10 +86,7 @@ function cloneOrUpdateGitRepo(repo, dir) {
   if (!fs.existsSync(dir)) {
     return spawn('git', ['clone', '--recursive', repo, dir]);
   }
-  return Q.when()
-    .then(function() {
-      return spawn('git', ['-C', dir, 'pull', '--rebase']);
-    })
+  return spawn('git', ['-C', dir, 'pull', '--rebase']);
 }
 
 function updateAllPlugins() {
@@ -128,11 +125,9 @@ function updateAllPlugins() {
   shelljs.mkdir('-p', ccaPluginsRoot);
 
   return plugins.map(function(plugin) {
-    // TODO: if we remove this factory they will run in parallel instead
-    //return function() {
-      console.log('## Updating ' + plugin);
-      return cloneOrUpdateGitRepo('git@github.com:MobileChromeApps/' + plugin + '.git', path.join(ccaPluginsRoot, plugin));
-    //}
+    // Run in parallel on purpose
+    console.log('## Updating ' + plugin);
+    return cloneOrUpdateGitRepo('git@github.com:MobileChromeApps/' + plugin + '.git', path.join(ccaPluginsRoot, plugin));
   }).reduce(Q.when, Q.when());
 }
 
