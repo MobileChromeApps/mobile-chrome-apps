@@ -10,6 +10,7 @@ var DEFAULT_PLUGINS = [
     'org.apache.cordova.inappbrowser',
     'org.apache.cordova.network-information',
     'org.apache.cordova.statusbar',
+    'org.apache.cordova.url-policy',
     'org.chromium.common',
     'org.chromium.runtime',
     'org.chromium.storage',
