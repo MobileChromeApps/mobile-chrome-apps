@@ -23,15 +23,20 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
 
     // TODO: we should make these maps of viewId -> pluginInstance in order to support
     // multiple webviews.
-    private CordovaPlugin pluginInstance;
+    private TPlugin pluginInstance;
     private CallbackContext messageChannel;
     private List<BackgroundEventInfo> pendingEvents = new ArrayList<BackgroundEventInfo>();
 
     public void handleBroadcast(Context context, Intent intent) {
         BackgroundEventInfo event = mapBroadcast(context, intent);
 
+        if (event == null) {
+            // No corresponding event generated, meaning the broadcast is to be ignored
+            return;
+        }
+
         if (pluginInstance != null && messageChannel != null) {
-            Log.w(LOG_TAG, "Firing notification to already running webview");
+            Log.d(LOG_TAG, "Firing notification to already running webview");
             sendEventMessage(event);
         } else {
             pendingEvents.add(event);
@@ -72,14 +77,18 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
     }
 */
 
-    public BackgroundEventInfo mapBroadcast(Context context, Intent intent) {
+    protected BackgroundEventInfo mapBroadcast(Context context, Intent intent) {
         return new BackgroundEventInfo(intent.getAction());
     }
 
-    public void mapEventToMessage(BackgroundEventInfo event, JSONObject obj) throws JSONException {
+    protected void mapEventToMessage(BackgroundEventInfo event, JSONObject message) throws JSONException {
         if (event.action != null) {
-            obj.put("action", event.action);
+            message.put("action", event.action);
         }
+    }
+
+    protected TPlugin getCurrentPlugin() {
+        return pluginInstance;
     }
 
     private void firePendingEvents() {
@@ -90,13 +99,13 @@ public class BackgroundEventHandler<TPlugin extends CordovaPlugin> {
     }
 
     private void sendEventMessage(BackgroundEventInfo event) {
-        JSONObject obj = new JSONObject();
+        JSONObject message = new JSONObject();
         try {
-            mapEventToMessage(event, obj);
+            mapEventToMessage(event, message);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Failed to create background event message", e);
         }
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, obj);
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, message);
         pluginResult.setKeepCallback(true);
         messageChannel.sendPluginResult(pluginResult);
     }
