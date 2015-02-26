@@ -36,18 +36,16 @@ chrome.notifications.onClosed.addListener(function(notificationId, byUser) {
 chrome.notifications.onClicked.addListener(function(notificationId) {
   logger('onClicked fired. notificationId = ' + notificationId);
   chrome.notifications.clear(notificationId, function(wasCleared) {});
-  logger('Showing window after 2 second');
-  setTimeout(function() {
-    var wnd = chrome.app.window.getAll()[0];
-    if (wnd) {
-      wnd.show();
-    } else {
-      logger('Creating Ui Window & showing');
-      createUiWindow(function(appWnd) {
-        // Todo: figure out how to navigate to notifications manual test page.
-      });
-    }
-  }, 2000);
+  logger('Showing window.');
+  var wnd = chrome.app.window.getAll()[0];
+  if (wnd) {
+    wnd.show();
+  } else {
+    logger('Creating Ui Window & showing');
+    createUiWindow(function(appWnd) {
+      // Todo: figure out how to navigate to notifications manual test page.
+    });
+  }
 });
 
 chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
