@@ -9,25 +9,20 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
 import org.apache.cordova.AndroidWebView;
-import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaActivity;
-import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
-import org.apache.cordova.LinearLayoutSoftKeyboardDetect;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class BackgroundActivity extends CordovaActivity
 {
@@ -39,7 +34,6 @@ public class BackgroundActivity extends CordovaActivity
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d(LOG_TAG, "Background Activity onCreate()");
         moveTaskToBack(true);
         delegatingCordovaInterface = new DelegatingCordovaInterface(this);
         activityInstance = this;
@@ -58,11 +52,26 @@ public class BackgroundActivity extends CordovaActivity
     protected CordovaWebView makeWebView() {
         String r = preferences.getString("webView", null);
         CordovaWebView ret = null;
+        Context webViewContext = this.getApplicationContext();
         if (r != null) {
             try {
                 Class<?> webViewClass = Class.forName(r);
-                Constructor<?> constructor = webViewClass.getConstructor(Context.class);
-                ret = (CordovaWebView) constructor.newInstance((Context)this.getApplicationContext());
+
+                // Look for a constructor that takes separate Context and Activity parameters
+                //  - Allows for use of application context, which is definitely not an Activity,
+                //    as expected by some web view implementations (i.e. Crosswalk)
+                Constructor<?> constructor;
+                Object[] constructArgs;
+                try {
+                    constructor = webViewClass.getConstructor(Context.class, Activity.class);
+                    constructArgs = new Object[] { webViewContext, this };
+                } catch (NoSuchMethodException e) {
+                    // No constructor with two separate parameters, so use the usual constructor
+                    // that takes only the Context
+                    constructor = webViewClass.getConstructor(Context.class);
+                    constructArgs = new Object[] { webViewContext };
+                }
+                ret = (CordovaWebView) constructor.newInstance(constructArgs);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             } catch (InstantiationException e) {
@@ -80,7 +89,7 @@ public class BackgroundActivity extends CordovaActivity
 
         if (ret == null) {
             // If all else fails, return a default WebView
-            ret = new AndroidWebView(this);
+            ret = new AndroidWebView(webViewContext);
         }
         ret.init(delegatingCordovaInterface, pluginEntries, internalWhitelist, externalWhitelist, preferences);
         return ret;
@@ -143,6 +152,7 @@ public class BackgroundActivity extends CordovaActivity
         ComponentName foregroundActivityComponent = findMainActivityComponentName(context);
         Intent launchIntent = makeMainActivityIntent(foregroundActivityComponent);
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
         // Use the application context to start this activity
         //  - Using activity.startActivity() doesn't work (error seen in logcat)
         //  - A semi-random activity will be shown instead
@@ -176,6 +186,7 @@ public class BackgroundActivity extends CordovaActivity
                 // Reason for this is that the hosting activity might change during the intent.
                 // Might look at enabling this if there's a real need, but work-around is to just
                 // start the real activity first.
+                Log.e(LOG_TAG, "Attempt to startActivityForResult while app is in background");
                 throw new IllegalStateException("Cannot fire intents while app is backgrounded.");
             }
             underlying.startActivityForResult(command, intent, requestCode);
