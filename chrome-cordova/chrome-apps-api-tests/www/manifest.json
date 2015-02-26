@@ -15,6 +15,7 @@
         "background.js",
         "tests.js",
         "medic.js",
+        "tests/manual/manual.chrome.alarms.js",
         "tests/manual/manual.chrome.app.window.js",
         "tests/manual/manual.chrome.bluetooth.js",
         "tests/manual/manual.chrome.bluetoothLowEnergy.js",
