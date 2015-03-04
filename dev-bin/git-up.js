@@ -127,7 +127,7 @@ function updateAllPlugins() {
   return plugins.map(function(plugin) {
     // Run in parallel on purpose
     console.log('## Updating ' + plugin);
-    return cloneOrUpdateGitRepo('git@github.com:MobileChromeApps/' + plugin + '.git', path.join(ccaPluginsRoot, plugin));
+    return cloneOrUpdateGitRepo('https://github.com/MobileChromeApps/' + plugin + '.git', path.join(ccaPluginsRoot, plugin));
   }).reduce(Q.when, Q.when());
 }
 
