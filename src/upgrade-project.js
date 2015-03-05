@@ -2,7 +2,6 @@ var fs = require('fs');
 var Q = require('q');
 var path = require('path');
 var shelljs = require('shelljs');
-var optimist = require('optimist');
 var __ = require('underscore');
 var utils = require('./utils');
 var cordova = require('cordova');

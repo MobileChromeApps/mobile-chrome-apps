@@ -4,12 +4,9 @@ var path = require('path');
 
 // Third-party modules.
 var et = require('elementtree');
-var shelljs = require('shelljs');
 var Q = require('q');
 
 var utils = require('./utils');
-var cordova = require('cordova');
-var cordovaLib = cordova.cordova_lib;
 
 
 // Returns a promise.

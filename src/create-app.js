@@ -16,7 +16,6 @@ function resolveTilde(string) {
 module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, packageId, appName, flags) {
   var srcAppDir = null;
   var manifest = null;
-  var isGitRepo = fs.existsSync(path.join(__dirname, '..', '.git')); // git vs npm
   var appWasImported = false;
   var manifestDesktopFilename = path.join(destAppDir, 'www', 'manifest.json');
   var manifestMobileFilename = path.join(destAppDir, 'www', 'manifest.mobile.json');

@@ -43,7 +43,7 @@ function main() {
 
   // TODO: Should we support an opt out `--no-update-notifier`?
   var pkg = require('../package.json');
-  var notifier = updateNotifier({
+  updateNotifier({
     pkg: pkg,
     updateCheckInterval: 1000 * 60 * 60 * 24, // Daily
   }).notify();
