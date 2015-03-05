@@ -34,6 +34,20 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     }
     return ret;
   }
+
+  function getOrCreatePlatformNode(name) {
+    var plats = widget.getElementsByTagName('platform');
+    for (var i = 0; i < plats.length; ++i) {
+      if (plats[i].getAttribute('name') == name) {
+        return plats[i];
+      }
+    }
+    var newNode = configXmlDom.createElement('platform');
+    newNode.setAttribute('name', name);
+    widget.appendChild(newNode);
+    return newNode;
+  }
+
   function setOrDeleteAttribute(node, name, value) {
     if (value) {
       node.setAttribute(name, value);
@@ -65,6 +79,38 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     pref.setAttribute('value', value);
     return pref;
   }
+
+  function deleteAllChildren(parentNode, nodeName) {
+    nodeName = nodeName.toUpperCase();
+    for (var i = 0; i < parentNode.childNodes.length; ) {
+      if (parentNode.childNodes[i].nodeName.toUpperCase() == nodeName) {
+        parentNode.removeChild(parentNode.childNodes[i]);
+      } else {
+        i++;
+      }
+    }
+    if (parentNode.childNodes.length === 0) {
+      parentNode.parentNode.removeChild(parentNode);
+    }
+  }
+
+  function createIconNode(parentNode, src, size) {
+    var newNode = configXmlDom.createElement('icon');
+    newNode.setAttribute('src', src);
+    if (size) {
+      newNode.setAttribute('width', size);
+    }
+    parentNode.appendChild(newNode);
+  }
+
+  function findLargestNumericKey(obj) {
+    var bestSize = '0';
+    for (var size in obj) {
+      bestSize = +size > +bestSize ? size : bestSize;
+    }
+    return bestSize;
+  }
+
 
   var ver = manifest.version || '0.0.1';
   if (!/^\d+(\.\d+){0,3}$/.test(ver)) {
@@ -114,6 +160,32 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     tag.setAttribute('origin', pattern);
     widget.appendChild(tag);
   });
+
+  // If there are any icons, clear out all existing <icon>s
+  if (manifest.icons || (manifest.android && manifest.android.icons) || (manifest.ios && manifest.ios.icons)) {
+    deleteAllChildren(widget, 'icon');
+    deleteAllChildren(getOrCreatePlatformNode('android'), 'icon');
+    deleteAllChildren(getOrCreatePlatformNode('ios'), 'icon');
+  }
+
+  function createIconTags(platform) {
+    var parentNode = getOrCreatePlatformNode(platform);
+    var iconMap = manifest[platform] && manifest[platform].icons || manifest.icons;
+    if (!iconMap) {
+      return;
+    }
+    var iconSizes = Object.keys(iconMap);
+    if (iconSizes.length) {
+      var defaultIconSrc = iconMap[findLargestNumericKey(iconMap)];
+      createIconNode(parentNode, 'www/' + defaultIconSrc, null);
+    }
+    iconSizes.forEach(function(size) {
+      createIconNode(parentNode, 'www/' + iconMap[size], size);
+    });
+  }
+
+  createIconTags('android');
+  createIconTags('ios');
 };
 
 // Taken from cordova-lib/src/cordova/metadata/android_parser.js

@@ -18,10 +18,10 @@ For Android, these sizes are needed:
 
 For iOS apps, the required sizes differ depending on whether you support 
 [iOS 6](https://developer.apple.com/library/ios/qa/qa1686/_index.html) vs 
-[iOS 7](https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/IconMatrix.html). The minimum number of icons required are:
+[iOS 7+](https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/IconMatrix.html). The minimum number of icons required are:
 
 * **iOS 6**: 57px, 72px, 114px, 144px
-* **iOS 7**: 72px, 120px, 152px
+* **iOS 7+**: 76px, 120px, 152px, 180px
 
 A complete icon list would look like this in your `manifest.json` file:
 
@@ -38,6 +38,20 @@ A complete icon list would look like this in your `manifest.json` file:
       "128": "assets/icons/icon128.png",
       "144": "assets/icons/icon144.png",
       "152": "assets/icons/icon152.png"
+      "180": "assets/icons/icon180.png"
+    }
+
+To have platform-specific icons, add the key to your `manifest.mobile.json`:
+
+    "android": {
+        "icons": {
+            ...
+        }
+    },
+    "ios":
+        "icons": {
+            ...
+        }
     }
 
 The icons will be copied to the appropriate places for each platform every time you run `cca prepare`.
