@@ -17,7 +17,7 @@
        under the License.
 */
 
-package org.apache.cordova.urlpolicy;
+package org.apache.cordova.whitelist;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.ConfigXmlParser;
@@ -27,25 +27,25 @@ import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
 
-public class UrlPolicyPlugin extends CordovaPlugin {
-    private static final String LOG_TAG = "UrlPolicyPlugin";
+public class WhitelistPlugin extends CordovaPlugin {
+    private static final String LOG_TAG = "WhitelistPlugin";
     private Whitelist allowedNavigations;
     private Whitelist allowedIntents;
     private Whitelist allowedRequests;
 
     // Used when instantiated via reflection by PluginManager
-    public UrlPolicyPlugin() {
+    public WhitelistPlugin() {
     }
     // These can be used by embedders to allow Java-configuration of whitelists.
-    public UrlPolicyPlugin(Context context) {
+    public WhitelistPlugin(Context context) {
         this(new Whitelist(), new Whitelist(), null);
         new CustomConfigXmlParser().parse(context);
     }
-    public UrlPolicyPlugin(XmlResourceParser xmlResourceParser) {
+    public WhitelistPlugin(XmlResourceParser xmlResourceParser) {
         this(new Whitelist(), new Whitelist(), null);
         new CustomConfigXmlParser().parse(xmlResourceParser);
     }
-    public UrlPolicyPlugin(Whitelist allowedNavigations, Whitelist allowedIntents, Whitelist allowedRequests) {
+    public WhitelistPlugin(Whitelist allowedNavigations, Whitelist allowedIntents, Whitelist allowedRequests) {
         if (allowedRequests == null) {
             allowedRequests = new Whitelist();
             allowedRequests.addWhiteListEntry("file:///*", false);

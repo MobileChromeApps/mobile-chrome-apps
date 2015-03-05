@@ -1,4 +1,4 @@
-# cordova-plugin-url-policy
+# cordova-plugin-whitelist
 
 This plugin implements a whitelist policy for navigating the application webview on Cordova 4.0
 
@@ -42,6 +42,10 @@ This whitelist does not apply to plugins, only hyperlinks and calls to `window.o
 
 In `config.xml`, add `<allow-intent>` tags, like this:
 
+    <!-- Allow links to web pages to open in a browser -->
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+
     <!-- Allow links to example.com to open in a browser -->
     <allow-intent href="http://example.com/*" />
 
@@ -65,7 +69,8 @@ In `config.xml`, add `<allow-intent>` tags, like this:
 ## Network Request Whitelist
 Controls which network requests (images, XHRs, etc) are allowed to be made.
 
-Note: Please use a Content Security Policy (see below) instead (or also), since it is more secure.  This whitelist is mostly historical for webviews which do not support CSP.
+You should use a Content Security Policy (see below) as well since this whitelist is not
+able to block all requests on newer versions of Android (e.g. Websocket).
 
 By default, only requests to `file://` URLs are allowed.
 
