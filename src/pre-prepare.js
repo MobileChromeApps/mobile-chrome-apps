@@ -130,6 +130,19 @@ module.exports = exports = function prePrepareCommand(context) {
       };
       var cmds = [];
       if (missingPlugins.length) {
+        // Pin major versions of plugins that are tied to cca hooks
+        var idx = missingPlugins.indexOf('org.chromium.navigation');
+        if (idx != -1) {
+          missingPlugins[idx] = missingPlugins[idx] + '@1';
+        }
+        idx = missingPlugins.indexOf('org.chromium.i18n');
+        if (idx != -1) {
+          missingPlugins[idx] = missingPlugins[idx] + '@1';
+        }
+        idx = missingPlugins.indexOf('org.chromium.bootstrap');
+        if (idx != -1) {
+          missingPlugins[idx] = missingPlugins[idx] + '@2';
+        }
         cmds.push(['plugin', 'add', missingPlugins, opts]);
       }
       if (excessPlugins.length) {
