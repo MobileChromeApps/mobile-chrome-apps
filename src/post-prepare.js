@@ -28,6 +28,36 @@ module.exports = exports = function postPrepareCommand(opts) {
   return p;
 };
 
+function createCspTag(manifest, platform) {
+  // Allow apps to define their own CSP.
+  if (manifest.csp) {
+    return manifest.csp;
+  }
+  var defaultSrc = 'file: data: chrome-extension:';
+  if (platform == 'ios') {
+    defaultSrc += ' gap:';
+  } else if (platform == 'android') {
+    // Required for TalkBack
+    defaultSrc += ' https://ssl.gstatic.com/accessibility/javascript/android/';
+  }
+  var strictCsp = manifest.strictCsp !== false;
+  if (!strictCsp) {
+    defaultSrc += " 'unsafe-inline' 'unsafe-eval'";
+  }
+  var cspMetaContent = 'default-src ' + defaultSrc + ';';
+  cspMetaContent += ' connect-src *; media-src *;';
+  if (strictCsp) {
+    cspMetaContent += ' style-src ' + defaultSrc + " 'unsafe-inline';";
+  }
+  return '<meta http-equiv="Content-Security-Policy" content="' + cspMetaContent + '">';
+}
+
+function injectCsp(htmlPath, cspTag) {
+  var html = fs.readFileSync(htmlPath, 'utf8');
+  html = html.replace(/<meta.*Content-Security.*>/, cspTag);
+  fs.writeFileSync(htmlPath, html);
+}
+
 // Internal function called potentially multiple times to cover all platforms.
 function postPrepareInternal(platform) {
   var root = utils.assetDirForPlatform(platform);
@@ -65,24 +95,28 @@ function postPrepareInternal(platform) {
   return promise.then(function() {
     return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
-    return Q.ninvoke(fs, 'writeFile', path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4))
-    .then(function() {
-      if (platform === 'android' && manifest) {
-        // Write manifest.short_name as launcher_name in Android strings.xml
-        if (manifest.short_name) {
-          var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
-          var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
-          strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
-          fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
-        }
+    // Write merged manifest.json
+    fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4));
+    // Write CSP tag
+    var cspTag = createCspTag(manifest, platform);
+    injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromeapp.html'), cspTag);
+    injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromebgpage.html'), cspTag);
 
-        // Update Android Theme to Translucent
-        var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-        var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-        var theme = manifest.androidTheme || "@android:style/Theme.Translucent";
-        androidManifest.find('./application/activity').attrib["android:theme"] = theme;
-        fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+    if (platform === 'android' && manifest) {
+      // Write manifest.short_name as launcher_name in Android strings.xml
+      if (manifest.short_name) {
+        var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
+        var strings = et.parse(fs.readFileSync(stringsPath, 'utf-8'));
+        strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
+        fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
       }
-    });
+
+      // Update Android Theme to Translucent
+      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
+      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
+      var theme = manifest.androidTheme || "@android:style/Theme.Translucent";
+      androidManifest.find('./application/activity').attrib["android:theme"] = theme;
+      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
+    }
   });
 }
