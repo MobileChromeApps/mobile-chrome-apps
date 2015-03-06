@@ -67,12 +67,9 @@ In `config.xml`, add `<allow-intent>` tags, like this:
     <allow-intent href="*" />
 
 ## Network Request Whitelist
-Controls which network requests (images, XHRs, etc) are allowed to be made.
+Controls which network requests (images, XHRs, etc) are allowed to be made (via cordova native hooks).
 
-You should use a Content Security Policy (see below) as well since this whitelist is not
-able to block all requests on newer versions of Android (e.g. Websocket).
-
-By default, only requests to `file://` URLs are allowed.
+Note: We suggest you use a Content Security Policy (see below), which is more secure.  This whitelist is mostly historical for webviews which do not support CSP.
 
 In `config.xml`, add `<access>` tags, like this:
 
@@ -92,13 +89,16 @@ In `config.xml`, add `<access>` tags, like this:
     <!-- Don't block any requests -->
     <access origin="*" />
 
-### Content Security Policy
-On Android and iOS, the network whitelist is not able to filter all types of requests (e.g.
-`<video>` & WebSockets are not blocked). So, in addition to the whitelist,
-you should use a [Content Security Policy](http://content-security-policy.com/) `<meta>` tag
-on all of your pages.
+Without any `<access>` tags, only requests to `file://` URLs are allowed. However, the default Cordova application includes `<access origin="*">` by default.
 
-On Android, support for CSP within the system webview starts with KitKat.
+Quirk: Android also allows requests to https://ssl.gstatic.com/accessibility/javascript/android/ by default, since this is required for TalkBack to function properly.
+
+### Content Security Policy
+Controls which network requests (images, XHRs, etc) are allowed to be made (via webview directly).
+
+On Android and iOS, the network request whitelist (see above) is not able to filter all types of requests (e.g. `<video>` & WebSockets are not blocked). So, in addition to the whitelist, you should use a [Content Security Policy](http://content-security-policy.com/) `<meta>` tag on all of your pages.
+
+On Android, support for CSP within the system webview starts with KitKat (but is available on all versions using Crosswalk WebView).
 
 Here are some example CSP declarations for your `.html` pages:
 
@@ -107,6 +107,9 @@ Here are some example CSP declarations for your `.html` pages:
 
     <!-- Enable all requests, inline styles, and eval() -->
     <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src: 'self' 'unsafe-inline' 'unsafe-eval' "/>
+
+    <!-- Allow requests to https://ssl.gstatic.com/accessibility/javascript/android/ (required for TalkBack on Android) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://ssl.gstatic.com/accessibility/javascript/android/"/>
 
     <!-- Allow XHRs via https only -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:"/>
