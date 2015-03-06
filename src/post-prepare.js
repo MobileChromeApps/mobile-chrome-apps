@@ -1,8 +1,26 @@
-// System modules.
+/**
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+ */
+
 var fs = require('fs');
 var path = require('path');
 
-// Third-party modules.
+var ccaManifestLogic = require('cca-manifest-logic');
 var et = require('elementtree');
 var Q = require('q');
 
@@ -27,30 +45,6 @@ module.exports = exports = function postPrepareCommand(opts) {
   }
   return p;
 };
-
-function createCspTag(manifest, platform) {
-  // Allow apps to define their own CSP.
-  if (manifest.csp) {
-    return manifest.csp;
-  }
-  var defaultSrc = 'file: data: chrome-extension:';
-  if (platform == 'ios') {
-    defaultSrc += ' gap:';
-  } else if (platform == 'android') {
-    // Required for TalkBack
-    defaultSrc += ' https://ssl.gstatic.com/accessibility/javascript/android/';
-  }
-  var strictCsp = manifest.strictCsp !== false;
-  if (!strictCsp) {
-    defaultSrc += " 'unsafe-inline' 'unsafe-eval'";
-  }
-  var cspMetaContent = 'default-src ' + defaultSrc + ';';
-  cspMetaContent += ' connect-src *; media-src *;';
-  if (strictCsp) {
-    cspMetaContent += ' style-src ' + defaultSrc + " 'unsafe-inline';";
-  }
-  return '<meta http-equiv="Content-Security-Policy" content="' + cspMetaContent + '">';
-}
 
 function injectCsp(htmlPath, cspTag) {
   var html = fs.readFileSync(htmlPath, 'utf8');
@@ -98,7 +92,8 @@ function postPrepareInternal(platform) {
     // Write merged manifest.json
     fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4));
     // Write CSP tag
-    var cspTag = createCspTag(manifest, platform);
+    var cspContent = ccaManifestLogic.analyseManifest.createCspString(manifest, platform)
+    var cspTag = '<meta http-equiv="Content-Security-Policy" content="' + cspContent + '">';
     injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromeapp.html'), cspTag);
     injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromebgpage.html'), cspTag);
 

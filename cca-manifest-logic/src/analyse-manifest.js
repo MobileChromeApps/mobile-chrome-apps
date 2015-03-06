@@ -148,3 +148,29 @@ module.exports = function analyseManifest(manifest, options) {
 
   return ret;
 };
+
+function createCspString(manifest, platform) {
+  // Allow apps to define their own CSP.
+  if (manifest.csp) {
+    return manifest.csp;
+  }
+  var defaultSrc = 'file: data: chrome-extension:';
+  if (platform == 'ios') {
+    defaultSrc += ' gap:';
+  } else if (platform == 'android') {
+    // Required for TalkBack
+    defaultSrc += ' https://ssl.gstatic.com/accessibility/javascript/android/';
+  }
+  var strictCsp = manifest.strictCsp !== false;
+  if (!strictCsp) {
+    defaultSrc += " 'unsafe-inline' 'unsafe-eval'";
+  }
+  var ret = 'default-src ' + defaultSrc + ';';
+  ret += ' connect-src *; media-src *;';
+  if (strictCsp) {
+    ret += ' style-src ' + defaultSrc + " 'unsafe-inline';";
+  }
+  return ret;
+}
+module.exports.createCspString = createCspString;
+
