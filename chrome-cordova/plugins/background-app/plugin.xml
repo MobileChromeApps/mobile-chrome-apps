@@ -21,8 +21,7 @@
   </js-module>
 
   <platform name="android">
-    <source-file src="src/android/BackgroundActivity.java" target-dir="src/org/chromium" />
-    <source-file src="src/android/BackgroundAppMainActivity.java" target-dir="src/org/chromium" />
+    <source-file src="src/android/BackgroundActivityLauncher.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundEventHandler.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundEventInfo.java" target-dir="src/org/chromium" />
     <source-file src="src/android/BackgroundPlugin.java" target-dir="src/org/chromium" />
@@ -32,13 +31,6 @@
         <param name="android-package" value="org.chromium.BackgroundPlugin" />
         <param name="onload" value="true" />
       </feature>
-    </config-file>
-    <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
-          android:excludeFromRecents="true"
-          android:launchMode="singleInstance"
-          android:name="org.chromium.BackgroundActivity"
-          android:theme="@android:style/Theme.NoDisplay" />
     </config-file>
   </platform>
 </plugin>
