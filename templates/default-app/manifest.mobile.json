@@ -1,3 +1,15 @@
 {
-  "packageId": "com.your.company.HelloWorld"
+  "packageId": "com.your.company.HelloWorld",
+  // Android-only overrides here (e.g. icons, name, version)
+  "android": {
+  },
+  // iOS-only overrides here (e.g. icons, name, version)
+  "ios": {
+  },
+  // Uncomment to use system WebView rather than Crosswalk
+  // "webview": "system",
+  // Uncomment to enable use of eval()
+  // "cspUnsafeEval": true,
+  // Uncomment to enable use of inline <script>
+  // "cspUnsafeInline": true,
 }

@@ -102,19 +102,10 @@ module.exports = exports = function createApp(destAppDir, ccaRoot, origDir, pack
   .then(function() {
     // Update default packageId if needed.
     return Q.ninvoke(fs, 'readFile', manifestMobileFilename, { encoding: 'utf-8' }).then(function(manifestMobileData) {
-      var manifestMobile;
-      try {
-        // jshint evil:true
-        manifestMobile = eval('(' + manifestMobileData + ')');
-        // jshint evil:false
-      } catch (e) {
-        console.error(e);
-        return Q.reject('Unable to parse manifest ' + manifestMobileFilename);
-      }
-      if (manifestMobile.packageId === 'com.your.company.HelloWorld') {
-        manifestMobile.packageId = packageId || ('com.your.company.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
-        Q.ninvoke(fs, 'writeFile', manifestMobileFilename, JSON.stringify(manifestMobile, null, 4));
-      }
+      var newPackageId = packageId || ('com.your.company.' + (appName || manifest['name'].replace(/[^a-zA-Z0-9_]/g, '')));
+      // Replace rather than parse so as to maintain comments
+      manifestMobileData = manifestMobileData.replace('com.your.company.HelloWorld', newPackageId);
+      return Q.ninvoke(fs, 'writeFile', manifestMobileFilename, manifestMobileData);
     });
   })
   .then(function() {

@@ -159,15 +159,17 @@ function createCspString(manifest, platform) {
     defaultSrc += ' gap:';
   } else if (platform == 'android') {
     // Required for TalkBack
-    defaultSrc += ' https://ssl.gstatic.com/accessibility/javascript/android/';
+    defaultSrc += ' https://ssl.gstatic.com';
   }
-  var strictCsp = manifest.strictCsp !== false;
-  if (!strictCsp) {
-    defaultSrc += " 'unsafe-inline' 'unsafe-eval'";
+  if (manifest.cspUnsafeEval) {
+    defaultSrc += " 'unsafe-eval'";
+  }
+  if (manifest.cspUnsafeInline) {
+    defaultSrc += " 'unsafe-inline'";
   }
   var ret = 'default-src ' + defaultSrc + ';';
   ret += ' connect-src *; media-src *;';
-  if (strictCsp) {
+  if (!manifest.cspUnsafeInline) {
     ret += ' style-src ' + defaultSrc + " 'unsafe-inline';";
   }
   return ret;
