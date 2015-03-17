@@ -40,7 +40,7 @@ if (( $ANDROID )); then
   cp $SPEC_PATH/debug-key.p12 $DIR_NAME
   cp $SPEC_PATH/android-debug-keys.properties $DIR_NAME
   cd $DIR_NAME
-  $CCA_PATH build android --link
+  $CCA_PATH platform add android --link
   cp $SPEC_PATH/build-extras.gradle platforms/android
   set +x
 fi
