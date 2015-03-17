@@ -92,12 +92,17 @@ function postPrepareInternal(platform) {
     // Write merged manifest.json
     fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4));
     // Write CSP tag
-    var cspContent = ccaManifestLogic.analyseManifest.createCspString(manifest, platform);
-    var cspTag = '<meta http-equiv="Content-Security-Policy" content="' + cspContent + '">';
-    injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromeapp.html'), cspTag);
-    injectCsp(path.join(root, 'plugins', 'org.chromium.bootstrap', 'chromebgpage.html'), cspTag);
+    //  - Check first if plugin is installed yet
+    var bootstrapPluginPath = path.join(root, 'plugins', 'org.chromium.bootstrap');
+    if (fs.existsSync(bootstrapPluginPath)) {
+      console.log('## Inject CSP for ' + platform);
+      var cspContent = ccaManifestLogic.analyseManifest.createCspString(manifest, platform);
+      var cspTag = '<meta http-equiv="Content-Security-Policy" content="' + cspContent + '">';
+      injectCsp(path.join(bootstrapPluginPath, 'chromeapp.html'), cspTag);
+      injectCsp(path.join(bootstrapPluginPath, 'chromebgpage.html'), cspTag);
+    }
 
-    if (platform === 'android' && manifest) {
+    if (platform === 'android') {
       // Write manifest.short_name as launcher_name in Android strings.xml
       if (manifest.short_name) {
         var stringsPath = path.join('platforms', 'android', 'res', 'values', 'strings.xml');
