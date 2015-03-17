@@ -121,6 +121,7 @@ function updateAllPlugins() {
     'cordova-plugin-chrome-apps-system-network',
     'cordova-plugin-chrome-apps-system-storage',
     'cordova-plugin-chrome-apps-videoCapture',
+    'cordova-plugin-background-app',
     ];
   shelljs.mkdir('-p', ccaPluginsRoot);
 
