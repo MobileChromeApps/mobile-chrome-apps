@@ -18,6 +18,7 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * Add `cca build --android-minSdkVersion` flag
 * Add `cca run --list` to list available deploy targets
 * Add `cca run --link` to link rather than copy native source files (useful when developing plugins)
+* `cca push` now works on node 0.12
 * Don't build multi-arch apks when `--webview=system` is used.
 * Added "new version of cca available" logic via `update-notifier` module
 * New publishing instructions on how to use Crosswalk for pre-L Android, and system webview for L+
