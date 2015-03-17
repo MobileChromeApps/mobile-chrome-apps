@@ -38,7 +38,7 @@
 
 * See which have changes:
 
-    cd chrome-cordova/plugins
+    cd ../mobile-chrome-apps-plugins
     ACTIVE=$(for l in *; do ( cd $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); [[ -z $"$LAST_VERSION_BUMP" || -n $(git log -n 1 "$LAST_VERSION_BUMP"..master .) ]] && echo $l); done | xargs echo)
     # See what's changed so you have an idea:
     (for l in $ACTIVE; do (cd $l; echo $l; LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master -- . ; echo); done) | less
@@ -50,8 +50,8 @@
 Vim helper command:
     :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:\%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .
 
-    git commit -am "Updated plugin release notes and version numbers for release."
-    git push origin master
+    for l in $ACTIVE; do ( cd $l; git commit -am "Updated release notes and version for release" ); done
+    for l in $ACTIVE; do ( cd $l; git push origin master ); done
 
 * Publish plugins
 
@@ -60,34 +60,36 @@ Vim helper command:
 * Set plugin versions to -dev
 
     for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E s:"version=\"$v\":version=\"$v2\":" plugin.xml; fi) ; done
-    git commit -am "Added -dev suffix to plugin versions"
-    git show # Sanity check
-    git push origin master
+    for l in $ACTIVE; do ( cd $l; git commit -am "Added -dev suffix to plugin versions" ); done
+    for l in $ACTIVE; do ( cd $l; git show ); done # Sanity check
+    for l in $ACTIVE; do ( cd $l; git push origin master ); done
 
 * Validate that plugins look good
 
-    dev-bin/check-published-plugin.js chrome-cordova/plugins/*
+    dev-bin/check-published-plugin.js ../mobile-chrome-apps-plugins/*
 
 ## Publish cca-manifest-logic Module (if changes exist)
 
 Bump version
 
     cd cca-manifest-logic
-    vim package.json ../package.json
-    git commit -am "Releasing cca-manifest-logic@$(grep '"version"' package.json | cut -d'"' -f4)"
+    LAST_VERSION_BUMP=$(git log --grep "Set.*-dev" -n 1 --pretty=format:%h .); git log --pretty=format:'* %s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master -- .
+    vim README.md package.json ../package.json
+    git add README.md package.json ../package.json
+    git commit -m "Releasing cca-manifest-logic@$(grep '"version"' package.json | cut -d'"' -f4)"
     npm publish .
 
 Increment & add -dev suffix
 
     vim package.json
-    git commit -am "Set version of cca-manifest-logic to $(grep '"version"' package.json | cut -d'"' -f4)"
+    git add package.json && git commit -m "Set version of cca-manifest-logic to $(grep '"version"' package.json | cut -d'"' -f4)"
     git push origin master
 
 Update version in chrome-app-developer-tool's package.json
 
     cd ../chrome-app-developer-tool
     npm install --save-dev cca-manifest-logic
-    git commit -am "Updated cca-manifest-logic to v$(npm ls --depth=0 --parseable --long | grep cca-manifest-logic | cut -d: -f2 | cut -d@ -f2)"
+    git add package.json && git commit -m "Updated cca-manifest-logic to v$(npm ls --depth=0 --parseable --long | grep cca-manifest-logic | cut -d: -f2 | cut -d@ -f2)"
     git push origin master
 
 
