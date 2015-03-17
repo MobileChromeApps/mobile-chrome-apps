@@ -130,7 +130,7 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
 
     # Publish rc to npm
     dev-bin/prepfornpm.sh
-    npm publish --tag=rc # This takes a long time.
+    npm publish --tag=rc # If this fails, try again with node v0.12
     dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
 
     # Double check things are still good
