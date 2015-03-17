@@ -4,6 +4,24 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.6.0 (Mar 17, 2015)
+* Updated cordova-android to use latest 4.0.0-dev version
+* Updated cordova-ios to 3.8.0 (Fixes `exec()` bridge `<iframe>` explosion bug)
+* Updated Crosswalk to version 11
+* Android now sets target-sdk=21 (Lollipop)
+* Content-Security-Policy now works and enabled by default (can be disabled though)
+* `cca` is now smarter about not adding iOS when building for Android (and vice-versa)
+* Pin major version of bootstrap, i18n, and navigation plugins (`cca` will no longer break when plugins are updated)
+* Generate `<icon>` within `config.xml` rather than copy files directly (Fixes iPhone 6+ issues)
+* Android builds now work the same when built via Android Studio vs. command-line
+* Ignore `<!-- html -->` when parsing main page (fixes #510)
+* Add `cca build --android-minSdkVersion` flag
+* Add `cca run --list` to list available deploy targets
+* Add `cca run --link` to link rather than copy native source files (useful when developing plugins)
+* Don't build multi-arch apks when `--webview=system` is used.
+* Added "new version of cca available" logic via `update-notifier` module
+* New publishing instructions on how to use Crosswalk for pre-L Android, and system webview for L+
+
 ### 0.5.1 (Dec 16, 2014)
 * Fix #412 #448 Warn when adding plugins explicitly when you need a manifest permission
 * Fix #455 Support setting androidTheme in manifest.mobile
