@@ -1,7 +1,7 @@
 {
   "name": "cca-manifest-logic",
   "author": "The Chrome Team",
-  "version": "1.0.0",
+  "version": "1.0.1-dev",
   "description": "Shared logic between cca and chrome-app-developer-tool",
   "main": "main.js",
   "license": "Apache version 2.0",
