@@ -14,6 +14,7 @@ For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordo
 * Pin major version of bootstrap, i18n, and navigation plugins (`cca` will no longer break when plugins are updated)
 * Generate `<icon>` within `config.xml` rather than copy files directly (Fixes iPhone 6+ issues)
 * Android builds now work the same when built via Android Studio vs. command-line
+* No longer rename `_locales` -> `CCA_locales`
 * Ignore `<!-- html -->` when parsing main page (fixes #510)
 * Add `cca build --android-minSdkVersion` flag
 * Add `cca run --list` to list available deploy targets
