@@ -186,7 +186,7 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     npm info cca
 
     # Unpublish rc
-    npm tag cca@0.0.0 rc
+    npm dist-tag cca@0.0.0 rc
     npm unpublish cca@$CCA_VERSION-rc#
 
     # Remove shrinkwrap file, and push changed to master
