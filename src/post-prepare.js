@@ -55,38 +55,26 @@ function injectCsp(htmlPath, cspTag) {
 // Internal function called potentially multiple times to cover all platforms.
 function postPrepareInternal(platform) {
   var root = utils.assetDirForPlatform(platform);
-
-  /* Android asset packager ignores, by default, directories beginning with
-     underscores. This can be fixed with an update to the project.properties
-     file, but only when compiling with ant. There is a bug outstanding to
-     fix this behaviour in Eclipse/ADT as well.
-
-     References:
-       https://code.google.com/p/android/issues/detail?id=5343
-       https://code.google.com/p/android/issues/detail?id=41237
-   */
-  var badPath = path.join(utils.assetDirForPlatform(platform), '_locales');
-  var betterPath = path.join(utils.assetDirForPlatform(platform), 'CCA_locales');
-  var promise = Q();
-  if (fs.existsSync(badPath)) {
-    console.log('## Pre-processing _locales for ' + platform);
-    fs.renameSync(badPath, betterPath);
-    promise = Q.ninvoke(fs, 'readdir', betterPath)
+  var localesPath = path.join(utils.assetDirForPlatform(platform), '_locales');
+  return Q().then(function() {
+    if (!fs.existsSync(localesPath)) {
+      return;
+    }
+    console.log('## Normalizing _locales for ' + platform);
+    return Q.ninvoke(fs, 'readdir', localesPath)
     .then(function(files) {
-      for (var i=0; i<files.length; i++) {
-        var fullName = path.join(betterPath, files[i]);
-        var adjustedFilename= files[i].replace('-', '_').toLowerCase();
-        if (files[i] !== adjustedFilename) {
+      files.forEach(function(f) {
+        var fullName = path.join(localesPath, f);
+        var adjustedFilename = f.replace('-', '_').toLowerCase();
+        if (f !== adjustedFilename) {
           var stats = fs.statSync(fullName);
           if (stats.isDirectory()) {
-            fs.renameSync(fullName, path.join(betterPath, adjustedFilename));
+            fs.renameSync(fullName, path.join(localesPath, adjustedFilename));
           }
         }
-      }
+      });
     });
-  }
-
-  return promise.then(function() {
+  }).then(function() {
     return require('./get-manifest')('www', platform);
   }).then(function(manifest) {
     // Write merged manifest.json
