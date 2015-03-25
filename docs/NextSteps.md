@@ -28,12 +28,14 @@ Possible values for `manifest.mobile.json`:
     }
 ```
 * `webview`: Android only. Can be `"system"` or `"crosswalk"` (default)
+  * This can also be set with the `--webview` command-line flag
 * `packageId`: Used as the `packageId` on Android, and the `CFBundleIdentifier` on iOS.
 * `csp`: When set, overrides the default Content-Security-Policy for apps
 * `cspUnsafeEval`: Allow `eval` within Content-Security-Policy (default: false)
 * `cspUnsafeInline`: Allow inline scripts within Content-Security-Policy (default: false)
 * `versionCode`: Android only. Sets the base `versionCode` (rather than deriving one from `version`)
 * `minSdkVersion`: Android only. Sets the [minSdkVersion](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+  * This can also be set with the `--android-minSdkVersion` command-line flag
 * `targetSdkVersion`: Android only. Sets the [targetSdkVersion](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
 * `androidTheme`: Android only. E.g. `"@android:style/Theme.Translucent"`
 
