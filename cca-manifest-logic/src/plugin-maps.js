@@ -49,11 +49,12 @@ var PLUGIN_MAP = {
 };
 
 var STALE_PLUGINS = [
-  'org.apache.cordova.engine.crosswalk'
+  'org.apache.cordova.engine.crosswalk',
+  'org.crosswalk.engine'
 ];
 
 var ENGINE_MAP = {
-  'crosswalk': ['org.crosswalk.engine'],
+  'crosswalk': ['cordova-plugin-crosswalk-webview'],
   'system': []
 };
 
