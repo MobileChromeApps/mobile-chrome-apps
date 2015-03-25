@@ -4,14 +4,14 @@ The Chrome Apps for Mobile toolchain can target iOS 6+ and Android 4.x+.
 
 ### Development dependencies for all platforms
 
-* [Node.js](http://nodejs.org) version 0.10.0 (or higher) with `npm` is required:
+* [Node.js](http://nodejs.org) (we test with versions `0.10.0` and `0.12.0`):
   * **Windows**: Install Node.js using the installation executables that you can download from [nodejs.org](http://nodejs.org).
   * **OS X** or **Linux**: Installation executables are also available from [nodejs.org](http://nodejs.org). If you wish to avoid the need for root access, it may be more convenient to install via [nvm](https://github.com/creationix/nvm). For example:
 
             curl -L https://raw.githubusercontent.com/creationix/nvm/master/install.sh | sh
             source ~/.bash_profile || source ~/.profile || source ~/.bashrc
-            nvm install 0.10
-            nvm alias default 0.10
+            nvm install 0.12
+            nvm alias default 0.12
 
 ### Targeting Android
 

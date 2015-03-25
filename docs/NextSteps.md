@@ -2,13 +2,45 @@
 
 Now that you have a working mobile Chrome App, there are lots of ways to improve the experience on mobile devices.
 
-### Mobile Manifest
+### `manifest.json` and `manifest.mobile.json`
 
-There are certain Chrome App settings that only apply to mobile platforms.  We have created a `www/manifest.mobile.json` file to contain these, and the specific values are referenced throughout the plugin documentation and this guide.
+Possible values for `manifest.json`:
+* `name`: Full name of application
+* `description`: Maps to Cordova's `<description>` tag
+* `author`: Maps to Cordova's `<author>` tag
+* `short_name`: E.g. used on app's launcher icon
+* `icons`: See below.
+* `version`: Should be in the form "x.y.z". Used to generate Android `versionCode` and iOS `CFBundleVersion`
+* `permissions`: List of APIs that will be used (e.g. "identity"), as well as URL patterns to allow network access to.
+* `oauth2`: Used when including the [`identity` plugin](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-identity)
+* `bluetooth`: used when includeing the [`bluetooth` plugin](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-bluetooth)
+* `key`: Used when using the [`identity` plugin](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-identity)
 
-You should adjust the values here accordingly.
+Possible values for `manifest.mobile.json`:
+* Any value from `manifest.json` can appear in `manifest.mobile.json`, and will take precedence.
+* Most settings (such as `name`, `icons`) can be set on a per-platform bases via:
+```
+    "android": {
+      "name": "value1"
+    },
+    "ios": {
+      "name": "value2"
+    }
+```
+* `webview`: Android only. Can be `"system"` or `"crosswalk"` (default)
+  * This can also be set with the `--webview` command-line flag
+* `packageId`: Used as the `packageId` on Android, and the `CFBundleIdentifier` on iOS.
+* `csp`: When set, overrides the default Content-Security-Policy for apps
+* `cspUnsafeEval`: Allow `eval` within Content-Security-Policy (default: false)
+* `cspUnsafeInline`: Allow inline scripts within Content-Security-Policy (default: false)
+* `versionCode`: Android only. Sets the base `versionCode` (rather than deriving one from `version`)
+* `minSdkVersion`: Android only. Sets the [minSdkVersion](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+  * This can also be set with the `--android-minSdkVersion` command-line flag
+* `targetSdkVersion`: Android only. Sets the [targetSdkVersion](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+* `androidTheme`: Android only. E.g. `"@android:style/Theme.Translucent"`
 
-### Icons
+
+### More about Icons
 
 Mobile apps need a few more icon resolutions than desktop Chrome Apps.
 

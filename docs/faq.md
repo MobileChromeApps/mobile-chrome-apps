@@ -77,22 +77,11 @@ By default, `cca` uses a bundled WebView ([Crosswalk](https://crosswalk-project.
 
 ### Why use the Crosswalk WebView?
 
-Crosswalk provides much better performance and a newer web runtime than the stock Android WebView.
-
-
-### What’s the memory/file size impact of bundling CrossWalk?
-
-Crosswalk adds about 30 MB to the .apk size and has a fixed memory overhead of about 30MB (_as reported by the RSS column of `ps`_).
-
-
-### Can I opt not to use the Crosswalk webview?
-
-You can opt-out by adding `"webview": "system"` to your `manifest.mobile.json`.
-
+On pre-L devices, Crosswalk provides much better performance and a newer web runtime than the stock Android WebView. However, there are [tradeoffs](https://github.com/MobileChromeApps/mobile-chrome-apps/blob/master/docs/Crosswalk.md
 
 ### Do CCA Apps violate CSP?
 
-CCA does not yet enforce CSP to the same extent as Chrome Apps on desktop. It currently does execute inline `<script>`s, and may in the future add further restrictions. [Track the issue](https://github.com/MobileChromeApps/mobile-chrome-apps/issues/73).
+As of `cca@0.6.0` (March 2015), CCA apps have use [the same Content-Security-Policy](https://developer.chrome.com/apps/contentSecurityPolicy) as desktop Chrome Apps.
 
 
 ## How To
@@ -151,6 +140,10 @@ Use `cca` when:
 
 Aside from that, use whichever you prefer.  Using them interchangeably on the same source directory will work just fine. :)
 
-### Can I use Xcode / Eclipse with CCA projects?
+### Can I use Xcode / Eclipse / Android Studio with CCA projects?
 
-Using Xcode and Eclipse is often really useful when developing your own Cordova plugins. Use the Xcode / Eclipse project files within the `platforms/ios` and `platforms/android` directories respectively. BUT REMEMBER! When making edits to files within these IDEs, you will be editing __copies__ of the files that are clobbered when running `cca` commands.
+Xcode and Android Studio: yes.
+
+Eclipse: No (since it doesn't support Android's gradle build system)
+
+Using Xcode and Android Studio is often really useful when developing your own Cordova plugins. Use the Xcode / Android Studio project files within the `platforms/ios` and `platforms/android` directories respectively. BUT REMEMBER! When making edits to files within these IDEs, you will be editing __copies__ of the files that are clobbered when running `cca` commands.

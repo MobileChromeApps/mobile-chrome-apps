@@ -22,7 +22,7 @@ CDE is an IDE built specifically for Chrome Apps. Use it with CADT for live depl
 
 There are three different workflows that you can use to run your application:
 
-* **Option A**: Live deploy with CADT (quick and easy!)
+* **Option A**: Live deploy with CADT (quick and easy, but not *everything* works!)
 * **Option B**: Use `cca` to package your application and deploy it to your mobile device
 * **Option C**: Use a third party IDE, such as Eclipse or Xcode. The use of a third party IDE is entirely optional (but often useful) to assist with launching, configuring, and debugging your hybrid mobile application.
 
@@ -42,7 +42,7 @@ Navigate to your Chrome App's directory. Then deploy:
 
 * IP deploy: `cca push --target=IP_ADDRESS`	
 * USB deploy:
-	* **Android:** To setup, use `adb forward tcp:2424 tcp:2424`
+	* **Android:** As of `cca@0.6.0`, no manual port forwarding is required!
 	* **iOS:** To setup, obtain [tcprelay.py](https://github.com/chid/tcprelay) and use `adb tcprelay.py 2424:2424`
 	* Use `cca push`
 * **New! &raquo;** Use `cca push [--target=IP_ADDRESS] --watch` to begin **continuous live deploy**: the Chrome App is automatically refreshed when the code is updated.
@@ -57,28 +57,27 @@ From the root of your `cca`-generated project directory:
 
 #### Android
 
-* To run your app on the Android Emulator: `cca emulate android`
+* To run your app on the Android Emulator: `cca run android --emulator`
   * **Note:** This requires that you have set up an emulator. You can run `android avd` to set this up. Download additional emulator images by running `android`. To make the intel images run faster, install [Intel's HAXM](http://software.intel.com/en-us/articles/intel-hardware-accelerated-execution-manager/).
-* To run your app on a connected ARM Android device: `cca run android`. To run on an Intel X86 Android device: `DEPLOY_APK_ARCH=x86 cca run android`
+* To run your app on a connected ARM Android device: `cca run android --device`.
+* To run on a specific target: `cca run android --target=foo`
+* To see a list of available targets: `cca run android --list`
 
 #### iOS
 
-* To run your app on the iOS Simulator: `cca emulate ios`
-* To run your app on a connected iOS device: `cca run ios`
+* To run your app on the iOS Simulator: `cca run ios --emulator`
+* To run your app on a connected iOS device: `cca run ios --device`
   * **Note**: To run on a connected iOS device, you must set up a [Provisioning Profile](http://stackoverflow.com/questions/3362652/what-is-a-provisioning-profile-used-for-when-developing-iphone-applications) for that device.
+* To run on a specific target: `cca run ios --target=foo`
+* To see a list of available targets: `cca run ios --list`
 
 ### Option C: Develop and build using an IDE
 
 #### Android
 
-1. In Eclipse, select `File` > `Import`.
-2. Choose `Android` > `Existing Android Code Into Workspace`.
-3. Import from the `platforms/android` folder that was created within your project.
-    * It is expected to have multiple projects to import.
-    * If `xwalk_core_library` is listed twice, then you probably accidentally imported from the root of the project. Ensure you are importing from `platforms/android` instead.
-4. Click the play button to run your app.
-  * You will need to create a Run Configuration (as with all Java applications). You _usually_ are automatically prompted for this the first time.
-  * You will need to manage your devices/emulators the first time as well.
+1. In Android Studio, select `Import Project`
+2. Import from the `platforms/android` directory that was created within your project.
+3. Click the play button to run your app.
 
 #### iOS
 
