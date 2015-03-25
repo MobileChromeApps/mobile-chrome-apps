@@ -30,7 +30,7 @@ However, not all Chrome JavaScript APIs are implemented. And not all Chrome Desk
 
   * no `<webview>` tag
   * no NaCl
-  * no IndexedDB on iOS 7 or below
+  * no IndexedDB on iOS
   * no getUserMedia() on iOS
 
 
