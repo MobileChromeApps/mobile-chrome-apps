@@ -36,10 +36,14 @@ To publish your Android application to the Play Store:
     keyPassword=YOUR_KEY_PASSWORD
     ```
     * Note: `storePassword` and `keyPassword` are optional. If omitted, you will be prompted for them when building.
+    * Note: You can likewise create an `android-debug-keys.properties`
 
-4. Build your project:
+4. We recommend that you use 3 APKs when publishing:
    ```
-   cca build android --release
+   # Creates ARM and x86 APKs
+   cca build android --release --webview=crosswalk
+   # Creates Cross-platform apk with higher versionCode
+   cca build android --release --webview=system --android-minSdkVersion=21
    ```
 
 5. Find your signed .apk(s) at `platforms/android/out/*-release.apk`.
