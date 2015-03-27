@@ -16,7 +16,7 @@ function setMode(mode) {
     'main': runMain,
     'auto': runAutoTests,
     'manual': runManualTests
-  }
+  };
   if (!handlers.hasOwnProperty(mode)) {
     return console.error("Unsopported mode: " + mode);
   }
@@ -36,12 +36,12 @@ window.clearContent = function() {
   log.innerHTML = '';
   var buttons = document.getElementById('buttons');
   buttons.innerHTML = '';
-}
+};
 
 window.setTitle = function(title) {
   var el = document.getElementById('title');
   el.textContent = title;
-}
+};
 
 window.createActionButton = function(title, callback) {
   var buttons = document.getElementById('buttons');
@@ -55,7 +55,7 @@ window.createActionButton = function(title, callback) {
   button.classList.add('topcoat-button');
   div.appendChild(button);
   buttons.appendChild(div);
-}
+};
 
 /******************************************************************************/
 
@@ -91,7 +91,7 @@ function runManualTests() {
     window.clearContent();
     createActionButton('Reset App', chrome.runtime.reload);
     createActionButton('Back', setMode.bind(null, 'manual'));
-  }
+  };
   window.opener.defineManualTests(contentEl, beforeEach, createActionButton);
 }
 
