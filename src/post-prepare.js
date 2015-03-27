@@ -98,13 +98,6 @@ function postPrepareInternal(platform) {
         strings.find('./string/[@name="launcher_name"]').text = manifest.short_name;
         fs.writeFileSync(stringsPath, strings.write({indent: 4}), 'utf-8');
       }
-
-      // Update Android Theme to Translucent
-      var androidManifestPath = path.join('platforms', 'android', 'AndroidManifest.xml');
-      var androidManifest = et.parse(fs.readFileSync(androidManifestPath, 'utf-8'));
-      var theme = manifest.androidTheme || "@android:style/Theme.Translucent";
-      androidManifest.find('./application/activity').attrib["android:theme"] = theme;
-      fs.writeFileSync(androidManifestPath, androidManifest.write({indent: 4}), 'utf-8');
     }
   });
 }
