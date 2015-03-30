@@ -97,6 +97,10 @@
     "system.memory",
     "system.network",
     "system.storage",
+    "usb",
+    {
+      "usbDevices": [{ "vendorId": 6353, "productId": 8193 }]
+    },
     "videoCapture",
     "http://www.apache.org/*",
     "http://127.0.0.1/*",

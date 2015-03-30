@@ -46,6 +46,7 @@ var PLUGIN_MAP = {
   'system.storage': ['org.chromium.system.storage'],
   'unlimitedStorage': [],
   'videoCapture': ['org.chromium.videocapture'],
+  'usb': ['org.chromium.usb'],
 };
 
 var STALE_PLUGINS = [
