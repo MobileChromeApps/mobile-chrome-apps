@@ -10,7 +10,7 @@ var Q = require('q');
 var fs = require('fs');
 
 var ccaRoot = path.join(__dirname, '..');
-var ccaPluginsRoot = path.join(ccaRoot, '..', 'mobile-chrome-apps-plugins')
+var ccaPluginsRoot = path.join(ccaRoot, '..', 'mobile-chrome-apps-plugins');
 var isWindows = process.platform.slice(0, 3) == 'win';
 
 // Returns a promise for an object with 'stdout' and 'stderr' as keys.
@@ -114,7 +114,6 @@ function updateAllPlugins() {
     'cordova-plugin-chrome-apps-sockets-tcpServer',
     'cordova-plugin-chrome-apps-sockets-udp',
     'cordova-plugin-chrome-apps-storage',
-    'cordova-plugin-chrome-apps-syncFileSystem',
     'cordova-plugin-chrome-apps-system-cpu',
     'cordova-plugin-chrome-apps-system-display',
     'cordova-plugin-chrome-apps-system-memory',
