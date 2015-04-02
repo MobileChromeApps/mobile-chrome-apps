@@ -55,7 +55,7 @@ function getCcaPlugins() {
 //  1. The project has not platforms installed
 //  2. The file ./platforms/created-with-cca-version contains older version string
 //  3. The file ./platforms/created-with-cca-version does not exist
-function upgradeProjectIfStale() {
+function upgradeProjectIfStale(skipPrompt) {
   var packageVersion = require('../package').version;
   var installedPlatfroms = getInstalledPlatfroms();
 
@@ -77,7 +77,7 @@ function upgradeProjectIfStale() {
     } else {
       // The platforms/created-with-cca-version file does not exist or contains older version string. Upgrading.
       console.log('This project was not upgraded to cca v' + packageVersion + ' yet.  Attempting to upgrade now...');
-      return exports.upgradeProject();
+      return exports.upgradeProject(skipPrompt);
     }
   }
 }
