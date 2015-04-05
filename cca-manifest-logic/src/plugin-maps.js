@@ -38,7 +38,6 @@ var PLUGIN_MAP = {
   'pushMessaging': ['org.chromium.pushmessaging', 'org.chromium.identity'],
   'socket': ['org.chromium.socket', 'org.chromium.system.network'],
   'storage': ['org.chromium.storage'],
-  'syncFileSystem': ['org.chromium.syncfilesystem', 'org.chromium.storage', 'org.chromium.identity'],
   'system.cpu': ['org.chromium.system.cpu'],
   'system.display': ['org.chromium.system.display'],
   'system.memory': ['org.chromium.system.memory'],
@@ -51,6 +50,7 @@ var PLUGIN_MAP = {
 
 var STALE_PLUGINS = [
   'org.apache.cordova.engine.crosswalk',
+  'org.chromium.syncfilesystem',
   'org.crosswalk.engine'
 ];
 
