@@ -27,6 +27,7 @@ html, body {
   position: absolute;
   top: 30px;
   bottom: 20px;
+  padding-bottom: 40%;
   width: 100%;
   overflow-y: auto;
   overflow-x: auto;
@@ -43,7 +44,7 @@ html, body {
 }
 
 #log.expanded {
-  height: 60%;
+  height: 40%;
 }
 
 #log--title {
@@ -67,4 +68,24 @@ html, body {
 #log--content--line {
   border-bottom: 1px solid #ccc;
   white-space: pre;
+}
+
+#test-enablers-container {
+  margin: 10px 5px;
+}
+
+#test-expander {
+  text-decoration: underline;
+}
+
+#test-list {
+  display: none;
+}
+
+#test-list.expanded {
+  display: inherit;
+}
+
+#test-list label {
+  display: block;
 }
