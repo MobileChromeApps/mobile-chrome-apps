@@ -44,3 +44,42 @@ if (( $ANDROID )); then
   cp $SPEC_PATH/build-extras.gradle platforms/android
   set +x
 fi
+
+# Change directory into new app, if necessary
+#   - Depending on platform add above, may already be in app directory
+if [ -d "$DIR_NAME" ]; then
+  cd "$DIR_NAME"
+fi
+
+# Adding a platform above will have triggered prepare, and plugins added
+# Look for any tests for the plugins found
+echo "Look for test plugins..."
+
+PLUGINS_ROOT="$PWD/plugins"
+TEST_PLUGINS=();
+
+for plugin in $PLUGINS_ROOT/*/; do
+  echo "Check for tests in ${plugin}"
+  pluginName="$(basename ${plugin})"
+  if [[ "${pluginName}" != "org.chromium."* ]] && [[ "${pluginName}" != "cordova-plugin-chrome-apps"* ]]; then
+    continue
+  fi
+
+  potential_tests_plugin_xml="${plugin}/tests/plugin.xml"
+
+  if [ ! -f $potential_tests_plugin_xml ]; then
+    continue
+  fi
+
+  echo "Found tests plugin for ${pluginName}"
+  TEST_PLUGINS=(${TEST_PLUGINS[@]} "$(dirname $potential_tests_plugin_xml)")
+done
+
+
+if [ ${#TEST_PLUGINS[@]} -gt 0 ]; then
+  # Add the necessary test framework plugins with the found test plugins
+  echo "${#TEST_PLUGINS[@]} test plugins to be added"
+  set -x
+  $CCA_PATH plugin add --link "org.apache.cordova.test-framework" "cordova-plugin-chrome-apps-test-framework" "${TEST_PLUGINS[@]}"
+  set +x
+fi
