@@ -12,9 +12,7 @@
   "app": {
     "background": {
       "scripts": [
-        "background.js",
-        "tests.js",
-        "medic.js"
+        "background.js"
       ]
     }
   },
