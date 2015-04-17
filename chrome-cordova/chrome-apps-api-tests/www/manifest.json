@@ -63,7 +63,6 @@
       "socket": [ "tcp-connect", "tcp-listen", "udp-send-to", "udp-bind", "udp-multicast-membership" ]
     },
     "storage",
-    "syncFileSystem",
     "system.cpu",
     "system.display",
     "system.memory",
