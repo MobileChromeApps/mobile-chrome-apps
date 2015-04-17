@@ -5,7 +5,7 @@
 /******************************************************************************/
 
 document.addEventListener("DOMContentLoaded", function() {
-  var cdvtests = cordova.require('org.apache.cordova.test-framework.main');
+  var cdvtests = cordova.require('cordova-plugin-test-framework.main');
   cdvtests.init();
 });
 

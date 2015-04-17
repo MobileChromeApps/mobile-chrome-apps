@@ -80,6 +80,6 @@ if [ ${#TEST_PLUGINS[@]} -gt 0 ]; then
   # Add the necessary test framework plugins with the found test plugins
   echo "${#TEST_PLUGINS[@]} test plugins to be added"
   set -x
-  $CCA_PATH plugin add --link "org.apache.cordova.test-framework" "cordova-plugin-chrome-apps-test-framework" "${TEST_PLUGINS[@]}"
+  $CCA_PATH plugin add --link "cordova-plugin-test-framework" "cordova-plugin-chrome-apps-test-framework" "${TEST_PLUGINS[@]}"
   set +x
 fi
