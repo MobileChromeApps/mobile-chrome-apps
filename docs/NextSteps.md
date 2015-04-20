@@ -63,6 +63,7 @@ A complete icon list would look like this in your `manifest.json` file:
       "48": "assets/icons/icon48.png",
       "57": "assets/icons/icon57.png",
       "72": "assets/icons/icon72.png",
+      "76": "assets/icons/icon76.png",
       "78": "assets/icons/icon78.png",
       "96": "assets/icons/icon96.png",
       "114": "assets/icons/icon114.png",
