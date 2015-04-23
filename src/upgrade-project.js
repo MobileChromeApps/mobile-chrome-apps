@@ -23,7 +23,6 @@ function getSupportedPlatforms() {
   var plats = [];
   return require('./tools-check')()
   .then(function(toolsCheckResults) {
-    // TODO(mmocny): any way to use .raw so as not to also call prepare after each platform add?
     if (toolsCheckResults.hasAndroidPlatform) {
       plats.push('android');
     }

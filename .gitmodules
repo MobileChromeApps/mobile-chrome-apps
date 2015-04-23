@@ -4,9 +4,3 @@
 [submodule "cordova/cordova-ios"]
 	path = cordova/cordova-ios
 	url = https://git-wip-us.apache.org/repos/asf/cordova-ios.git
-[submodule "cordova/cordova-crosswalk-engine"]
-	path = cordova/cordova-crosswalk-engine
-	url = https://github.com/MobileChromeApps/cordova-crosswalk-engine/
-[submodule "cordova/cordova-plugin-whitelist"]
-	path = cordova/cordova-plugin-whitelist
-	url = https://git-wip-us.apache.org/repos/asf/cordova-plugin-whitelist.git
