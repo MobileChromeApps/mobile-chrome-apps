@@ -80,6 +80,13 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
     return pref;
   }
 
+  function deletePreference(name) {
+    var node = getPreference(name);
+    if (node) {
+      node.parentNode.removeChild(node);
+    }
+  }
+
   function deleteAllChildren(parentNode, nodeName) {
     nodeName = nodeName.toUpperCase();
     for (var i = 0; i < parentNode.childNodes.length; ) {
@@ -186,6 +193,12 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
 
   createIconTags('android');
   createIconTags('ios');
+
+  if (analyzedManifest.engineName == 'crosswalk' && analyzedManifest.engineVer) {
+      setOrCreatePreference('xwalkVersion', analyzedManifest.engineVer);
+  } else {
+      deletePreference('xwalkVersion');
+  }
 };
 
 // Taken from cordova-lib/src/cordova/metadata/android_parser.js

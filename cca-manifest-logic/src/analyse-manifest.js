@@ -93,7 +93,10 @@ module.exports = function analyseManifest(manifest, options) {
   });
 
   var pluginsForPermissions = mapPermissionsToPlugins(PLUGIN_MAP, ret.permissions);
-  var pluginsForEngines = mapPermissionsToPlugins(ENGINE_MAP, [options.webview || manifest.webview || "crosswalk"]);
+  var engineSpec = options.webview || manifest.webview || "crosswalk";
+  ret.engineName = engineSpec.replace(/@.*/, '');
+  ret.engineVer = engineSpec.slice(ret.engineName.length + 1);
+  var pluginsForEngines = mapPermissionsToPlugins(ENGINE_MAP, [ret.engineName]);
   var pluginsForSockets = mapPermissionsToPlugins(SOCKETS_MAP, Object.keys(manifest.sockets || {}));
 
   ret.pluginsToBeInstalled = [].concat.apply([], [
