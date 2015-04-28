@@ -8,10 +8,3 @@ if (cdvDebugSigningPropertiesFile == null && file('../../android-debug-keys.prop
 if (cdvReleaseSigningPropertiesFile == null && file('../../android-release-keys.properties').exists()) {
   ext.cdvReleaseSigningPropertiesFile = '../../android-release-keys.properties'
 }
-if (cdvBuildMultipleApks == null) {
-  def f1 = file('org.crosswalk.engine');
-  def f2 = file('org.apache.cordova.engine.crosswalk');
-  if (f1.exists() && f1.list().length > 0 || f2.exists() && f2.list().length > 0) {
-    ext.cdvBuildMultipleApks = true
-  }
-}
