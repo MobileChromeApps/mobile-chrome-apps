@@ -54,8 +54,8 @@ function mapPermissionsToPlugins(knownPermissionsMap, requestedPermissionsList) 
     ret.toUninstall = ret.toUninstall.concat(knownPermissionsMap[permission]);
   });
   // Final step, bit of a hack, remove duplicate plugins from toUninstall list that exist in toInstall
-  // e.g. syncFS depends on identity.  So, even if identity isn't in your manifest, don't uninstal it if you have syncFS
-  // The way we handle this is to add org.chromium.identity to the list of plugins to install for the syncFS permission
+  // e.g. syncFS depends on identity.  So, even if identity isn't in your manifest, don't uninstall it if you have syncFS
+  // The way we handle this is to add identity to the list of plugins to install for the syncFS permission
   // so, the last thing to do is subtract the plugins to install from the plugins to not install, since there can be overlap.
   ret.toUninstall = ret.toUninstall.filter(function(plugin) {
     return ret.toInstall.indexOf(plugin) == -1;
@@ -115,11 +115,15 @@ module.exports = function analyseManifest(manifest, options) {
 
   // Special case for bluetooth, since it uses boolean flags and not just the existance of keys.
   if (manifest.bluetooth && typeof manifest.bluetooth === 'object') {
-    ret.pluginsToBeInstalled.push('org.chromium.bluetooth');
-    (manifest.bluetooth.low_energy ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('org.chromium.bluetoothlowenergy');
-    (manifest.bluetooth.socket ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('org.chromium.bluetoothsocket');
+    ret.pluginsToBeInstalled.push('cordova-plugin-chrome-apps-bluetooth');
+    (manifest.bluetooth.low_energy ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('cordova-plugin-chrome-apps-bluetoothlowenergy');
+    (manifest.bluetooth.socket ? ret.pluginsToBeInstalled : ret.pluginsToBeNotInstalled).push('cordova-plugin-chrome-apps-bluetoothsocket');
   } else {
-    ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.concat(['org.chromium.bluetoothlowenergy', 'org.chromium.bluetoothsocket', 'org.chromium.bluetooth']);
+    ret.pluginsToBeNotInstalled = ret.pluginsToBeNotInstalled.concat([
+      'cordova-plugin-chrome-apps-bluetoothlowenergy',
+      'cordova-plugin-chrome-apps-bluetoothsocket',
+      'cordova-plugin-chrome-apps-bluetooth'
+    ]);
   }
 
   // This next filter seems needless, but it happens when we still want plugins installed for which there are missing permissions, e.g. chrome.storage

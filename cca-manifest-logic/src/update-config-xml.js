@@ -148,7 +148,7 @@ module.exports = exports = function updateConfigXml(manifest, analyzedManifest, 
   getOrCreateRootNode('name').textContent = manifest.name || manifest.packageId || 'Your App Name';
   getOrCreateRootNode('description').textContent = manifest.description || 'Plain text description of this app';
   getOrCreateRootNode('author').textContent = manifest.author || 'Author Name <a@b.com>';
-  getOrCreateRootNode('content').setAttribute('src', 'plugins/org.chromium.bootstrap/chromeapp.html');
+  getOrCreateRootNode('content').setAttribute('src', 'plugins/cordova-plugin-chrome-apps-bootstrap/chromeapp.html');
 
   // Set minSdkVersion and targetSdkVersion, corodva-lib copies them to AndoridManifest.xml
   // Default minSdkVersion is 14 for Android 4.0 (ICS)

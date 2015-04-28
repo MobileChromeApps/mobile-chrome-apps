@@ -81,7 +81,7 @@ function postPrepareInternal(platform) {
     fs.writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 4));
     // Write CSP tag
     //  - Check first if plugin is installed yet
-    var bootstrapPluginPath = path.join(root, 'plugins', 'org.chromium.bootstrap');
+    var bootstrapPluginPath = path.join(root, 'plugins', 'cordova-plugin-chrome-apps-bootstrap');
     if (fs.existsSync(bootstrapPluginPath)) {
       console.log('## Inject CSP for ' + platform);
       var cspContent = ccaManifestLogic.analyseManifest.createCspString(manifest, platform);

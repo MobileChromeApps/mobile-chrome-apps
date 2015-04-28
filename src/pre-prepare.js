@@ -155,7 +155,7 @@ module.exports = exports = function prePrepareCommand(context) {
     // After adding/removing plugins above, the list of installed plugins is:
     installedPlugins = __.difference(__.union(installedPlugins, pluginsToBeInstalled), pluginsToBeNotInstalled);
     // If chrome.identity is installed, we need a client id.
-    if (installedPlugins.indexOf('org.chromium.identity') >= 0) {
+    if (installedPlugins.indexOf('cordova-plugin-chrome-apps-identity') >= 0) {
       if (!manifest.oauth2 || !manifest.oauth2.client_id) {
         console.warn('Warning: chrome.identity requires a client ID to be specified in the manifest.');
       }
