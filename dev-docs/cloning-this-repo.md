@@ -5,6 +5,8 @@ git clone --recursive https://github.com/MobileChromeApps/mobile-chrome-apps
 cd mobile-chrome-apps
 npm link cca-manifest-logic/
 npm link
+# Clone all plugins:
+./dev-bin/git-up.js
 ```
 
 ## Update source to pick up latest changes

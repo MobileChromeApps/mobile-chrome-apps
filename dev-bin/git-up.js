@@ -119,6 +119,8 @@ function updateAllPlugins() {
     'cordova-plugin-chrome-apps-system-memory',
     'cordova-plugin-chrome-apps-system-network',
     'cordova-plugin-chrome-apps-system-storage',
+    'cordova-plugin-chrome-apps-test-framework',
+    'cordova-plugin-chrome-apps-usb',
     'cordova-plugin-chrome-apps-videoCapture',
     'cordova-plugin-background-app',
     ];
