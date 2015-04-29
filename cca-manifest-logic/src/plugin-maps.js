@@ -45,6 +45,7 @@ var PLUGIN_MAP = {
   'system.storage': ['cordova-plugin-chrome-apps-system-storage'],
   'unlimitedStorage': [],
   'videoCapture': ['cordova-plugin-chrome-apps-videocapture'],
+  'usbDevices': ['cordova-plugin-chrome-apps-usb'],
   'usb': ['cordova-plugin-chrome-apps-usb'],
 };
 
