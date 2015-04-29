@@ -17,8 +17,9 @@ var DEFAULT_PLUGINS = [
     'cordova-plugin-chrome-apps-navigation',
     'cordova-plugin-chrome-apps-bootstrap',
     'cordova-plugin-chrome-apps-i18n',
-    'org.chromium.polyfill.customevent',
-    'org.chromium.polyfill.blob_constructor',
+    'cordova-plugin-customevent-polyfill',
+    'cordova-plugin-blob-constructor-polyfill',
+    'cordova-plugin-xhr-blob-polyfill',
 ];
 
 var PLUGIN_MAP = {
@@ -32,7 +33,7 @@ var PLUGIN_MAP = {
   'identity': ['cordova-plugin-chrome-apps-identity'],
   'idle': ['cordova-plugin-chrome-apps-idle'],
   'notifications': ['cordova-plugin-chrome-apps-notifications', 'cordova-plugin-chrome-apps-storage'],
-  'payments': ['com.google.payments'],
+  'payments': ['cordova-plugin-google-payments'],
   'power': ['cordova-plugin-chrome-apps-power'],
   'pushMessaging': ['cordova-plugin-chrome-apps-pushmessaging', 'cordova-plugin-chrome-apps-identity'],
   'socket': ['cordova-plugin-chrome-apps-socket', 'cordova-plugin-chrome-apps-system-network'],
@@ -48,6 +49,7 @@ var PLUGIN_MAP = {
 };
 
 var STALE_PLUGINS = [
+  'com.google.payments',
   'org.apache.cordova.engine.crosswalk',
   'org.chromium.syncfilesystem',
   'org.chromium.alarms',
@@ -66,6 +68,9 @@ var STALE_PLUGINS = [
   'org.chromium.iossocketscommon',
   'org.chromium.navigation',
   'org.chromium.notifications',
+  'org.chromium.polyfill.blob_constructor',
+  'org.chromium.polyfill.customevent',
+  'org.chromium.polyfill.xhr_features',
   'org.chromium.power',
   'org.chromium.pushmessaging',
   'org.chromium.runtime',
