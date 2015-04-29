@@ -18,7 +18,6 @@ var DEFAULT_PLUGINS = [
     'cordova-plugin-chrome-apps-bootstrap',
     'cordova-plugin-chrome-apps-i18n',
     'org.chromium.polyfill.customevent',
-    'org.chromium.polyfill.xhr_features',
     'org.chromium.polyfill.blob_constructor',
 ];
 
