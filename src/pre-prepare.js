@@ -119,6 +119,13 @@ module.exports = exports = function prePrepareCommand(context) {
     var missingPlugins = __.difference(pluginsToBeInstalled, installedPlugins);
     var excessPlugins = __.intersection(installedPlugins, pluginsToBeNotInstalled);
 
+    function pinVersion(pluginId, version) {
+      var idx = missingPlugins.indexOf(pluginId);
+      if (idx != -1) {
+        missingPlugins[idx] += '@' + version;
+      }
+    }
+
     if (missingPlugins.length || excessPlugins.length || pluginsNotRecognized.length) {
       console.log('## Updating plugins based on manifest.json');
       pluginsNotRecognized.forEach(function(unknownPermission) {
@@ -130,19 +137,12 @@ module.exports = exports = function prePrepareCommand(context) {
       };
       var cmds = [];
       if (missingPlugins.length) {
-        // Pin major versions of plugins that are tied to cca hooks
-        var idx = missingPlugins.indexOf('cordova-plugin-chrome-apps-navigation');
-        if (idx != -1) {
-          missingPlugins[idx] = missingPlugins[idx] + '@1';
-        }
-        idx = missingPlugins.indexOf('cordova-plugin-chrome-apps-i18n');
-        if (idx != -1) {
-          missingPlugins[idx] = missingPlugins[idx] + '@2';
-        }
-        idx = missingPlugins.indexOf('cordova-plugin-chrome-apps-bootstrap');
-        if (idx != -1) {
-          missingPlugins[idx] = missingPlugins[idx] + '@2';
-        }
+        // Pin major versions of plugins that we care about
+        pinVersion('cordova-plugin-chrome-apps-navigation', '1');
+        pinVersion('cordova-plugin-chrome-apps-i18n', '2');
+        pinVersion('cordova-plugin-chrome-apps-bootstrap', '2');
+        pinVersion('cordova-plugin-crosswalk-webview', '1');
+
         cmds.push(['plugin', 'add', missingPlugins, opts]);
       }
       if (excessPlugins.length) {
