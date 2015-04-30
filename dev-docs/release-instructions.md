@@ -45,7 +45,7 @@
 
 * Add release notes & bump version:
 
-    for l in $ACTIVE; do ( cd $l; vim README.md plugin.xml ); done
+    for l in $ACTIVE; do ( cd $l; vim README.md plugin.xml package.json ); done
 
 Vim helper command:
     :read !DATE=$(date "+\%h \%d, \%Y"); LAST_VERSION_BUMP=$(git log --grep "Added -dev suffix" -n 1 --pretty=format:\%h .); v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; echo "\#\# $v ($DATE)"; git log --pretty=format:'* \%s' --topo-order --no-merges "$LAST_VERSION_BUMP"..master .
@@ -53,19 +53,25 @@ Vim helper command:
     for l in $ACTIVE; do ( cd $l; git commit -am "Updated release notes and version for release" ); done
     for l in $ACTIVE; do ( cd $l; git push origin master ); done
 
+* Tag repos
+
+    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git tag "$v"; echo "$PWD: Tagged $v"); done
+    for l in *; do ( cd $l; pwd; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git push origin "refs/tags/$v"); done
+
 * Publish plugins
 
-    for l in $ACTIVE; do ( cd $l; plugman publish . ); done
+    for l in $ACTIVE; do ( cd $l; npm publish ); done
 
 * Set plugin versions to -dev
 
-    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E s:"version=\"$v\":version=\"$v2\":" plugin.xml; fi) ; done
+    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E "s:version=\"$v\":version=\"$v2\":" plugin.xml; sed -i '' -E "s/\"version\": \"$v\"/\"version\": \"$v2\"/" package.json; fi); done
     for l in $ACTIVE; do ( cd $l; git commit -am "Added -dev suffix to plugin versions" ); done
     for l in $ACTIVE; do ( cd $l; git show ); done # Sanity check
     for l in $ACTIVE; do ( cd $l; git push origin master ); done
 
 * Validate that plugins look good
 
+    # TODO: This needs updating now that we're on NPM
     dev-bin/check-published-plugin.js ../mobile-chrome-apps-plugins/*
 
 ## Publish cca-manifest-logic Module (if changes exist)
