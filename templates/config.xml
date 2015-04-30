@@ -19,5 +19,5 @@
     <preference name="iosPersistentFileLocation" value="Library" />
     <preference name="AndroidPersistentFileLocation" value="Internal" />
 
-    <content src="plugins/org.chromium.bootstrap/chromeapp.html" />
+    <content src="plugins/cordova-plugin-chrome-apps-bootstrap/chromeapp.html" />
 </widget>
