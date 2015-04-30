@@ -123,6 +123,10 @@ function updateAllPlugins() {
     'cordova-plugin-chrome-apps-usb',
     'cordova-plugin-chrome-apps-videoCapture',
     'cordova-plugin-background-app',
+    'cordova-plugin-blob-constructor-polyfill',
+    'cordova-plugin-customevent-polyfill',
+    'cordova-plugin-google-payments',
+    'cordova-plugin-xhr-blob-polyfill',
     ];
   shelljs.mkdir('-p', ccaPluginsRoot);
 
