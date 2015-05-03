@@ -23,7 +23,7 @@ To publish your Android application to the Play Store:
    ```
   * Create a password when prompted
   * Note: the "cca exec" prefix is required only if keytool is not already available on your PATH
-  * To see retrieve your certificate's fingerprint (needed when using `chrome.identity`):
+  * To retrieve your certificate's fingerprint (needed when using `chrome.identity`):
     * `cca exec keytool -list -v -keystore keys.p12 -storetype PKCS12`
 
 
