@@ -6,6 +6,7 @@
 
 
 var DEFAULT_PLUGINS = [
+    'cordova-plugin-background-app',
     'cordova-plugin-file',
     'cordova-plugin-inappbrowser',
     'cordova-plugin-network-information',
