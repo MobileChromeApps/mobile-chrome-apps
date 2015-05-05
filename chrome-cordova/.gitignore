@@ -1,6 +1,0 @@
-cordova.android.js
-cordova.ios.js
-grunt_output
-node_modules
-.DS_Store
-*.swp
