@@ -4,6 +4,17 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.7.0 (May 05, 2015)
+* Big! Rewrite of `cordova-plugin-background-app` so that `android:theme=translucent` is no longer needed (#322)
+* Add support for `chrome.usb`
+* All plugins are now hosted on npm
+* Update crosswalk plugin to 1.2.0 (Crosswalk 13)
+* Allow setting "webview": "crosswalk@version"
+* Update notifier and crypto-js module deps
+* Update to official cordova-android to 4.0.0 release!
+* Android: CB-8834 Don't fail to install on VERSION_DOWNGRADE
+* Android: CB-8829 Set targetSdk to 22
+
 ### v0.6.0 (Mar 17, 2015)
 * Updated cordova-android to use latest 4.0.0-dev version
 * Updated cordova-ios to 3.8.0 (Fixes `exec()` bridge `<iframe>` explosion bug)
