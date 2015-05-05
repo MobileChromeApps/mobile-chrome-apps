@@ -16,6 +16,9 @@ chrome-app-deleloper-tool always works without needing to `npm link` in this mod
 
 # Release Notes
 
+# 1.1.1 (May 4, 2015)
+* Add background-app to default plugin list
+
 # 1.1.0 (May 4, 2015)
 * Update plugin IDs of polyfills and google.payments plugins
 * Remove obsolete plugin from defaults
