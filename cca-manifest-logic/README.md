@@ -16,6 +16,14 @@ chrome-app-deleloper-tool always works without needing to `npm link` in this mod
 
 # Release Notes
 
+# 1.1.0 (May 4, 2015)
+* Update plugin IDs of polyfills and google.payments plugins
+* Remove obsolete plugin from defaults
+* Use NPM plugin ids
+* Allow setting "webview": "crosswalk@version"
+* Remove mapping for obsolete syncFileSystem plugin
+* Add chrome.usb plugin to manifest logic
+
 # 1.0.0 (March 17, 2015)
 * Added `createCspString` to `analyse-manifest`
 * Generate `<icon>` within `config.xml` rather than copy files directly (fixes #404, fixes #403)
