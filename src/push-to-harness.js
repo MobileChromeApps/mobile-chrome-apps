@@ -207,7 +207,7 @@ function relaunchWithBiggerUlimit(argsAsJson) {
   // re-run with the new ulimit
   var deferred = Q.defer();
   var args = ['-c', 'ulimit -n 10240 && exec "' + process.argv[0] + '" "' + __filename + '" "' + argsAsJson.replace(/"/g, '@') + '"'];
-  var child = child_process.spawn(process.env['SHELL'], args, { stdio: 'inherit' });
+  var child = child_process.spawn('sh', args, { stdio: 'inherit' });
   child.on('close', function(code) {
     if (code) {
       deferred.reject(code);
