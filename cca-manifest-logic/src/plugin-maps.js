@@ -11,7 +11,7 @@ var DEFAULT_PLUGINS = [
     'cordova-plugin-inappbrowser',
     'cordova-plugin-network-information',
     'cordova-plugin-statusbar',
-    'cordova-plugin-whitelist',
+    'cordova-plugin-whitelist@1.0.0',
     'cordova-plugin-chrome-apps-common',
     'cordova-plugin-chrome-apps-runtime',
     'cordova-plugin-chrome-apps-storage',
