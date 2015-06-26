@@ -55,8 +55,8 @@ Vim helper command:
 
 * Tag repos
 
-    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git tag "$v"; echo "$PWD: Tagged $v"); done
-    for l in *; do ( cd $l; pwd; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git push origin "refs/tags/$v"); done
+    for l in $ACTIVE; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git tag "$v"; echo "$PWD: Tagged $v"); done
+    for l in $ACTIVE; do ( cd $l; pwd; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; git push origin "refs/tags/$v"); done
 
 * Publish plugins
 
@@ -64,7 +64,7 @@ Vim helper command:
 
 * Set plugin versions to -dev
 
-    for l in *; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E "s:version=\"$v\":version=\"$v2\":" plugin.xml; sed -i '' -E "s/\"version\": \"$v\"/\"version\": \"$v2\"/" package.json; fi); done
+    for l in $ACTIVE; do ( cd $l; v="$(grep version= plugin.xml | grep -v xml | head -n1 | cut -d'"' -f2)"; v_no_dev="${v%-dev}"; if [ $v = $v_no_dev ]; then v2="$(echo $v|awk -F"." '{$NF+=1}{print $0RT}' OFS="." ORS="")-dev"; echo "$l: Setting version to $v2"; sed -i '' -E "s:version=\"$v\":version=\"$v2\":" plugin.xml; sed -i '' -E "s/\"version\": \"$v\"/\"version\": \"$v2\"/" package.json; fi); done
     for l in $ACTIVE; do ( cd $l; git commit -am "Added -dev suffix to plugin versions" ); done
     for l in $ACTIVE; do ( cd $l; git show ); done # Sanity check
     for l in $ACTIVE; do ( cd $l; git push origin master ); done

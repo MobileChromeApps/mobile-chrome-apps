@@ -4,6 +4,10 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.7.1 (June 26, 2015)
+* Pin cordova-plugin-whitelist to v1.0.0 to avoid iOS breakage
+* Fix cca push on OS X when shell is not bash
+
 ### v0.7.0 (May 05, 2015)
 * Big! Rewrite of `cordova-plugin-background-app` so that `android:theme=translucent` is no longer needed (#322)
 * Add support for `chrome.usb`
