@@ -16,6 +16,9 @@ chrome-app-deleloper-tool always works without needing to `npm link` in this mod
 
 # Release Notes
 
+# 1.1.2 (June 26, 2015)
+* Pin cordova-plugin-whitelist to v1.0.0 to avoid breakage in following version
+
 # 1.1.1 (May 4, 2015)
 * Add background-app to default plugin list
 

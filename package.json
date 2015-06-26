@@ -21,7 +21,7 @@
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
-    "cca-manifest-logic": "^1.1.1",
+    "cca-manifest-logic": "^1.1.2",
     "chrome-app-developer-tool-client": "^0.0.5",
     "cordova": "^5.0.0",
     "crypto-js": "^3.1.4",
