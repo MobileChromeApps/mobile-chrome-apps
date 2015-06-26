@@ -126,6 +126,7 @@ function updateAllPlugins() {
     'cordova-plugin-blob-constructor-polyfill',
     'cordova-plugin-customevent-polyfill',
     'cordova-plugin-google-payments',
+    'cordova-plugin-google-sign-in-ios',
     'cordova-plugin-xhr-blob-polyfill',
     ];
   shelljs.mkdir('-p', ccaPluginsRoot);
