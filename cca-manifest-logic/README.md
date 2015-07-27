@@ -16,6 +16,9 @@ chrome-app-deleloper-tool always works without needing to `npm link` in this mod
 
 # Release Notes
 
+# 1.1.3 (July 27, 2015)
+- Add gopher: to default Content-Security-Policy (http://crbug.com/513352)
+
 # 1.1.2 (June 26, 2015)
 * Pin cordova-plugin-whitelist to v1.0.0 to avoid breakage in following version
 
