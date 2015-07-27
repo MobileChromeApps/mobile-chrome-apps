@@ -140,7 +140,7 @@ module.exports = exports = function prePrepareCommand(context) {
         // Pin major versions of plugins that we care about
         pinVersion('cordova-plugin-chrome-apps-navigation', '1');
         pinVersion('cordova-plugin-chrome-apps-i18n', '2');
-        pinVersion('cordova-plugin-chrome-apps-bootstrap', '2');
+        pinVersion('cordova-plugin-chrome-apps-bootstrap', '3');
         pinVersion('cordova-plugin-crosswalk-webview', '1');
 
         cmds.push(['plugin', 'add', missingPlugins, opts]);

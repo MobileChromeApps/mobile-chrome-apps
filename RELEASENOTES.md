@@ -4,6 +4,9 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.7.3 (Jul 27, 2015)
+* Fixed 0.7.2 release being broken
+
 ### v0.7.2 (Jul 27, 2015)
 * Switch from chrome-extension: to gopher: to fix apps being broken on latest Andrew WebView (http://crbug.com/513352)
 
