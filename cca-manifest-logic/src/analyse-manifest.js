@@ -161,7 +161,7 @@ function createCspString(manifest, platform) {
   if (manifest.csp) {
     return manifest.csp;
   }
-  var defaultSrc = 'file: data: chrome-extension:';
+  var defaultSrc = 'file: data: chrome-extension: gopher:';
   if (platform == 'ios') {
     defaultSrc += ' gap:';
   } else if (platform == 'android') {
