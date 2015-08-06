@@ -16,6 +16,9 @@ chrome-app-deleloper-tool always works without needing to `npm link` in this mod
 
 # Release Notes
 
+# 1.1.4 (Aug 6, 2015)
+- Add blob: to default CSP (fixes #589)
+
 # 1.1.3 (July 27, 2015)
 - Add gopher: to default Content-Security-Policy (http://crbug.com/513352)
 
