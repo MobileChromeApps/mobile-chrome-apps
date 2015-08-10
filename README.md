@@ -1,5 +1,5 @@
 # Create Chrome Apps for Mobile Using Apache Cordova
-_**The Chrome Apps for Mobile toolchain is in developer preview. We welcome your feedback on the [Github issue tracker](https://github.com/MobileChromeApps/mobile-chrome-apps/issues), the [Chrome Apps developer forum](http://groups.google.com/a/chromium.org/group/chromium-apps/topics), [Stack Overflow](http://stackoverflow.com/questions/tagged/google-chrome-app), and our [G+ Developers page](https://plus.google.com/+GoogleChromeDevelopers/).**_
+The Chrome Apps for Mobile Toolchain _**is no longer being actively developed**_. We intend to keep it functional, but do not intend on adding any new features.
 
 ![A Chrome App running on both desktop and mobile](docs/images/todomvc-chromebook.png)
 
