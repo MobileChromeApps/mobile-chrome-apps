@@ -4,6 +4,12 @@ For detailed release notes for plugins, refer to each plugin's `README.md`.
 
 For Android / iOS detailed release notes, refer to `RELEASENOTES.md` with `cordova/cordova-android` and `cordova/cordova-ios`
 
+### v0.8.0 (Nov 10, 2015)
+* Upgrade to cordova@5.4.0 (fixes errors with newer versions of npm / nodejs)
+* Upgrade cordova-android to v5.0.0 (support for Marshmallow)
+* Upgrade cordova-ios to v3.9.2
+* Adds experimental support for `chrome.proxy` permission on Android
+
 ### v0.7.4 (Aug 6, 2015)
 * Add blob: to default CSP (fixes #589)
 

@@ -1,7 +1,7 @@
 {
   "name": "cca",
   "author": "The Chrome Team",
-  "version": "0.7.5-dev",
+  "version": "0.8.0-rc1",
   "description": "Run Chrome Apps on mobile using Apache Cordova",
   "preferGlobal": "true",
   "keywords": [
