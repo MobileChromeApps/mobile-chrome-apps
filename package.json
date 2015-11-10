@@ -15,15 +15,15 @@
   },
   "main": "src/cca.js",
   "man": "./docs/man/cca.7",
-  "license": "Apache version 2.0",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/MobileChromeApps/mobile-chrome-apps.git"
   },
   "dependencies": {
-    "cca-manifest-logic": "^1.1.4",
+    "cca-manifest-logic": "^1.1.5",
     "chrome-app-developer-tool-client": "^0.0.5",
-    "cordova": "^5.0.0",
+    "cordova": "^5.4.0",
     "crypto-js": "^3.1.4",
     "debounce": "^1.0.0",
     "elementtree": "0.1.6",
@@ -35,7 +35,7 @@
     "semver": "^4.1.0",
     "shelljs": "^0.4.0",
     "underscore": "^1.7.0",
-    "update-notifier": "^0.4.0",
+    "update-notifier": "^0.5.0",
     "xmldom": "^0.1.19"
   },
   "files": [

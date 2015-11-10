@@ -108,6 +108,7 @@ function updateAllPlugins() {
     'cordova-plugin-chrome-apps-iosSocketsCommon',
     'cordova-plugin-chrome-apps-notifications',
     'cordova-plugin-chrome-apps-power',
+    'cordova-plugin-chrome-apps-proxy',
     'cordova-plugin-chrome-apps-pushMessaging',
     'cordova-plugin-chrome-apps-socket',
     'cordova-plugin-chrome-apps-sockets-tcp',

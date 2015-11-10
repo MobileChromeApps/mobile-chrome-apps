@@ -38,6 +38,8 @@ var cordovaLib = cordova.cordova_lib;
 var hooks = require('./hooks');
 
 function main() {
+  cordovaLib.binname = 'cca';
+
   var commandLineFlags = require('./parse-command-line')();
   utils.exit.pause_on_exit = commandLineFlags.pause_on_exit;
 

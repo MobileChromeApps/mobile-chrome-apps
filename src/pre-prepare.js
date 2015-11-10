@@ -84,8 +84,9 @@ module.exports = exports = function prePrepareCommand(context) {
     var hasIos = fs.existsSync(path.join('platforms', 'ios'));
     if (hasIos) {
       var platforms = cordovaLib.cordova_platforms;
-      var parser = new platforms.ios.parser(path.join('platforms','ios'));
-      var infoPlistPath = path.join('platforms', 'ios', parser.originalName, parser.originalName + '-Info.plist');
+      var parser = platforms.getPlatformApi('ios');
+      var infoPlistPath = path.join('platforms', 'ios', parser._parser.originalName, parser._parser.originalName + '-Info.plist');
+      console.log('adsf')
       var infoPlistXml = et.parse(fs.readFileSync(infoPlistPath, 'utf-8'));
 
       var rootPlistElement = infoPlistXml.getroot();
