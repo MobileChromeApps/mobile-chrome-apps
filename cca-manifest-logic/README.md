@@ -10,11 +10,14 @@ and published when publishing cca.
 
 ## Using from chrome-app-developer-tool
 
-When developing changes, npm link cca-manifest-logic, install CADT and then run `gulp`
+When developing changes, npm link cca-manifest-logic, install CADT and then run gulp`
 whenever files change. When happy with change, publish a new version to npm so that
 chrome-app-deleloper-tool always works without needing to `npm link` in this module.
 
 # Release Notes
+
+# 1.1.5 (Nov 10, 2015)
+- Add chrome.proxy to list of plugins
 
 # 1.1.4 (Aug 6, 2015)
 - Add blob: to default CSP (fixes #589)
