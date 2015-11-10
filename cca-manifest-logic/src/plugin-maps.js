@@ -36,6 +36,7 @@ var PLUGIN_MAP = {
   'notifications': ['cordova-plugin-chrome-apps-notifications', 'cordova-plugin-chrome-apps-storage'],
   'payments': ['cordova-plugin-google-payments'],
   'power': ['cordova-plugin-chrome-apps-power'],
+  'proxy': ['cordova-plugin-chrome-apps-proxy'],
   'pushMessaging': ['cordova-plugin-chrome-apps-pushmessaging', 'cordova-plugin-chrome-apps-identity'],
   'socket': ['cordova-plugin-chrome-apps-socket', 'cordova-plugin-chrome-apps-system-network'],
   'storage': ['cordova-plugin-chrome-apps-storage'],
