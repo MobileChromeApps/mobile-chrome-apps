@@ -16,7 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if [[ -e npm_deleted_git_ignores ]]; then
+function delete_git_ignores() {
+  GIT_IGNORES=$(echo $(find . -name ".gitignore" | grep -v "node_modules"))
+  echo $GIT_IGNORES > npm_deleted_git_ignores
+  rm $GIT_IGNORES
+}
+
+function restore_git_ignores() {
   for f in $(cat npm_deleted_git_ignores); do
     (
       cd $(dirname $f)
@@ -25,13 +31,31 @@ if [[ -e npm_deleted_git_ignores ]]; then
     ) || exit $?
   done
   rm npm_deleted_git_ignores
-  echo Restored files.
-  exit 0
-fi
+}
 
 set -e
-GIT_IGNORES=$(echo $(find . -name ".gitignore" | grep -v "node_modules"))
-echo $GIT_IGNORES > npm_deleted_git_ignores
-rm $GIT_IGNORES
-echo Prepped for npm pack / npm publish. Deleted:
-for f in $GIT_IGNORES; do echo $f; done
+set -x
+cd $(dirname $0)/..
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "********** Changes exist. aborting. ************"
+  git status
+  exit 1
+fi
+delete_git_ignores
+npm pack
+TMP_DIR=tmp-$RANDOM
+mkdir $TMP_DIR
+cd $TMP_DIR
+tar xzf ../*.tgz
+# This is the main reason for this script.
+if [[ ! -e ../cordova/cordova-android/node_modules ]]; then
+  cp -r ../cordova/cordova-android/node_modules package/cordova/cordova-android
+  cp -r ../cordova/cordova-ios/bin/node_modules package/cordova/cordova-ios/bin
+fi
+tar czf foo.tgz package
+mv foo.tgz ../*.tgz
+cd ..
+rm -r $TMP_DIR
+restore_git_ignores
+echo DONE
+

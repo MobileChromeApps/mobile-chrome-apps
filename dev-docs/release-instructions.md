@@ -17,9 +17,7 @@
     npm update -g npm
 
 ## How to See What is Packaged:
-    dev-bin/prepfornpm.sh
-    npm pack
-    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    dev-bin/create-tgz.sh
     tar xzf *.tgz
     cd package
     find .
@@ -135,9 +133,8 @@ Next, add in notable RELEASENOTE.md entries from `cordova-plugman` and `cordova-
     git commit -am "Set version to $(grep '"version"' package.json | cut -d'"' -f4)"
 
     # Publish rc to npm
-    dev-bin/prepfornpm.sh
-    npm publish --tag=rc # If this fails, try again with node v0.12
-    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    dev-bin/create-tgz.sh
+    npm publish *.tgz --tag=rc
 
     # Double check things are still good
     git status
@@ -184,9 +181,8 @@ The following is the full set of tests. Vary accordingly depending on the magnit
     git tag v$CCA_VERSION
 
     # Publish to npm
-    dev-bin/prepfornpm.sh
-    npm publish
-    dev-bin/prepfornpm.sh # It's a toggle... yeah, i know...
+    dev-bin/create-tgz.sh
+    npm publish *.tgz
 
     # Double check that the tags point to the right things:
     npm info cca
