@@ -48,7 +48,7 @@ mkdir $TMP_DIR
 cd $TMP_DIR
 tar xzf ../*.tgz
 # This is the main reason for this script.
-if [[ ! -e ../cordova/cordova-android/node_modules ]]; then
+if [[ ! -e package/cordova/cordova-android/node_modules ]]; then
   cp -r ../cordova/cordova-android/node_modules package/cordova/cordova-android
   cp -r ../cordova/cordova-ios/bin/node_modules package/cordova/cordova-ios/bin
 fi
