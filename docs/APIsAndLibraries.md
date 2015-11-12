@@ -47,8 +47,7 @@ _Current as of July 2014_.
     * Working on Android and iOS.
     * `chrome.storage.sync` storage does not sync, but works like `chrome.storage.local`.
 * [syncFileSystem](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem) - store and retrieve files backed by Google Drive
-    * Alpha quality on iOS and Android (not currently being worked on)
-    * Does not sync when app is not running.
+    * Not feasible.
 * [system.cpu](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-cpu) - query basic CPU information of the system
     * Working on Android and iOS.
 * [system.display](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-system-display) - query display metadata

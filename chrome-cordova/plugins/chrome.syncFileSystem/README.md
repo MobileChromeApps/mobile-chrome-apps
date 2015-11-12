@@ -1,1 +1,2 @@
-Moved to [MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem](https://github.com/MobileChromeApps/cordova-plugin-chrome-apps-syncFileSystem)
+Abandoned as infeasble.
+
