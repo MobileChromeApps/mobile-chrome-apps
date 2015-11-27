@@ -29,6 +29,7 @@ Possible values for `manifest.mobile.json`:
 ```
 * `webview`: Android only. Can be `"system"` or `"crosswalk"` (default)
   * This can also be set with the `--webview` command-line flag
+  * To use a specific version of crosswalk, value can be `"crosswalk@##"`, where ## is the version.
 * `packageId`: Used as the `packageId` on Android, and the `CFBundleIdentifier` on iOS.
 * `csp`: When set, overrides the default Content-Security-Policy for apps
 * `cspUnsafeEval`: Allow `eval` within Content-Security-Policy (default: false)
