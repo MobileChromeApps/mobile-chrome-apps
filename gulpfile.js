@@ -28,7 +28,7 @@ gulp.task('watch', [], function() {
   gulp.watch([
       'src/**/*.js',
       'tests/**/*.js',
-    ], ['lint', 'test']);
+    ],['lint' , 'test']);
 });
 
 gulp.task('default', ['lint', 'test'], function() {
