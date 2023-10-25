@@ -13,7 +13,7 @@
     "crypto-js": "is not meant to be pinned, but 3.1.2-5 IS later than 3.1.2 (incorrect use of semver), and this works"
   },
   "dependencies": {
-    "crypto-js": "3.1.2-5",
+    "crypto-js": "4.2.0",
     "node.extend": ""
   }
 }
